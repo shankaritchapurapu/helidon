@@ -1,0 +1,8 @@
+/Users/jtrent/dev/hldn/oci-helidon/oci-error-code/src/main/java/module-info.java
+/Users/jtrent/dev/hldn/oci-helidon/oci-error-code/src/main/java/io/helidon/integrations/oci/errorcode/ErrorCodeAutoDiscoverable.java
+/Users/jtrent/dev/hldn/oci-helidon/oci-error-code/src/main/java/io/helidon/integrations/oci/errorcode/ErrorCodeResponseMapper.java
+/Users/jtrent/dev/hldn/oci-helidon/oci-error-code/src/main/java/io/helidon/integrations/oci/errorcode/package-info.java
+/Users/jtrent/dev/hldn/oci-helidon/oci-error-code/src/main/java/io/helidon/integrations/oci/errorcode/ErrorCodeExceptionMapper.java
+/Users/jtrent/dev/hldn/oci-helidon/oci-error-code/src/main/java/io/helidon/integrations/oci/errorcode/ErrorDetail.java
+/Users/jtrent/dev/hldn/oci-helidon/oci-error-code/src/main/java/io/helidon/integrations/oci/errorcode/RenderableException.java
+/Users/jtrent/dev/hldn/oci-helidon/oci-error-code/src/main/java/io/helidon/integrations/oci/errorcode/ErrorCode.java

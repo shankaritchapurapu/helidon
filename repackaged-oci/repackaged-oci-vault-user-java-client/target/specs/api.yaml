@@ -1,0 +1,684 @@
+# This is the Vault user API spec in YAML
+# Clients and documentation will be auto-generated from this file.
+# Review the API checklist:
+# https://confluence.aka.lgl.grungy.us/display/DEX/API+Consistency+Checklist
+swagger: '2.0'
+x-oracle-package: com.oracle.pic
+info:
+  title: Vault user API
+  description: A description of the vault user API
+  version: "1.0.0"
+
+# the domain of the service
+host: 127.0.0.1:8200
+# array of all schemes that your API supports
+schemes:
+- https
+- http
+
+# will be prefixed to all paths
+basePath: /v1
+produces:
+- application/json
+
+# Enable SDK Retries by default
+# Details: https://confluence.oci.oraclecorp.com/display/DEX/API+Consistency+Guidelines#APIConsistencyGuidelines-DefaultRetriesintheSDKs
+x-obmcs-client-retries-enabled: true
+
+# https://secret-service-se.svc.<availibilityDomainName>.<regionName>/v1
+# secret-service-ce.svc.<region>/v1
+# https://secret-service-ce.<regionName>.<region internal public domain>/v1
+x-obmcs-endpoint-template: 'https://secret-service*.*.{region}*/v1'
+
+paths:
+
+  /{secretPath}:
+    get:
+      description: List secrets.
+      tags:
+      - vaultUser
+      - vaultManagement
+      summary: List secrets.
+      operationId: ListSecrets
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/SDKVersionParam'
+      - $ref: '#/parameters/SecretPathParam'
+      - $ref: '#/parameters/ListParam'
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/ListSecretsResponse"
+
+  /{path}:
+    get:
+      description: Get secret.
+      tags:
+      - vaultUser
+      - vaultManagement
+      summary: Get secret.
+      operationId: GetSecret
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/SDKVersionParam'
+      - in: path
+        name: path
+        required: true
+        type: string
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: "#/definitions/GetSecretResponse"
+
+    post:
+      description: Post secret
+      tags:
+      - vaultUser
+      - vaultManagement
+      summary: Post secret.
+      operationId: PostSecret
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - in: path
+        name: path
+        required: true
+        type: string
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/PostSecretParams"
+      responses:
+        204:
+          description: Successful response
+
+    delete:
+      description: Delete secret.
+      tags:
+      - vaultUser
+      - vaultManagement
+      summary: Delete secret.
+      operationId: DeleteSecret
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - in: path
+        name: path
+        required: true
+        type: string
+      responses:
+        204:
+          description: Successful response
+
+  /auth/internaloci/login:
+    post:
+      tags:
+      - vaultUser
+      - vaultManagement
+      summary: Logs into Vault using the OCI Identity auth method
+      description: Logs into Vault using the OCI Identity auth method
+      operationId: LoginUsingIdentity
+      parameters:
+      - $ref: '#/parameters/SDKVersionParam'
+      - name: AuthenticateClientRequest
+        description: AuthenticateClient request
+        required: true
+        in: body
+        schema:
+          $ref: '#/definitions/AuthenticateClientRequest'
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/LoginResponse"
+        400:
+          description: Login failed
+
+  /auth/pki/login:
+    post:
+      tags:
+      - vaultUser
+      - vaultManagement
+      summary: Logs into Vault using the PKI auth method
+      description: Logs into Vault using the PKI auth method
+      operationId: LoginUsingPki
+      parameters:
+      - $ref: '#/parameters/SDKVersionParam'
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: "#/definitions/LoginResponse"
+
+  /auth/{authPluginName}/role:
+    get:
+      description: Lists roles of the corresponding auth plugin
+      tags:
+      - vaultManagement
+      summary: Lists roles
+      operationId: ListRoles
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/AuthPluginNameParam'
+      - $ref: '#/parameters/ListParam'
+      responses:
+        200:
+          description: Lists roles
+          schema:
+           $ref: "#/definitions/ListDetails"
+
+  /auth/{authPluginName}/role/{roleName}:
+    post:
+      description: Creates a role or Updates it if it already exists
+      tags:
+      - vaultManagement
+      summary: Creates a role or Updates it if it already exists
+      operationId: UpsertRole
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/AuthPluginNameParam'
+      - $ref: '#/parameters/RoleNameParam'
+      - in: "body"
+        name: "upsertRoleDetails"
+        required: true
+        schema:
+          $ref: "#/definitions/UpsertRoleDetails"
+      responses:
+        200:
+          description: Role details
+          schema:
+            $ref: "#/definitions/RoleDetails"
+
+    get:
+      description: Gets a role
+      tags:
+      - vaultManagement
+      summary: Gets a role
+      operationId: GetRole
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/AuthPluginNameParam'
+      - $ref: '#/parameters/RoleNameParam'
+      responses:
+        200:
+          description: Gets a Role details
+          schema:
+            $ref: "#/definitions/RoleDetails"
+
+    delete:
+      description: Deletes a role
+      tags:
+      - vaultManagement
+      summary: Deletes a role
+      operationId: DeleteRole
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/AuthPluginNameParam'
+      - $ref: '#/parameters/RoleNameParam'
+      responses:
+        204:
+          description: Role was deleted
+
+  /auth/{authPluginName}/config:
+    get:
+      description: Lists config
+      tags:
+      - vaultManagement
+      summary: Lists configs
+      operationId: ListConfigs
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/AuthPluginNameParam'
+      - $ref: '#/parameters/ListParam'
+      responses:
+        200:
+          description: Lists config
+          schema:
+            $ref: "#/definitions/ListDetails"
+
+  /auth/{authPluginName}/config/{configName}:
+    post:
+      description: Creates a config
+      tags:
+      - vaultManagement
+      summary: Creates a config
+      operationId: CreateConfig
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/AuthPluginNameParam'
+      - $ref: '#/parameters/ConfigNameParam'
+      - in: "body"
+        name: "createConfigDetails"
+        description: Create Config Details
+        required: true
+        schema:
+          $ref: "#/definitions/CreateConfigDetails"
+      responses:
+        200:
+          description: config details
+          schema:
+            $ref: "#/definitions/ConfigDetails"
+
+    get:
+      description: Gets a config
+      tags:
+      - vaultManagement
+      summary: Gets a config
+      operationId: GetConfig
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/AuthPluginNameParam'
+      - $ref: '#/parameters/ConfigNameParam'
+      responses:
+        200:
+          description: Gets a config details
+          schema:
+            $ref: "#/definitions/ConfigDetails"
+
+    put:
+      description: Creates a config
+      tags:
+      - vaultManagement
+      summary: Updates a config
+      operationId: UpdateConfig
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/AuthPluginNameParam'
+      - $ref: '#/parameters/ConfigNameParam'
+      - $ref: '#/parameters/IfMatchHeader'
+      - in: "body"
+        name: "updateConfigDetails"
+        required: true
+        schema:
+          $ref: "#/definitions/UpdateConfigDetails"
+      responses:
+        200:
+          description: config details
+          schema:
+            $ref: "#/definitions/ConfigDetails"
+
+    delete:
+      description: Deletes a config
+      tags:
+      - vaultManagement
+      summary: Deletes a config
+      operationId: DeleteConfig
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/AuthPluginNameParam'
+      - $ref: '#/parameters/ConfigNameParam'
+      - $ref: '#/parameters/IfMatchHeader'
+      responses:
+        204:
+          description: The config was deleted
+
+  /sys/policy:
+    get:
+      description: Lists Policies
+      tags:
+      - vaultManagement
+      summary: Lists Policies
+      operationId: ListPolicies
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/ListParam'
+      responses:
+        200:
+          description: Lists Policies
+          schema:
+            $ref: "#/definitions/PolicyListDetails"
+
+  /sys/policy/{policyName}:
+    put:
+      description: Creates a policy, or updates it if it already exists
+      tags:
+      - vaultManagement
+      summary: Upsert vault policy
+      operationId: UpsertPolicy
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/VaultPolicyNameParam'
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          type: "string"
+          maxLength: 8192
+      responses:
+        204:
+          description: The policy was created
+
+    get:
+      description: Gets a  Policy
+      tags:
+      - vaultManagement
+      summary: Gets a Policy
+      operationId: GetPolicy
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/VaultPolicyNameParam'
+      responses:
+        200:
+          description: Gets a Policy
+          schema:
+            $ref: "#/definitions/PolicyDetails"
+
+    delete:
+      description: Deletes a policy
+      tags:
+      - vaultManagement
+      summary: Deletes a policy
+      operationId: DeletePolicy
+      parameters:
+      - $ref: '#/parameters/VaultTokenParam'
+      - $ref: '#/parameters/VaultPolicyNameParam'
+      responses:
+        204:
+          description: Deletes a policy
+
+definitions:
+  GetSecretResponse:
+    type: object
+    properties:
+      data:
+        type: object
+        additionalProperties:
+          type: string
+        example:
+          foo: bar
+          zip: zap
+
+  PostSecretParams:
+    type: object
+    properties:
+      secretParams:
+        type: object
+        additionalProperties:
+          type: string
+        example:
+          foo: bar
+          zip: zap
+
+  LoginResponse:
+    type: object
+    properties:
+      request_id:
+        type: string
+      auth:
+        $ref: "#/definitions/LoginAuthDetails"
+
+  LoginAuthDetails:
+    type: object
+    properties:
+      client_token:
+        type: string
+      policies:
+        type: array
+        items:
+          type: string
+      metadata:
+        type: object
+        additionalProperties:
+          type: string
+      lease_duration:
+        type: integer
+      renewable:
+        type: boolean
+
+  ListDetails:
+    type: object
+    properties:
+      request_id:
+        type: string
+      lease_id:
+        type: string
+      renewable:
+        type: boolean
+      lease_duration:
+        type: integer
+      data:
+        $ref: "#/definitions/ListData"
+
+  ListData:
+    type: object
+    properties:
+      keys:
+        type: array
+        items:
+          type: string
+
+  ListSecretsResponse:
+    type: object
+    properties:
+      data:
+        $ref: "#/definitions/SecretList"
+
+  SecretList:
+    type: object
+    properties:
+      keys:
+        type: array
+        items:
+          type: string
+
+  RoleDetails:
+    type: object
+    properties:
+      request_id:
+        type: string
+      lease_id:
+        type: string
+      renewable:
+        type: boolean
+      lease_duration:
+        type: integer
+      data:
+        $ref: "#/definitions/RoleData"
+
+  RoleData:
+    type: object
+    properties:
+      description:
+        type: string
+      policy_list:
+        type: array
+        items:
+          type: string
+      role:
+        type: string
+      ttl:
+        type: integer
+      version:
+        type: integer
+
+  UpsertRoleDetails:
+    type: object
+    properties:
+      description:
+        type: string
+      ttl:
+        type: integer
+      add_policy_list:
+        type: string
+      remove_policy_list:
+        type: string
+
+  PolicyDetails:
+    type: object
+    properties:
+      request_id:
+        type: string
+      lease_id:
+        type: string
+      renewable:
+        type: boolean
+      lease_duration:
+        type: integer
+      data:
+        $ref: "#/definitions/PolicyData"
+
+  PolicyData:
+    type: object
+    properties:
+      name:
+        type: string
+      rules:
+        type: string
+
+  PolicyListDetails:
+    type: object
+    properties:
+      request_id:
+        type: string
+      lease_id:
+        type: string
+      renewable:
+        type: boolean
+      lease_duration:
+        type: integer
+      data:
+        $ref: "#/definitions/PolicyListData"
+
+  PolicyListData:
+    type: object
+    properties:
+      keys:
+        type: array
+        items:
+          type: string
+      policies:
+        type: array
+        items:
+          type: string
+
+  CreateConfigDetails:
+    type: object
+    properties:
+      configValue:
+        type: string
+
+  UpdateConfigDetails:
+    type: object
+    properties:
+      configValue:
+        type: string
+
+  ConfigDetails:
+    type: object
+    properties:
+      request_id:
+        type: string
+      lease_id:
+        type: string
+      renewable:
+        type: boolean
+      lease_duration:
+        type: integer
+      data:
+        $ref: "#/definitions/ConfigData"
+
+  ConfigData:
+    type: object
+    properties:
+      configName:
+        type: string
+      configValue:
+        type: string
+      etag:
+        type: string
+
+  AuthenticateClientRequest:
+    required:
+    - requestHeaders
+    properties:
+      requestHeaders:
+        type: object
+        additionalProperties:
+         type: array
+         items:
+          type: string
+        description: The signed headers of the client
+
+parameters:
+
+  AuthPluginNameParam:
+    name: authPluginName
+    in: path
+    required: true
+    description: The name of the auth plugin.
+    type: string
+    enum:
+    - internaloci
+    - pki
+
+  RoleNameParam:
+    name: roleName
+    type: string
+    in: path
+    required: true
+    description: The name of the role to take. Policies available to this role will be granted. Pass * to take up all roles available to the entity that is calling this API.
+    minLength: 1
+    maxLength: 300
+
+  VaultTokenParam:
+    name: X-Vault-Token
+    type: string
+    in: header
+    required: true
+    description: The authorization token.
+    minLength: 1
+    maxLength: 100
+
+  SecretPathParam:
+    name: secretPath
+    type: string
+    in: path
+    required: true
+    description: The path of the secret
+    minLength: 0
+    maxLength: 255
+
+  ListParam:
+    name: list
+    type: boolean
+    in: query
+    required: true
+    description: Just pass true to this parameter to get the list of items
+
+  VaultPolicyNameParam:
+    name: policyName
+    type: string
+    in: path
+    required: true
+    description: The name of the policy.
+    minLength: 1
+    maxLength: 300
+
+  ConfigNameParam:
+    name: configName
+    type: string
+    in: path
+    required: true
+    description: The name of the config to take.
+    minLength: 1
+    maxLength: 300
+
+  IfMatchHeader:
+    name: if-match
+    in: header
+    type: string
+    required: true
+    description: |
+      For optimistic concurrency control. In the PUT or DELETE call for a resource, set the `if-match`
+      parameter to the value of the etag from a previous GET or POST response for that resource.  The resource
+      will be updated or deleted only if the if-match you provide matches the resource's current etag value.
+
+  SDKVersionParam:
+    name: sdk-version
+    type: string
+    in: header
+    required: false
+    description: The sdk version.
+    minLength: 1
+    maxLength: 100

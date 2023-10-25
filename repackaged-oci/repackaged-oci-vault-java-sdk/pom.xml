@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.oracle.helidon.oci</groupId>
+        <artifactId>helidon-repackaged-oci</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>repackaged-oci-vault-java-sdk</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>Repackaged: OCI vault-java-sdk</name>
+
+    <properties>
+        <version.lib.oci.vault.java.sdk>2.0.3</version.lib.oci.vault.java.sdk>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.oracle.pic.vault</groupId>
+            <artifactId>vault-java-sdk</artifactId>
+<!--            <version>${version.lib.oci.vault.java.sdk}</version>-->
+            <exclusions>
+                <!-- replaced by "our" version below -->
+                <exclusion>
+                    <groupId>com.oracle.pic.identity.authorization</groupId>
+                    <artifactId>sdk</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.oracle.pic.vault</groupId>
+                    <artifactId>vault-user-java-client</artifactId>
+                </exclusion>
+
+                <!-- other exclusions -->
+                <exclusion>
+                    <groupId>javax.inject</groupId>
+                    <artifactId>javax.inject</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.oracle.pic.commons</groupId>
+                    <artifactId>metrics</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.oracle.oci.sdk</groupId>
+                    <artifactId>oci-java-sdk-addons-s2s</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- our replacement for the exclusions from base vault-java-sdk -->
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
+        </dependency>
+
+        <!-- our replacement for the exclusions from base vault-java-sdk -->
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.helidon.build-tools</groupId>
+                <artifactId>helidon-services-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce-jakarta-dependencies</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <helidonDependenciesRule>
+                                    <excludedGavRegExs>
+                                        <excludedGavRegExs>jakarta.servlet:jakarta.servlet-api:4.0.4</excludedGavRegExs>
+                                    </excludedGavRegExs>
+                                </helidonDependenciesRule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

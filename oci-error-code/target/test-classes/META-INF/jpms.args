@@ -1,0 +1,4 @@
+--patch-module
+io.helidon.integrations.oci.errorcode=_
+--add-reads
+io.helidon.integrations.oci.errorcode=ALL-UNNAMED
