@@ -26,6 +26,7 @@ mvn clean package
 ```
 
 ## Links
+* [Helidon Service Generator](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-service-generator)
 * Oracle Slack Channel: #helidon-users
 * Public Site: https://helidon.io/
 * Oracle Jira Issues (used for any/all Oracle Internal issue tracking): https://jira.oci.oraclecorp.com/projects/HLDN/summary
