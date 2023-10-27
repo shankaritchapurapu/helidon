@@ -1,4 +1,0 @@
---patch-module
-io.helidon.integrations.oci.requestid=_
---add-reads
-io.helidon.integrations.oci.requestid=ALL-UNNAMED
