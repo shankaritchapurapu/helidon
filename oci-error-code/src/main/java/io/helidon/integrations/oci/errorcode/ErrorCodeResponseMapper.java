@@ -15,9 +15,9 @@
  */
 package io.helidon.integrations.oci.errorcode;
 
-import jakarta.ws.rs.Priorities;
-import jakarta.ws.rs.ProcessingException;
-import jakarta.ws.rs.core.Response;
+import javax.ws.rs.Priorities;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
 /**
