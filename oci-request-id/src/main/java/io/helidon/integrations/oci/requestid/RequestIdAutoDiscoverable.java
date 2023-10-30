@@ -15,7 +15,8 @@
  */
 package io.helidon.integrations.oci.requestid;
 
-import jakarta.ws.rs.core.FeatureContext;
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.FeatureContext;
 import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 
 /**
@@ -27,9 +28,13 @@ public class RequestIdAutoDiscoverable implements AutoDiscoverable {
 
     @Override
     public void configure(FeatureContext context) {
-        switch (context.getConfiguration().getRuntimeType()) {
-            case SERVER -> context.register(RequestIdServerFilter.class);
-            case CLIENT -> context.register(RequestIdClientFilter.class);
+        RuntimeType rt = context.getConfiguration().getRuntimeType();
+        if (RuntimeType.SERVER == rt) {
+            context.register(RequestIdServerFilter.class);
+        } else if (RuntimeType.CLIENT == rt) {
+            context.register(RequestIdClientFilter.class);
+        } else {
+            throw new IllegalStateException();
         }
     }
 }

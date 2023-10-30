@@ -18,7 +18,8 @@
  * Helidon support for Error Codes.
  */
 module io.helidon.integrations.oci.errorcode {
-    requires jakarta.ws.rs;
+    requires java.ws.rs;
+
     requires microprofile.rest.client.api;
 
     requires io.helidon.microprofile.server;

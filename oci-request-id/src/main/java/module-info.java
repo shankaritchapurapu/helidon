@@ -18,7 +18,7 @@
  * Helidon support for opc-request-id.
  */
 module io.helidon.integrations.oci.requestid {
-    requires jakarta.ws.rs;
+    requires java.ws.rs;
 
     requires io.helidon.logging.common;
     requires io.helidon.microprofile.server;
