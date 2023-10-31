@@ -1,0 +1,34 @@
+package {{package}};
+
+{{#imports}}import {{import}};
+{{/imports}}
+
+/**
+ * Base class to use when parameters defined by the swagger spec are all you need.
+ */
+{{>generatedAnnotation}}
+@{{annotationPackage}}.ws.rs.Path("{{contextPath}}")
+{{#hasConsumes}}@{{annotationPackage}}.ws.rs.Consumes({ {{#consumes}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/consumes}} }){{/hasConsumes}}
+{{#hasProduces}}@{{annotationPackage}}.ws.rs.Produces({ {{#produces}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/produces}} })
+{{/hasProduces}}
+public abstract class Abstract{{classname}}BaseResource {{#parentAbstractClass}}extends {{parentAbstractClass}}{{/parentAbstractClass}} {
+{{#operations}}
+{{#operation}}
+{{> abstract-method-javadoc }}
+    @{{httpMethod}}
+    @{{annotationPackage}}.ws.rs.Path("{{path}}")
+    {{#hasConsumes}}@{{annotationPackage}}.ws.rs.Consumes({ {{#consumes}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/consumes}} }){{/hasConsumes}}
+    {{#hasProduces}}@{{annotationPackage}}.ws.rs.Produces({ {{#produces}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/produces}} })
+    {{/hasProduces}}
+    public abstract {{#abstractResourceReturnType}}{{{abstractResourceReturnType}}}{{/abstractResourceReturnType}}{{^abstractResourceReturnType}}void{{/abstractResourceReturnType}} {{nickname}}({{#allParams}}
+        {{> arg-validation}}{{#isFormParam}}
+        @{{annotationPackage}}.ws.rs.FormParam("{{baseName}}") {{/isFormParam}}{{#isHeaderParam}}
+        @{{annotationPackage}}.ws.rs.HeaderParam("{{baseName}}") {{/isHeaderParam}}{{#isPathParam}}
+        @{{annotationPackage}}.ws.rs.PathParam("{{baseName}}") {{/isPathParam}}{{#isQueryParam}}
+        @{{annotationPackage}}.ws.rs.QueryParam("{{baseName}}") {{/isQueryParam}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}} {{! "-last" to avoid putting a comma at the if there are no contexts }}
+        {{#hasParamsAndContexts}},{{/hasParamsAndContexts}}
+        {{#contextsToInclude}}{{this}}{{^-last}},{{/-last}}{{/contextsToInclude}}
+        );
+
+{{/operation}}
+} {{/operations}}

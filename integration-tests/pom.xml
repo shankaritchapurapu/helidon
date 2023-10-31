@@ -16,5 +16,6 @@
 
     <modules>
         <module>oci-request-id-test</module>
+        <module>oci-swagger-maven-plugin-test</module>
     </modules>
 </project>
