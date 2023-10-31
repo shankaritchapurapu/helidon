@@ -23,7 +23,6 @@ module io.helidon.integrations.oci.requestid {
     requires io.helidon.logging.common;
     requires io.helidon.microprofile.server;
 
-    requires oci.service.core;
     requires request.id;
     requires java.logging;
 

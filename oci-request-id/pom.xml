@@ -32,10 +32,6 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.oci.sfw</groupId>
-            <artifactId>oci-service-core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>request-id</artifactId>
         </dependency>
