@@ -29,6 +29,7 @@
         <module>repackaged-oci</module>
         <module>oci-request-id</module>
         <module>oci-error-code</module>
+        <module>oci-swagger-maven-plugin</module>
         <module>integration-tests</module>
     </modules>
 
@@ -142,6 +143,11 @@
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-request-id</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
