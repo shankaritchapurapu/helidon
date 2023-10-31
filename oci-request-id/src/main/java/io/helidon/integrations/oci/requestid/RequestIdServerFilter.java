@@ -16,9 +16,8 @@
 
 package io.helidon.integrations.oci.requestid;
 
-import com.oracle.oci.sfw.netty.request.id.OpcRequestIdGenerator;
-
 import io.helidon.common.context.Contexts;
+import io.helidon.integrations.oci.requestid.generator.OpcRequestIdGenerator;
 import io.helidon.logging.common.HelidonMdc;
 
 import javax.annotation.Priority;
