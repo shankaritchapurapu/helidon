@@ -4,7 +4,7 @@
 Integration tests for common modules.
 
 ## Prerequisites
-- JDK 17 or higher
+- JDK 11 or higher
 - Maven 3.6.1 or higher
 
 ## Configuration

@@ -11,7 +11,7 @@ If, however, you are part of the customer or service enclave, and you have need 
 libraries that OCI teams produce (that are not part of the public OCI SDK), then you are at the right place here.
 
 ## Prerequisites
-- JDK 17 or higher
+- JDK 11 or higher
 - Maven 3.6.1 or higher
 - Helidon 2.6.3 or higher
 
