@@ -10,8 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>helidon-oci-swagger-maven-plugin-test</artifactId>
-    <version>0.0.0</version>
-
+    <name>Integration Test: Helidon OCI Swagger Maven Plugin</name>
     <description>Verifies code produced by the code generator compiles</description>
 
     <properties>
@@ -123,7 +122,7 @@
                         <configuration>
                             <basePackage>com.oracle.test</basePackage>
                             <language>oracle-java-helidon-service</language>
-                            <specPath>reference-spec.yaml</specPath>
+                            <specPath>${project.basedir}/reference-spec.yaml</specPath>
                             <additionalProperties>
                                 <!-- Telling SDK and generator to use Jakarta namespace or not -->
                                 <useJakartaAnnotations>false</useJakartaAnnotations>

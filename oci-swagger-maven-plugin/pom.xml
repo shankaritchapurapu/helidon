@@ -5,8 +5,8 @@
 
 	<groupId>com.oracle.helidon.oci</groupId>
 	<artifactId>helidon-oci-swagger-maven-plugin</artifactId>
-	<!-- Release versions are updated automatically by the build service. Do not change this value. -->
-	<version>0.0.0</version>
+	<version>1.0-SNAPSHOT</version>
+	<name>Helidon OCI Swagger Maven Plugin</name>
 	<packaging>maven-plugin</packaging>
 
 	<properties>
