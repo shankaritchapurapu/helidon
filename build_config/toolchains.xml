@@ -4,10 +4,10 @@
     <toolchain>
         <type>jdk</type>
         <provides>
-            <version>17</version>
+            <version>11</version>
         </provides>
         <configuration>
-            <jdkHome>/usr/lib/jvm/jdk-17.0.1</jdkHome>
+            <jdkHome>/usr/lib/jvm/jdk-11.0.2</jdkHome>
         </configuration>
     </toolchain>
 </toolchains>

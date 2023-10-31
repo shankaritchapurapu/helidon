@@ -5,7 +5,7 @@ This module provides support for error codes described in
 in [OCI Error Codes](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEX&title=Error+Codes).
 
 ## Prerequisites
-- JDK 17 or higher
+- JDK 11 or higher
 - Maven 3.6.1 or higher
 
 ## Configuration
