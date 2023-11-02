@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.oracle.helidon.integrations.oci.errorcode;
 
-import com.oracle.helidon.integrations.oci.requestid.RequestIdAutoDiscoverable;
+import javax.ws.rs.ConstrainedTo;
+import javax.ws.rs.RuntimeType;
+import javax.ws.rs.core.FeatureContext;
+import org.glassfish.jersey.internal.spi.AutoDiscoverable;
 
 /**
- * Helidon support for opc-request-id.
+ * Registers exception mapper to support error code mapping. This class will be
+ * automatically loaded by Jersey using the Java service loader mechanism.
  */
-module com.oracle.helidon.integrations.oci.requestid {
-    requires java.ws.rs;
+@ConstrainedTo(RuntimeType.SERVER)
+public class ErrorCodeAutoDiscoverable implements AutoDiscoverable {
 
-    requires io.helidon.logging.common;
-    requires io.helidon.microprofile.server;
-
-    requires request.id;
-    requires java.logging;
-
-    exports com.oracle.helidon.integrations.oci.requestid;
-
-    provides org.glassfish.jersey.internal.spi.AutoDiscoverable
-            with RequestIdAutoDiscoverable;
+    @Override
+    public void configure(FeatureContext context) {
+        context.register(ErrorCodeExceptionMapper.class);
+    }
 }
