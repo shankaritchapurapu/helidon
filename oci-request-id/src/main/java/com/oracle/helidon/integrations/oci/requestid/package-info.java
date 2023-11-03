@@ -14,22 +14,7 @@
  * limitations under the License.
  */
 
-import com.oracle.helidon.integrations.oci.requestid.RequestIdAutoDiscoverable;
-
 /**
- * Helidon support for opc-request-id.
+ * Support for opc-request-id header.
  */
-module com.oracle.helidon.integrations.oci.requestid {
-    requires java.ws.rs;
-
-    requires io.helidon.logging.common;
-    requires io.helidon.microprofile.server;
-
-    requires request.id;
-    requires java.logging;
-
-    exports com.oracle.helidon.integrations.oci.requestid;
-
-    provides org.glassfish.jersey.internal.spi.AutoDiscoverable
-            with RequestIdAutoDiscoverable;
-}
+package com.oracle.helidon.integrations.oci.requestid;

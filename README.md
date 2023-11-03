@@ -7,7 +7,7 @@ These libraries are additions to what is found in our public [gitHub repository]
 If you are building a service "built on public OCI SDK and public-facing services" then you can use
 our [public quickstart for building OCI applications](https://helidon.io/starter/2.6.3?step=2&flavor=mp) instead of this repo.
 
-If, however, you are part of the customer or service enclave, and you have need to integrate to the native/private
+If, however, you are part of the customer or service enclave, and you need to integrate to the native/private
 libraries that OCI teams produce (that are not part of the public OCI SDK), then you are at the right place here.
 
 ## Prerequisites
