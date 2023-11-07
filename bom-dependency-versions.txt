@@ -1,3 +1,11 @@
 
-This project does not have any properties associated with versions.
+The following version properties are referencing the newest available version:
+  ${oci-java-sdk-version} ...................................... 3.28.1
+  ${oracle-identity-version} .................................. 3.0.228
+  ${secret-service-cp-java-client-version} ...................... 1.1.4
+  ${vault-java-sdk-version} ..................................... 2.0.2
+  ${vault-user-java-client-version} ............................. 1.0.1
+The following version property updates are available:
+  ${commons-request-id-version} ...................... 1.1.45 -> 1.1.46
+  ${oracle-identity-common-version}  2.1.0.465 -> 2.2.0-rmnikam_common_jdk17_uptake.4
 
