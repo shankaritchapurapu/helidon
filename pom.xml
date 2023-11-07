@@ -21,6 +21,7 @@
         <module>oci-request-id</module>
         <module>oci-error-code</module>
         <module>oci-swagger-maven-plugin</module>
+        <module>bom</module>
         <module>integration-tests</module>
     </modules>
 
