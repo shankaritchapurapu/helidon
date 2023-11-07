@@ -177,4 +177,11 @@
             <url>https://artifactory.oci.oraclecorp.com/libs-release</url>
         </repository>
     </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>libs-release</id>
+            <name>Libs release in Artifactory</name>
+            <url>https://artifactory.oci.oraclecorp.com/libs-release</url>
+        </pluginRepository>
+    </pluginRepositories>
 </project>
