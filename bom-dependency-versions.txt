@@ -1,0 +1,6 @@
+
+The following version properties are referencing the newest available version:
+  ${oci-internal-bom-version} ................................. 2.0.188
+  ${oci-java-sdk-version} ...................................... 3.28.1
+All version properties are referencing the newest version available.
+

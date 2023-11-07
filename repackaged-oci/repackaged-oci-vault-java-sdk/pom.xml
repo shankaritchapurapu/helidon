@@ -14,15 +14,10 @@
 
     <name>Repackaged: OCI vault-java-sdk</name>
 
-    <properties>
-        <version.lib.oci.vault.java.sdk>2.0.3</version.lib.oci.vault.java.sdk>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.oracle.pic.vault</groupId>
             <artifactId>vault-java-sdk</artifactId>
-<!--            <version>${version.lib.oci.vault.java.sdk}</version>-->
             <exclusions>
                 <!-- replaced by "our" version below -->
                 <exclusion>
