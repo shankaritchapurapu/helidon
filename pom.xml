@@ -3,27 +3,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.helidon.applications</groupId>
-        <artifactId>helidon-applications</artifactId>
-        <version>2.6.4</version>
-        <relativePath/>
+        <groupId>com.oracle.helidon.oci</groupId>
+        <artifactId>helidon-oci-dependencies</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>./dependencies/pom.xml</relativePath>
     </parent>
 
-    <groupId>com.oracle.helidon.oci</groupId>
     <artifactId>helidon-oci-project</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Helidon OCI Pegasus Native Integrations</name>
+    <name>Helidon OCI Pegasus Native Integrations Project</name>
 
     <properties>
-        <!-- Versions for libraries used in build -->
-        <oci-internal-bom-version>2.0.188</oci-internal-bom-version>
-<!--        <oci-java-sdk-version>${version.lib.oci}</oci-java-sdk-version>-->
-        <oci-java-sdk-version>3.28.1</oci-java-sdk-version>
-
-        <version.lib.mockito>2.23.4</version.lib.mockito>
-
         <version.plugin.helidon-build-tools>3.0.5</version.plugin.helidon-build-tools>
         <version.plugin.helidon-build-tools.enforcer>4.0.0</version.plugin.helidon-build-tools.enforcer>
         <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
@@ -34,8 +26,9 @@
         <version.plugin.maven-javadoc-plugin>2.10.4</version.plugin.maven-javadoc-plugin>
         <version.plugin.maven-versions-plugin>2.16.1</version.plugin.maven-versions-plugin>
     </properties>
-
+    
     <modules>
+        <module>dependencies</module>
         <module>repackaged-oci</module>
         <module>oci-request-id</module>
         <module>oci-error-code</module>
@@ -114,6 +107,7 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>org.commonjava.maven.plugins</groupId>
@@ -196,91 +190,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <dependencyManagement>
-        <dependencies>
-            <!-- See https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-internal-dependency-management/browse/oci-internal-bom/pom.xml -->
-            <dependency>
-                <groupId>com.oracle.pic.sfw</groupId>
-                <artifactId>oci-internal-bom</artifactId>
-                <version>${oci-internal-bom-version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <!-- BEGIN Copied from https://bitbucket.oci.oraclecorp.com/projects/SDK/repos/bmc-sdk-swagger/browse/bmc-sdk-clients/bmc-sdk-java-client-parent/pom.xml?at=refs%2Ftags%2F2.22-3.23.2 -->
-            <dependency>
-                <groupId>com.oracle.oci.sdk</groupId>
-                <artifactId>oci-java-sdk-common</artifactId>
-                <version>${oci-java-sdk-version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.bouncycastle</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.commons</groupId>
-                        <artifactId>commons-lang3</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.glassfish.hk2</groupId>
-                        <artifactId>hk2-locator</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-io</groupId>
-                        <artifactId>commons-io</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-codec</groupId>
-                        <artifactId>commons-codec</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.oci.sdk</groupId>
-                <artifactId>oci-java-sdk-common-httpclient</artifactId>
-                <version>${oci-java-sdk-version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.oci.sdk</groupId>
-                <artifactId>oci-java-sdk-common-httpclient-jersey3</artifactId>
-                <version>${oci-java-sdk-version}</version>
-            </dependency>
-
-            <!-- our module definitions -->
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-error-code</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-request-id</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- repackaged module definitions -->
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-vault-java-sdk</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <repositories>
         <repository>
