@@ -6,6 +6,7 @@
         <groupId>io.helidon.applications</groupId>
         <artifactId>helidon-applications</artifactId>
         <version>2.6.4</version>
+        <relativePath/>
     </parent>
     <groupId>com.oracle.helidon.oci</groupId>
     <artifactId>helidon-oci-dependencies</artifactId>
@@ -21,7 +22,6 @@
         <oci-java-sdk-version>3.28.1</oci-java-sdk-version>
 
         <!-- <oci-internal-bom-version>2.0.188</oci-internal-bom-version>-->
-        <oracle-identity-version>3.0.228</oracle-identity-version>
         <oracle-identity-version>3.0.228</oracle-identity-version>
         <oracle-identity-common-version>2.1.0.465</oracle-identity-common-version>
 <!--        <oracle-identity-policy-version>3.1.194</oracle-identity-policy-version>-->
@@ -60,23 +60,32 @@
             <!-- Identity
                     Confluence: https://confluence.oci.oraclecorp.com/x/GV0cB
                     Phonebook link: https://devops.oci.oraclecorp.com/phonebook/identity-cloud-service
-                    IF you get a version conflict for other repos outside these 3, exclude them from their
-                    respective imports in your pom
-                  -->
+                    https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/authorization/sdk/
+            -->
             <dependency>
                 <groupId>com.oracle.pic.identity.authorization</groupId>
                 <artifactId>sdk</artifactId>
                 <version>${oracle-identity-version}</version>
-                <!-- -com.oracle.pic.identity.authorization:sdk:2.0.136 conflicts with oci-java-sdk-common:2.24.0-->
                 <exclusions>
                     <exclusion>
                         <groupId>javax.annotation</groupId>
                         <artifactId>javax.annotation-api</artifactId>
                     </exclusion>
-                    <!-- com.oracle.pic.identity.authorization:sdk 2.1.194 conflicts with com.oracle.pic.identity.policy:protocols:3.1.191 -->
                     <exclusion>
                         <groupId>com.oracle.pic.identity.policy</groupId>
                         <artifactId>protocols</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.inject</groupId>
+                        <artifactId>javax.inject</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.validation</groupId>
+                        <artifactId>validation-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>javax.servlet-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -327,31 +336,6 @@
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <inherited>false</inherited> <!-- We only want to run this plugin in this pom, and not every module. -->
-                <executions>
-                    <execution>
-                        <id>Remove old BOM update</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>rm</executable>
-                            <arguments>
-                                <argument>${top.parent.basedir}/bom-dependency-versions.txt</argument>
-                            </arguments>
-                            <successCodes>
-                                <!-- Don't fail if the file isn't there -->
-                                <successCode>0</successCode>
-                                <successCode>1</successCode>
-                            </successCodes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
                 <executions>
                     <execution>
@@ -362,14 +346,6 @@
                         <configuration>
                             <!--suppress UnresolvedMavenProperty -->
                             <rulesUri>file://${top.parent.basedir}/build_config/maven-version-rules.xml</rulesUri>
-                            <includeProperties>oci-java-sdk-version,
-                                oracle-identity-version,
-                                oracle-identity-common-version,
-                                commons-request-id-version,
-                                vault-java-sdk-version,
-                                vault-user-java-client-version,
-                                secret-service-cp-java-client-version
-                            </includeProperties>
                             <allowIncrementalUpdates>true</allowIncrementalUpdates>
                             <allowMinorUpdates>true</allowMinorUpdates>
                             <allowMajorUpdates>true</allowMajorUpdates>
