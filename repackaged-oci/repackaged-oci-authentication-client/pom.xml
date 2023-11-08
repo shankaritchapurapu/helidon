@@ -33,23 +33,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>enforce-jakarta-dependencies</id>-->
-<!--                        <goals>-->
-<!--                            <goal>enforce</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <rules>-->
-<!--                                <helidonDependenciesRule>-->
-<!--                                    <excludedGavRegExs>-->
-<!--                                        <excludedGavRegExs>jakarta.servlet:jakarta.servlet-api:4.0.4</excludedGavRegExs>-->
-<!--                                    </excludedGavRegExs>-->
-<!--                                </helidonDependenciesRule>-->
-<!--                            </rules>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
             </plugin>
         </plugins>
     </build>
