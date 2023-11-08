@@ -23,20 +23,19 @@
 
         <oracle-identity-version>3.0.230</oracle-identity-version>
         <oracle-identity-common-version>2.1.0.465</oracle-identity-common-version>
-        <commons-request-id-version>1.1.45</commons-request-id-version>
+        <commons-request-id-version>1.1.46</commons-request-id-version>
 
         <!-- 2.0.3 relies on oci-java-sdk 3.x(line 36), we are going to stay on this version before we update java-sdk -->
-        <vault-java-sdk-version>2.0.2</vault-java-sdk-version>
-        <vault-user-java-client-version>1.0.1</vault-user-java-client-version>
+        <vault-java-sdk-version>2.0.3</vault-java-sdk-version>
+        <vault-user-java-client-version>1.0.2</vault-user-java-client-version>
         <secret-service-cp-java-client-version>1.1.4</secret-service-cp-java-client-version>
 
         <version.lib.mockito>2.23.4</version.lib.mockito>
 
         <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
-        <version.plugin.helidon-build-tools>3.0.5</version.plugin.helidon-build-tools>
-        <version.plugin.helidon-build-tools.enforcer>4.0.0</version.plugin.helidon-build-tools.enforcer>
+        <version.plugin.helidon-build-tools>2.3.8</version.plugin.helidon-build-tools>
         <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
-        <version.plugin.maven-build-helper-plugin>3.0.0</version.plugin.maven-build-helper-plugin>
+        <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
         <version.plugin.maven-directory-plugin>1.0</version.plugin.maven-directory-plugin>
         <version.plugin.maven-enforcer-plugin>3.4.1</version.plugin.maven-enforcer-plugin>
         <version.plugin.maven-exec-plugin>3.1.0</version.plugin.maven-exec-plugin>
@@ -318,7 +317,7 @@
                         <dependency>
                             <groupId>io.helidon.build-tools</groupId>
                             <artifactId>helidon-build-maven-enforcer-rules</artifactId>
-                            <version>${version.plugin.helidon-build-tools.enforcer}</version>
+                            <version>${version.plugin.helidon-build-tools}</version>
                         </dependency>
                         <dependency>
                             <groupId>com.oracle.oci.sdk</groupId>
