@@ -3,172 +3,26 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.helidon.applications</groupId>
-        <artifactId>helidon-applications</artifactId>
-        <version>2.6.3</version>
-        <relativePath/>
+        <groupId>com.oracle.helidon.oci</groupId>
+        <artifactId>helidon-oci-dependencies</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>./dependencies/pom.xml</relativePath>
     </parent>
 
-    <groupId>com.oracle.helidon.oci</groupId>
     <artifactId>helidon-oci-project</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Helidon OCI Pegasus Native Integrations</name>
-
-    <properties>
-        <version.lib.mockito>2.23.4</version.lib.mockito>
-        <version.lib.oci-internal-bom>1.3.171</version.lib.oci-internal-bom>
-        <version.lib.oci-java-sdk-common>3.26.0</version.lib.oci-java-sdk-common>
-        <version.plugin.helidon-build-tools>3.0.5</version.plugin.helidon-build-tools>
-        <version.plugin.helidon-build-tools.enforcer>4.0.0</version.plugin.helidon-build-tools.enforcer>
-        <version.plugin.maven-enforcer-plugin>3.4.1</version.plugin.maven-enforcer-plugin>
-    </properties>
+    <name>Helidon OCI Pegasus Native Integrations Project</name>
 
     <modules>
+        <module>dependencies</module>
         <module>repackaged-oci</module>
         <module>oci-request-id</module>
         <module>oci-error-code</module>
         <module>oci-swagger-maven-plugin</module>
         <module>integration-tests</module>
     </modules>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>io.helidon.build-tools</groupId>
-                    <artifactId>helidon-services-plugin</artifactId>
-                    <version>${version.plugin.helidon-build-tools}</version>
-                    <configuration>
-                        <mode>fail</mode>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>generate-meta-inf-services</id>
-                            <phase>compile</phase>
-                            <goals>
-                                <goal>services</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>${version.plugin.maven-enforcer-plugin}</version>
-                    <dependencies>
-                        <!-- dependencies to your artifact contains rule implementation -->
-                        <dependency>
-                            <groupId>io.helidon.build-tools</groupId>
-                            <artifactId>helidon-build-maven-enforcer-rules</artifactId>
-                            <version>${version.plugin.helidon-build-tools.enforcer}</version>
-                        </dependency>
-                    </dependencies>
-                    <executions>
-                        <execution>
-                            <id>enforce-jakarta-dependencies</id>
-                            <goals>
-                                <goal>enforce</goal>
-                            </goals>
-                            <configuration>
-                                <rules>
-                                    <helidonDependenciesRule>
-                                        <namespace>JAVAX</namespace>
-                                        <excludedGavRegExs/>
-                                    </helidonDependenciesRule>
-                                </rules>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.oracle.pic.sfw</groupId>
-                <artifactId>oci-internal-bom</artifactId>
-                <version>${version.lib.oci-internal-bom}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <!-- BEGIN Copied from https://bitbucket.oci.oraclecorp.com/projects/SDK/repos/bmc-sdk-swagger/browse/bmc-sdk-clients/bmc-sdk-java-client-parent/pom.xml?at=refs%2Ftags%2F2.22-3.23.2 -->
-            <dependency>
-                <groupId>com.oracle.oci.sdk</groupId>
-                <artifactId>oci-java-sdk-common</artifactId>
-                <version>${version.lib.oci-java-sdk-common}</version>
-                <exclusions>
-<!--                    <exclusion>-->
-<!--                        <groupId>org.bouncycastle</groupId>-->
-<!--                        <artifactId>*</artifactId>-->
-<!--                    </exclusion>-->
-                    <exclusion>
-                        <groupId>org.apache.commons</groupId>
-                        <artifactId>commons-lang3</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.glassfish.hk2</groupId>
-                        <artifactId>hk2-locator</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-io</groupId>
-                        <artifactId>commons-io</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-codec</groupId>
-                        <artifactId>commons-codec</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.oci.sdk</groupId>
-                <artifactId>oci-java-sdk-common-httpclient</artifactId>
-                <version>${version.lib.oci-java-sdk-common}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.oci.sdk</groupId>
-                <artifactId>oci-java-sdk-common-httpclient-jersey3</artifactId>
-                <version>${version.lib.oci-java-sdk-common}</version>
-            </dependency>
-
-            <!-- our module definitions -->
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-error-code</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-request-id</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- repackaged module definitions -->
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-vault-java-sdk</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <repositories>
         <repository>

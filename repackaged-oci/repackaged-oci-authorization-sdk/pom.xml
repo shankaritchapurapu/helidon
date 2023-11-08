@@ -11,41 +11,21 @@
     </parent>
     <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <name>Repackaged: OCI authorization-sdk</name>
-
-    <properties>
-        <version.lib.oci.authorization.sdk>3.0.225</version.lib.oci.authorization.sdk>
-        <version.lib.pic.identity.common>2.1.0.467</version.lib.pic.identity.common>
-    </properties>
 
     <dependencies>
         <!-- https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/authorization/sdk/ -->
         <dependency>
             <groupId>com.oracle.pic.identity.authorization</groupId>
             <artifactId>sdk</artifactId>
-            <version>${version.lib.oci.authorization.sdk}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.inject</groupId>
-                    <artifactId>javax.inject</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.validation</groupId>
-                    <artifactId>validation-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>javax.servlet-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/common/ -->
         <dependency>
             <groupId>com.oracle.pic.identity</groupId>
             <artifactId>common</artifactId>
-            <version>${version.lib.pic.identity.common}</version>
             <exclusions>
                 <!-- extra exclusions besides the ones we copied below-->
                 <exclusion>

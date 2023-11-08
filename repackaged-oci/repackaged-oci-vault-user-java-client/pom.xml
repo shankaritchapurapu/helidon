@@ -14,7 +14,7 @@
 
     <name>Repackaged: OCI vault-user-java-client</name>
 
-    <!-- SEE https://bitbucket.oci.oraclecorp.com/projects/VAULT/repos/vault-user-java-client/pull-requests/30 -->
+    <!-- See https://bitbucket.oci.oraclecorp.com/projects/VAULT/repos/vault-user-java-client/pull-requests/30 -->
 
     <!--
        Unfortunately, we cannot use a different parent POM here
@@ -32,17 +32,13 @@
     -->
 
     <properties>
-        <jakarta.annotation.version>2.1.1</jakarta.annotation.version>
-        <lombok-maven-plugin.version>1.18.20.0</lombok-maven-plugin.version>
-        <maven-dependency-plugin.version>2.10</maven-dependency-plugin.version>
-        <maven-build-helper-maven-plugin.version>3.0.0</maven-build-helper-maven-plugin.version>
-        <maven-javadoc-plugin.version>2.10.4</maven-javadoc-plugin.version>
+        <!-- Override of https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-internal-dependency-management/browse/oci-internal-bom/pom.xml -->
+        <vault-user-java-client-version>2.0.3</vault-user-java-client-version>
 
-        <vault-user-api-spec.version>1.0.1</vault-user-api-spec.version>
-<!--        <oci-java-sdk-common.version>3.23.2</oci-java-sdk-common.version>-->
-
-        <!-- Update this to the latest versions. -->
         <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
+
+        <!-- Overrides -->
+        <version.lib.annotation-api>2.1.1</version.lib.annotation-api>
 
         <codegen.base.package.name>com.oracle.pic.vault</codegen.base.package.name>
         <codegen.artifactory.groupId>com.oracle.pic.vault</codegen.artifactory.groupId>
@@ -55,44 +51,10 @@
         <codegen.specGenerationType>INTERNAL</codegen.specGenerationType>
     </properties>
 
-    <!-- see parent for the below -->
-<!--    <dependencyManagement>-->
-<!--        <dependencies>-->
-<!--            <dependency>-->
-<!--                <groupId>com.oracle.oci.sdk</groupId>-->
-<!--                <artifactId>oci-java-sdk-common</artifactId>-->
-<!--                <version>${oci-java-sdk-common.version}</version>-->
-<!--                <exclusions>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>org.bouncycastle</groupId>-->
-<!--                        <artifactId>*</artifactId>-->
-<!--                    </exclusion>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>org.apache.commons</groupId>-->
-<!--                        <artifactId>commons-lang3</artifactId>-->
-<!--                    </exclusion>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>org.glassfish.hk2</groupId>-->
-<!--                        <artifactId>hk2-locator</artifactId>-->
-<!--                    </exclusion>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>commons-io</groupId>-->
-<!--                        <artifactId>commons-io</artifactId>-->
-<!--                    </exclusion>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>commons-codec</groupId>-->
-<!--                        <artifactId>commons-codec</artifactId>-->
-<!--                    </exclusion>-->
-<!--                </exclusions>-->
-<!--            </dependency>-->
-<!--        </dependencies>-->
-<!--    </dependencyManagement>-->
-
     <dependencies>
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <version>${jakarta.annotation.version}</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
@@ -109,7 +71,6 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
-                    <version>${maven-dependency-plugin.version}</version>
                     <executions>
                         <execution>
                             <id>get-spec-from-artifactory</id>
@@ -183,7 +144,6 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>${maven-build-helper-maven-plugin.version}</version>
                     <executions>
                         <execution>
                             <id>add-source-root</id>
@@ -202,7 +162,6 @@
                 <plugin>
                     <groupId>org.projectlombok</groupId>
                     <artifactId>lombok-maven-plugin</artifactId>
-                    <version>${lombok-maven-plugin.version}</version>
                     <executions>
                         <execution>
                             <id>delombok</id>
@@ -231,7 +190,6 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>${maven-javadoc-plugin.version}</version>
                     <goals>
                         <goal>jar</goal>
                     </goals>
