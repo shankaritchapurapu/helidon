@@ -21,11 +21,8 @@
         <!-- <oci-java-sdk-version>${version.lib.oci}</oci-java-sdk-version>-->
         <oci-java-sdk-version>3.28.1</oci-java-sdk-version>
 
-        <!-- <oci-internal-bom-version>2.0.188</oci-internal-bom-version>-->
-        <oracle-identity-version>3.0.228</oracle-identity-version>
+        <oracle-identity-version>3.0.230</oracle-identity-version>
         <oracle-identity-common-version>2.1.0.465</oracle-identity-common-version>
-<!--        <oracle-identity-policy-version>3.1.194</oracle-identity-policy-version>-->
-<!--        <oracle-identity-metadata-version>1.0.31</oracle-identity-metadata-version>-->
         <commons-request-id-version>1.1.45</commons-request-id-version>
 
         <!-- 2.0.3 relies on oci-java-sdk 3.x(line 36), we are going to stay on this version before we update java-sdk -->
@@ -35,6 +32,7 @@
 
         <version.lib.mockito>2.23.4</version.lib.mockito>
 
+        <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
         <version.plugin.helidon-build-tools>3.0.5</version.plugin.helidon-build-tools>
         <version.plugin.helidon-build-tools.enforcer>4.0.0</version.plugin.helidon-build-tools.enforcer>
         <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
@@ -62,6 +60,7 @@
                     Phonebook link: https://devops.oci.oraclecorp.com/phonebook/identity-cloud-service
                     https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/authorization/sdk/
             -->
+            <!-- see repackaged-oci-authorization-sdk -->
             <dependency>
                 <groupId>com.oracle.pic.identity.authorization</groupId>
                 <artifactId>sdk</artifactId>
@@ -87,7 +86,21 @@
                         <groupId>javax.servlet</groupId>
                         <artifactId>javax.servlet-api</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.oci.sdk</groupId>
+                        <artifactId>oci-java-sdk-addons-apache</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.oci.sdk</groupId>
+                        <artifactId>oci-java-sdk-addons-internal</artifactId>
+                    </exclusion>
                 </exclusions>
+            </dependency>
+            <!-- see repackaged-oci-authentication-client -->
+            <dependency>
+                <groupId>com.oracle.pic.identity.authentication</groupId>
+                <artifactId>authentication-client</artifactId>
+                <version>${oracle-identity-version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.pic.identity</groupId>
@@ -144,13 +157,38 @@
                         <groupId>com.oracle.pic.flightssettings</groupId>
                         <artifactId>flight-setting</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>io.dropwizard</groupId>
+                        <artifactId>dropwizard-logging</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.dropwizard</groupId>
+                        <artifactId>dropwizard-lifecycle</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.dropwizard</groupId>
+                        <artifactId>dropwizard-util</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.identity.policy</groupId>
+                <artifactId>parser</artifactId>
+                <version>${oracle-identity-common-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.dropwizard</groupId>
+                        <artifactId>dropwizard-util</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
             <dependency>
                 <groupId>com.oracle.pic.commons</groupId>
                 <artifactId>request-id</artifactId>
                 <version>${commons-request-id-version}</version>
             </dependency>
+
             <!-- Secret Service
                    Confluence: https://confluence.oci.oraclecorp.com/x/tajZ
                    Phonebook link: https://devops.oci.oraclecorp.com/phonebook/secret-management-service
@@ -282,6 +320,17 @@
                             <artifactId>helidon-build-maven-enforcer-rules</artifactId>
                             <version>${version.plugin.helidon-build-tools.enforcer}</version>
                         </dependency>
+                        <dependency>
+                            <groupId>com.oracle.oci.sdk</groupId>
+                            <artifactId>oci-java-sdk-enforcer-rules</artifactId>
+                            <version>${oci-java-sdk-version}</version>
+                            <optional>false</optional>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>extra-enforcer-rules</artifactId>
+                            <version>${version.plugin.extra-enforcer-rules}</version>
+                        </dependency>
                     </dependencies>
                     <executions>
                         <execution>
@@ -295,6 +344,20 @@
                                         <namespace>JAVAX</namespace>
                                         <excludedGavRegExs/>
                                     </helidonDependenciesRule>
+                                    <bannedDependencies>
+                                        <excludes>
+                                            <exclude>io.dropwizard</exclude>
+                                            <exclude>com.oracle.pic.commons:service-core</exclude>
+                                        </excludes>
+                                    </bannedDependencies>
+                                    <!-- TODO: https://bitbucket.oci.oraclecorp.com/projects/SDK/repos/java-sdk/pull-requests/5217/overview -->
+                                    <noMixedOciJavaSdkVersionsRule implementation="com.oracle.bmc.enforcer.rule.NoMixedOciJavaSdkVersionsRule">
+                                        <allowedDependencies>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common:.*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:.*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common-httpclient:.*</allowedDependency>
+                                        </allowedDependencies>
+                                    </noMixedOciJavaSdkVersionsRule>
                                 </rules>
                             </configuration>
                         </execution>
