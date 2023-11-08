@@ -11,6 +11,7 @@
     </parent>
     <artifactId>repackaged-oci-vault-java-sdk</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <name>Repackaged: OCI vault-java-sdk</name>
 
