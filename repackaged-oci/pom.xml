@@ -16,6 +16,7 @@
     <modules>
         <module>repackaged-oci-authentication-client</module>
         <module>repackaged-oci-authorization-sdk</module>
+        <module>repackaged-oci-authproxy-fillter</module>
         <module>repackaged-oci-vault-java-sdk</module>
         <module>repackaged-oci-vault-user-java-client</module>
     </modules>
