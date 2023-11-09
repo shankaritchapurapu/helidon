@@ -16,6 +16,8 @@
     <description>Maven dependency management for Helidon OCI native applications</description>
 
     <properties>
+        <helidon.version>2.6.4</helidon.version>
+        <version.lib.cdi-api>2.0.2</version.lib.cdi-api>
         <!-- Versions for libraries used in build -->
         <!-- <oci-java-sdk-version>${version.lib.oci}</oci-java-sdk-version>-->
         <oci-java-sdk-version>3.28.1</oci-java-sdk-version>
