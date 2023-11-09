@@ -117,7 +117,9 @@
                                 <rules>
                                     <helidonDependenciesRule>
                                         <namespace>JAVAX</namespace>
-                                        <excludedGavRegExs/>
+                                        <excludedGavRegExs>
+                                            <excludedGav>javax.servlet:javax.servlet-api:.*</excludedGav>
+                                        </excludedGavRegExs>
                                     </helidonDependenciesRule>
                                     <bannedDependencies>
                                         <excludes>
@@ -131,6 +133,7 @@
                                             <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common:.*</allowedDependency>
                                             <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:.*</allowedDependency>
                                             <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common-httpclient:.*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-objectstorage-generated:.*</allowedDependency>
                                         </allowedDependencies>
                                     </noMixedOciJavaSdkVersionsRule>
                                 </rules>
