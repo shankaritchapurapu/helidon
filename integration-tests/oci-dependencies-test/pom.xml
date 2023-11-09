@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.oracle.helidon.oci</groupId>
+        <artifactId>helidon-oci-integration-tests</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>helidon-oci-dependencies-test</artifactId>
+    <name>OCI Dependencies Test</name>
+    <packaging>pom</packaging>
+    <description>These ensure that downstream usages of our ${basedir}/dependencies/pom.xml will work properly</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>exception-mapping</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.log</groupId>
+            <artifactId>oci-logging-lib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-common-httpclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-common-httpclient-jersey</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-common-httpclient-jersey3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-loggingingestion</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-monitoring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.authproxy</groupId>
+            <artifactId>authproxy-filter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>request-id</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.identity</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.identity.authorization</groupId>
+            <artifactId>sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.identity.authentication</groupId>
+            <artifactId>authentication-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.identity.policy</groupId>
+            <artifactId>parser</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.vault</groupId>
+            <artifactId>vault-java-sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.vault</groupId>
+            <artifactId>vault-user-java-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.secinf</groupId>
+            <artifactId>secret-service-cp-java-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.helidon.integrations.oci.sdk</groupId>
+            <artifactId>helidon-integrations-oci-sdk-cdi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+        </dependency>
+
+        <!-- our repackaged module definitions -->
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-authentication-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-authproxy-filter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-vault-java-sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
+        </dependency>
+
+        <!-- our module definitions -->
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-error-code</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-request-id</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- the enforcer is acting as our test here -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
