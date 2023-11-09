@@ -21,14 +21,13 @@
         <!-- <oci-java-sdk-version>${version.lib.oci}</oci-java-sdk-version>-->
         <oci-java-sdk-version>3.28.1</oci-java-sdk-version>
 
-        <oracle-identity-version>3.0.230</oracle-identity-version>
-        <oracle-identity-common-version>2.1.0.465</oracle-identity-common-version>
-        <commons-request-id-version>1.1.46</commons-request-id-version>
-
-        <!-- 2.0.3 relies on oci-java-sdk 3.x(line 36), we are going to stay on this version before we update java-sdk -->
-        <vault-java-sdk-version>2.0.3</vault-java-sdk-version>
-        <vault-user-java-client-version>1.0.2</vault-user-java-client-version>
-        <secret-service-cp-java-client-version>1.1.4</secret-service-cp-java-client-version>
+        <oracle-internal-identity-version>3.0.230</oracle-internal-identity-version>
+        <oracle-internal-identity-common-version>2.1.0.465</oracle-internal-identity-common-version>
+        <oracle-internal-commons-request-id-version>1.1.46</oracle-internal-commons-request-id-version>
+        <oracle-internal-authproxy-filter-version>1.1.38</oracle-internal-authproxy-filter-version>
+        <oracle-internal-vault-java-sdk-version>2.0.3</oracle-internal-vault-java-sdk-version>
+        <oracle-internal-vault-user-java-client-version>1.0.2</oracle-internal-vault-user-java-client-version>
+        <oracle-internal-secret-service-cp-java-client-version>1.1.4</oracle-internal-secret-service-cp-java-client-version>
 
         <version.lib.mockito>2.23.4</version.lib.mockito>
 
@@ -63,7 +62,7 @@
             <dependency>
                 <groupId>com.oracle.pic.identity.authorization</groupId>
                 <artifactId>sdk</artifactId>
-                <version>${oracle-identity-version}</version>
+                <version>${oracle-internal-identity-version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>javax.annotation</groupId>
@@ -99,12 +98,12 @@
             <dependency>
                 <groupId>com.oracle.pic.identity.authentication</groupId>
                 <artifactId>authentication-client</artifactId>
-                <version>${oracle-identity-version}</version>
+                <version>${oracle-internal-identity-version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.pic.identity</groupId>
                 <artifactId>common</artifactId>
-                <version>${oracle-identity-common-version}</version>
+                <version>${oracle-internal-identity-common-version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.oracle.pic.identity.authorization</groupId>
@@ -173,7 +172,7 @@
             <dependency>
                 <groupId>com.oracle.pic.identity.policy</groupId>
                 <artifactId>parser</artifactId>
-                <version>${oracle-identity-common-version}</version>
+                <version>${oracle-internal-identity-common-version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>io.dropwizard</groupId>
@@ -182,12 +181,21 @@
                 </exclusions>
             </dependency>
 
+            <!-- See repackaged-oci-authproxy-filter -->
+            <!-- https://bitbucket.oci.oraclecorp.com/projects/SECINF/repos/authproxy-filter -->
+            <dependency>
+                <groupId>com.oracle.pic.authproxy</groupId>
+                <artifactId>authproxy-filter</artifactId>
+                <version>${oracle-internal-authproxy-filter-version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>com.oracle.pic.commons</groupId>
                 <artifactId>request-id</artifactId>
-                <version>${commons-request-id-version}</version>
+                <version>${oracle-internal-commons-request-id-version}</version>
             </dependency>
 
+            <!-- See repackaged-oci-vault-java-sdk -->
             <!-- Secret Service
                    Confluence: https://confluence.oci.oraclecorp.com/x/tajZ
                    Phonebook link: https://devops.oci.oraclecorp.com/phonebook/secret-management-service
@@ -195,17 +203,18 @@
             <dependency>
                 <groupId>com.oracle.pic.vault</groupId>
                 <artifactId>vault-java-sdk</artifactId>
-                <version>${vault-java-sdk-version}</version>
+                <version>${oracle-internal-vault-java-sdk-version}</version>
             </dependency>
+            <!-- See repackaged=oci-vault-user-java-client -->
             <dependency>
                 <groupId>com.oracle.pic.vault</groupId>
                 <artifactId>vault-user-java-client</artifactId>
-                <version>${vault-user-java-client-version}</version>
+                <version>${oracle-internal-vault-user-java-client-version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.pic.secinf</groupId>
                 <artifactId>secret-service-cp-java-client</artifactId>
-                <version>${secret-service-cp-java-client-version}</version>
+                <version>${oracle-internal-secret-service-cp-java-client-version}</version>
             </dependency>
 
             <!-- overrides from parent io.helidon bom -->
@@ -247,6 +256,33 @@
                 <version>${oci-java-sdk-version}</version>
             </dependency>
 
+            <!-- our repackaged module definitions -->
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-oci-authentication-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-oci-authproxy-filter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-oci-vault-java-sdk</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- our module definitions -->
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
@@ -261,23 +297,6 @@
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- our repackaged module definitions -->
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-vault-java-sdk</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
