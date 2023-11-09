@@ -35,22 +35,6 @@
     <name>Helidon OCI MP Applications</name>
     <description>Helidon OCI MP applications</description>
 
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
-        <version.plugin.compiler>3.8.1</version.plugin.compiler>
-        <version.lib.helidon>2.6.4</version.lib.helidon>
-        <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
-        <version.plugin.helidon-build-tools>2.3.8</version.plugin.helidon-build-tools>
-        <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
-        <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
-        <version.plugin.maven-directory-plugin>1.0</version.plugin.maven-directory-plugin>
-        <version.plugin.maven-enforcer-plugin>3.4.1</version.plugin.maven-enforcer-plugin>
-        <version.plugin.maven-exec-plugin>3.1.0</version.plugin.maven-exec-plugin>
-        <version.plugin.maven-javadoc-plugin>2.10.4</version.plugin.maven-javadoc-plugin>
-        <version.plugin.maven-versions-plugin>2.16.1</version.plugin.maven-versions-plugin>
-    </properties>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
