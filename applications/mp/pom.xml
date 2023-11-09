@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2023 Oracle and/or its affiliates.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.helidon.applications</groupId>
+        <artifactId>helidon-mp</artifactId>
+        <version>2.6.4</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.oracle.helidon.oci</groupId>
+    <artifactId>helidon-oci-mp</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Helidon OCI MP Applications</name>
+    <description>Helidon OCI MP applications</description>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
+        <version.plugin.compiler>3.8.1</version.plugin.compiler>
+        <version.lib.helidon>2.6.4</version.lib.helidon>
+        <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
+        <version.plugin.helidon-build-tools>2.3.8</version.plugin.helidon-build-tools>
+        <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
+        <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
+        <version.plugin.maven-directory-plugin>1.0</version.plugin.maven-directory-plugin>
+        <version.plugin.maven-enforcer-plugin>3.4.1</version.plugin.maven-enforcer-plugin>
+        <version.plugin.maven-exec-plugin>3.1.0</version.plugin.maven-exec-plugin>
+        <version.plugin.maven-javadoc-plugin>2.10.4</version.plugin.maven-javadoc-plugin>
+        <version.plugin.maven-versions-plugin>2.16.1</version.plugin.maven-versions-plugin>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-dependencies</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>
