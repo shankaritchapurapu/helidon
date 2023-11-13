@@ -15,20 +15,6 @@
  */
 
 /**
- * Helidon support for opc-request-id.
+ * Support for Error Codes and their mappings.
  */
-module com.oracle.helidon.oci.integrations.requestid {
-    requires java.ws.rs;
-
-    requires io.helidon.logging.common;
-    requires io.helidon.logging.jul;
-    requires io.helidon.microprofile.server;
-
-    requires request.id;
-    requires java.logging;
-
-    exports com.oracle.helidon.oci.integrations.requestid;
-
-    provides org.glassfish.jersey.internal.spi.AutoDiscoverable
-            with com.oracle.helidon.oci.integrations.requestid.RequestIdAutoDiscoverable;
-}
+package com.oracle.helidon.oci.integrations.errorcode;

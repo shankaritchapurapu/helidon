@@ -34,8 +34,9 @@
     <modules>
         <module>dependencies</module>
         <module>repackaged-oci</module>
-        <module>oci-request-id</module>
         <module>oci-error-code</module>
+        <module>oci-identity</module>
+        <module>oci-request-id</module>
         <module>oci-swagger-maven-plugin</module>
         <module>bom</module>
         <module>applications</module>
