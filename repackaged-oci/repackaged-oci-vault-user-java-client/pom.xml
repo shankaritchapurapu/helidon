@@ -55,6 +55,7 @@
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
+            <version>${version.lib.annotation-api}</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>

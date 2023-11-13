@@ -15,14 +15,201 @@
 
     <name>Helidon OCI Pegasus Native Integrations Project</name>
 
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
+        <version.plugin.compiler>3.8.1</version.plugin.compiler>
+        <version.lib.mockito>2.23.4</version.lib.mockito>
+        <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
+        <version.plugin.helidon-build-tools>2.3.8</version.plugin.helidon-build-tools>
+        <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
+        <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
+        <version.plugin.maven-directory-plugin>1.0</version.plugin.maven-directory-plugin>
+        <version.plugin.maven-enforcer-plugin>3.4.1</version.plugin.maven-enforcer-plugin>
+        <version.plugin.maven-exec-plugin>3.1.0</version.plugin.maven-exec-plugin>
+        <version.plugin.maven-javadoc-plugin>2.10.4</version.plugin.maven-javadoc-plugin>
+        <version.plugin.maven-versions-plugin>2.16.1</version.plugin.maven-versions-plugin>
+    </properties>
+
     <modules>
         <module>dependencies</module>
         <module>repackaged-oci</module>
         <module>oci-request-id</module>
         <module>oci-error-code</module>
         <module>oci-swagger-maven-plugin</module>
+        <module>bom</module>
+        <module>applications</module>
         <module>integration-tests</module>
     </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.helidon</groupId>
+                <artifactId>helidon-dependencies</artifactId>
+                <version>${helidon.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${version.plugin.compiler}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>${version.plugin.maven-versions-plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>io.helidon.build-tools</groupId>
+                    <artifactId>helidon-services-plugin</artifactId>
+                    <version>${version.plugin.helidon-build-tools}</version>
+                    <configuration>
+                        <mode>fail</mode>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>generate-meta-inf-services</id>
+                            <phase>compile</phase>
+                            <goals>
+                                <goal>services</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>${version.plugin.maven-enforcer-plugin}</version>
+                    <dependencies>
+                        <!-- dependencies to your artifact contains rule implementation -->
+                        <dependency>
+                            <groupId>io.helidon.build-tools</groupId>
+                            <artifactId>helidon-build-maven-enforcer-rules</artifactId>
+                            <version>${version.plugin.helidon-build-tools}</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>com.oracle.oci.sdk</groupId>
+                            <artifactId>oci-java-sdk-enforcer-rules</artifactId>
+                            <version>${oci-java-sdk-version}</version>
+                            <optional>false</optional>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>extra-enforcer-rules</artifactId>
+                            <version>${version.plugin.extra-enforcer-rules}</version>
+                        </dependency>
+                    </dependencies>
+                    <executions>
+                        <execution>
+                            <id>enforce-jakarta-dependencies</id>
+                            <goals>
+                                <goal>enforce</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <helidonDependenciesRule>
+                                        <namespace>JAVAX</namespace>
+                                        <excludedGavRegExs>
+                                            <excludedGav>javax.servlet:javax.servlet-api:.*</excludedGav>
+                                        </excludedGavRegExs>
+                                    </helidonDependenciesRule>
+                                    <bannedDependencies>
+                                        <excludes>
+                                            <exclude>io.dropwizard</exclude>
+                                            <exclude>com.oracle.pic.commons:service-core</exclude>
+                                        </excludes>
+                                    </bannedDependencies>
+                                    <!-- TODO: https://bitbucket.oci.oraclecorp.com/projects/SDK/repos/java-sdk/pull-requests/5217/overview -->
+                                    <noMixedOciJavaSdkVersionsRule implementation="com.oracle.bmc.enforcer.rule.NoMixedOciJavaSdkVersionsRule">
+                                        <allowedDependencies>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common:.*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:.*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common-httpclient:.*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-objectstorage-generated:.*</allowedDependency>
+                                        </allowedDependencies>
+                                    </noMixedOciJavaSdkVersionsRule>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.commonjava.maven.plugins</groupId>
+                    <artifactId>directory-maven-plugin</artifactId>
+                    <version>${version.plugin.maven-directory-plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>${version.plugin.maven-exec-plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>${version.plugin.maven-build-helper-plugin}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.commonjava.maven.plugins</groupId>
+                <artifactId>directory-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-top-parent-basedir</id>
+                        <goals>
+                            <goal>highest-basedir</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <property>top.parent.basedir</property>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>display-property-updates</goal>
+                        </goals>
+                        <configuration>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <rulesUri>file://${top.parent.basedir}/build_config/maven-version-rules.xml</rulesUri>
+                            <allowIncrementalUpdates>true</allowIncrementalUpdates>
+                            <allowMinorUpdates>true</allowMinorUpdates>
+                            <allowMajorUpdates>true</allowMajorUpdates>
+
+                            <!-- This files tracks dependency updates that are due -->
+                            <!-- Remove the following line if you wish to disable this tracking file feature -->
+                            <outputFile>../bom-dependency-versions.txt</outputFile>
+
+                            <!-- SNAPSHOT versions of the bom should NOT be used in production -->
+                            <allowSnapshots>false</allowSnapshots>
+
+                            <!-- Version control already keeps history of the pom file changes -->
+                            <generateBackupPoms>false</generateBackupPoms>
+
+                            <!-- We don't want to scan the dependencies within the bom -->
+                            <!-- <processDependencyManagementTransitive>false</processDependencyManagementTransitive>-->
+                        </configuration>
+                    </execution>
+                </executions>
+                <inherited>false</inherited> <!-- We only want to run this plugin in this pom, and not every module. -->
+            </plugin>
+        </plugins>
+    </build>
 
     <repositories>
         <repository>
