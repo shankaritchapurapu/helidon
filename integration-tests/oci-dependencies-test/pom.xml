@@ -139,10 +139,6 @@
         </dependency>
         <dependency>
             <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-identity</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
             <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
         </dependency>
     </dependencies>
