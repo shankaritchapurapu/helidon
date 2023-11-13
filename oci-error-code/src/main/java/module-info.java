@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import com.oracle.helidon.oci.errorcode.ErrorCodeAutoDiscoverable;
-
 /**
  * Helidon support for Error Codes.
  */
@@ -33,5 +31,5 @@ module com.oracle.helidon.oci.errorcode {
     exports com.oracle.helidon.oci.errorcode;
 
     provides org.glassfish.jersey.internal.spi.AutoDiscoverable
-            with ErrorCodeAutoDiscoverable;
+            with com.oracle.helidon.oci.errorcode.ErrorCodeAutoDiscoverable;
 }
