@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
+package com.oracle.helidon.oci.requestid;
+
 /**
- * Helidon support for opc-request-id.
+ * Some commonly used header names in OCI libraries.
  */
-module com.oracle.helidon.oci.requestid {
-    requires java.ws.rs;
+public interface OciHeaderNames {
 
-    requires io.helidon.logging.common;
-    requires io.helidon.logging.jul;
-    requires io.helidon.microprofile.server;
-
-    requires request.id;
-    requires java.logging;
-
-    exports com.oracle.helidon.oci.requestid;
-
-    provides org.glassfish.jersey.internal.spi.AutoDiscoverable
-            with com.oracle.helidon.oci.requestid.RequestIdAutoDiscoverable;
+    String OPC_REQUEST_ID = "opc-request-id";
 }

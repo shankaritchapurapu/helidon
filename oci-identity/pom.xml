@@ -9,12 +9,16 @@
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>helidon-oci-request-id</artifactId>
+    <artifactId>helidon-oci-identity</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <name>Request ID</name>
 
     <dependencies>
+        <dependency>
+            <groupId>io.helidon.security.integration</groupId>
+            <artifactId>helidon-security-integration-jersey</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.helidon.microprofile.server</groupId>
             <artifactId>helidon-microprofile-server</artifactId>
@@ -30,10 +34,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.commons</groupId>
-            <artifactId>request-id</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>

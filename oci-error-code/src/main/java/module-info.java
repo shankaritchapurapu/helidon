@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-import com.oracle.helidon.integrations.oci.errorcode.ErrorCodeAutoDiscoverable;
-
 /**
  * Helidon support for Error Codes.
  */
-module com.oracle.helidon.integrations.oci.errorcode {
+module com.oracle.helidon.oci.errorcode {
     requires java.ws.rs;
 
     requires microprofile.rest.client.api;
@@ -28,10 +26,10 @@ module com.oracle.helidon.integrations.oci.errorcode {
 
     requires com.fasterxml.jackson.annotation;
 
-    opens com.oracle.helidon.integrations.oci.errorcode to weld.core.impl, io.helidon.microprofile.cdi;
+    opens com.oracle.helidon.oci.errorcode to weld.core.impl, io.helidon.microprofile.cdi;
 
-    exports com.oracle.helidon.integrations.oci.errorcode;
+    exports com.oracle.helidon.oci.errorcode;
 
     provides org.glassfish.jersey.internal.spi.AutoDiscoverable
-            with ErrorCodeAutoDiscoverable;
+            with com.oracle.helidon.oci.errorcode.ErrorCodeAutoDiscoverable;
 }

@@ -15,20 +15,6 @@
  */
 
 /**
- * Helidon support for opc-request-id.
+ * Support for opc-request-id header.
  */
-module com.oracle.helidon.oci.requestid {
-    requires java.ws.rs;
-
-    requires io.helidon.logging.common;
-    requires io.helidon.logging.jul;
-    requires io.helidon.microprofile.server;
-
-    requires request.id;
-    requires java.logging;
-
-    exports com.oracle.helidon.oci.requestid;
-
-    provides org.glassfish.jersey.internal.spi.AutoDiscoverable
-            with com.oracle.helidon.oci.requestid.RequestIdAutoDiscoverable;
-}
+package com.oracle.helidon.oci.requestid;

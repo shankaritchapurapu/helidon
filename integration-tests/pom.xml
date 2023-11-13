@@ -16,6 +16,7 @@
 
     <modules>
         <module>oci-dependencies-test</module>
+        <module>oci-identity-test</module>
         <module>oci-request-id-test</module>
         <module>oci-swagger-maven-plugin-test</module>
     </modules>
