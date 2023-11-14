@@ -35,6 +35,10 @@
     <name>Helidon OCI SE Applications</name>
     <description>Helidon OCI SE applications</description>
 
+    <properties>
+        <helidon.oci.version>1.0-SNAPSHOT</helidon.oci.version>
+    </properties>
+
     <!-- Placeholder. Currently not used -->
 
     <dependencyManagement>
@@ -42,7 +46,7 @@
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-dependencies</artifactId>
-                <version>${project.version}</version>
+                <version>${helidon.oci.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
