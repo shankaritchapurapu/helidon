@@ -35,12 +35,16 @@
     <name>Helidon OCI MP Applications</name>
     <description>Helidon OCI MP applications</description>
 
+    <properties>
+        <helidon.oci.version>1.0-SNAPSHOT</helidon.oci.version>
+    </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-dependencies</artifactId>
-                <version>${project.version}</version>
+                <version>${helidon.oci.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -53,7 +57,7 @@
                 <plugin>
                     <groupId>com.oracle.helidon.oci</groupId>
                     <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
-                    <version>${project.version}</version>
+                    <version>${helidon.oci.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
