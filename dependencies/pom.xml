@@ -8,7 +8,6 @@
         <version>1.0-SNAPSHOT</version>
         <relativePath>../bom/pom.xml</relativePath>
     </parent>
-    <groupId>com.oracle.helidon.oci</groupId>
     <artifactId>helidon-oci-dependencies</artifactId>
     <packaging>pom</packaging>
 
