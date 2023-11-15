@@ -16,6 +16,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.security.integration</groupId>
             <artifactId>helidon-security-integration-jersey</artifactId>
         </dependency>

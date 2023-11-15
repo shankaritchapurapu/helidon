@@ -61,26 +61,31 @@
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-repackaged-oci-authentication-client</artifactId>
                 <version>${helidon.oci.version}</version>
+                <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
                 <version>${helidon.oci.version}</version>
+                <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-repackaged-oci-authproxy-filter</artifactId>
                 <version>${helidon.oci.version}</version>
+                <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-repackaged-oci-vault-java-sdk</artifactId>
                 <version>${helidon.oci.version}</version>
+                <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
                 <version>${helidon.oci.version}</version>
+                <optional>true</optional>
             </dependency>
         </dependencies>
     </dependencyManagement>

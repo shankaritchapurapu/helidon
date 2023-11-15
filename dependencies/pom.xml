@@ -14,7 +14,6 @@
     <name>Helidon OCI Native Dependencies</name>
     <description>Maven dependency management for Helidon OCI native applications</description>
 
-    <!-- IMPORTANT NOTE: This must always be duplicated into integration-tests/oci-dependencies-test/pom.xml -->
     <properties>
         <helidon.version>2.6.4</helidon.version>
         <version.lib.cdi-api>2.0.2</version.lib.cdi-api>
@@ -311,6 +310,10 @@
                         <groupId>com.oracle.oci.sdk</groupId>
                         <artifactId>oci-java-sdk-addons-internal</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.identity.policy</groupId>
+                        <artifactId>parser</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <!-- see repackaged-oci-authentication-client -->
@@ -318,17 +321,6 @@
                 <groupId>com.oracle.pic.identity.authentication</groupId>
                 <artifactId>authentication-client</artifactId>
                 <version>${oracle-internal-identity-version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.pic.identity.policy</groupId>
-                <artifactId>parser</artifactId>
-                <version>${oracle-internal-identity-common-version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>io.dropwizard</groupId>
-                        <artifactId>dropwizard-util</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <!-- See repackaged-oci-vault-java-sdk -->
