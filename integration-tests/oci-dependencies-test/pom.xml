@@ -108,6 +108,10 @@
             <groupId>com.oracle.pic.identity.authorization</groupId>
             <artifactId>sdk</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.identity.authorization</groupId>
+            <artifactId>jersey-2-29-annotations</artifactId>
+        </dependency>
         <!-- see repackaged-oci-authentication-client -->
         <dependency>
             <groupId>com.oracle.pic.identity.authentication</groupId>

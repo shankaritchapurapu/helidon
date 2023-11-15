@@ -316,6 +316,11 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.identity.authorization</groupId>
+                <artifactId>jersey-2-29-annotations</artifactId>
+                <version>${oracle-internal-identity-version}</version>
+            </dependency>
             <!-- see repackaged-oci-authentication-client -->
             <dependency>
                 <groupId>com.oracle.pic.identity.authentication</groupId>
