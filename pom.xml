@@ -184,39 +184,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>versions-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>display-property-updates</goal>
-                        </goals>
-                        <configuration>
-                            <!--suppress UnresolvedMavenProperty -->
-                            <rulesUri>file://${top.parent.basedir}/build_config/maven-version-rules.xml</rulesUri>
-                            <allowIncrementalUpdates>true</allowIncrementalUpdates>
-                            <allowMinorUpdates>true</allowMinorUpdates>
-                            <allowMajorUpdates>true</allowMajorUpdates>
-
-                            <!-- This files tracks dependency updates that are due -->
-                            <!-- Remove the following line if you wish to disable this tracking file feature -->
-                            <outputFile>../bom-dependency-versions.txt</outputFile>
-
-                            <!-- SNAPSHOT versions of the bom should NOT be used in production -->
-                            <allowSnapshots>false</allowSnapshots>
-
-                            <!-- Version control already keeps history of the pom file changes -->
-                            <generateBackupPoms>false</generateBackupPoms>
-
-                            <!-- We don't want to scan the dependencies within the bom -->
-                            <!-- <processDependencyManagementTransitive>false</processDependencyManagementTransitive>-->
-                        </configuration>
-                    </execution>
-                </executions>
-                <inherited>false</inherited> <!-- We only want to run this plugin in this pom, and not every module. -->
-            </plugin>
         </plugins>
     </build>
 

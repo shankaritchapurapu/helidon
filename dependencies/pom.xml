@@ -14,6 +14,7 @@
     <name>Helidon OCI Native Dependencies</name>
     <description>Maven dependency management for Helidon OCI native applications</description>
 
+    <!-- IMPORTANT NOTE: This must always be duplicated into integration-tests/oci-dependencies-test/pom.xml -->
     <properties>
         <helidon.version>2.6.4</helidon.version>
         <version.lib.cdi-api>2.0.2</version.lib.cdi-api>
@@ -25,7 +26,7 @@
         <oracle-internal-commons-request-id-version>1.1.46</oracle-internal-commons-request-id-version>
         <oracle-internal-exception-mapping-version>3.0.65</oracle-internal-exception-mapping-version>
         <oracle-internal-identity-common-version>2.1.0.465</oracle-internal-identity-common-version>
-        <oracle-internal-identity-version>3.0.230</oracle-internal-identity-version>
+        <oracle-internal-identity-version>3.0.232</oracle-internal-identity-version>
         <oracle-internal-logging-version>3.3.5</oracle-internal-logging-version>
         <oracle-internal-vault-java-sdk-version>2.0.4</oracle-internal-vault-java-sdk-version>
         <oracle-internal-vault-user-java-client-version>1.0.2</oracle-internal-vault-user-java-client-version>
@@ -36,6 +37,7 @@
     </properties>
 
     <dependencyManagement>
+        <!-- IMPORTANT NOTE: This must always be duplicated into integration-tests/oci-dependencies-test/pom.xml -->
         <dependencies>
             <!-- TODO - see https://jira.oci.oraclecorp.com/browse/WLMS-703 -->
             <!-- See https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-internal-dependency-management/browse/oci-internal-bom/pom.xml -->
@@ -397,5 +399,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
 </project>
