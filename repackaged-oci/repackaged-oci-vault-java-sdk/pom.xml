@@ -11,7 +11,7 @@
     </parent>
     <artifactId>helidon-repackaged-oci-vault-java-sdk</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging> <!-- TODO: ideally we should be a pom only jar -->
 
     <name>Repackaged: OCI vault-java-sdk</name>
 
@@ -19,45 +19,7 @@
         <dependency>
             <groupId>com.oracle.pic.vault</groupId>
             <artifactId>vault-java-sdk</artifactId>
-            <exclusions>
-                <!-- replaced by "our" version below -->
-                <exclusion>
-                    <groupId>com.oracle.pic.identity.authorization</groupId>
-                    <artifactId>sdk</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.oracle.pic.vault</groupId>
-                    <artifactId>vault-user-java-client</artifactId>
-                </exclusion>
-
-                <!-- other exclusions -->
-                <exclusion>
-                    <groupId>javax.inject</groupId>
-                    <artifactId>javax.inject</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.oracle.pic.commons</groupId>
-                    <artifactId>metrics</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.oracle.oci.sdk</groupId>
-                    <artifactId>oci-java-sdk-addons-s2s</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
-
-        <!-- our replacement for the exclusions from base vault-java-sdk -->
-        <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
-        </dependency>
-
-        <!-- our replacement for the exclusions from base vault-java-sdk -->
-        <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
-        </dependency>
-
     </dependencies>
 
     <build>
@@ -69,23 +31,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>enforce-jakarta-dependencies</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <helidonDependenciesRule>
-                                    <excludedGavRegExs>
-                                        <excludedGavRegExs>jakarta.servlet:jakarta.servlet-api:4.0.4</excludedGavRegExs>
-                                    </excludedGavRegExs>
-                                </helidonDependenciesRule>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

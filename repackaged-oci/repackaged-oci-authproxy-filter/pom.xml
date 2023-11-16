@@ -11,7 +11,7 @@
     </parent>
     <artifactId>helidon-repackaged-oci-authproxy-filter</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging> <!-- TODO: ideally we should be a pom only jar -->
 
     <name>Repackaged: OCI authproxy-filter</name>
 
@@ -21,7 +21,6 @@
             <groupId>com.oracle.pic.authproxy</groupId>
             <artifactId>authproxy-filter</artifactId>
         </dependency>
-
     </dependencies>
 
     <build>

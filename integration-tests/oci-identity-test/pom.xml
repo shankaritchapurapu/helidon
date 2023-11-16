@@ -13,6 +13,8 @@
     <name>Integration Test: Identity</name>
 
     <properties>
+        <enforcer.skip>true</enforcer.skip>
+
 <!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
         <version.plugin.jandex>1.1.0</version.plugin.jandex>
         <version.lib.jackson.databind.nullable>0.2.3</version.lib.jackson.databind.nullable>

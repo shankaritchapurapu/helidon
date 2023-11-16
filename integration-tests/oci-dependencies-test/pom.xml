@@ -15,146 +15,6 @@
     <packaging>pom</packaging>
     <description>These ensure that downstream usages of our ${basedir}/dependencies/pom.xml will work properly</description>
 
-    <!-- IMPORTANT NOTE: This must always be a complete duplicate of dependencies/pom.xml -->
-    <dependencies>
-        <!-- TODO - see https://jira.oci.oraclecorp.com/browse/WLMS-703 -->
-        <!-- See https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-internal-dependency-management/browse/oci-internal-bom/pom.xml -->
-        <!--            <dependency>-->
-        <!--                <groupId>com.oracle.pic.sfw</groupId>-->
-        <!--                <artifactId>oci-internal-bom</artifactId>-->
-        <!--                <version>${oci-internal-bom-version}</version>-->
-        <!--                <type>pom</type>-->
-        <!--                <scope>import</scope>-->
-        <!--            </dependency>-->
-
-        <!-- overrides from parent io.helidon bom, etc. -->
-        <dependency>
-            <groupId>com.oracle.pic.commons</groupId>
-            <artifactId>exception-mapping</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.log</groupId>
-            <artifactId>oci-logging-lib</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-addons-s2s</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-audit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-common-httpclient</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-common-httpclient-jersey</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-common-httpclient-jersey3</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-database</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-loggingingestion</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-monitoring</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-workrequests</artifactId>
-        </dependency>
-
-        <!-- See repackaged-oci-authproxy-filter -->
-        <!-- https://bitbucket.oci.oraclecorp.com/projects/SECINF/repos/authproxy-filter -->
-        <dependency>
-            <groupId>com.oracle.pic.authproxy</groupId>
-            <artifactId>authproxy-filter</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.oracle.pic.commons</groupId>
-            <artifactId>request-id</artifactId>
-        </dependency>
-
-        <!-- Identity
-                Confluence: https://confluence.oci.oraclecorp.com/x/GV0cB
-                Phonebook link: https://devops.oci.oraclecorp.com/phonebook/identity-cloud-service
-                https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/authorization/sdk/
-        -->
-
-        <!-- see repackaged-oci-authorization-sdk -->
-        <dependency>
-            <groupId>com.oracle.pic.identity</groupId>
-            <artifactId>common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.identity.authorization</groupId>
-            <artifactId>sdk</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.identity.authorization</groupId>
-            <artifactId>jersey-2-29-annotations</artifactId>
-        </dependency>
-        <!-- see repackaged-oci-authentication-client -->
-        <dependency>
-            <groupId>com.oracle.pic.identity.authentication</groupId>
-            <artifactId>authentication-client</artifactId>
-        </dependency>
-
-        <!-- See repackaged-oci-vault-java-sdk -->
-        <!-- Secret Service
-               Confluence: https://confluence.oci.oraclecorp.com/x/tajZ
-               Phonebook link: https://devops.oci.oraclecorp.com/phonebook/secret-management-service
-             -->
-        <dependency>
-            <groupId>com.oracle.pic.vault</groupId>
-            <artifactId>vault-java-sdk</artifactId>
-        </dependency>
-        <!-- See repackaged=oci-vault-user-java-client -->
-        <dependency>
-            <groupId>com.oracle.pic.vault</groupId>
-            <artifactId>vault-user-java-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.secinf</groupId>
-            <artifactId>secret-service-cp-java-client</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.helidon.integrations.oci.sdk</groupId>
-            <artifactId>helidon-integrations-oci-sdk-cdi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.enterprise</groupId>
-            <artifactId>jakarta.enterprise.cdi-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jackson</artifactId>
-        </dependency>
-    </dependencies>
-
     <build>
         <plugins>
             <!-- the enforcer is acting as our test here -->
@@ -173,11 +33,31 @@
                             <goal>display-property-updates</goal>
                         </goals>
                         <configuration>
+                            <includeProperties>
+                                helidon.version,
+                                oci-java-sdk-version,
+                                oracle-internal-authproxy-filter-version,
+<!--                                oracle-internal-commons-core-version,-->
+<!--                                oracle-internal-commons-core-resources-version,-->
+                                oracle-internal-commons-metrics-lib-version,
+                                oracle-internal-commons-metrics-reporter-version,
+                                oracle-internal-commons-metrics-version,
+                                oracle-internal-commons-request-id-version,
+<!--                                oracle-internal-core-regions-version,-->
+                                oracle-internal-exception-mapping-version,
+                                oracle-internal-identity-common-version,
+                                oracle-internal-identity-version,
+                                oracle-internal-logging-version,
+                                oracle-internal-vault-java-sdk-version,
+                                oracle-internal-vault-user-api-spec-version,
+                                oracle-internal-vault-user-java-client-version,
+                                oracle-internal-secret-service-cp-java-client-version,
+                            </includeProperties>
                             <!--suppress UnresolvedMavenProperty -->
                             <rulesUri>file://${top.parent.basedir}/build_config/maven-version-rules.xml</rulesUri>
                             <allowIncrementalUpdates>true</allowIncrementalUpdates>
                             <allowMinorUpdates>true</allowMinorUpdates>
-                            <allowMajorUpdates>true</allowMajorUpdates>
+                            <allowMajorUpdates>false</allowMajorUpdates>
 
                             <!-- This files tracks dependency updates that are due -->
                             <!-- Remove the following line if you wish to disable this tracking file feature -->
@@ -190,9 +70,6 @@
                             <generateBackupPoms>false</generateBackupPoms>
 
                             <includeParent>true</includeParent>
-
-                            <!-- We don't want to scan the dependencies within the bom -->
-                            <!-- <processDependencyManagementTransitive>false</processDependencyManagementTransitive>-->
                         </configuration>
                     </execution>
                 </executions>

@@ -1,24 +1,25 @@
 package com.oracle.test.api;
 
+import javax.inject.Inject;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+
+import io.helidon.microprofile.tests.junit5.HelidonTest;
+
 import com.oracle.test.model.AttachIScsiVolumeRequest;
 import com.oracle.test.model.AttachVolumeRequest;
 import com.oracle.test.model.IScsiVolumeAttachment;
 import com.oracle.test.model.Instance;
 import com.oracle.test.model.Region;
 import com.oracle.test.model.VolumeAttachment;
-
-import io.helidon.microprofile.tests.junit5.HelidonTest;
-
-import javax.inject.Inject;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 
 @Disabled // TODO
 @HelidonTest
