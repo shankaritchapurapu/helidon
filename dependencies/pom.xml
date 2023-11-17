@@ -45,10 +45,8 @@
     </properties>
 
     <dependencyManagement>
-        <!-- IMPORTANT NOTE: This must always be duplicated into integration-tests/oci-dependencies-test/pom.xml -->
         <dependencies>
-            <!-- TODO - see https://jira.oci.oraclecorp.com/browse/WLMS-703 -->
-            <!-- See https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-internal-dependency-management/browse/oci-internal-bom/pom.xml -->
+            <!-- see for reference https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-internal-dependency-management/browse/oci-internal-bom/pom.xml -->
 <!--            <dependency>-->
 <!--                <groupId>com.oracle.pic.sfw</groupId>-->
 <!--                <artifactId>oci-internal-bom</artifactId>-->
@@ -183,7 +181,7 @@
                 <version>${oci-java-sdk-version}</version>
             </dependency>
 
-            <!-- See repackaged-oci-authproxy-filter -->
+            <!-- see repackaged-oci-authproxy-filter -->
             <!-- https://bitbucket.oci.oraclecorp.com/projects/SECINF/repos/authproxy-filter -->
             <dependency>
                 <groupId>com.oracle.pic.authproxy</groupId>

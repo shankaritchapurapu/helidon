@@ -8,7 +8,6 @@ The following version properties are referencing the newest available version:
   ${oracle-internal-commons-request-id-version} ................ 1.1.46
   ${oracle-internal-exception-mapping-version} ................. 3.0.65
   ${oracle-internal-identity-version} ......................... 3.0.232
-  ${oracle-internal-secret-service-cp-java-client-version} ...... 1.1.4
   ${oracle-internal-vault-java-sdk-version} ..................... 2.0.4
   ${oracle-internal-vault-user-api-spec-version} ............... 1.0.78
   ${oracle-internal-vault-user-java-client-version} ............. 1.0.2
@@ -16,4 +15,5 @@ The following version property updates are available:
   ${oracle-internal-commons-metrics-lib-version} ..... 0.0.30 -> 0.3.53
   ${oracle-internal-identity-common-version}  2.1.0.465 -> 2.2.0-rmnikam_common_jdk17_uptake.5
   ${oracle-internal-logging-version} ................... 3.3.5 -> 3.5.6
+  ${oracle-internal-secret-service-cp-java-client-version}  1.1.4 -> 1.1.5
 

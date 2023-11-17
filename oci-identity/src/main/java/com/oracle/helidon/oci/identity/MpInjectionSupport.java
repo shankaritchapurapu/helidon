@@ -21,37 +21,78 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.Extension;
-import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.ProcessInjectionPoint;
 
-// TODO:
+import io.helidon.security.SecurityContext;
+import io.helidon.security.Subject;
+
+import com.oracle.pic.identity.authorization.sdk.AuthorizationRequestFactory;
+
+/**
+ * Provides the bridge from OCI injectable identity types into CDI.
+ */
 @ApplicationScoped
-public class MpInjectionSupport implements Extension {
-
-    @Produces
-    @ApplicationScoped
-//    @PrincipalContext // TODO: this anno can only can be used on parameters
-    public static com.oracle.pic.identity.authentication.Principal producePrincipal(/*SecurityContext securityContext*/
-            InjectionPoint ip) {
-        return null;
-    }
-
-    @Produces
-    @ApplicationScoped
-//    @AuthorizationRequestContext // TODO: this anno can only can be used on parameters
-    public static com.oracle.pic.identity.authorization.sdk.AuthorizationRequest produceAuthorizationRequest(/*SecurityContext securityContext*/
-            InjectionPoint ip) {
-        return null;
-    }
-
+public class MpInjectionSupport /*implements Extension*/ {
+    static final Subject EMPTY_SUBJECT = Subject.builder().build();
     private final Set<Type> proxyTypes = new HashSet<>();
     private final Set<Type> inProcessProxyTypes = new HashSet<>();
+
+    private MpInjectionSupport() {
+    }
+
+    // Subject.class is final so can't be proxied so can't be @RequestScoped.
+    @Produces
+    @Default
+    private static Subject produceDefaultSubject(SecurityContext sc) {
+        // TODO:
+        return sc.service().orElse(EMPTY_SUBJECT);
+    }
+
+    // Subject.class is final so can't be proxied so can't be @RequestScoped.
+    @Produces
+    @Service
+    @Dependent
+    private static Subject produceContextualSubject(SecurityContext sc) {
+        // TODO:
+        return sc.service().orElse(EMPTY_SUBJECT);
+    }
+
+    @Produces
+    @Default
+//    @PrincipalContext // TODO: this anno can only can be used on parameters
+    public static com.oracle.pic.identity.authentication.Principal produceDefaultPrincipal() {
+        // TODO:
+        return com.oracle.pic.authproxy.AuthProxyAnonymousPrincipal.builder().build();
+    }
+
+    @Produces
+//    @Default
+    @Service
+    @Dependent
+//    @PrincipalContext // TODO: this anno can only can be used on parameters
+    public static com.oracle.pic.identity.authentication.Principal produceContextualPrincipal(SecurityContext sc/*,
+            InjectionPoint ip*/) {
+        // TODO:
+        return com.oracle.pic.authproxy.AuthProxyAnonymousPrincipal.builder().build();
+    }
+
+    @Produces
+//    @Default
+    @Service
+    @Dependent
+//    @AuthorizationRequestContext // TODO: this anno can only can be used on parameters
+    public static com.oracle.pic.identity.authorization.sdk.AuthorizationRequest produceContextualAuthorizationRequest(SecurityContext sc/*,
+                                                                                                             InjectionPoint ip*/) {
+        // TODO:
+        return AuthorizationRequestFactory.serviceRequest("test", produceContextualPrincipal(sc));
+    }
 
     /**
      * Process injection points.

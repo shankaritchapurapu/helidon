@@ -33,6 +33,7 @@
                             <goal>display-property-updates</goal>
                         </goals>
                         <configuration>
+                            <!-- TODO: the properties that are commented out cause the versions plugin to crash - research this -->
                             <includeProperties>
                                 helidon.version,
                                 oci-java-sdk-version,
