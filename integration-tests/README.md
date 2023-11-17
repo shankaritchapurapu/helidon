@@ -3,10 +3,6 @@
 ## Overview
 Integration tests for common modules.
 
-## Prerequisites
-- JDK 11 or higher
-- Maven 3.6.1 or higher
-
 ## Configuration
 Create a submodule named `<module>-test` for each module under test.
 

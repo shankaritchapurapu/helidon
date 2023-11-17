@@ -3,12 +3,7 @@
 ## Overview
 This module provides support for handling of the opc-request-id header as required in OCI.
 
-## Prerequisites
-- JDK 11 or higher
-- Maven 3.6.1 or higher
-
 ## Configuration
-
 Just include a dependency to this module in your pom file as shown below. All relevant
 providers will be automatically loaded into your application.
 
