@@ -17,8 +17,6 @@
 package com.oracle.helidon.oci.identity;
 
 import java.lang.reflect.Type;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
@@ -41,8 +39,8 @@ import com.oracle.pic.identity.authorization.sdk.AuthorizationRequestFactory;
 @ApplicationScoped
 public class MpInjectionSupport /*implements Extension*/ {
     static final Subject EMPTY_SUBJECT = Subject.builder().build();
-    private final Set<Type> proxyTypes = new HashSet<>();
-    private final Set<Type> inProcessProxyTypes = new HashSet<>();
+//    private final Set<Type> proxyTypes = new HashSet<>();
+//    private final Set<Type> inProcessProxyTypes = new HashSet<>();
 
     private MpInjectionSupport() {
     }
@@ -50,6 +48,7 @@ public class MpInjectionSupport /*implements Extension*/ {
     // Subject.class is final so can't be proxied so can't be @RequestScoped.
     @Produces
     @Default
+    @Dependent
     private static Subject produceDefaultSubject(SecurityContext sc) {
         // TODO:
         return sc.service().orElse(EMPTY_SUBJECT);
@@ -66,17 +65,17 @@ public class MpInjectionSupport /*implements Extension*/ {
 
     @Produces
     @Default
-//    @PrincipalContext // TODO: this anno can only can be used on parameters
+    //    @PrincipalContext // TODO: this anno can only can be used on parameters
+    @Dependent
     public static com.oracle.pic.identity.authentication.Principal produceDefaultPrincipal() {
         // TODO:
         return com.oracle.pic.authproxy.AuthProxyAnonymousPrincipal.builder().build();
     }
 
     @Produces
-//    @Default
-    @Service
     @Dependent
-//    @PrincipalContext // TODO: this anno can only can be used on parameters
+    //    @PrincipalContext // TODO: this anno can only can be used on parameters
+    @Service
     public static com.oracle.pic.identity.authentication.Principal produceContextualPrincipal(SecurityContext sc/*,
             InjectionPoint ip*/) {
         // TODO:
@@ -84,10 +83,9 @@ public class MpInjectionSupport /*implements Extension*/ {
     }
 
     @Produces
-//    @Default
-    @Service
     @Dependent
-//    @AuthorizationRequestContext // TODO: this anno can only can be used on parameters
+    //    @AuthorizationRequestContext // TODO: this anno can only can be used on parameters
+    @Service
     public static com.oracle.pic.identity.authorization.sdk.AuthorizationRequest produceContextualAuthorizationRequest(SecurityContext sc/*,
                                                                                                              InjectionPoint ip*/) {
         // TODO:

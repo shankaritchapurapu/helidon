@@ -132,12 +132,13 @@
                                 <useJakartaAnnotations>false</useJakartaAnnotations>
                                 <!-- This is shared between SDK model and our service gen -->
                                 <enableValidation>true</enableValidation>
-                                <!-- Same as default set in code but still setting here as reference -->
+                                <!-- Turns on identity and authentication -->
                                 <contextsIdentity>true</contextsIdentity>
                                 <contextsJaxRsHttpHeaders>false</contextsJaxRsHttpHeaders>
                                 <contextsJaxRsUriInfo>false</contextsJaxRsUriInfo>
                                 <contextsJaxRsRequest>false</contextsJaxRsRequest>
                                 <contextsJaxRsSecurityContext>false</contextsJaxRsSecurityContext>
+                                <!-- TODO: next phase -->
                                 <contextsAuthProxyIdentity>false</contextsAuthProxyIdentity>
                                 <contextsAuditPayloadAppender>false</contextsAuditPayloadAppender>
                                 <contextsContainerRequest>false</contextsContainerRequest>
