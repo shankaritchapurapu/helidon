@@ -19,6 +19,11 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
 
+        <surefire.argLine>-Xmx1024m -Dfile.encoding=UTF-8</surefire.argLine>
+        <failsafe.argLine>-Xmx1024m -Dfile.encoding=UTF-8</failsafe.argLine>
+        <surefire.coverage.argline />
+        <failsafe.coverage.argline />
+
         <version.lib.commons-io>2.13.0</version.lib.commons-io>
         <version.lib.commons-lang3>3.10</version.lib.commons-lang3>
         <version.lib.hamcrest>1.3</version.lib.hamcrest>
@@ -33,8 +38,10 @@
 
         <version.plugin.compiler>3.8.1</version.plugin.compiler>
         <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
+        <version.plugin.failsafe>3.0.0-M5</version.plugin.failsafe>
         <version.plugin.helidon-build-tools>2.3.8</version.plugin.helidon-build-tools>
         <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
+        <version.plugin.surefire>3.0.0-M5</version.plugin.surefire>
         <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
         <version.plugin.maven-directory-plugin>1.0</version.plugin.maven-directory-plugin>
         <version.plugin.maven-enforcer-plugin>3.4.1</version.plugin.maven-enforcer-plugin>
@@ -272,6 +279,29 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
                     <version>${version.plugin.maven-build-helper-plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${version.plugin.surefire}</version>
+                    <configuration>
+                        <useModulePath>false</useModulePath>
+                        <trimStackTrace>false</trimStackTrace>
+                        <!-- DO NOT override argLine instead use surefire.argLine -->
+                        <argLine>${surefire.argLine} ${surefire.coverage.argline}</argLine>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${version.plugin.failsafe}</version>
+                    <configuration>
+                        <useModulePath>false</useModulePath>
+                        <!-- DO NOT override argLine instead use failsafe.argLine -->
+                        <argLine>${failsafe.argLine} ${failsafe.coverage.argline}</argLine>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
