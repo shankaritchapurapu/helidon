@@ -29,7 +29,6 @@ import io.helidon.security.Principal;
 import io.helidon.security.SecurityContext;
 import io.helidon.security.Subject;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -40,7 +39,7 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Disabled
+//@Disabled
 @HelidonTest
 public class MpInjectionSupportTest {
 
@@ -78,6 +77,7 @@ public class MpInjectionSupportTest {
         assertThat(sc, notNullValue());
         assertThat(serviceSubjectProvider, notNullValue());
         assertThat(servicePrincipalProvider, notNullValue());
+        // TODO: @Laird
 //        assertThat(defaultSubject, notNullValue());
 //        assertThat(defaultPrincipal, notNullValue());
     }
