@@ -13,6 +13,8 @@
     <name>Integration Test: Identity</name>
 
     <properties>
+        <enforcer.skip>true</enforcer.skip>
+
 <!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
         <version.plugin.jandex>1.1.0</version.plugin.jandex>
         <version.lib.jackson.databind.nullable>0.2.3</version.lib.jackson.databind.nullable>
@@ -23,6 +25,7 @@
             <groupId>com.oracle.helidon.oci</groupId>
             <artifactId>helidon-oci-identity</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.helidon.microprofile.bundles</groupId>
             <artifactId>helidon-microprofile-core</artifactId>
@@ -47,11 +50,11 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.openapitools</groupId>
-            <artifactId>jackson-databind-nullable</artifactId>
-            <version>${version.lib.jackson.databind.nullable}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.openapitools</groupId>-->
+<!--            <artifactId>jackson-databind-nullable</artifactId>-->
+<!--            <version>${version.lib.jackson.databind.nullable}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
@@ -129,12 +132,13 @@
                                 <useJakartaAnnotations>false</useJakartaAnnotations>
                                 <!-- This is shared between SDK model and our service gen -->
                                 <enableValidation>true</enableValidation>
-                                <!-- Same as default set in code but still setting here as reference -->
-                                <contextsIdentity>false</contextsIdentity>
+                                <!-- Turns on identity and authentication -->
+                                <contextsIdentity>true</contextsIdentity>
                                 <contextsJaxRsHttpHeaders>false</contextsJaxRsHttpHeaders>
                                 <contextsJaxRsUriInfo>false</contextsJaxRsUriInfo>
                                 <contextsJaxRsRequest>false</contextsJaxRsRequest>
                                 <contextsJaxRsSecurityContext>false</contextsJaxRsSecurityContext>
+                                <!-- TODO: next phase -->
                                 <contextsAuthProxyIdentity>false</contextsAuthProxyIdentity>
                                 <contextsAuditPayloadAppender>false</contextsAuditPayloadAppender>
                                 <contextsContainerRequest>false</contextsContainerRequest>

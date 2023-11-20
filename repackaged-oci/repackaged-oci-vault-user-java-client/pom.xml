@@ -11,39 +11,20 @@
     </parent>
     <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
     <name>Repackaged: OCI vault-user-java-client</name>
 
     <!-- See https://bitbucket.oci.oraclecorp.com/projects/VAULT/repos/vault-user-java-client/pull-requests/30 -->
 
-    <!--
-       Unfortunately, we cannot use a different parent POM here
-       than for the secret-service-cp-java-client (v2). What
-       we would really want to do is point this at
-       com.oracle.bmc.sdk.clients:bmc-sdk-java-client-parent:3.0.0.
-       as parent.
-       But then the Maven version set plugin (mvn version:set)
-       would not update the version of this pom.xml file, and
-       building in Build Service wouldn't work anymore (or anywhere
-       where we need to set the version).
-       Hence, the only solution here is to copy a lot from the
-       3.0.0 parent at
-       https://bitbucket.oci.oraclecorp.com/projects/SDK/repos/bmc-sdk-swagger/browse/bmc-sdk-clients/bmc-sdk-java-client-parent/pom.xml?at=refs%2Ftags%2F2.22-3.23.2
-    -->
-
     <properties>
-        <!-- Override of https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-internal-dependency-management/browse/oci-internal-bom/pom.xml -->
-        <vault-user-java-client-version>2.0.3</vault-user-java-client-version>
-
-        <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
-
         <!-- Overrides -->
         <version.lib.annotation-api>2.1.1</version.lib.annotation-api>
 
         <codegen.base.package.name>com.oracle.pic.vault</codegen.base.package.name>
         <codegen.artifactory.groupId>com.oracle.pic.vault</codegen.artifactory.groupId>
         <codegen.artifactory.artifactId>vault-user-api-spec</codegen.artifactory.artifactId>
-        <codegen.artifactory.version>1.0.1</codegen.artifactory.version>
+        <codegen.artifactory.version>${oracle-internal-vault-user-api-spec-version}</codegen.artifactory.version>
         <codegen.spec.name>api.yaml</codegen.spec.name>
         <codegen.spec.dir>${project.build.directory}/specs</codegen.spec.dir>
         <codegen.spec.swagger>${codegen.spec.dir}/${codegen.spec.name}</codegen.spec.swagger>
