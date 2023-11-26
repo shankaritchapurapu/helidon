@@ -30,6 +30,7 @@ module com.oracle.helidon.oci.identity {
     requires sdk;
     requires io.helidon.security;
     requires authproxy.filter;
+    requires hk2.api;
 
     exports com.oracle.helidon.oci.identity;
 

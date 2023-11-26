@@ -82,6 +82,16 @@ public class MpInjectionSupport /*implements Extension*/ {
         return com.oracle.pic.authproxy.AuthProxyAnonymousPrincipal.builder().build();
     }
 
+
+    @Produces
+    @Default
+    //    @PrincipalContext // TODO: this anno can only can be used on parameters
+    @Dependent
+    public static com.oracle.pic.identity.authorization.sdk.AuthorizationRequest produceDefaultAuthorizationRequest() {
+        // TODO:
+        return AuthorizationRequestFactory.serviceRequest("test", produceDefaultPrincipal());
+    }
+
     @Produces
     @Dependent
     //    @AuthorizationRequestContext // TODO: this anno can only can be used on parameters

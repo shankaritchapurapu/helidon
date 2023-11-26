@@ -78,4 +78,220 @@
         </plugins>
     </build>
 
+    <!--
+        These dependencies were
+        produced by calling
+        > cat ../../dependencies/pom.xml | ../../etc/scripts/depm2dep.sh
+    -->
+    <dependencies>
+        <!-- see for reference https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-internal-dependency-management/browse/oci-internal-bom/pom.xml -->
+        <!--            <dependency>-->
+        <!--                <groupId>com.oracle.pic.sfw</groupId>-->
+        <!--                <artifactId>oci-internal-bom</artifactId>-->
+        <!--                <type>pom</type>-->
+        <!--                <scope>import</scope>-->
+        <!--            </dependency>-->
+
+        <!-- overrides from parent io.helidon bom, etc. -->
+        <dependency>
+            <groupId>com.oracle.oci.log</groupId>
+            <artifactId>oci-logging-lib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-addons-s2s</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-audit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-common-httpclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-common-httpclient-jersey</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-common-httpclient-jersey3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-database</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-loggingingestion</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-monitoring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-workrequests</artifactId>
+        </dependency>
+
+        <!-- see repackaged-oci-authproxy-filter -->
+        <!-- https://bitbucket.oci.oraclecorp.com/projects/SECINF/repos/authproxy-filter -->
+        <dependency>
+            <groupId>com.oracle.pic.authproxy</groupId>
+            <artifactId>authproxy-filter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>core-regions</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>core-resources</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>exception-mapping</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>metrics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.telemetry.commons</groupId>
+            <artifactId>metrics-lib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.telemetry.commons</groupId>
+            <artifactId>metrics-reporter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>request-id</artifactId>
+        </dependency>
+
+        <!-- Identity
+                Confluence: https://confluence.oci.oraclecorp.com/x/GV0cB
+                Phonebook link: https://devops.oci.oraclecorp.com/phonebook/identity-cloud-service
+                https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/authorization/sdk/
+        -->
+
+        <!-- see repackaged-oci-authorization-sdk -->
+        <!-- https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/common/ -->
+        <dependency>
+            <groupId>com.oracle.pic.identity</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.identity.authorization</groupId>
+            <artifactId>sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.identity.authorization</groupId>
+            <artifactId>jersey-2-29-annotations</artifactId>
+        </dependency>
+        <!-- see repackaged-oci-authentication-client -->
+        <dependency>
+            <groupId>com.oracle.pic.identity.authentication</groupId>
+            <artifactId>authentication-client</artifactId>
+        </dependency>
+
+        <!-- See repackaged-oci-vault-java-sdk -->
+        <!-- Secret Service
+               Confluence: https://confluence.oci.oraclecorp.com/x/tajZ
+               Phonebook link: https://devops.oci.oraclecorp.com/phonebook/secret-management-service
+             -->
+        <dependency>
+            <groupId>com.oracle.pic.vault</groupId>
+            <artifactId>vault-java-sdk</artifactId>
+        </dependency>
+        <!-- See repackaged=oci-vault-user-java-client -->
+        <dependency>
+            <groupId>com.oracle.pic.vault</groupId>
+            <artifactId>vault-user-api-spec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.vault</groupId>
+            <artifactId>vault-user-java-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.secinf</groupId>
+            <artifactId>secret-service-cp-java-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.internals.sdk</groupId>
+            <artifactId>java-sdk-oci-internals-commons</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.helidon.integrations.oci.sdk</groupId>
+            <artifactId>helidon-integrations-oci-sdk-cdi</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.enterprise</groupId>
+            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+        </dependency>
+
+        <!-- needed for dependency convergence -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.javassist</groupId>
+            <artifactId>javassist</artifactId>
+        </dependency>
+
+    </dependencies>
+
 </project>
