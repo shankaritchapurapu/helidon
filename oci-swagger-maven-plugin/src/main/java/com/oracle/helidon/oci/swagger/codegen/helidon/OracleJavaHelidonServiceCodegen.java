@@ -210,6 +210,10 @@ public class OracleJavaHelidonServiceCodegen extends OracleJavaSdkCodegen
     // only boolean options right now, so implementing in a simple way, no need to support non-booleans yet
     public boolean getOptionValue(ConfigOption option) {
         // values is always set by mojo
+        Object v = config.getAdditionalProperties().get(option.additionalPropertyKey);
+        if (v instanceof Boolean) {
+            return (Boolean) v;
+        }
         return Boolean.parseBoolean(
                 config.getAdditionalProperties().get(option.additionalPropertyKey));
     }

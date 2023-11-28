@@ -12,6 +12,9 @@ package {{package}};
 {{#hasProduces}}@{{annotationPackage}}.ws.rs.Produces({ {{#produces}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/produces}} })
 {{/hasProduces}}
 public abstract class Abstract{{classname}}BaseResource {{#parentAbstractClass}}extends {{parentAbstractClass}}{{/parentAbstractClass}} {
+{{#contextsIdentity}}    @javax.inject.Inject javax.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest;
+    @javax.inject.Inject javax.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal;
+{{/contextsIdentity}}
 {{#operations}}
 {{#operation}}
 {{> abstract-method-javadoc }}

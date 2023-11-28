@@ -4,10 +4,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.oracle.bmc.sdk.swagger.codegen.OracleCodegenOrchestrator;
+import com.oracle.bmc.sdk.swagger.codegen.OracleCodegenOrchestratorInput;
+import com.oracle.bmc.sdk.swagger.codegen.OracleJavaSdkCodegen;
+import com.oracle.bmc.sdk.swagger.codegen.SpecGenerationType;
 import com.oracle.helidon.oci.swagger.codegen.helidon.OracleJavaHelidonServiceCodegen;
+import io.swagger.codegen.utils.OptionUtils;
+import lombok.Setter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.maven.plugin.AbstractMojo;
@@ -17,14 +25,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-
-import com.oracle.bmc.sdk.swagger.codegen.OracleCodegenOrchestrator;
-import com.oracle.bmc.sdk.swagger.codegen.OracleCodegenOrchestratorInput;
-import com.oracle.bmc.sdk.swagger.codegen.OracleJavaSdkCodegen;
-import com.oracle.bmc.sdk.swagger.codegen.SpecGenerationType;
-
-import io.swagger.codegen.utils.OptionUtils;
-import lombok.Setter;
 
 /**
  * Generates code using Swagger.
@@ -76,7 +76,7 @@ public class OracleSwaggerMojo extends AbstractMojo {
     /**
      * Additional properties to pass forward to the SDK code generator.
      */
-    @Parameter @Setter private Map<String, String> additionalProperties;
+    @Parameter @Setter private Map<String, Object> additionalProperties;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -89,6 +89,7 @@ public class OracleSwaggerMojo extends AbstractMojo {
             }
 
             setAdditionalProperties();
+            normalizeAdditionalProperties();
             generateModels();
             generateApis();
 
@@ -100,13 +101,30 @@ public class OracleSwaggerMojo extends AbstractMojo {
         }
     }
 
+    // adjust the types from String -> boolean (as needed)
+    protected void normalizeAdditionalProperties() {
+        Set<String> keys = new LinkedHashSet<>(additionalProperties.keySet());
+        for (String key : keys) {
+            if (key.startsWith("use") || key.startsWith("enable") || key.startsWith("contexts")) {
+                normalizeAdditionalProperty(key);
+            }
+        }
+    }
+
+    protected void normalizeAdditionalProperty(String key) {
+        Object v = additionalProperties.get(key);
+        if (v instanceof String) {
+            additionalProperties.put(key, Boolean.parseBoolean((String) v));
+        }
+    }
+
     private void setAdditionalProperties() {
         if (!additionalProperties.containsKey(OracleJavaSdkCodegen.OPTION_ANNOTATION_PACKAGE)) {
-            String v =
+            Object v =
                     additionalProperties.get(
                             OracleJavaHelidonServiceCodegen.ConfigOption.OPTION_USE_JAKARTA_ANNOTATIONS.getAdditionalPropertyKey());
             if (v != null) {
-                boolean useJakartaAnnotations = Boolean.valueOf(v);
+                boolean useJakartaAnnotations = (v instanceof Boolean) ? (Boolean) v : Boolean.parseBoolean((String) v);
                 if (useJakartaAnnotations) {
                     additionalProperties.put(
                             OracleJavaSdkCodegen.OPTION_ANNOTATION_PACKAGE, "jakarta");
@@ -124,7 +142,7 @@ public class OracleSwaggerMojo extends AbstractMojo {
     }
 
     private void generateModels() throws MojoExecutionException, MojoFailureException {
-        Map<String, String> modelAdditionalProperties = new HashMap<>(additionalProperties);
+        Map<String, Object> modelAdditionalProperties = new HashMap<>(additionalProperties);
 
         // user can always override these, but if they don't, default these values
         modelAdditionalProperties.putIfAbsent(
@@ -185,19 +203,19 @@ public class OracleSwaggerMojo extends AbstractMojo {
     }
 
     private void generateApis() throws MojoExecutionException, MojoFailureException {
-        Map<String, String> serviceAdditionalProperties = new HashMap<>(additionalProperties);
+        Map<String, Object> serviceAdditionalProperties = new HashMap<>(additionalProperties);
 
         // add default values for everything that wasn't specified by the caller
         for (OracleJavaHelidonServiceCodegen.ConfigOption configOption : OracleJavaHelidonServiceCodegen.ConfigOption.values()) {
             serviceAdditionalProperties.putIfAbsent(
                     configOption.getAdditionalPropertyKey(),
-                    Boolean.valueOf(configOption.isDefaultValue()).toString());
+                    configOption.isDefaultValue());
         }
 
         runCodegen(language, serviceAdditionalProperties);
     }
 
-    private void runCodegen(String language, Map<String, String> additionalProperties)
+    private void runCodegen(String language, Map<String, Object> additionalProperties)
             throws MojoExecutionException, MojoFailureException {
         try {
             OracleCodegenOrchestratorInput codegenOrchestratorInput =
@@ -208,7 +226,7 @@ public class OracleSwaggerMojo extends AbstractMojo {
                             .language(language)
                             .specGenerationType(SpecGenerationType.INTERNAL.name())
                             .generateClient(false)
-                            .additionalProperties(additionalProperties)
+                            .additionalProperties((Map) additionalProperties)
                             .isTestGenerationEnabled(false)
                             .testOutputDir(DUMMY_TEST_DIR)
                             .externalModels(createMapFromImportMappings())

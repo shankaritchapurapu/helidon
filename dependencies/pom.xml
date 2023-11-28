@@ -524,6 +524,31 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse -->
+            <dependency>
+                <groupId>com.oracle.pic.identity.authorization</groupId>
+                <artifactId>jersey-2-25-annotations</artifactId>
+                <version>${oracle-internal-identity-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.code.findbugs</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.hk2.external</groupId>
+                        <artifactId>jakarta.inject</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.hk2.external</groupId>
+                        <artifactId>javax.inject</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse -->
             <dependency>
                 <groupId>com.oracle.pic.identity.authorization</groupId>
                 <artifactId>jersey-2-29-annotations</artifactId>
