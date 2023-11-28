@@ -137,7 +137,7 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
         if (bodyParam == null || BooleanUtils.isNotTrue(bodyParam.isBodyParam)) {
             return;
         }
-        log.info("Body Param " + bodyParam.dataType.toString());
+        log.info("Body Param " + bodyParam.dataType);
         boolean isBodyParam = BooleanUtils.isTrue(bodyParam.isBodyParam);
         boolean isNonPrimitiveType = BooleanUtils.isNotTrue(bodyParam.isPrimitiveType);
 
@@ -187,10 +187,10 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
 
     private void resolveContexts(OracleJavaHelidonServiceCodegen oracleJavaHelidonServiceCodegen) {
         if (oracleJavaHelidonServiceCodegen.getOptionValue(OracleJavaHelidonServiceCodegen.ConfigOption.OPTION_CONTEXTS_IDENTITY)) {
-            contextsToInclude.add(
-                    "@com.oracle.pic.identity.authorization.sdk.context.PrincipalContext com.oracle.pic.identity.authentication.Principal principal");
-            contextsToInclude.add(
-                    "@com.oracle.pic.identity.authorization.sdk.context.AuthorizationRequestContext com.oracle.pic.identity.authorization.sdk.AuthorizationRequest authorizationRequest");
+//            contextsToInclude.add(
+//                    "@com.oracle.pic.identity.authorization.sdk.context.PrincipalContext com.oracle.pic.identity.authentication.Principal principal");
+//            contextsToInclude.add(
+//                    "@com.oracle.pic.identity.authorization.sdk.context.AuthorizationRequestContext com.oracle.pic.identity.authorization.sdk.AuthorizationRequest authorizationRequest");
         }
         if (oracleJavaHelidonServiceCodegen.getOptionValue(
                 OracleJavaHelidonServiceCodegen.ConfigOption.OPTION_CONTEXTS_JAXRS_HTTPHEADERS)) {

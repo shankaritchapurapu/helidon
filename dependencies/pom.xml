@@ -27,21 +27,31 @@
         <oracle-internal-commons-core-resources-version>1.2.337</oracle-internal-commons-core-resources-version>
         <oracle-internal-commons-metrics-lib-version>0.0.30</oracle-internal-commons-metrics-lib-version>
         <oracle-internal-commons-metrics-reporter-version>0.0.51</oracle-internal-commons-metrics-reporter-version>
-        <oracle-internal-commons-metrics-version>4.1.9</oracle-internal-commons-metrics-version>
+        <oracle-internal-commons-metrics-version>4.1.11</oracle-internal-commons-metrics-version>
         <oracle-internal-commons-request-id-version>1.1.46</oracle-internal-commons-request-id-version>
         <oracle-internal-core-regions-version>2.1.73</oracle-internal-core-regions-version>
         <oracle-internal-exception-mapping-version>3.0.65</oracle-internal-exception-mapping-version>
         <oracle-internal-identity-common-version>2.1.0.465</oracle-internal-identity-common-version>
-        <oracle-internal-identity-version>3.0.232</oracle-internal-identity-version>
+        <oracle-internal-identity-version>3.0.237</oracle-internal-identity-version>
         <oracle-internal-logging-version>3.3.5</oracle-internal-logging-version>
         <oracle-internal-vault-java-sdk-version>2.0.4</oracle-internal-vault-java-sdk-version>
         <oracle-internal-vault-user-api-spec-version>1.0.78</oracle-internal-vault-user-api-spec-version>
         <oracle-internal-vault-user-java-client-version>1.0.2</oracle-internal-vault-user-java-client-version>
-        <oracle-internal-secret-service-cp-java-client-version>1.1.4</oracle-internal-secret-service-cp-java-client-version>
+        <oracle-internal-sdk-common-version>1.2</oracle-internal-sdk-common-version>
+        <oracle-internal-secret-service-cp-java-client-version>1.1.5</oracle-internal-secret-service-cp-java-client-version>
 
         <version.lib.cdi-api>2.0.2</version.lib.cdi-api>
         <version.lib.jaxrs-api>2.1.6</version.lib.jaxrs-api>
         <version.lib.org-glassfish>2.40</version.lib.org-glassfish>
+
+        <version.lib.commons-io>2.13.0</version.lib.commons-io>
+        <version.lib.commons-lang3>3.10</version.lib.commons-lang3>
+        <version.lib.httpclient>4.5.14</version.lib.httpclient>
+        <version.lib.httpcore>4.4.16</version.lib.httpcore>
+        <version.lib.guice>5.1.0</version.lib.guice>
+        <version.lib.joda-time>2.10.14</version.lib.joda-time>
+        <version.lib.javaassist>3.29.2-GA</version.lib.javaassist>
+        <version.lib.nimbus-jose-jwt>9.10.1</version.lib.nimbus-jose-jwt>
     </properties>
 
     <dependencyManagement>
@@ -71,28 +81,28 @@
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-common</artifactId>
                 <version>${oci-java-sdk-version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.bouncycastle</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.commons</groupId>
-                        <artifactId>commons-lang3</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.glassfish.hk2</groupId>
-                        <artifactId>hk2-locator</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-io</groupId>
-                        <artifactId>commons-io</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-codec</groupId>
-                        <artifactId>commons-codec</artifactId>
-                    </exclusion>
-                </exclusions>
+<!--                <exclusions>-->
+<!--                    <exclusion>-->
+<!--                        <groupId>org.bouncycastle</groupId>-->
+<!--                        <artifactId>*</artifactId>-->
+<!--                    </exclusion>-->
+<!--                    <exclusion>-->
+<!--                        <groupId>org.apache.commons</groupId>-->
+<!--                        <artifactId>commons-lang3</artifactId>-->
+<!--                    </exclusion>-->
+<!--                    <exclusion>-->
+<!--                        <groupId>org.glassfish.hk2</groupId>-->
+<!--                        <artifactId>hk2-locator</artifactId>-->
+<!--                    </exclusion>-->
+<!--                    <exclusion>-->
+<!--                        <groupId>commons-io</groupId>-->
+<!--                        <artifactId>commons-io</artifactId>-->
+<!--                    </exclusion>-->
+<!--                    <exclusion>-->
+<!--                        <groupId>commons-codec</groupId>-->
+<!--                        <artifactId>commons-codec</artifactId>-->
+<!--                    </exclusion>-->
+<!--                </exclusions>-->
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
@@ -293,6 +303,10 @@
                     <exclusion>
                         <groupId>com.oracle.pic.commons.client</groupId>
                         <artifactId>java-rest-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.ws.rs</groupId>
+                        <artifactId>javax.ws.rs-api</artifactId>
                     </exclusion>
                     <exclusion>
                         <groupId>org.projectlombok</groupId>
@@ -510,6 +524,31 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse -->
+            <dependency>
+                <groupId>com.oracle.pic.identity.authorization</groupId>
+                <artifactId>jersey-2-25-annotations</artifactId>
+                <version>${oracle-internal-identity-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.code.findbugs</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.hk2.external</groupId>
+                        <artifactId>jakarta.inject</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.hk2.external</groupId>
+                        <artifactId>javax.inject</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse -->
             <dependency>
                 <groupId>com.oracle.pic.identity.authorization</groupId>
                 <artifactId>jersey-2-29-annotations</artifactId>
@@ -634,6 +673,21 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.internals.sdk</groupId>
+                <artifactId>java-sdk-oci-internals-commons</artifactId>
+                <version>${oracle-internal-sdk-common-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>bc-fips</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>bcpkix-fips</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
 
             <dependency>
                 <groupId>io.helidon.integrations.oci.sdk</groupId>
@@ -686,6 +740,59 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+
+            <!-- needed for dependency convergence -->
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${version.lib.commons-io}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>${version.lib.guice}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.inject</groupId>
+                        <artifactId>javax.inject</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>aopalliance</groupId>
+                        <artifactId>aopalliance</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${version.lib.nimbus-jose-jwt}</version>
+            </dependency>
+            <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>${version.lib.joda-time}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${version.lib.commons-lang3}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${version.lib.httpclient}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>${version.lib.httpcore}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.javassist</groupId>
+                <artifactId>javassist</artifactId>
+                <version>${version.lib.javaassist}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 </project>

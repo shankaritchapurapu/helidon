@@ -24,17 +24,9 @@
         <surefire.coverage.argline />
         <failsafe.coverage.argline />
 
-        <version.lib.commons-io>2.13.0</version.lib.commons-io>
-        <version.lib.commons-lang3>3.10</version.lib.commons-lang3>
         <version.lib.hamcrest>1.3</version.lib.hamcrest>
-        <version.lib.httpclient>4.5.14</version.lib.httpclient>
-        <version.lib.httpcore>4.4.16</version.lib.httpcore>
-        <version.lib.guice>5.1.0</version.lib.guice>
-        <version.lib.joda-time>2.10.14</version.lib.joda-time>
-        <version.lib.javaassist>3.29.2-GA</version.lib.javaassist>
         <version.lib.junit>5.10.1</version.lib.junit>
         <version.lib.mockito>2.23.4</version.lib.mockito>
-        <version.lib.nimbus-jose-jwt>9.10.1</version.lib.nimbus-jose-jwt>
 
         <version.plugin.compiler>3.8.1</version.plugin.compiler>
         <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
@@ -74,51 +66,6 @@
 
             <!-- misc. other 3rd party dependencies -->
             <dependency>
-                <groupId>commons-io</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>${version.lib.commons-io}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.inject</groupId>
-                <artifactId>guice</artifactId>
-                <version>${version.lib.guice}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>javax.inject</groupId>
-                        <artifactId>javax.inject</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>aopalliance</groupId>
-                        <artifactId>aopalliance</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.nimbusds</groupId>
-                <artifactId>nimbus-jose-jwt</artifactId>
-                <version>${version.lib.nimbus-jose-jwt}</version>
-            </dependency>
-            <dependency>
-                <groupId>joda-time</groupId>
-                <artifactId>joda-time</artifactId>
-                <version>${version.lib.joda-time}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-lang3</artifactId>
-                <version>${version.lib.commons-lang3}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpclient</artifactId>
-                <version>${version.lib.httpclient}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpcore</artifactId>
-                <version>${version.lib.httpcore}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-all</artifactId>
                 <version>${version.lib.hamcrest}</version>
@@ -129,11 +76,6 @@
                 <artifactId>hamcrest-core</artifactId>
                 <version>${version.lib.hamcrest}</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.javassist</groupId>
-                <artifactId>javassist</artifactId>
-                <version>${version.lib.javaassist}</version>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -159,7 +101,6 @@
                 <version>${version.lib.mockito}</version>
                 <scope>test</scope>
             </dependency>
-
         </dependencies>
     </dependencyManagement>
 
