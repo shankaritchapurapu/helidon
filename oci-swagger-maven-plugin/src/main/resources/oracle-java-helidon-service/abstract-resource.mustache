@@ -19,15 +19,15 @@ public abstract class Abstract{{classname}}BaseResource {{#parentAbstractClass}}
     protected Abstract{{classname}}BaseResource() {
     }
 
-    @javax.inject.Inject
+    @{{annotationPackage}}.inject.Inject
     protected Abstract{{classname}}BaseResource(
-                javax.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest,
-                javax.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal) {
+                {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest,
+                {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal) {
         setAuthorizationRequestProvider(authorizationRequest);
         setPrincipalProvider(principal);
     }
 
-    @javax.inject.Inject
+    @{{annotationPackage}}.inject.Inject
     public void setAuthorizationRequestProvider(
                 @{{annotationPackage}}.validation.constraints.NotNull
                 {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest) {
@@ -40,7 +40,7 @@ public abstract class Abstract{{classname}}BaseResource {{#parentAbstractClass}}
         return java.util.Optional.ofNullable(authorizationRequest != null ? authorizationRequest.get() : null);
     }
 
-    @javax.inject.Inject
+    @{{annotationPackage}}.inject.Inject
     public void setPrincipalProvider(
                 @{{annotationPackage}}.validation.constraints.NotNull
                 {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal) {
