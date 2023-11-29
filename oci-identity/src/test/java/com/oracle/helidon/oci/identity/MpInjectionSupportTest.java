@@ -53,33 +53,22 @@ public class MpInjectionSupportTest {
     private SecurityContext sc;
 
     @Inject
-    @Service
-    private Provider<Subject> serviceSubjectProvider;
+    private Provider<Subject> subjectProvider;
 
     @Inject
-    @Service
-    private Provider<com.oracle.pic.identity.authentication.Principal> servicePrincipalProvider;
+    private Provider<com.oracle.pic.identity.authentication.Principal> principalProvider;
 
-    // TODO: @Laird
-//    @Inject
-//    @Default
-    private Subject defaultSubject;
-
-    // TODO: @Laird
-//    @Inject
-//    @Default
-    private com.oracle.pic.identity.authentication.Principal defaultPrincipal;
+    @Inject
+    private Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequestProvider;
 
     @Test
     void sanity() {
         assertThat(rcc, notNullValue());
         assertThat(target, notNullValue());
         assertThat(sc, notNullValue());
-        assertThat(serviceSubjectProvider, notNullValue());
-        assertThat(servicePrincipalProvider, notNullValue());
-        // TODO: @Laird
-//        assertThat(defaultSubject, notNullValue());
-//        assertThat(defaultPrincipal, notNullValue());
+        assertThat(subjectProvider, notNullValue());
+        assertThat(authorizationRequestProvider, notNullValue());
+        assertThat(principalProvider, notNullValue());
     }
 
     @Test
@@ -108,17 +97,23 @@ public class MpInjectionSupportTest {
     }
 
     @Test
-    void testInjectedSubjectWhenNoRequestScopeIsActive() {
-        assertThrows(ContextNotActiveException.class, this.serviceSubjectProvider::get);
+    void testInjectedWhenNoRequestScopeIsActive() {
+        assertThrows(ContextNotActiveException.class, this.subjectProvider::get);
+
+        // TODO: How is this not throwing - since we are not in a request scoped context?
+//        assertThrows(IllegalStateException.class, this.authorizationRequestProvider::get);
+//        assertThrows(ContextNotActiveException.class, this.principalProvider::get);
     }
 
     @Test
     void testInjectedSubjectWhenRequestIsActive() {
         try {
             rcc.activate();
-            Subject s = this.serviceSubjectProvider.get();
-            assertThat(s, is(not(nullValue())));
-            Object p = this.servicePrincipalProvider.get();
+            Subject s = this.subjectProvider.get();
+            assertThat(s, not(nullValue()));
+            Object r = this.authorizationRequestProvider.get();
+            assertThat(r, not(nullValue()));
+            Object p = this.principalProvider.get();
             assertThat(p, not(nullValue()));
         } finally {
             rcc.deactivate();

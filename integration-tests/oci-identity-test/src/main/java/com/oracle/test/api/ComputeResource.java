@@ -27,6 +27,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
             String opcIdempotencyToken
     ) {
         Objects.requireNonNull(principal.get());
+        assert(principal.get() == getPrincipal().orElseThrow());
         Objects.requireNonNull(authorizationRequest);
 
         VolumeAttachment volumeAttachment =

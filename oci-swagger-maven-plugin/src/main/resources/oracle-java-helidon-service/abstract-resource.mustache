@@ -12,8 +12,46 @@ package {{package}};
 {{#hasProduces}}@{{annotationPackage}}.ws.rs.Produces({ {{#produces}}"{{{mediaType}}}"{{#hasMore}}, {{/hasMore}}{{/produces}} })
 {{/hasProduces}}
 public abstract class Abstract{{classname}}BaseResource {{#parentAbstractClass}}extends {{parentAbstractClass}}{{/parentAbstractClass}} {
-{{#contextsIdentity}}    @javax.inject.Inject javax.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest;
-    @javax.inject.Inject javax.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal;
+{{#contextsIdentity}}
+    {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest;
+    {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal;
+
+    protected Abstract{{classname}}BaseResource() {
+    }
+
+    @{{annotationPackage}}.inject.Inject
+    protected Abstract{{classname}}BaseResource(
+                {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest,
+                {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal) {
+        setAuthorizationRequestProvider(authorizationRequest);
+        setPrincipalProvider(principal);
+    }
+
+    @{{annotationPackage}}.inject.Inject
+    void setAuthorizationRequestProvider(
+                @{{annotationPackage}}.validation.constraints.NotNull
+                {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest) {
+        java.util.Objects.requireNonNull(authorizationRequest);
+        assert(this.authorizationRequest == null || this.authorizationRequest == authorizationRequest);
+        this.authorizationRequest = authorizationRequest;
+    }
+
+    java.util.Optional<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> getAuthorizationRequest() {
+        return java.util.Optional.ofNullable(authorizationRequest != null ? authorizationRequest.get() : null);
+    }
+
+    @{{annotationPackage}}.inject.Inject
+    void setPrincipalProvider(
+                @{{annotationPackage}}.validation.constraints.NotNull
+                {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal) {
+        java.util.Objects.requireNonNull(principal);
+        assert(this.principal == null || this.principal == principal);
+        this.principal = principal;
+    }
+
+    java.util.Optional<com.oracle.pic.identity.authentication.Principal> getPrincipal() {
+        return java.util.Optional.ofNullable(principal != null ? principal.get() : null);
+    }
 {{/contextsIdentity}}
 {{#operations}}
 {{#operation}}

@@ -18,6 +18,7 @@ package com.oracle.helidon.oci.identity;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
+import javax.enterprise.context.RequestScoped;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Produces;
 
@@ -46,46 +47,18 @@ public class MpInjectionSupport {
         return sc.service().orElse(EMPTY_SUBJECT);
     }
 
-    // Subject.class is final so can't be proxied so can't be @RequestScoped.
     @Produces
-    @Service
-    @Dependent
-    private static Subject produceContextualSubject(SecurityContext sc) {
-        // TODO:
-        return sc.service().orElse(EMPTY_SUBJECT);
-    }
-
-    @Produces
-    @Default
-    @Dependent
-    public static com.oracle.pic.identity.authentication.Principal produceDefaultPrincipal(SecurityContext sc) {
-        // TODO:
-        return com.oracle.pic.authproxy.AuthProxyAnonymousPrincipal.builder().build();
-    }
-
-    @Produces
-    @Dependent
-    @Service
+    @RequestScoped
     public static com.oracle.pic.identity.authentication.Principal produceContextualPrincipal(SecurityContext sc/*,
             InjectionPoint ip*/) {
         // TODO:
         return com.oracle.pic.authproxy.AuthProxyAnonymousPrincipal.builder().build();
     }
 
-
     @Produces
-    @Default
-    @Dependent
-    public static com.oracle.pic.identity.authorization.sdk.AuthorizationRequest produceDefaultAuthorizationRequest(SecurityContext sc) {
-        // TODO:
-        return AuthorizationRequestFactory.serviceRequest(PrincipalType.SERVICE.name(), produceDefaultPrincipal(sc));
-    }
-
-    @Produces
-    @Dependent
-    @Service
+    @RequestScoped
     public static com.oracle.pic.identity.authorization.sdk.AuthorizationRequest produceContextualAuthorizationRequest(SecurityContext sc/*,
-                                                                                                             InjectionPoint ip*/) {
+            InjectionPoint ip*/) {
         // TODO:
         return AuthorizationRequestFactory.serviceRequest(PrincipalType.SERVICE.name(), produceContextualPrincipal(sc));
     }
