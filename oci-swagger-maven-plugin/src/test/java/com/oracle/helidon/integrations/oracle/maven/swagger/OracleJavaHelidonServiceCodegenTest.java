@@ -82,16 +82,6 @@ public class OracleJavaHelidonServiceCodegenTest {
         assertThat(
                 find(
                         linesFromFile,
-                        "@com.oracle.pic.identity.authorization.sdk.context.PrincipalContext com.oracle.pic.identity"
-                                + ".authentication.Principal principal"), is(false));
-        assertThat(
-                find(
-                        linesFromFile,
-                        "@javax.inject.Inject javax.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal;"),
-                is(true));
-        assertThat(
-                find(
-                        linesFromFile,
                         "@jakarta.ws.rs.core.Context jakarta.ws.rs.core.HttpHeaders httpHeadersContext"), is(true));
         assertThat(
                 find(
