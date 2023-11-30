@@ -31,7 +31,7 @@
         <version.plugin.compiler>3.8.1</version.plugin.compiler>
         <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
         <version.plugin.failsafe>3.0.0-M5</version.plugin.failsafe>
-        <version.plugin.helidon-build-tools>2.3.8</version.plugin.helidon-build-tools>
+        <version.plugin.helidon-build-tools>4.0.0-SNAPSHOT</version.plugin.helidon-build-tools>
         <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
         <version.plugin.surefire>3.0.0-M5</version.plugin.surefire>
         <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
@@ -167,9 +167,9 @@
                                 <rules>
                                     <helidonDependenciesRule>
                                         <namespace>JAVAX</namespace>
-                                        <excludedGavRegExs>
-                                            <excludedGav>javax.servlet:javax.servlet-api:.*</excludedGav>
-                                        </excludedGavRegExs>
+<!--                                        <excludedGavRegExs>-->
+<!--                                            <excludedGav>javax.servlet:javax.servlet-api:.*</excludedGav>-->
+<!--                                        </excludedGavRegExs>-->
                                     </helidonDependenciesRule>
                                     <bannedDependencies>
                                         <searchTransitive>true</searchTransitive>
