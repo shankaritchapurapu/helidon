@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 
+import com.oracle.helidon.oci.identity.RepeatableInputStreamer.Configuration;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 
@@ -48,10 +49,50 @@ class RepeatableInputStreamTest {
     byte[] contents;
 
     @Test
+    void sanity() throws Exception {
+        String input = "\tHello\nWorld! ";
+        Stream stream = create(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)));
+        String output = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(output, equalTo(input));
+        stream.close();
+
+        stream = create(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)));
+        ReplayStream replay = stream.replay();
+        output = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(output, equalTo(input));
+        output = new String(replay.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(output, equalTo(input));
+        stream.close();
+        replay.close();
+    }
+
+    @Test
+    void sanity_offline_encrypted() throws Exception {
+        Config config = Config.builder()
+                .sources(ConfigSources.create(Map.of("memoryThreshold", "1", "useEncryption", "true")))
+                .build();
+        Configuration configuration = RepeatableInputStreamer.loadConfig(config, true);
+
+        String input = "\tHello\nWorld! ";
+        Stream stream = create(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), configuration);
+        String output = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(output, equalTo(input));
+        stream.close();
+
+        stream = create(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), configuration);
+        ReplayStream replay = stream.replay();
+        output = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(output, equalTo(input));
+        output = new String(replay.readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(output, equalTo(input));
+        stream.close();
+        replay.close();
+    }
+
+    @Test
     void emptyStream_streamIsReadCompletelyFirst() throws Exception {
         Stream stream = create(new ByteArrayInputStream(new byte[] {}));
         assertThat(stream.available(), is(0));
-        assertThat(stream.read(), is(0));
         assertThat(stream.read(), is(-1));
 
         ReplayStream replay1 = stream.replay();
@@ -59,11 +100,9 @@ class RepeatableInputStreamTest {
         assertThat(replay1, not(sameInstance(replay2)));
 
         assertThat(replay1.available(), is(0));
-        assertThat(replay1.read(), is(0));
         assertThat(replay1.read(), is(-1));
 
         assertThat(replay2.available(), is(0));
-        assertThat(replay2.read(), is(0));
         assertThat(replay2.read(), is(-1));
 
         stream.close();
@@ -87,16 +126,13 @@ class RepeatableInputStreamTest {
         assertThat(replay1, not(sameInstance(replay2)));
 
         assertThat(replay1.available(), is(0));
-        assertThat(replay1.read(), is(0));
         assertThat(replay1.read(), is(-1));
 
         assertThat(replay2.available(), is(0));
-        assertThat(replay2.read(), is(0));
         assertThat(replay2.read(), is(-1));
 
         // now we can finally read the first stream as shown in the commented out code above
         assertThat(stream.available(), is(0));
-        assertThat(stream.read(), is(0));
         assertThat(stream.read(), is(-1));
 
         stream.close();
@@ -164,7 +200,7 @@ class RepeatableInputStreamTest {
                 .sources(ConfigSources.create(
                         Map.of("memoryThreshold", "1", "streamThreshold", "5", "useEncryption", "false")))
                 .build();
-        RepeatableInputStreamer.Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
+        Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
         assertThat(cfg.memoryThreshold(), is(1));
         assertThat(cfg.streamThreshold(), is(5L));
         assertThat(cfg.useEncryption(), is(false));
@@ -182,7 +218,7 @@ class RepeatableInputStreamTest {
                 .sources(ConfigSources.create(
                         Map.of("memoryThreshold", "4", "streamThreshold", "5", "useEncryption", "false")))
                 .build();
-        RepeatableInputStreamer.Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
+        Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
         assertThat(cfg.memoryThreshold(), is(4));
         assertThat(cfg.streamThreshold(), is(5L));
         assertThat(cfg.useEncryption(), is(false));
@@ -206,7 +242,7 @@ class RepeatableInputStreamTest {
         Config config = Config.builder()
                 .sources(ConfigSources.create(Map.of("memoryThreshold", "1", "useEncryption", "false")))
                 .build();
-        RepeatableInputStreamer.Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
+        Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
         assertThat(cfg.useEncryption(), is(false));
 
         Optional<Path> backingPath = boundedStream_n_streamIsReadCompletelyFirst("* Hello World!".getBytes(), null, cfg);
@@ -221,7 +257,7 @@ class RepeatableInputStreamTest {
         Config config = Config.builder()
                 .sources(ConfigSources.create(Map.of("memoryThreshold", "1", "useEncryption", "true")))
                 .build();
-        RepeatableInputStreamer.Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
+        Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
         assertThat(cfg.useEncryption(), is(true));
 
         Optional<Path> backingPath = boundedStream_n_streamIsReadCompletelyFirst("* Hello World!".getBytes(), null, cfg);
@@ -236,7 +272,7 @@ class RepeatableInputStreamTest {
         Config config = Config.builder()
                 .sources(ConfigSources.create(Map.of("memoryThreshold", "1", "useEncryption", "false")))
                 .build();
-        RepeatableInputStreamer.Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
+        Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
         assertThat(cfg.useEncryption(), is(false));
 
         AtomicReference<ReplayStream> ref = new AtomicReference<>();
@@ -267,14 +303,14 @@ class RepeatableInputStreamTest {
     }
 
     Optional<Path> boundedStream_n_streamIsReadCompletelyFirst(int size,
-                                                               RepeatableInputStreamer.Configuration... cfg) {
+                                                               Configuration... cfg) {
         byte[] buff = createTestBytes(size);
         return boundedStream_n_streamIsReadCompletelyFirst(buff, null, cfg);
     }
 
     Optional<Path> boundedStream_n_streamIsReadCompletelyFirst(byte[] buff,
                                                                Consumer<Stream> streamConsumer,
-                                                               RepeatableInputStreamer.Configuration... cfg) {
+                                                               Configuration... cfg) {
         Stream stream;
         if (cfg == null || cfg.length <= 0) {
             stream = create(new ByteArrayInputStream(buff));
@@ -355,7 +391,7 @@ class RepeatableInputStreamTest {
     }
 
     static Optional<Path> boundedStream_n_streamIsNotReadFirst(int size,
-                                                               RepeatableInputStreamer.Configuration... cfg) {
+                                                               Configuration... cfg) {
         byte[] buff = createTestBytes(size);
         Stream stream;
         if (cfg == null || cfg.length <= 0) {

@@ -98,7 +98,11 @@ class RepeatableInputStreamer {
             byte[] firstBlockIn = new byte[size];
             int read = stream.readNBytes(firstBlockIn, 0, size - 1);
             int oneMoreByte = stream.read();
-            if (oneMoreByte != IOUtils.EOF) {
+            if (oneMoreByte == IOUtils.EOF) {
+                byte[] tmp = new byte[size - 1];
+                System.arraycopy(firstBlockIn, 0, tmp, 0, tmp.length);
+                firstBlockIn = tmp;
+            } else {
                 firstBlockIn[read] = Integer.valueOf(oneMoreByte).byteValue();
 
                 // we know there is a potential for more to come...
