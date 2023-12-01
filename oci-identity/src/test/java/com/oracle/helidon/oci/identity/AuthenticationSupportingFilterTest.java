@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -28,10 +29,14 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
+import io.helidon.config.Config;
+import io.helidon.config.ConfigSources;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static com.oracle.helidon.oci.identity.AuthenticationSupportingFilter.*;
+import static com.oracle.helidon.oci.identity.AuthenticationSupportingFilter.Configuration;
+import static com.oracle.helidon.oci.identity.AuthenticationSupportingFilter.TAG_DEFAULT_HEADER;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -80,7 +85,7 @@ class AuthenticationSupportingFilterTest {
     }
 
     @Test
-    void configTest() {
+    void matchTest() {
         Configuration config = Mockito.mock(Configuration.class);
         when(config.uriPrefix()).thenReturn(List.of("/path/0", "/path/1"));
         AuthenticationSupportingFilter filter = new AuthenticationSupportingFilter(config);
@@ -89,6 +94,25 @@ class AuthenticationSupportingFilterTest {
         assertThat(filter.matches("/path/1"), is(true));
         assertThat(filter.matches("/path/1/more"), is(true));
         assertThat(filter.matches("/"), is(false));
+    }
+
+    @Test
+    void configTest() {
+        Config config = Config.builder()
+                .sources(ConfigSources.create(Map.of("memoryThreshold", "1",
+                                                     "useEncryption", "true",
+                                                     "headerTag", "tag",
+                                                     "uriPrefix.0", "/v1/")))
+                .build();
+        AuthenticationSupportingFilter filter = new AuthenticationSupportingFilter(config);
+        assertThat(filter.configuration().uriPrefix(), equalTo(List.of("/v1/")));
+        assertThat(filter.configuration().headerTag(), equalTo("tag"));
+
+        RepeatableInputStreamer.Stream stream = filter.createRepeatableStream(new ByteArrayInputStream("".getBytes()));
+        RepeatableInputStreamer.Configuration rsConfig = stream.configuration();
+        assertThat(rsConfig.useEncryption(), is(true));
+        assertThat(rsConfig.memoryThreshold(), is(1));
+        assertThat(rsConfig.streamThreshold(), is(RepeatableInputStreamer.DEFAULT_BYTES_MAX));
     }
 
     private ContainerRequestContext newRequestContext(String uri,

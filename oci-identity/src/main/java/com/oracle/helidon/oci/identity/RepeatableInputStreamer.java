@@ -66,7 +66,7 @@ import org.eclipse.microprofile.config.ConfigProvider;
 class RepeatableInputStreamer {
     static final String DEFAULT_CONFIG_KEY = "repeatable-input-streamer";
     static final int DEFAULT_BYTES_IN_FIRST_BLOCK = 4096;
-    static final int DEFAULT_BYTES_MAX = 256 * 1024 * 1024;
+    static final long DEFAULT_BYTES_MAX = 256 * 1024 * 1024;
     static final boolean DEFAULT_USE_ENCRYPTION = false;
     static final String DEFAULT_ENCRYPTION_ALGORITHM = "AES";
     static final String DEFAULT_ENCRYPTION_CIPHER = "AES/CBC/PKCS5Padding";
@@ -188,7 +188,7 @@ class RepeatableInputStreamer {
          * @return the streaming threshold limit
          */
         public long streamThreshold() {
-            int result = config.get("streamThreshold").asInt().orElse(DEFAULT_BYTES_MAX);
+            long result = config.get("streamThreshold").asLong().orElse(DEFAULT_BYTES_MAX);
             if (result < memoryThreshold()) {
                 throw new IllegalStateException("`streamThreshold` must be larger than `memoryThreshold`; val=" + result);
             }
@@ -388,6 +388,10 @@ class RepeatableInputStreamer {
                     && tempFile != null) {
                 tempFile.delete();
             }
+        }
+
+        Configuration configuration() {
+            return configuration;
         }
     }
 

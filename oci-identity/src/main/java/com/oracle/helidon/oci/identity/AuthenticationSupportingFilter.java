@@ -16,6 +16,7 @@
 
 package com.oracle.helidon.oci.identity;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
 
@@ -57,6 +58,10 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
         this(CONFIG.get());
     }
 
+    AuthenticationSupportingFilter(Config config) {
+        this.config = new Configuration(Objects.requireNonNull(config));
+    }
+
     AuthenticationSupportingFilter(Configuration config) {
         this.config = Objects.requireNonNull(config);
     }
@@ -66,10 +71,7 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
         boolean hasBody = rc.hasEntity();
         if (hasBody
                 && matches("/" + rc.getUriInfo().getPath())) {
-            RepeatableInputStreamer.Stream stream =
-                    RepeatableInputStreamer.create(rc.getEntityStream(),
-                                                   // share the same config that we use for ourselves
-                                                   RepeatableInputStreamer.loadConfig(config.config, false));
+            RepeatableInputStreamer.Stream stream = createRepeatableStream(rc.getEntityStream());
             RepeatableInputStreamer.ReplayStream replayStream = stream.replay();
 
             String digest = DigestStreamer.calculateDigest(stream);
@@ -77,6 +79,15 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
 
             rc.setEntityStream(replayStream);
         }
+    }
+
+    /**
+     * Returns {@code true} if this feature was explicitly configured.
+     *
+     * @return true if explicitly configured, false if using defaults
+     */
+    public boolean isConfigured() {
+        return configuration().exists();
     }
 
     /**
@@ -90,13 +101,10 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
                 .anyMatch(requestUriPath::startsWith);
     }
 
-    /**
-     * Returns {@code true} if this feature was explicitly configured.
-     *
-     * @return true if explicitly configured, false if using defaults
-     */
-    public boolean isConfigured() {
-        return configuration().exists();
+    RepeatableInputStreamer.Stream createRepeatableStream(InputStream is) {
+        return RepeatableInputStreamer.create(is,
+                                       // share the same config that we use for ourselves
+                                       RepeatableInputStreamer.loadConfig(config.config, false));
     }
 
     Configuration configuration() {
