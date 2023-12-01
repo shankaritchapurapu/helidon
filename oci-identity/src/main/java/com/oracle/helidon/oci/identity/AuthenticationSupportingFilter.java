@@ -19,6 +19,8 @@ package com.oracle.helidon.oci.identity;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
@@ -39,6 +41,9 @@ import org.eclipse.microprofile.config.ConfigProvider;
 @PreMatching
 @Priority(Priorities.AUTHENTICATION - 50) // runs after the opc request id generator
 public class AuthenticationSupportingFilter implements ContainerRequestFilter {
+    private static final Logger LOGGER = Logger.getLogger(AuthenticationSupportingFilter.class.getName());
+    private static boolean LOGGED;
+
     /**
      * The top level config key used to configure this filter.
      */
@@ -69,8 +74,9 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext rc) {
         boolean hasBody = rc.hasEntity();
-        if (hasBody
-                && matches("/" + rc.getUriInfo().getPath())) {
+        boolean qualifies = (hasBody && matches("/" + rc.getUriInfo().getPath()));
+        LOGGER.log(Level.FINE, "filter qualifies: " + rc.getUriInfo().getPath() + ": " + qualifies);
+        if (qualifies) {
             RepeatableInputStreamer.Stream stream = createRepeatableStream(rc.getEntityStream());
             RepeatableInputStreamer.ReplayStream replayStream = stream.replay();
 
@@ -108,6 +114,10 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
     }
 
     Configuration configuration() {
+        if (!LOGGED) {
+            LOGGED = true;
+            LOGGER.log(Level.FINE, "configuration: " + config);
+        }
         return config;
     }
 
@@ -145,6 +155,11 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
          */
         public String headerTag() {
             return config.get("headerTag").asString().orElse(TAG_DEFAULT_HEADER);
+        }
+
+        @Override
+        public String toString() {
+            return "{\theaderTag: " + headerTag() + ";\n\turiPrefix: " + uriPrefix() + "\n}";
         }
 
         boolean exists() {

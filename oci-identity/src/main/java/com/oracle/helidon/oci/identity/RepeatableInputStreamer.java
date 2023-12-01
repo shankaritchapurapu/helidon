@@ -30,6 +30,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
@@ -64,6 +66,8 @@ import org.eclipse.microprofile.config.ConfigProvider;
  *  upon this since it will risk memory and disk exhaustion.
  */
 class RepeatableInputStreamer {
+    private static final Logger LOGGER = Logger.getLogger(RepeatableInputStreamer.class.getName());
+
     static final String DEFAULT_CONFIG_KEY = "repeatable-input-streamer";
     static final int DEFAULT_BYTES_IN_FIRST_BLOCK = 8 * 1024;
     static final long DEFAULT_BYTES_MAX = 256 * 1024 * 1024;
@@ -71,6 +75,8 @@ class RepeatableInputStreamer {
     static final boolean DEFAULT_USE_ENCRYPTION = false;
     static final String DEFAULT_ENCRYPTION_ALGORITHM = "AES";
     static final String DEFAULT_ENCRYPTION_CIPHER = "AES/CBC/PKCS5Padding";
+
+    private static boolean LOGGED;
 
     private RepeatableInputStreamer() {
     }
@@ -237,6 +243,15 @@ class RepeatableInputStreamer {
             return config.get("encryptionCipher").asString().orElse(DEFAULT_ENCRYPTION_CIPHER);
         }
 
+        @Override
+        public String toString() {
+            return "{\tmemoryThreshold: " + memoryThreshold()
+                    + ";\n\tuseFilesystem: " + useFilesystem()
+                    + ";\n\tuseEncryption: " + useEncryption()
+                    + ";\n\tstreamThreshold: " + streamThreshold()
+                    + "\n}";
+        }
+
         /**
          * Will validate the integrity of the configuration and then return {@code this}.
          *
@@ -301,6 +316,11 @@ class RepeatableInputStreamer {
             this.remainingIn = remainingIn;
             this.tempFile = tempFile;
             this.offlineOut = offlineOut;
+
+            if (!LOGGED) {
+                LOGGED = true;
+                LOGGER.log(Level.FINE, "configuration: " + configuration);
+            }
         }
 
         @Override
