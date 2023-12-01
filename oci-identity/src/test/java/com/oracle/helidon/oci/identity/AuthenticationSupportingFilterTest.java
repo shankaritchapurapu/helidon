@@ -42,17 +42,6 @@ class AuthenticationSupportingFilterTest {
 
     static final String TEST_INPUT = "Hello Joe";
 
-//    Config config;
-//
-//    @BeforeAll
-//    void setup() {
-//        config = ConfigProviderResolver.instance()
-//                .getBuilder()
-//                .withSources(MpConfigSources.create(Map.of("oci-identity.uriPrefix.0", "/path/0",
-//                                                           "oci-identity.uriPrefix.1", "/path/1/")))
-//                .build();
-//    }
-
     @Test
     void testRequestFilter_GET_withBody() {
         MultivaluedMap<String, String> map = new MultivaluedHashMap<>();
@@ -60,9 +49,9 @@ class AuthenticationSupportingFilterTest {
 
         AuthenticationSupportingFilter filter = new AuthenticationSupportingFilter();
         filter.filter(rc);
-        assertThat(map.containsKey(TAG_HEADER),
+        assertThat(map.containsKey(TAG_DEFAULT_HEADER),
                    is(true));
-        assertThat(map.getFirst(TAG_HEADER),
+        assertThat(map.getFirst(TAG_DEFAULT_HEADER),
                    equalTo("KFl7HCWzS/TNRlIt6rej3jzJBQ0pttRghDf7ZP/wpBM="));
     }
 
@@ -73,7 +62,7 @@ class AuthenticationSupportingFilterTest {
 
         AuthenticationSupportingFilter filter = new AuthenticationSupportingFilter();
         filter.filter(rc);
-        assertThat(map.containsKey(TAG_HEADER),
+        assertThat(map.containsKey(TAG_DEFAULT_HEADER),
                    is(false));
     }
 
@@ -84,9 +73,9 @@ class AuthenticationSupportingFilterTest {
 
         AuthenticationSupportingFilter filter = new AuthenticationSupportingFilter();
         filter.filter(rc);
-        assertThat(map.containsKey(TAG_HEADER),
+        assertThat(map.containsKey(TAG_DEFAULT_HEADER),
                    is(true));
-        assertThat(map.getFirst(TAG_HEADER),
+        assertThat(map.getFirst(TAG_DEFAULT_HEADER),
                    equalTo("KFl7HCWzS/TNRlIt6rej3jzJBQ0pttRghDf7ZP/wpBM="));
     }
 

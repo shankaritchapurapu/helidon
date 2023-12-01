@@ -17,6 +17,7 @@
 package com.oracle.helidon.oci.identity;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
@@ -45,7 +46,7 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
     /**
      * The header key that will be used to add the calculated digest value (when the URI matches what is configured).
      */
-    public static final String TAG_HEADER = "X-HELIDON-DIGEST";
+    public static final String TAG_DEFAULT_HEADER = "X-HELIDON-DIGEST";
 
     private static final LazyValue<Configuration> CONFIG = LazyValue
             .create(() -> new Configuration(globalMpConfig().get(TAG_CONFIG_KEY)));
@@ -53,11 +54,11 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
     private final Configuration config;
 
     public AuthenticationSupportingFilter() {
-        this(null);
+        this(CONFIG.get());
     }
 
     AuthenticationSupportingFilter(Configuration config) {
-        this.config = config;
+        this.config = Objects.requireNonNull(config);
     }
 
     @Override
@@ -65,11 +66,14 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
         boolean hasBody = rc.hasEntity();
         if (hasBody
                 && matches("/" + rc.getUriInfo().getPath())) {
-            RepeatableInputStreamer.Stream stream = RepeatableInputStreamer.create(rc.getEntityStream());
+            RepeatableInputStreamer.Stream stream =
+                    RepeatableInputStreamer.create(rc.getEntityStream(),
+                                                   // share the same config that we use for ourselves
+                                                   RepeatableInputStreamer.loadConfig(config.config, false));
             RepeatableInputStreamer.ReplayStream replayStream = stream.replay();
 
             String digest = DigestStreamer.calculateDigest(stream);
-            rc.getHeaders().add(TAG_HEADER, digest);
+            rc.getHeaders().add(configuration().headerTag(), digest);
 
             rc.setEntityStream(replayStream);
         }
@@ -96,7 +100,7 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
     }
 
     Configuration configuration() {
-        return (config != null) ? config : CONFIG.get();
+        return config;
     }
 
     private static Config globalMpConfig() {
@@ -124,6 +128,15 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
          */
         public List<String> uriPrefix() {
             return uriPrefix.get();
+        }
+
+        /**
+         * The tag to use as the header key. The default value is {@link #TAG_DEFAULT_HEADER}.
+         *
+         * @return the header key
+         */
+        public String headerTag() {
+            return config.get("headerTag").asString().orElse(TAG_DEFAULT_HEADER);
         }
 
         boolean exists() {

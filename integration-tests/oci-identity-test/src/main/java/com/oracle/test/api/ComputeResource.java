@@ -34,7 +34,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
         assert(principal.get() == getPrincipal().orElseThrow());
         Objects.requireNonNull(authorizationRequest);
 
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER));
+        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
 
         VolumeAttachment volumeAttachment =
                 IScsiVolumeAttachment.builder()
@@ -54,14 +54,14 @@ public class ComputeResource extends AbstractComputeBaseResource {
                              String volumeAttachmentId) {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER));
+        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
     }
 
     @Override
     public byte[] getBinaryString() {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER) != null) {
+        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER) != null) {
             throw new IllegalStateException("unexpected header present");
         }
 
@@ -72,7 +72,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
     public InputStream getBinaryStringWithLargeObject() {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER) != null) {
+        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER) != null) {
             throw new IllegalStateException("unexpected header present");
         }
 
@@ -84,7 +84,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
             String instanceId) {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER) != null) {
+        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER) != null) {
             throw new IllegalStateException("unexpected header present");
         }
 
@@ -102,7 +102,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
             String instanceId) {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER) != null) {
+        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER) != null) {
             throw new IllegalStateException("unexpected header present");
         }
 
@@ -142,7 +142,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
     public List<Region> listRegions() {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER));
+        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
 
         List<Region> list = new ArrayList<>();
         list.add(Region.builder().id("1").build());
@@ -162,7 +162,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
             byte[] binaryString) {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER));
+        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
     }
 
     @Override
@@ -170,7 +170,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
             InputStream binaryString) {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER));
+        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
     }
 
     @Override
@@ -180,7 +180,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
             Integer length) {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER));
+        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
         return null;
     }
 
@@ -189,7 +189,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
             String instanceId) {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER));
+        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
     }
 
     @Override
@@ -197,14 +197,14 @@ public class ComputeResource extends AbstractComputeBaseResource {
             AttachVolumeRequest attachVolumeRequest) {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER));
+        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
     }
 
     @Override
     public void voidPostWithNoArg() {
         Objects.requireNonNull(principal.get());
         Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_HEADER));
+        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
     }
 
 }
