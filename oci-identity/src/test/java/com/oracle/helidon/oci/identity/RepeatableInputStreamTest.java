@@ -162,32 +162,32 @@ class RepeatableInputStreamTest {
     }
 
     @Test
-    void boundedStream_4095_streamIsReadCompletelyFirst() {
+    void boundedStream_8191_streamIsReadCompletelyFirst() {
         boundedStream_n_streamIsReadCompletelyFirst(RepeatableInputStreamer.DEFAULT_BYTES_IN_FIRST_BLOCK-1);
     }
 
     @Test
-    void boundedStream_4095_streamIsNotReadFirst() {
+    void boundedStream_8191_streamIsNotReadFirst() {
         boundedStream_n_streamIsNotReadFirst(RepeatableInputStreamer.DEFAULT_BYTES_IN_FIRST_BLOCK-1);
     }
 
     @Test
-    void boundedStream_4096_streamIsReadCompletelyFirst() {
+    void boundedStream_8192_streamIsReadCompletelyFirst() {
         boundedStream_n_streamIsReadCompletelyFirst(RepeatableInputStreamer.DEFAULT_BYTES_IN_FIRST_BLOCK);
     }
 
     @Test
-    void boundedStream_4096_streamIsNotReadFirst() {
+    void boundedStream_8192_streamIsNotReadFirst() {
         boundedStream_n_streamIsNotReadFirst(RepeatableInputStreamer.DEFAULT_BYTES_IN_FIRST_BLOCK);
     }
 
     @Test
-    void boundedStream_4097_streamIsReadCompletelyFirst() {
+    void boundedStream_8193_streamIsReadCompletelyFirst() {
         boundedStream_n_streamIsReadCompletelyFirst(RepeatableInputStreamer.DEFAULT_BYTES_IN_FIRST_BLOCK+1);
     }
 
     @Test
-    void boundedStream_4097_streamIsNotReadFirst() {
+    void boundedStream_8193_streamIsNotReadFirst() {
         boundedStream_n_streamIsNotReadFirst(RepeatableInputStreamer.DEFAULT_BYTES_IN_FIRST_BLOCK+1);
     }
 
@@ -232,6 +232,24 @@ class RepeatableInputStreamTest {
         IllegalStateException e = assertThrows(IllegalStateException.class,
                                                () -> boundedStream_n_streamIsNotReadFirst(6, cfg));
         assertThat(e.getMessage(), equalTo("read past streamThreshold: 5"));
+    }
+
+    @Test
+    void filesystemDisabled() {
+        Config config = Config.builder()
+                .sources(ConfigSources.create(
+                        Map.of("memoryThreshold", "5", "useFilesystem", "false")))
+                .build();
+        Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
+        assertThat(cfg.memoryThreshold(), is(5));
+        assertThat(cfg.useFilesystem(), is(false));
+        assertThat(cfg.useEncryption(), is(false));
+
+        Optional<Path> backingPath = boundedStream_n_streamIsNotReadFirst(5, cfg);
+        assertThat(backingPath.isPresent(), is(false));
+
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                                               () -> boundedStream_n_streamIsNotReadFirst(6, cfg));
     }
 
     @Test

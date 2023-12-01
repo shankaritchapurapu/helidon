@@ -65,8 +65,9 @@ import org.eclipse.microprofile.config.ConfigProvider;
  */
 class RepeatableInputStreamer {
     static final String DEFAULT_CONFIG_KEY = "repeatable-input-streamer";
-    static final int DEFAULT_BYTES_IN_FIRST_BLOCK = 4096;
+    static final int DEFAULT_BYTES_IN_FIRST_BLOCK = 8 * 1024;
     static final long DEFAULT_BYTES_MAX = 256 * 1024 * 1024;
+    static final boolean DEFAULT_USE_FILESYSTEM = true;
     static final boolean DEFAULT_USE_ENCRYPTION = false;
     static final String DEFAULT_ENCRYPTION_ALGORITHM = "AES";
     static final String DEFAULT_ENCRYPTION_CIPHER = "AES/CBC/PKCS5Padding";
@@ -105,14 +106,16 @@ class RepeatableInputStreamer {
             } else {
                 firstBlockIn[read] = Integer.valueOf(oneMoreByte).byteValue();
 
-                // we know there is a potential for more to come...
-                tempFile = Files.createTempFile(RepeatableInputStreamer.class.getSimpleName(), ".tmp").toFile();
-                tempFile.deleteOnExit();
-                offlineOut = new FileOutputStream(tempFile);
+                if (config.useFilesystem()) {
+                    // we know there is a potential for more to come...
+                    tempFile = Files.createTempFile(RepeatableInputStreamer.class.getSimpleName(), ".tmp").toFile();
+                    tempFile.deleteOnExit();
+                    offlineOut = new FileOutputStream(tempFile);
 
-                if (config.useEncryption()) {
-                    Cipher cipher = config.encCipher.get();
-                    offlineOut = new CipherOutputStream(offlineOut, cipher);
+                    if (config.useEncryption()) {
+                        Cipher cipher = config.encCipher.get();
+                        offlineOut = new CipherOutputStream(offlineOut, cipher);
+                    }
                 }
             }
 
@@ -196,16 +199,26 @@ class RepeatableInputStreamer {
         }
 
         /**
-         * This flag indicates whether any offline storage should be encrypted. The default value is {@link #DEFAULT_USE_ENCRYPTION}.
+         * This flag indicates whether any offline storage should be enabled. The default value is {@link #DEFAULT_USE_FILESYSTEM}.
          *
-         * @return the streaming threshold limit
+         * @return the flag indicating whether offline temp file storage will be enabled
+         */
+        public boolean useFilesystem() {
+            return config.get("useFilesystem").asBoolean().orElse(DEFAULT_USE_FILESYSTEM);
+        }
+
+        /**
+         * This flag indicates whether any offline storage should be encrypted. The default value is {@link #DEFAULT_USE_ENCRYPTION}.
+         * This is only applicable when {@link #useFilesystem()} is enabled.
+         *
+         * @return the flag indicating whether encryption is in use
          */
         public boolean useEncryption() {
             return config.get("useEncryption").asBoolean().orElse(DEFAULT_USE_ENCRYPTION);
         }
 
         /**
-         * This is the encryption algorithm that us used when {@link #useEncryption()} is enabled. The default value
+         * This is the encryption algorithm that is used when {@link #useEncryption()} is enabled. The default value
          * is {@link #DEFAULT_ENCRYPTION_ALGORITHM}.
          *
          * @return the encryption algorithm
@@ -215,10 +228,10 @@ class RepeatableInputStreamer {
         }
 
         /**
-         * This is the encryption cipher that us used when {@link #useEncryption()} is enabled. The default value
+         * This is the encryption cipher that is used when {@link #useEncryption()} is enabled. The default value
          * is {@link #DEFAULT_ENCRYPTION_CIPHER}.
          *
-         * @return the encryption algorithm
+         * @return the encryption cipher
          */
         public String encryptionCipher() {
             return config.get("encryptionCipher").asString().orElse(DEFAULT_ENCRYPTION_CIPHER);
