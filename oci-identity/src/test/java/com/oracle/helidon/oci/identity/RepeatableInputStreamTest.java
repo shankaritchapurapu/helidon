@@ -117,9 +117,6 @@ class RepeatableInputStreamTest {
     @Test
     void emptyStream_streamIsNotReadFirst() throws Exception {
         Stream stream = create(new ByteArrayInputStream(new byte[] {}));
-//        assertThat(stream.available(), is(0));
-//        assertThat(stream.read(), is(0));
-//        assertThat(stream.read(), is(-1));
 
         ReplayStream replay1 = stream.replay();
         ReplayStream replay2 = stream.replay();
@@ -268,7 +265,7 @@ class RepeatableInputStreamTest {
     }
 
     @Test
-    void backingFilesAreDeletedWhenReferenceCountsGoToZero() throws Exception {
+    void backingFilesAreDeletedWhenReferenceCountsGoToZero() {
         Config config = Config.builder()
                 .sources(ConfigSources.create(Map.of("memoryThreshold", "1", "useEncryption", "false")))
                 .build();
@@ -287,6 +284,17 @@ class RepeatableInputStreamTest {
     }
 
     @Test
+    void noReplayAfterEOForClose() throws Exception {
+        String input = "\tHello\nWorld! ";
+        Stream stream = create(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)));
+        stream.readAllBytes();
+        stream.close();
+
+        IllegalStateException e = assertThrows(IllegalStateException.class, stream::replay);
+        assertThat(e.getMessage(), equalTo("Can't replay after EOF or close"));
+    }
+
+    @Test
     void badConfig() {
         {
             Config config = Config.builder()
@@ -302,17 +310,17 @@ class RepeatableInputStreamTest {
         }
     }
 
-    Optional<Path> boundedStream_n_streamIsReadCompletelyFirst(int size,
-                                                               Configuration... cfg) {
+    void boundedStream_n_streamIsReadCompletelyFirst(int size,
+                                                     Configuration... cfg) {
         byte[] buff = createTestBytes(size);
-        return boundedStream_n_streamIsReadCompletelyFirst(buff, null, cfg);
+        boundedStream_n_streamIsReadCompletelyFirst(buff, null, cfg);
     }
 
     Optional<Path> boundedStream_n_streamIsReadCompletelyFirst(byte[] buff,
                                                                Consumer<Stream> streamConsumer,
                                                                Configuration... cfg) {
         Stream stream;
-        if (cfg == null || cfg.length <= 0) {
+        if (cfg == null || cfg.length == 0) {
             stream = create(new ByteArrayInputStream(buff));
         } else {
             stream = create(new ByteArrayInputStream(buff), cfg[0]);
@@ -328,15 +336,17 @@ class RepeatableInputStreamTest {
                 assertThat(Arrays.equals(buff, read), is(true));
             }
 
-            // need to create a replay before we close
+            // need to create a replay before we close or exhaust the input stream
             ReplayStream replay1 = stream.replay();
+            ReplayStream replay2 = stream.replay();
+            assertThat(replay1, not(sameInstance(replay2)));
 
             if (streamConsumer == null) {
-                assertThat(stream.refCount(), is(2));
+                assertThat(stream.refCount(), is(3));
             }
             stream.close();
             if (streamConsumer == null) {
-                assertThat(stream.refCount(), is(1));
+                assertThat(stream.refCount(), is(2));
             }
 
             {
@@ -344,8 +354,6 @@ class RepeatableInputStreamTest {
                 assertThat(Arrays.equals(buff, read), is(true));
             }
 
-            ReplayStream replay2 = stream.replay();
-            assertThat(replay1, not(sameInstance(replay2)));
             {
                 byte[] read = IOUtils.readFully(replay2, buff.length);
                 assertThat(Arrays.equals(buff, read), is(true));
@@ -394,7 +402,7 @@ class RepeatableInputStreamTest {
                                                                Configuration... cfg) {
         byte[] buff = createTestBytes(size);
         Stream stream;
-        if (cfg == null || cfg.length <= 0) {
+        if (cfg == null || cfg.length == 0) {
             stream = create(new ByteArrayInputStream(buff));
         } else {
             stream = create(new ByteArrayInputStream(buff), cfg[0]);

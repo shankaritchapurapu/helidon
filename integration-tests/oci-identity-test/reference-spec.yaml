@@ -379,6 +379,8 @@ paths:
       - "compute"
       operationId: "PutBinaryString"
       consumes:
+        - "text/plain"
+      produces:
         - "application/octet-stream"
       parameters:
         - name: binaryString

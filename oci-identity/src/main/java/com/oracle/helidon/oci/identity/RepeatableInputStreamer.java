@@ -42,8 +42,10 @@ import javax.crypto.spec.IvParameterSpec;
 import io.helidon.common.LazyValue;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigException;
+import io.helidon.config.mp.MpConfig;
 
 import org.apache.commons.io.IOUtils;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
  * This class provides an ephemeral stream (available to only this JVM instance) that allows for storage (via temporary files)
@@ -99,9 +101,7 @@ class RepeatableInputStreamer {
             int read = stream.readNBytes(firstBlockIn, 0, size - 1);
             int oneMoreByte = stream.read();
             if (oneMoreByte == IOUtils.EOF) {
-                byte[] tmp = new byte[size - 1];
-                System.arraycopy(firstBlockIn, 0, tmp, 0, tmp.length);
-                firstBlockIn = tmp;
+                size--;
             } else {
                 firstBlockIn[read] = Integer.valueOf(oneMoreByte).byteValue();
 
@@ -116,7 +116,7 @@ class RepeatableInputStreamer {
                 }
             }
 
-            return new Stream(config, firstBlockIn, stream, tempFile, offlineOut);
+            return new Stream(config, firstBlockIn, size, stream, tempFile, offlineOut);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -130,7 +130,7 @@ class RepeatableInputStreamer {
      * @return a configuration object
      */
     public static Configuration loadConfig() {
-        return loadConfig(Config.create().get(DEFAULT_CONFIG_KEY), false);
+        return loadConfig(globalMpConfig().get(DEFAULT_CONFIG_KEY), false);
     }
 
     /**
@@ -146,6 +146,10 @@ class RepeatableInputStreamer {
             throw new ConfigException("The configKey `" + config.key() + "` was expected to be found.");
         }
         return new Configuration(config).validated();
+    }
+
+    private static Config globalMpConfig() {
+        return MpConfig.toHelidonConfig(ConfigProvider.getConfig());
     }
 
 
@@ -256,6 +260,7 @@ class RepeatableInputStreamer {
         }
     }
 
+
     /**
      * The wrapped input stream.
      */
@@ -264,19 +269,22 @@ class RepeatableInputStreamer {
         private final Configuration configuration;
         private final long streamThreshold;
         private final File tempFile;
-        private final byte[] firstBlockIn;
+        private byte[] firstBlockIn;
+        private final int firstBlockInRealLength;
         private final InputStream remainingIn;
         private transient OutputStream offlineOut;
         private transient long readPos;
 
         Stream(Configuration configuration,
                byte[] firstBlockIn,
+               int firstBlockInRealLength,
                InputStream remainingIn,
                File tempFile,
                OutputStream offlineOut) {
             this.configuration = configuration;
             this.streamThreshold = configuration.streamThreshold();
             this.firstBlockIn = firstBlockIn;
+            this.firstBlockInRealLength = firstBlockInRealLength;
             this.remainingIn = remainingIn;
             this.tempFile = tempFile;
             this.offlineOut = offlineOut;
@@ -288,7 +296,7 @@ class RepeatableInputStreamer {
                 throw new IOException("stream is closed");
             } else if (firstBlockIn.length <= 0) {
                 return IOUtils.EOF;
-            } else if (readPos < firstBlockIn.length) {
+            } else if (readPos < firstBlockInRealLength) {
                 return (int) firstBlockIn[(int) readPos++];
             } else if (readPos >= streamThreshold) {
                 IllegalStateException e = new IllegalStateException("read past streamThreshold: " + readPos);
@@ -325,6 +333,9 @@ class RepeatableInputStreamer {
                 readPos = IOUtils.EOF;
                 deref();
             }
+
+            // optimization
+            firstBlockIn = null;
         }
 
         /**
@@ -334,9 +345,14 @@ class RepeatableInputStreamer {
          * @return a replay stream
          */
         public synchronized ReplayStream replay() {
+            if (readPos < 0) {
+                throw new IllegalStateException("Can't replay after EOF or close");
+            }
+            assert(firstBlockIn != null);
+
             if (tempFile == null) {
                 refCount.incrementAndGet();
-                return new ReplayStream(firstBlockIn, null, this::deref);
+                return new ReplayStream(firstBlockIn, firstBlockInRealLength, null, this::deref);
             }
 
             try {
@@ -352,7 +368,7 @@ class RepeatableInputStreamer {
                     offlineIn = new CipherInputStream(offlineIn, configuration.decCipher.get());
                 }
 
-                return new ReplayStream(firstBlockIn, offlineIn, this::deref);
+                return new ReplayStream(firstBlockIn, firstBlockInRealLength, offlineIn, this::deref);
             } catch (IOException e) {
                 refCount.decrementAndGet();
                 throw new UncheckedIOException(e);
@@ -375,19 +391,23 @@ class RepeatableInputStreamer {
         }
     }
 
+
     /**
      * The replayable stream.
      */
     public static class ReplayStream extends InputStream {
-        private final byte[] firstBlockIn;
+        private byte[] firstBlockIn;
+        private final int firstBlockInRealLength;
         private final InputStream offlineIn;
         private transient Runnable closeable;
         private transient long readPos;
 
         ReplayStream(byte[] firstBlockIn,
+                     int firstBlockInRealLength,
                      InputStream offlineIn,
                      Runnable closeable) {
             this.firstBlockIn = firstBlockIn;
+            this.firstBlockInRealLength = firstBlockInRealLength;
             this.offlineIn = offlineIn;
             this.closeable = closeable;
         }
@@ -396,9 +416,9 @@ class RepeatableInputStreamer {
         public synchronized int read() throws IOException {
             if (readPos < 0) {
                 throw new IOException("stream is closed");
-            } else if (firstBlockIn.length <= 0) {
+            } else if (firstBlockInRealLength <= 0) {
                 return IOUtils.EOF;
-            } else if (readPos < firstBlockIn.length) {
+            } else if (readPos < firstBlockInRealLength) {
                 return (int) firstBlockIn[(int) readPos++];
             }
 
@@ -416,6 +436,9 @@ class RepeatableInputStreamer {
                 closeable.run();
                 closeable = null;
             }
+
+            // optimization
+            firstBlockIn = null;
         }
     }
 

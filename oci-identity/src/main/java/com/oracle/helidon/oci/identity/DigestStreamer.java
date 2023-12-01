@@ -21,9 +21,6 @@ import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -68,6 +65,12 @@ class DigestStreamer {
         }
     }
 
+    /**
+     * Calculates a digest given a byte array.
+     *
+     * @param content the content tp consume
+     * @return the digest
+     */
     static String calculateDigest(byte[] content) {
         try {
             MessageDigest messageDigest = MessageDigest.getInstance(DEFAULT_DIGEST_ALGORITHM);
@@ -76,18 +79,6 @@ class DigestStreamer {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * AuthN request expects signed headers as a map with String keys and List of String values.
-     */
-    static Map<String, List<String>> convertSignedHeadersToAuthnReqFormat(
-            Map<String, String> signedHeaders) {
-        Map<String, List<String>> map = new HashMap<>();
-        for (Map.Entry<String, String> entry : signedHeaders.entrySet()) {
-            map.put(entry.getKey(), List.of(entry.getValue()));
-        }
-        return map;
     }
 
 }
