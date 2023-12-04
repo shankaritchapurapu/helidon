@@ -4,15 +4,18 @@ import javax.inject.Inject;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import io.helidon.microprofile.tests.junit5.HelidonTest;
 
+import com.oracle.helidon.oci.identity.AuthenticationSupportingFilter;
 import com.oracle.test.model.AttachIScsiVolumeRequest;
 import com.oracle.test.model.AttachVolumeRequest;
 import com.oracle.test.model.IScsiVolumeAttachment;
 import com.oracle.test.model.Instance;
 import com.oracle.test.model.Region;
 import com.oracle.test.model.VolumeAttachment;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,7 +33,12 @@ class ComputeResourceTest {
     }
 
     @Test
-    public void testAttachVolume() {
+    void isConfigured() {
+        assertThat(new AuthenticationSupportingFilter().isConfigured(), is(true));
+    }
+
+    @Test
+    void testAttachVolume() {
         String instanceId = "1234567890123456789012345678901234567";
         AttachVolumeRequest attachVolumeRequest = AttachIScsiVolumeRequest.builder().volumeId("my-volume").build();
 
@@ -51,7 +59,7 @@ class ComputeResourceTest {
     }
 
     @Test
-    public void testAttachVolumeInvalidParameter() {
+    void testAttachVolumeInvalidParameter() {
         String instanceId = "myinstance";
         AttachVolumeRequest attachVolumeRequest = AttachIScsiVolumeRequest.builder().volumeId("my-volume").build();
         VolumeAttachment volumeAttachment = null;
@@ -69,7 +77,7 @@ class ComputeResourceTest {
     }
 
     @Test
-    public void testGetBinaryString() {
+    void testGetBinaryString() {
         byte[] result = target.path("/v1/nonJsonReturns/binaryString")
                 .request(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_OCTET_STREAM)
@@ -78,7 +86,7 @@ class ComputeResourceTest {
     }
 
     @Test
-    public void testGetLongBinaryString() {
+    void testGetLongBinaryString() {
         byte[] result = target.path("/v1/nonJsonReturns/binaryStringWithLargeObject")
                 .request(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_OCTET_STREAM)
@@ -87,7 +95,15 @@ class ComputeResourceTest {
     }
 
     @Test
-    public void getInstanceTest() {
+    void testPutBinaryString() {
+        Response result = target.path("/v1/nonJsonBody/binaryString")
+                .request(MediaType.APPLICATION_OCTET_STREAM)
+                .put(Entity.text("Hi"));
+        assertThat(result.getStatus(), is(HttpStatus.SC_NO_CONTENT));
+    }
+
+    @Test
+    void getInstanceTest() {
         String instanceId = "1234567890123456789012345678901234567";
         Instance result = target.path("/v1/instances/{instance-id}")
                 .resolveTemplate("instance-id", instanceId)
@@ -106,7 +122,7 @@ class ComputeResourceTest {
     }
 
     @Test
-    public void getRegionTest() {
+    void getRegionTest() {
         String instanceId = "1234567890123456789012345678901234567";
         Region result = target.path("/v1/regions/{instance-id}")
                 .resolveTemplate("instance-id", instanceId)

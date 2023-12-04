@@ -18,6 +18,7 @@
  * Helidon support for oci-identity.
  */
 module com.oracle.helidon.oci.identity {
+    requires java.logging;
     requires java.ws.rs;
 
     requires io.helidon.logging.common;
@@ -25,20 +26,19 @@ module com.oracle.helidon.oci.identity {
     requires io.helidon.microprofile.server;
 
     requires request.id;
-    requires java.logging;
     requires authentication.client;
     requires sdk;
     requires io.helidon.security;
     requires authproxy.filter;
     requires hk2.api;
+    requires org.apache.commons.io;
+    requires org.apache.commons.codec;
+    requires io.helidon.config.mp;
 
     exports com.oracle.helidon.oci.identity;
 
-//    provides org.glassfish.jersey.internal.spi.AutoDiscoverable
-//            with com.oracle.helidon.oci.requestid.RequestIdAutoDiscoverable;
-
-//    provides javax.enterprise.inject.spi.Extension
-//            with com.oracle.helidon.oci.identity.MpInjectionSupport;
+    provides org.glassfish.jersey.internal.spi.AutoDiscoverable
+            with com.oracle.helidon.oci.identity.AuthenticationSupportAutoDiscoverable;
 
     // needed when running with modules - to make private methods accessible
     opens com.oracle.helidon.oci.identity to weld.core.impl, io.helidon.microprofile.cdi;
