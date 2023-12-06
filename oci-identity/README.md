@@ -49,3 +49,4 @@ mvn clean package
 
 ## References
 * [Helidon Security Extensibility](https://helidon.io/docs/v2/#/se/security/05_extensibility)
+* [Creating a CA and self-signed Cert](self-singed-cert-readme.md)
