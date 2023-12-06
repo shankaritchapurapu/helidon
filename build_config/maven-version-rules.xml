@@ -4,5 +4,6 @@
     <ignoreVersions>
 <!--        <ignoreVersion type="regex">.*[-_\.](|alpha|Alpha|ALPHA|b|beta|Beta|BETA|rc|RC|M|EA|dev|DEV|snapshot|SNAPSHOT)[-_\.]?[0-9].[0-9]</ignoreVersion>-->
         <ignoreVersion type="regex">.*experimental.*</ignoreVersion>
+        <ignoreVersion type="regex">.*uptake.*</ignoreVersion>
     </ignoreVersions>
 </ruleset>
