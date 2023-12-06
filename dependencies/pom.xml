@@ -18,21 +18,21 @@
         <helidon.version>2.6.4</helidon.version>
         <!-- Versions for libraries used in build -->
         <!-- <oci-java-sdk-version>${version.lib.oci}</oci-java-sdk-version>-->
-        <oci-java-sdk-version>3.29.0</oci-java-sdk-version>
+        <oci-java-sdk-version>3.30.0</oci-java-sdk-version>
 
         <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
 
         <oracle-internal-authproxy-filter-version>1.1.38</oracle-internal-authproxy-filter-version>
         <oracle-internal-commons-core-version>4.0.76</oracle-internal-commons-core-version>
+        <oracle-internal-commons-core-regions-version>2.1.73</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-core-resources-version>1.2.337</oracle-internal-commons-core-resources-version>
         <oracle-internal-commons-metrics-lib-version>0.0.30</oracle-internal-commons-metrics-lib-version>
         <oracle-internal-commons-metrics-reporter-version>0.0.51</oracle-internal-commons-metrics-reporter-version>
         <oracle-internal-commons-metrics-version>4.1.11</oracle-internal-commons-metrics-version>
         <oracle-internal-commons-request-id-version>1.1.46</oracle-internal-commons-request-id-version>
-        <oracle-internal-core-regions-version>2.1.73</oracle-internal-core-regions-version>
         <oracle-internal-exception-mapping-version>3.0.65</oracle-internal-exception-mapping-version>
         <oracle-internal-identity-common-version>2.1.0.465</oracle-internal-identity-common-version>
-        <oracle-internal-identity-version>3.0.237</oracle-internal-identity-version>
+        <oracle-internal-identity-version>3.0.238</oracle-internal-identity-version>
         <oracle-internal-logging-version>3.3.5</oracle-internal-logging-version>
         <oracle-internal-vault-java-sdk-version>2.0.4</oracle-internal-vault-java-sdk-version>
         <oracle-internal-vault-user-api-spec-version>1.0.78</oracle-internal-vault-user-api-spec-version>
@@ -46,6 +46,7 @@
 
         <version.lib.commons-io>2.13.0</version.lib.commons-io>
         <version.lib.commons-lang3>3.10</version.lib.commons-lang3>
+        <version.lib.google-httpclient>1.43.3</version.lib.google-httpclient>
         <version.lib.httpclient>4.5.14</version.lib.httpclient>
         <version.lib.httpcore>4.4.16</version.lib.httpcore>
         <version.lib.guice>5.1.0</version.lib.guice>
@@ -81,28 +82,6 @@
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-common</artifactId>
                 <version>${oci-java-sdk-version}</version>
-<!--                <exclusions>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>org.bouncycastle</groupId>-->
-<!--                        <artifactId>*</artifactId>-->
-<!--                    </exclusion>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>org.apache.commons</groupId>-->
-<!--                        <artifactId>commons-lang3</artifactId>-->
-<!--                    </exclusion>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>org.glassfish.hk2</groupId>-->
-<!--                        <artifactId>hk2-locator</artifactId>-->
-<!--                    </exclusion>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>commons-io</groupId>-->
-<!--                        <artifactId>commons-io</artifactId>-->
-<!--                    </exclusion>-->
-<!--                    <exclusion>-->
-<!--                        <groupId>commons-codec</groupId>-->
-<!--                        <artifactId>commons-codec</artifactId>-->
-<!--                    </exclusion>-->
-<!--                </exclusions>-->
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
@@ -208,7 +187,8 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
+            <!-- TODO: we should (eventually) discontinue usage of this -->
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/core -->
             <dependency>
                 <groupId>com.oracle.pic.commons</groupId>
                 <artifactId>core</artifactId>
@@ -226,21 +206,24 @@
                         <groupId>com.google.code.findbugs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>com.google.http-client</groupId>
-                        <artifactId>google-http-client</artifactId>
-                    </exclusion>
+                    <!-- TODO: file a tix on peg team to not rely on this library -->
+<!--                    <exclusion>-->
+<!--                        <groupId>com.google.http-client</groupId>-->
+<!--                        <artifactId>google-http-client</artifactId>-->
+<!--                    </exclusion>-->
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>
                         <artifactId>javax.ws.rs-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/SHEP/repos/core-regions -->
             <dependency>
                 <groupId>com.oracle.pic.commons</groupId>
                 <artifactId>core-regions</artifactId>
-                <version>${oracle-internal-core-regions-version}</version>
+                <version>${oracle-internal-commons-core-regions-version}</version>
             </dependency>
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/COMMONS/repos/core-resources -->
             <dependency>
                 <groupId>com.oracle.pic.commons</groupId>
                 <artifactId>core-resources</artifactId>
@@ -267,6 +250,7 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/COMMONS/repos/metrics -->
             <dependency>
                 <groupId>com.oracle.pic.commons</groupId>
                 <artifactId>metrics</artifactId>
@@ -314,6 +298,8 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!-- TODO: we should (eventually) discontinue usage of this -->
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/request-id -->
             <dependency>
                 <groupId>com.oracle.pic.commons</groupId>
                 <artifactId>request-id</artifactId>
@@ -349,10 +335,11 @@
                         <groupId>com.google.code.findbugs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>com.google.http-client</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
+                    <!-- TODO: file a tix on identity team to not rely on this library -->
+<!--                    <exclusion>-->
+<!--                        <groupId>com.google.http-client</groupId>-->
+<!--                        <artifactId>*</artifactId>-->
+<!--                    </exclusion>-->
                     <exclusion>
                         <groupId>com.oracle.pic.commons.client</groupId>
                         <artifactId>java-rest-client</artifactId>
@@ -470,10 +457,11 @@
                         <groupId>com.google.code.findbugs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>com.google.http-client</groupId>
-                        <artifactId>google-http-client</artifactId>
-                    </exclusion>
+                    <!-- TODO: file a tix on sdk team to not rely on this library -->
+<!--                    <exclusion>-->
+<!--                        <groupId>com.google.http-client</groupId>-->
+<!--                        <artifactId>google-http-client</artifactId>-->
+<!--                    </exclusion>-->
                     <exclusion>
                         <groupId>com.oracle.oci.sdk</groupId>
                         <artifactId>oci-java-sdk-addons-apache</artifactId>
@@ -582,10 +570,11 @@
                         <groupId>com.google.code.findbugs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>com.google.http-client</groupId>
-                        <artifactId>google-http-client</artifactId>
-                    </exclusion>
+                    <!-- TODO: file a tix on sdk team to not rely on this library -->
+<!--                    <exclusion>-->
+<!--                        <groupId>com.google.http-client</groupId>-->
+<!--                        <artifactId>google-http-client</artifactId>-->
+<!--                    </exclusion>-->
                     <exclusion>
                         <groupId>org.apache.httpcomponents</groupId>
                         <artifactId>*</artifactId>
@@ -747,6 +736,12 @@
                 <artifactId>commons-io</artifactId>
                 <version>${version.lib.commons-io}</version>
             </dependency>
+            <!-- TODO: file a tix on identity + sdk teams to not rely on this library -->
+            <dependency>
+                <groupId>com.google.http-client</groupId>
+                <artifactId>google-http-client</artifactId>
+                <version>${version.lib.google-httpclient}</version>
+            </dependency>
             <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
@@ -792,7 +787,6 @@
                 <artifactId>javassist</artifactId>
                 <version>${version.lib.javaassist}</version>
             </dependency>
-
         </dependencies>
     </dependencyManagement>
 </project>

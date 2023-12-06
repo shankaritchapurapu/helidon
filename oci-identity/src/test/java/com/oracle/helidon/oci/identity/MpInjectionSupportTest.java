@@ -17,6 +17,7 @@
 package com.oracle.helidon.oci.identity;
 
 import java.util.Collection;
+import java.util.Map;
 
 import javax.enterprise.context.ContextNotActiveException;
 import javax.enterprise.context.control.RequestContextController;
@@ -24,11 +25,18 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.ws.rs.client.WebTarget;
 
+import io.helidon.config.Config;
+import io.helidon.config.ConfigSources;
 import io.helidon.microprofile.tests.junit5.HelidonTest;
 import io.helidon.security.Principal;
 import io.helidon.security.SecurityContext;
 import io.helidon.security.Subject;
 
+import com.oracle.pic.identity.authentication.AuthenticatorClient;
+import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
+import com.oracle.pic.identity.authentication.supplier.InstancePrincipalCertificateSupplier;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -60,6 +68,33 @@ public class MpInjectionSupportTest {
 
     @Inject
     private Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequestProvider;
+
+    @Inject
+    private AuthenticatorClient authenticatorClient;
+
+    @Inject
+    private ServiceAuthenticationClient serviceAuthenticationClient;
+
+    @Inject
+    private InstancePrincipalCertificateSupplier instancePrincipalCertificateSupplier;
+
+    @BeforeAll
+    static void overrideConfig() {
+        Config config = Config.builder()
+                .sources(ConfigSources.create(Map.of("authEnabled", "false",
+                                                     "rootCertPath", "target/test-classes/secrets/ca.cert.pem")))
+                .build();
+        OciIdentityConfiguration.AuthConfig authConfig = new OciIdentityConfiguration.AuthConfig(config);
+        if (!authConfig.rootCertFilePath().isPresent()) {
+            throw new IllegalStateException("Expected cert to be present: " + authConfig.rootCertPath());
+        }
+        OciIdentityConfiguration.authConfigOverride(authConfig);
+    }
+
+    @AfterAll
+    static void reset() {
+        OciIdentityConfiguration.authConfigOverride(null);
+    }
 
     @Test
     void sanity() {

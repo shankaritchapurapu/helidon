@@ -44,7 +44,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 class AuthenticationSupportingFilterTest {
-
     static final String TEST_INPUT = "Hello Joe";
 
     @Test

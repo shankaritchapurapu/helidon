@@ -27,6 +27,7 @@ module com.oracle.helidon.oci.identity {
 
     requires request.id;
     requires authentication.client;
+    requires core;
     requires sdk;
     requires io.helidon.security;
     requires authproxy.filter;
@@ -35,7 +36,10 @@ module com.oracle.helidon.oci.identity {
     requires org.apache.commons.codec;
     requires io.helidon.config.mp;
 
+    uses com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
+
     exports com.oracle.helidon.oci.identity;
+    exports com.oracle.helidon.oci.identity.authentication;
 
     provides org.glassfish.jersey.internal.spi.AutoDiscoverable
             with com.oracle.helidon.oci.identity.AuthenticationSupportAutoDiscoverable;

@@ -30,9 +30,6 @@ import javax.ws.rs.container.PreMatching;
 
 import io.helidon.common.LazyValue;
 import io.helidon.config.Config;
-import io.helidon.config.mp.MpConfig;
-
-import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
  * Makes the header value representing the SHA hash digest of the request.
@@ -45,17 +42,12 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
     private static boolean LOGGED;
 
     /**
-     * The top level config key used to configure this filter.
-     */
-    public static final String TAG_CONFIG_KEY = "oci-identity";
-
-    /**
      * The header key that will be used to add the calculated digest value (when the URI matches what is configured).
      */
-    public static final String TAG_DEFAULT_HEADER = "X-HELIDON-DIGEST";
+    public static final String TAG_DEFAULT_HEADER = "X-HELIDON-SHA-DIGEST";
 
     private static final LazyValue<Configuration> CONFIG = LazyValue
-            .create(() -> new Configuration(globalMpConfig().get(TAG_CONFIG_KEY)));
+            .create(() -> new Configuration(OciIdentityConfiguration.globalOciIdentityConfig()));
 
     private final Configuration config;
 
@@ -116,13 +108,9 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
     Configuration configuration() {
         if (!LOGGED) {
             LOGGED = true;
-            LOGGER.log(Level.FINE, "configuration: " + config);
+            LOGGER.log(Level.FINE, AuthenticationSupportingFilter.class.getSimpleName() + " configuration: " + config);
         }
         return config;
-    }
-
-    private static Config globalMpConfig() {
-        return MpConfig.toHelidonConfig(ConfigProvider.getConfig());
     }
 
 

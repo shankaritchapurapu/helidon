@@ -44,10 +44,8 @@ import javax.crypto.spec.IvParameterSpec;
 import io.helidon.common.LazyValue;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigException;
-import io.helidon.config.mp.MpConfig;
 
 import org.apache.commons.io.IOUtils;
-import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
  * This class provides an ephemeral stream (available to only this JVM instance) that allows for storage (via temporary files)
@@ -139,7 +137,8 @@ class RepeatableInputStreamer {
      * @return a configuration object
      */
     public static Configuration loadConfig() {
-        return loadConfig(globalMpConfig().get(DEFAULT_CONFIG_KEY), false);
+        return loadConfig(OciIdentityConfiguration
+                                  .globalMpConfig().get(DEFAULT_CONFIG_KEY), false);
     }
 
     /**
@@ -155,10 +154,6 @@ class RepeatableInputStreamer {
             throw new ConfigException("The configKey `" + config.key() + "` was expected to be found.");
         }
         return new Configuration(config).validated();
-    }
-
-    private static Config globalMpConfig() {
-        return MpConfig.toHelidonConfig(ConfigProvider.getConfig());
     }
 
 
@@ -327,7 +322,7 @@ class RepeatableInputStreamer {
         public synchronized int read() throws IOException {
             if (readPos < 0) {
                 throw new IOException("stream is closed");
-            } else if (firstBlockIn.length <= 0) {
+            } else if (firstBlockIn.length == 0) {
                 return IOUtils.EOF;
             } else if (readPos < firstBlockInRealLength) {
                 return (int) firstBlockIn[(int) readPos++];
