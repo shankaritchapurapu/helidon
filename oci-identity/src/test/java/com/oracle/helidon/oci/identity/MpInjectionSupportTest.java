@@ -39,6 +39,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -153,6 +154,13 @@ public class MpInjectionSupportTest {
         } finally {
             rcc.deactivate();
         }
+    }
+
+    @Test
+    void serviceAuthenticationClient() {
+        assertThat(serviceAuthenticationClient.getClass(), equalTo(PassThruServiceAuthenticationClient.class));
+        assertThat(authenticatorClient, notNullValue());
+        assertThat(instancePrincipalCertificateSupplier, notNullValue());
     }
 
 }
