@@ -31,7 +31,7 @@ class OciIdentityConfigurationTest {
 
     @Test
     void appConfigDefaults() {
-        assertThat(OciIdentityConfiguration.globalAppConfig().key().name(), equalTo("oci-app"));
+        assertThat(OciIdentityConfiguration.globalAppConfig().key().toString(), equalTo("oci.app"));
         OciIdentityConfiguration.AppConfig appConfig = OciIdentityConfiguration.appConfig();
         assertThat(appConfig.name(), equalTo("xxxx"));
         assertThat(appConfig.teamName(), equalTo("x-team"));
@@ -42,7 +42,7 @@ class OciIdentityConfigurationTest {
 
     @Test
     void authConfigDefaults() {
-        assertThat(OciIdentityConfiguration.globalOciIdentityConfig().key().name(), equalTo("oci-identity"));
+        assertThat(OciIdentityConfiguration.globalOciIdentityConfig().key().toString(), equalTo("oci.identity"));
         OciIdentityConfiguration.AuthConfig authConfig = OciIdentityConfiguration.authConfig();
         assertThat(authConfig.authEnabled(), is(false));
         assertThat(authConfig.authServiceEndpoint().toString(), equalTo("https://auth.us-phoenix-1.oraclecloud.com"));

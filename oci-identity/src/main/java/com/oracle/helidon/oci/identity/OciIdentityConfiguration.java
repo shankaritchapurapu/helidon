@@ -36,12 +36,12 @@ class OciIdentityConfiguration {
      * The top level config key used to configure the general application-level settings.
      */
     // TODO: ideally relocate to a common module
-    static final String TAG_APP_CONFIG_KEY = "oci-app";
+    static final String TAG_APP_CONFIG_KEY = "oci.app";
 
     /**
      * The top level config key used to configure the filter and oci-identity features.
      */
-    static final String TAG_AUTH_CONFIG_KEY = "oci-identity";
+    static final String TAG_AUTH_CONFIG_KEY = "oci.identity";
 
     private static boolean LOGGED;
 
