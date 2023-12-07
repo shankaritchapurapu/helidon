@@ -19,6 +19,11 @@
             <groupId>com.oracle.helidon.oci</groupId>
             <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
         </dependency>
+        <!-- TODO: we should (eventually) discontinue usage of this -->
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.oracle.helidon.oci</groupId>
             <artifactId>helidon-repackaged-oci-authproxy-filter</artifactId>
