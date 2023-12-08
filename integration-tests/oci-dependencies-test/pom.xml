@@ -79,9 +79,9 @@
     </build>
 
     <!--
-        These dependencies were
-        produced by calling
+        These dependencies were produced by calling
         > cat ../../dependencies/pom.xml | ../../etc/scripts/depm2dep.sh
+        see README.md for details.
     -->
     <dependencies>
         <!-- see for reference https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-internal-dependency-management/browse/oci-internal-bom/pom.xml -->
@@ -148,15 +148,18 @@
             <groupId>com.oracle.pic.authproxy</groupId>
             <artifactId>authproxy-filter</artifactId>
         </dependency>
-
+        <!-- TODO: we should (eventually) discontinue usage of this -->
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/core -->
         <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>core</artifactId>
         </dependency>
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/SHEP/repos/core-regions -->
         <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>core-regions</artifactId>
         </dependency>
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/COMMONS/repos/core-resources -->
         <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>core-resources</artifactId>
@@ -165,9 +168,14 @@
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>exception-mapping</artifactId>
         </dependency>
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/COMMONS/repos/metrics -->
         <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>metrics</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.platform.splat.sdk</groupId>
+            <artifactId>splat-sdk</artifactId>
         </dependency>
         <dependency>
             <groupId>com.oracle.pic.telemetry.commons</groupId>
@@ -177,6 +185,8 @@
             <groupId>com.oracle.pic.telemetry.commons</groupId>
             <artifactId>metrics-reporter</artifactId>
         </dependency>
+        <!-- TODO: we should (eventually) discontinue usage of this -->
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/request-id -->
         <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>request-id</artifactId>
@@ -198,6 +208,7 @@
             <groupId>com.oracle.pic.identity.authorization</groupId>
             <artifactId>sdk</artifactId>
         </dependency>
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse -->
         <dependency>
             <groupId>com.oracle.pic.identity.authorization</groupId>
             <artifactId>jersey-2-29-annotations</artifactId>
@@ -263,6 +274,11 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
+        <!-- TODO: file a tix on identity + sdk teams to not rely on this library -->
+        <dependency>
+            <groupId>com.google.http-client</groupId>
+            <artifactId>google-http-client</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
@@ -291,7 +307,6 @@
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
         </dependency>
-
     </dependencies>
 
 </project>

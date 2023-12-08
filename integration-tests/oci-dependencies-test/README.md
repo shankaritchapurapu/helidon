@@ -1,7 +1,7 @@
 # Dependencies Tests
 
 ## Overview
-Ensures the integrity of the dependencies from depeendency management.
+Ensures the integrity of the dependencies from dependency management.
 
 ## Usage
 From the top level of the project:

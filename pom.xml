@@ -200,6 +200,10 @@
                                         </scopes>
                                         <findAllDuplicates>true</findAllDuplicates>
                                         <ignoreWhenIdentical>true</ignoreWhenIdentical>
+                                        <!-- TODO: https://jira.oci.oraclecorp.com/projects/SPLAT/issues/SPLAT-6046 -->
+                                        <ignoreClasses>
+                                            <ignoreClass>com.oracle.pic.identity.authentication.**</ignoreClass>
+                                        </ignoreClasses>
                                     </banDuplicateClasses>
                                 </rules>
                             </configuration>
