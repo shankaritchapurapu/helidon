@@ -1,17 +1,6 @@
-# Dependencies Tests
+# etc/scripts
 
 ## Overview
-Ensures the integrity of the dependencies from dependency management.
+Useful scripts for various oci-helidon related activities:
 
-## Usage
-From the top level of the project:
-```agsl
-cat dependencies/pom.xml | etc/scripts/depm2dep.sh
-```
-Then update [pom.xml](pom.xml) with the output.
-
-## Build
-
-```shell
-mvn clean package
-```
+* [depm2dep.sh](./depm2dep.sh) - see [integration-tests/oci-dependencies-test](../../integration-tests/oci-dependencies-test).

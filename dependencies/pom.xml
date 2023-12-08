@@ -32,13 +32,14 @@
         <oracle-internal-commons-request-id-version>1.1.46</oracle-internal-commons-request-id-version>
         <oracle-internal-exception-mapping-version>3.0.65</oracle-internal-exception-mapping-version>
         <oracle-internal-identity-common-version>2.1.0.469</oracle-internal-identity-common-version>
-        <oracle-internal-identity-version>3.0.238</oracle-internal-identity-version>
-        <oracle-internal-logging-version>3.3.5</oracle-internal-logging-version>
+        <oracle-internal-identity-version>3.0.243</oracle-internal-identity-version>
+        <oracle-internal-logging-version>3.5.7</oracle-internal-logging-version>
+        <oracle-internal-sdk-common-version>1.2</oracle-internal-sdk-common-version>
+        <oracle-internal-secret-service-cp-java-client-version>1.1.5</oracle-internal-secret-service-cp-java-client-version>
+        <oracle-internal-splat-sdk-version>0.1.39867</oracle-internal-splat-sdk-version>
         <oracle-internal-vault-java-sdk-version>2.0.4</oracle-internal-vault-java-sdk-version>
         <oracle-internal-vault-user-api-spec-version>1.0.78</oracle-internal-vault-user-api-spec-version>
         <oracle-internal-vault-user-java-client-version>1.0.2</oracle-internal-vault-user-java-client-version>
-        <oracle-internal-sdk-common-version>1.2</oracle-internal-sdk-common-version>
-        <oracle-internal-secret-service-cp-java-client-version>1.1.5</oracle-internal-secret-service-cp-java-client-version>
 
         <version.lib.cdi-api>2.0.2</version.lib.cdi-api>
         <version.lib.jaxrs-api>2.1.6</version.lib.jaxrs-api>
@@ -271,6 +272,29 @@
                     <exclusion>
                         <groupId>org.projectlombok</groupId>
                         <artifactId>lombok</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.platform.splat.sdk</groupId>
+                <artifactId>splat-sdk</artifactId>
+                <version>${oracle-internal-splat-sdk-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>bc-fips</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>bcpkix-fips</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.validation</groupId>
+                        <artifactId>validation-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.ws.rs</groupId>
+                        <artifactId>javax.ws.rs-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -509,30 +533,6 @@
                     <exclusion>
                         <groupId>org.projectlombok</groupId>
                         <artifactId>lombok</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse -->
-            <dependency>
-                <groupId>com.oracle.pic.identity.authorization</groupId>
-                <artifactId>jersey-2-25-annotations</artifactId>
-                <version>${oracle-internal-identity-version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.google.code.findbugs</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.httpcomponents</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.glassfish.hk2.external</groupId>
-                        <artifactId>jakarta.inject</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.glassfish.hk2.external</groupId>
-                        <artifactId>javax.inject</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
