@@ -69,6 +69,7 @@ public class MpInjectionSupport {
         }
         if (config.metricsEnabled()) {
             // TODO: https://jira.oci.oraclecorp.com/browse/WLMS-807
+            // see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/metrics-implementation
             builder.withNoAuthMetrics();
         } else {
             builder.withNoAuthMetrics();
