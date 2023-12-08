@@ -41,6 +41,7 @@
 <!--                                oracle-internal-commons-core-version,-->
 <!--                                oracle-internal-commons-core-resources-version,-->
                                 oracle-internal-commons-metrics-lib-version,
+                                oracle-internal-commons-metrics-module-version,
                                 oracle-internal-commons-metrics-reporter-version,
                                 oracle-internal-commons-metrics-version,
                                 oracle-internal-commons-request-id-version,
@@ -49,6 +50,7 @@
                                 oracle-internal-identity-common-version,
                                 oracle-internal-identity-version,
                                 oracle-internal-logging-version,
+                                oracle-internal-splat-sdk-version,
                                 oracle-internal-vault-java-sdk-version,
                                 oracle-internal-vault-user-api-spec-version,
                                 oracle-internal-vault-user-java-client-version,
@@ -173,18 +175,7 @@
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>metrics</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.platform.splat.sdk</groupId>
-            <artifactId>splat-sdk</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.telemetry.commons</groupId>
-            <artifactId>metrics-lib</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.telemetry.commons</groupId>
-            <artifactId>metrics-reporter</artifactId>
-        </dependency>
+
         <!-- TODO: we should (eventually) discontinue usage of this -->
         <!-- see https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/request-id -->
         <dependency>
@@ -197,13 +188,19 @@
                 Phonebook link: https://devops.oci.oraclecorp.com/phonebook/identity-cloud-service
                 https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/authorization/sdk/
         -->
-
         <!-- see repackaged-oci-authorization-sdk -->
         <!-- https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/common/ -->
         <dependency>
             <groupId>com.oracle.pic.identity</groupId>
             <artifactId>common</artifactId>
         </dependency>
+
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/authentication-client -->
+        <dependency>
+            <groupId>com.oracle.pic.identity.authentication</groupId>
+            <artifactId>authentication-client</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.oracle.pic.identity.authorization</groupId>
             <artifactId>sdk</artifactId>
@@ -213,10 +210,34 @@
             <groupId>com.oracle.pic.identity.authorization</groupId>
             <artifactId>jersey-2-29-annotations</artifactId>
         </dependency>
-        <!-- see repackaged-oci-authentication-client -->
+
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/metrics-implementation -->
         <dependency>
-            <groupId>com.oracle.pic.identity.authentication</groupId>
-            <artifactId>authentication-client</artifactId>
+            <groupId>com.oracle.pic.identity.authorization</groupId>
+            <artifactId>metrics-implementation</artifactId>
+        </dependency>
+
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/PLATFORM/repos/mpapi/browse/splat-sdk -->
+        <dependency>
+            <groupId>com.oracle.pic.platform.splat.sdk</groupId>
+            <artifactId>splat-sdk</artifactId>
+        </dependency>
+
+        <!-- see https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEVCENTRAL&title=Overlay+Telemetry+%28T2%29+Basics -->
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/telemetry-commons/browse -->
+        <dependency>
+            <groupId>com.oracle.pic.telemetry.commons</groupId>
+            <artifactId>metrics-lib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.telemetry.commons</groupId>
+            <artifactId>metrics-reporter</artifactId>
+        </dependency>
+
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/metrics-overlay/browse -->
+        <dependency>
+            <groupId>com.oracle.pic.telemetry.overlay.metrics</groupId>
+            <artifactId>metrics-module</artifactId>
         </dependency>
 
         <!-- See repackaged-oci-vault-java-sdk -->

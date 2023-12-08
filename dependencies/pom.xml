@@ -26,7 +26,8 @@
         <oracle-internal-commons-core-version>4.0.76</oracle-internal-commons-core-version>
         <oracle-internal-commons-core-regions-version>2.1.73</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-core-resources-version>1.2.337</oracle-internal-commons-core-resources-version>
-        <oracle-internal-commons-metrics-lib-version>0.0.30</oracle-internal-commons-metrics-lib-version>
+        <oracle-internal-commons-metrics-lib-version>0.3.53</oracle-internal-commons-metrics-lib-version>
+        <oracle-internal-commons-metrics-module-version>2.0.3</oracle-internal-commons-metrics-module-version>
         <oracle-internal-commons-metrics-reporter-version>0.0.51</oracle-internal-commons-metrics-reporter-version>
         <oracle-internal-commons-metrics-version>4.1.11</oracle-internal-commons-metrics-version>
         <oracle-internal-commons-request-id-version>1.1.46</oracle-internal-commons-request-id-version>
@@ -275,53 +276,7 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <dependency>
-                <groupId>com.oracle.pic.platform.splat.sdk</groupId>
-                <artifactId>splat-sdk</artifactId>
-                <version>${oracle-internal-splat-sdk-version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>bc-fips</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>bcpkix-fips</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.validation</groupId>
-                        <artifactId>validation-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.ws.rs</groupId>
-                        <artifactId>javax.ws.rs-api</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.pic.telemetry.commons</groupId>
-                <artifactId>metrics-lib</artifactId>
-                <version>${oracle-internal-commons-metrics-lib-version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.pic.telemetry.commons</groupId>
-                <artifactId>metrics-reporter</artifactId>
-                <version>${oracle-internal-commons-metrics-reporter-version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.oracle.pic.commons.client</groupId>
-                        <artifactId>java-rest-client</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.ws.rs</groupId>
-                        <artifactId>javax.ws.rs-api</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.projectlombok</groupId>
-                        <artifactId>lombok</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
+
             <!-- TODO: we should (eventually) discontinue usage of this -->
             <!-- see https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/request-id -->
             <dependency>
@@ -335,7 +290,6 @@
                     Phonebook link: https://devops.oci.oraclecorp.com/phonebook/identity-cloud-service
                     https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/authorization/sdk/
             -->
-
             <!-- see repackaged-oci-authorization-sdk -->
             <!-- https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/common/ -->
             <dependency>
@@ -460,6 +414,33 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/authentication-client -->
+            <dependency>
+                <groupId>com.oracle.pic.identity.authentication</groupId>
+                <artifactId>authentication-client</artifactId>
+                <version>${oracle-internal-identity-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.code.findbugs</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <!-- TODO: file a tix on sdk team to not rely on this library -->
+                    <!--                    <exclusion>-->
+                    <!--                        <groupId>com.google.http-client</groupId>-->
+                    <!--                        <artifactId>google-http-client</artifactId>-->
+                    <!--                    </exclusion>-->
+                    <exclusion>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.connectors</groupId>
+                        <artifactId>jersey-apache-connector</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
             <dependency>
                 <groupId>com.oracle.pic.identity.authorization</groupId>
                 <artifactId>sdk</artifactId>
@@ -560,28 +541,83 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <!-- see repackaged-oci-authentication-client -->
+
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/metrics-implementation -->
             <dependency>
-                <groupId>com.oracle.pic.identity.authentication</groupId>
-                <artifactId>authentication-client</artifactId>
+                <groupId>com.oracle.pic.identity.authorization</groupId>
+                <artifactId>metrics-implementation</artifactId>
                 <version>${oracle-internal-identity-version}</version>
+            </dependency>
+
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/PLATFORM/repos/mpapi/browse/splat-sdk -->
+            <dependency>
+                <groupId>com.oracle.pic.platform.splat.sdk</groupId>
+                <artifactId>splat-sdk</artifactId>
+                <version>${oracle-internal-splat-sdk-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>bc-fips</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>bcpkix-fips</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.validation</groupId>
+                        <artifactId>validation-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.ws.rs</groupId>
+                        <artifactId>javax.ws.rs-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- see https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEVCENTRAL&title=Overlay+Telemetry+%28T2%29+Basics -->
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/telemetry-commons/browse -->
+            <dependency>
+                <groupId>com.oracle.pic.telemetry.commons</groupId>
+                <artifactId>metrics-lib</artifactId>
+                <version>${oracle-internal-commons-metrics-lib-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.telemetry.commons</groupId>
+                <artifactId>metrics-reporter</artifactId>
+                <version>${oracle-internal-commons-metrics-reporter-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.oracle.pic.commons.client</groupId>
+                        <artifactId>java-rest-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.ws.rs</groupId>
+                        <artifactId>javax.ws.rs-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/metrics-overlay/browse -->
+            <dependency>
+                <groupId>com.oracle.pic.telemetry.overlay.metrics</groupId>
+                <artifactId>metrics-module</artifactId>
+                <version>${oracle-internal-commons-metrics-module-version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.google.code.findbugs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
-                    <!-- TODO: file a tix on sdk team to not rely on this library -->
-<!--                    <exclusion>-->
-<!--                        <groupId>com.google.http-client</groupId>-->
-<!--                        <artifactId>google-http-client</artifactId>-->
-<!--                    </exclusion>-->
                     <exclusion>
-                        <groupId>org.apache.httpcomponents</groupId>
-                        <artifactId>*</artifactId>
+                        <groupId>com.oracle.pic.commons</groupId>
+                        <artifactId>service-core</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>org.glassfish.jersey.connectors</groupId>
-                        <artifactId>jersey-apache-connector</artifactId>
+                        <groupId>javax.ws.rs</groupId>
+                        <artifactId>javax.ws.rs-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
