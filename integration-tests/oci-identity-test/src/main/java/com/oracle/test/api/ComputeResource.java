@@ -11,6 +11,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 
 import com.oracle.helidon.oci.identity.AuthenticationSupportingFilter;
+import com.oracle.pic.identity.authentication.SecurityContext;
 import com.oracle.test.model.AttachVolumeRequest;
 import com.oracle.test.model.AvailabilityDomain;
 import com.oracle.test.model.IScsiVolumeAttachment;
@@ -30,11 +31,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
             String instanceId,
             AttachVolumeRequest attachVolumeRequest,
             String opcIdempotencyToken) {
-        Objects.requireNonNull(principal.get());
-        assert(principal.get() == getPrincipal().orElseThrow());
-        Objects.requireNonNull(authorizationRequest);
-
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
+        validateInternalState(true);
 
         VolumeAttachment volumeAttachment =
                 IScsiVolumeAttachment.builder()
@@ -52,29 +49,19 @@ public class ComputeResource extends AbstractComputeBaseResource {
     @Override
     public void detachVolume(String instanceId,
                              String volumeAttachmentId) {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
+        validateInternalState(true);
     }
 
     @Override
     public byte[] getBinaryString() {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER) != null) {
-            throw new IllegalStateException("unexpected header present");
-        }
+        validateInternalState(false);
 
         return "hello".getBytes();
     }
 
     @Override
     public InputStream getBinaryStringWithLargeObject() {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER) != null) {
-            throw new IllegalStateException("unexpected header present");
-        }
+        validateInternalState(false);
 
         return new ByteArrayInputStream("Good afternoon".getBytes());
     }
@@ -82,11 +69,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
     @Override
     public Instance getInstance(
             String instanceId) {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER) != null) {
-            throw new IllegalStateException("unexpected header present");
-        }
+        validateInternalState(false);
 
         return Instance.builder()
                 .id("my-id")
@@ -100,11 +83,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
     @Override
     public Region getRegion(
             String instanceId) {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER) != null) {
-            throw new IllegalStateException("unexpected header present");
-        }
+        validateInternalState(false);
 
         return Region.builder()
                 .id("my-region")
@@ -117,6 +96,7 @@ public class ComputeResource extends AbstractComputeBaseResource {
     public VolumeAttachment getVolumeAttachment(
             String instanceId,
             String volumeAttachmentId) {
+        validateInternalState(true);
         return null;
     }
 
@@ -124,25 +104,26 @@ public class ComputeResource extends AbstractComputeBaseResource {
     public Instance launchInstance(
             LaunchInstanceRequest launchInstanceRequest,
             String opcIdempotencyToken) {
+        validateInternalState(true);
         return null;
     }
 
     @Override
     public List<AvailabilityDomain> listAvailabilityDomains(
             String instanceId) {
+        validateInternalState(true);
         return null;
     }
 
     @Override
     public List<Instance> listInstances() {
+        validateInternalState(true);
         return null;
     }
 
     @Override
     public List<Region> listRegions() {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
+        validateInternalState(true);
 
         List<Region> list = new ArrayList<>();
         list.add(Region.builder().id("1").build());
@@ -154,23 +135,20 @@ public class ComputeResource extends AbstractComputeBaseResource {
     public List<VolumeAttachment> listVolumeAttachments(
             String instanceId,
             List<LifecycleStates> lifecycleState) {
+        validateInternalState(false);
         return null;
     }
 
     @Override
     public void putBinaryString(
             byte[] binaryString) {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
+        validateInternalState(true);
     }
 
     @Override
     public void putLargeBinaryString(
             InputStream binaryString) {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
+        validateInternalState(true);
     }
 
     @Override
@@ -178,33 +156,40 @@ public class ComputeResource extends AbstractComputeBaseResource {
             String instanceId,
             Integer offset,
             Integer length) {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
+        validateInternalState(true);
         return null;
     }
 
     @Override
     public void terminateInstance(
             String instanceId) {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
+        validateInternalState(true);
     }
 
     @Override
     public void voidPostWithArg(
             AttachVolumeRequest attachVolumeRequest) {
-        Objects.requireNonNull(principal.get());
-        Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
+        validateInternalState(true);
     }
 
     @Override
     public void voidPostWithNoArg() {
-        Objects.requireNonNull(principal.get());
+        validateInternalState(true);
+    }
+
+    private void validateInternalState(boolean expectHeader) {
+        assert(principal.get() == getPrincipal().orElseThrow());
         Objects.requireNonNull(authorizationRequest);
-        Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
+        if (expectHeader) {
+            Objects.requireNonNull(requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER));
+        } else if (requestHeaders.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER) != null) {
+            throw new IllegalStateException("unexpected header present");
+        }
+        SecurityContext bmcSecCtx = getAuthenticator().orElseThrow().authenticateRequest();
+        Objects.requireNonNull(bmcSecCtx);
+//        if (!bmcSecCtx.isSuccess()) {
+//            throw new IllegalStateException();
+//        }
     }
 
 }

@@ -145,7 +145,7 @@ public class MpInjectionSupport {
     @Default
     @Dependent
     static Subject produceDefaultSubject(SecurityContext sc) {
-        // TODO: https://jira.oci.oraclecorp.com/browse/WLMS-785
+        // TODO: https://jira.oci.oraclecorp.com/browse/WLMS-786
         return sc.service().orElse(EMPTY_SUBJECT);
     }
 

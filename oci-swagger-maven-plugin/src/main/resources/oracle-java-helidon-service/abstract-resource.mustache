@@ -13,8 +13,9 @@ package {{package}};
 {{/hasProduces}}
 public abstract class Abstract{{classname}}BaseResource {{#parentAbstractClass}}extends {{parentAbstractClass}}{{/parentAbstractClass}} {
 {{#contextsIdentity}}
-    {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest;
+    private {{annotationPackage}}.inject.Provider<com.oracle.helidon.oci.identity.authentication.Authenticator> authenticator;
     {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal;
+    {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest;
 
     protected Abstract{{classname}}BaseResource() {
     }
@@ -36,6 +37,11 @@ public abstract class Abstract{{classname}}BaseResource {{#parentAbstractClass}}
         this.authorizationRequest = authorizationRequest;
     }
 
+    /**
+     * Returns the pic identity authorization request that has been set.
+     * @return authorization request
+     * @see #setAuthorizationRequestProvider
+     */
     java.util.Optional<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> getAuthorizationRequest() {
         return java.util.Optional.ofNullable(authorizationRequest != null ? authorizationRequest.get() : null);
     }
@@ -49,9 +55,33 @@ public abstract class Abstract{{classname}}BaseResource {{#parentAbstractClass}}
         this.principal = principal;
     }
 
+    /**
+     * Returns the pic identity authentication principal that has been set.
+     * @return principal
+     * @see #setPrincipalProvider
+     */
     java.util.Optional<com.oracle.pic.identity.authentication.Principal> getPrincipal() {
         return java.util.Optional.ofNullable(principal != null ? principal.get() : null);
     }
+
+    @{{annotationPackage}}.inject.Inject
+    void setAuthenticatorProvider(
+                @{{annotationPackage}}.validation.constraints.NotNull
+                {{annotationPackage}}.inject.Provider<com.oracle.helidon.oci.identity.authentication.Authenticator> authenticator) {
+        java.util.Objects.requireNonNull(authenticator);
+        assert(this.authenticator == null || this.authenticator == authenticator);
+        this.authenticator = authenticator;
+    }
+
+    /**
+     * Returns the authenticator that has been set.
+     * @return authenticator
+     * @see #setAuthenticatorProvider
+     */
+    java.util.Optional<com.oracle.helidon.oci.identity.authentication.Authenticator> getAuthenticator() {
+        return java.util.Optional.ofNullable(authenticator != null ? authenticator.get() : null);
+    }
+
 {{/contextsIdentity}}
 {{#operations}}
 {{#operation}}
