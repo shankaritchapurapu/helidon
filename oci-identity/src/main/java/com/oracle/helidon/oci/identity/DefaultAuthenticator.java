@@ -28,10 +28,10 @@ import javax.inject.Inject;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.container.ContainerRequestContext;
 
-import com.oracle.helidon.oci.identity.authentication.Authenticator;
 import com.oracle.pic.identity.authentication.AuthenticatorClient;
 import com.oracle.pic.identity.authentication.SecurityContext;
 
+@SuppressWarnings("unused")
 class DefaultAuthenticator implements Authenticator {
     private static final Logger LOGGER = Logger.getLogger(AuthenticationSupportingFilter.class.getName());
 
@@ -59,12 +59,15 @@ class DefaultAuthenticator implements Authenticator {
         URI methodUri = rc.getUriInfo().getRequestUri();
         String opcRequestId = rc.getHeaderString(OciHeaderNames.OPC_REQUEST_ID);
         String shaDigest = rc.getHeaderString(AuthenticationSupportingFilter.TAG_DEFAULT_HEADER);
+        // TODO: https://jira.oci.oraclecorp.com/browse/WLMS-852
         boolean allowBodyForGet = rc.getMethod().equals(HttpMethod.GET) && (shaDigest != null);
 
         // Step 4: Perform AuthN using client's Signed Headers and compare body with header's
-        LOGGER.log(Level.FINE,
-                "Proceeding to authenticate request {} with signed headers and sha digest {}",
-                new Object[] {opcRequestId, shaDigest});
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.log(Level.FINE,
+                       "Proceeding to authenticate request {0} with signed headers and sha digest {1}",
+                       new Object[] {opcRequestId, shaDigest});
+        }
         SecurityContext authenticationResponse =
                 authenticatorClient.authenticate(
                         rc.getMethod(),
@@ -72,7 +75,7 @@ class DefaultAuthenticator implements Authenticator {
                         headers,
                         Optional.ofNullable(shaDigest),
                         allowBodyForGet);
-        LOGGER.log(Level.FINE, "AuthN call performed successfully; success=" + authenticationResponse.isSuccess());
+        LOGGER.log(Level.FINE, "AuthN call performed successfully; success={0}", authenticationResponse.isSuccess());
         return authenticationResponse;
     }
 

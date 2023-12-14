@@ -16,7 +16,9 @@
 
 package com.oracle.helidon.oci.identity;
 
-/** Commons OCI Header Names. */
+/**
+ * Commons OCI Header Names.
+ **/
 // inspired by https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-netty/browse/oci-service-common/src/main/java/com/oracle/oci/sfw/netty/common/header/OciHeaderNames.java
 class OciHeaderNames {
     static final String X_DATE = "X-Date";

@@ -14,7 +14,20 @@
  * limitations under the License.
  */
 
+package com.oracle.helidon.oci.identity;
+
+import com.oracle.pic.identity.authentication.SecurityContext;
+
 /**
- * Support for oci-identity's authenticator.
+ * Contract representing authentication into the oci native authentication libraries.
  */
-package com.oracle.helidon.oci.identity.authentication;
+public interface Authenticator {
+
+  /**
+   * Authenticate the current server request.
+   *
+   * @return the bmc security context
+   */
+  SecurityContext authenticateRequest();
+
+}

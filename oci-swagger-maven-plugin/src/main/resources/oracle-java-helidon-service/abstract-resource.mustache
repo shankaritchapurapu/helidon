@@ -2,6 +2,8 @@ package {{package}};
 
 {{#imports}}import {{import}};
 {{/imports}}
+{{#contextsIdentity}}import {{annotationPackage}}.inject.Provider;
+{{/contextsIdentity}}
 
 /**
  * Base class to use when parameters defined by the swagger spec are all you need.
@@ -13,17 +15,19 @@ package {{package}};
 {{/hasProduces}}
 public abstract class Abstract{{classname}}BaseResource {{#parentAbstractClass}}extends {{parentAbstractClass}}{{/parentAbstractClass}} {
 {{#contextsIdentity}}
-    private {{annotationPackage}}.inject.Provider<com.oracle.helidon.oci.identity.authentication.Authenticator> authenticator;
-    {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal;
-    {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest;
+    private Provider<com.oracle.helidon.oci.identity.Authenticator> authenticator;
+    Provider<com.oracle.pic.identity.authentication.Principal> principal;
+    Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest;
 
     protected Abstract{{classname}}BaseResource() {
     }
 
-    @{{annotationPackage}}.inject.Inject
+//    @{{annotationPackage}}.inject.Inject
     protected Abstract{{classname}}BaseResource(
-                {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest,
-                {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal) {
+                Provider<com.oracle.helidon.oci.identity.Authenticator> authenticator,
+                Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest,
+                Provider<com.oracle.pic.identity.authentication.Principal> principal) {
+        setAuthenticatorProvider(authenticator);
         setAuthorizationRequestProvider(authorizationRequest);
         setPrincipalProvider(principal);
     }
@@ -31,55 +35,64 @@ public abstract class Abstract{{classname}}BaseResource {{#parentAbstractClass}}
     @{{annotationPackage}}.inject.Inject
     void setAuthorizationRequestProvider(
                 @{{annotationPackage}}.validation.constraints.NotNull
-                {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest) {
+                Provider<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> authorizationRequest) {
         java.util.Objects.requireNonNull(authorizationRequest);
-        assert(this.authorizationRequest == null || this.authorizationRequest == authorizationRequest);
+        if (this.authorizationRequest != null && this.authorizationRequest != authorizationRequest) {
+            throw new IllegalStateException("Resetting the authorizationRequestProvider is not permitted.");
+        }
         this.authorizationRequest = authorizationRequest;
     }
 
     /**
      * Returns the pic identity authorization request that has been set.
+     *
      * @return authorization request
      * @see #setAuthorizationRequestProvider
      */
     java.util.Optional<com.oracle.pic.identity.authorization.sdk.AuthorizationRequest> getAuthorizationRequest() {
-        return java.util.Optional.ofNullable(authorizationRequest != null ? authorizationRequest.get() : null);
+        return java.util.Optional.ofNullable(authorizationRequest).map(Provider::get);
     }
 
     @{{annotationPackage}}.inject.Inject
     void setPrincipalProvider(
                 @{{annotationPackage}}.validation.constraints.NotNull
-                {{annotationPackage}}.inject.Provider<com.oracle.pic.identity.authentication.Principal> principal) {
+                Provider<com.oracle.pic.identity.authentication.Principal> principal) {
         java.util.Objects.requireNonNull(principal);
-        assert(this.principal == null || this.principal == principal);
+        if (this.principal != null && this.principal != principal) {
+            throw new IllegalStateException("Resetting the principalProvider is not permitted.");
+        }
         this.principal = principal;
     }
 
     /**
      * Returns the pic identity authentication principal that has been set.
+     *
      * @return principal
      * @see #setPrincipalProvider
      */
     java.util.Optional<com.oracle.pic.identity.authentication.Principal> getPrincipal() {
-        return java.util.Optional.ofNullable(principal != null ? principal.get() : null);
+        return java.util.Optional.ofNullable(principal).map(Provider::get);
     }
 
     @{{annotationPackage}}.inject.Inject
     void setAuthenticatorProvider(
                 @{{annotationPackage}}.validation.constraints.NotNull
-                {{annotationPackage}}.inject.Provider<com.oracle.helidon.oci.identity.authentication.Authenticator> authenticator) {
+                Provider<com.oracle.helidon.oci.identity.Authenticator> authenticator) {
         java.util.Objects.requireNonNull(authenticator);
-        assert(this.authenticator == null || this.authenticator == authenticator);
+        if (this.authenticator != null && this.authenticator != authenticator) {
+            throw new IllegalStateException("Resetting the authenticationProvider is not permitted.");
+        }
         this.authenticator = authenticator;
     }
 
     /**
      * Returns the authenticator that has been set.
+     *
      * @return authenticator
      * @see #setAuthenticatorProvider
      */
-    java.util.Optional<com.oracle.helidon.oci.identity.authentication.Authenticator> getAuthenticator() {
-        return java.util.Optional.ofNullable(authenticator != null ? authenticator.get() : null);
+    java.util.Optional<com.oracle.helidon.oci.identity.Authenticator> getAuthenticator() {
+        return java.util.Optional.ofNullable(authenticator).map(Provider::get);
     }
 
 {{/contextsIdentity}}
