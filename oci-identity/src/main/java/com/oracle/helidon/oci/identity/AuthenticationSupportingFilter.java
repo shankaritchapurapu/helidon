@@ -78,7 +78,6 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
             rc.getHeaders().add(configuration().headerTag(), digest);
 
             rc.setEntityStream(replayStream);
-            assert(rc.hasEntity());
         }
     }
 
