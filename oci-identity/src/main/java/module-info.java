@@ -39,7 +39,6 @@ module com.oracle.helidon.oci.identity {
     uses com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
 
     exports com.oracle.helidon.oci.identity;
-    exports com.oracle.helidon.oci.identity.authentication;
 
     provides org.glassfish.jersey.internal.spi.AutoDiscoverable
             with com.oracle.helidon.oci.identity.AuthenticationSupportAutoDiscoverable;

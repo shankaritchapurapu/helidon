@@ -33,6 +33,8 @@ import io.helidon.config.Config;
 
 /**
  * Makes the header value representing the SHA hash digest of the request.
+ * <p>
+ * Be sure to configure the filter (see README.md of this module) as necessary.
  */
 // inspired by https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-netty/browse/oci-service-identity/src/main/java/com/oracle/oci/sfw/netty/identity/authentication/Authenticator.java
 @PreMatching
@@ -44,7 +46,7 @@ public class AuthenticationSupportingFilter implements ContainerRequestFilter {
     /**
      * The header key that will be used to add the calculated digest value (when the URI matches what is configured).
      */
-    public static final String TAG_DEFAULT_HEADER = "X-HELIDON-SHA-DIGEST";
+    public static final String TAG_DEFAULT_HEADER = OciHeaderNames.X_CONTENT_SHA256;
 
     private static final LazyValue<Configuration> CONFIG = LazyValue
             .create(() -> new Configuration(OciIdentityConfiguration.globalOciIdentityConfig()));

@@ -16,19 +16,19 @@
 
 package com.oracle.helidon.oci.identity;
 
-/** Commons OCI Header Names. */
+/**
+ * Commons OCI Header Names.
+ **/
 // inspired by https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-netty/browse/oci-service-common/src/main/java/com/oracle/oci/sfw/netty/common/header/OciHeaderNames.java
 class OciHeaderNames {
-    public static final String X_DATE = "X-Date";
-    // TODO: reconcile this with AuthenticationSupportingFilter#TAG_DEFAULT_HEADER
-    public static final String X_CONTENT_SHA256 = "X-Content-SHA256";
-    public static final String X_CROSS_TENANCY_REQUEST = "x-cross-tenancy-request";
-    public static final String IDEMPOTENCY_TOKEN = "opc-idempotency-token";
-    public static final String RETRY_TOKEN = "opc-retry-token";
-    public static final String OPC_REQUEST_ID = "opc-request-id";
-    public static final String CLIENT_INFO = "opc-client-info";
-    public static final String NEXT_PAGE = "opc-next-page";
-    public static final String PREVIOUS_PAGE = "opc-previous-page";
-    public static final String TOTAL_ITEMS = "opc-total-items";
-
+    static final String X_DATE = "X-Date";
+    static final String X_CONTENT_SHA256 = "X-Content-SHA256";
+    static final String X_CROSS_TENANCY_REQUEST = "x-cross-tenancy-request";
+    static final String IDEMPOTENCY_TOKEN = "opc-idempotency-token";
+    static final String RETRY_TOKEN = "opc-retry-token";
+    static final String OPC_REQUEST_ID = "opc-request-id";
+    static final String CLIENT_INFO = "opc-client-info";
+    static final String NEXT_PAGE = "opc-next-page";
+    static final String PREVIOUS_PAGE = "opc-previous-page";
+    static final String TOTAL_ITEMS = "opc-total-items";
 }

@@ -18,7 +18,7 @@
         <helidon.version>2.6.4</helidon.version>
         <!-- Versions for libraries used in build -->
         <!-- <oci-java-sdk-version>${version.lib.oci}</oci-java-sdk-version>-->
-        <oci-java-sdk-version>3.30.0</oci-java-sdk-version>
+        <oci-java-sdk-version>3.31.0</oci-java-sdk-version>
 
         <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
 
@@ -27,17 +27,17 @@
         <oracle-internal-commons-core-regions-version>2.1.73</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-core-resources-version>1.2.337</oracle-internal-commons-core-resources-version>
         <oracle-internal-commons-metrics-lib-version>0.3.53</oracle-internal-commons-metrics-lib-version>
-        <oracle-internal-commons-metrics-module-version>2.0.3</oracle-internal-commons-metrics-module-version>
+        <oracle-internal-commons-metrics-module-version>2.0.4</oracle-internal-commons-metrics-module-version>
         <oracle-internal-commons-metrics-reporter-version>0.0.51</oracle-internal-commons-metrics-reporter-version>
         <oracle-internal-commons-metrics-version>4.1.11</oracle-internal-commons-metrics-version>
-        <oracle-internal-commons-request-id-version>1.1.46</oracle-internal-commons-request-id-version>
-        <oracle-internal-exception-mapping-version>3.0.65</oracle-internal-exception-mapping-version>
+        <oracle-internal-commons-request-id-version>1.1.47</oracle-internal-commons-request-id-version>
+        <oracle-internal-exception-mapping-version>3.0.66</oracle-internal-exception-mapping-version>
         <oracle-internal-identity-common-version>2.1.0.469</oracle-internal-identity-common-version>
         <oracle-internal-identity-version>3.0.243</oracle-internal-identity-version>
-        <oracle-internal-logging-version>3.5.7</oracle-internal-logging-version>
+        <oracle-internal-logging-version>3.5.8</oracle-internal-logging-version>
         <oracle-internal-sdk-common-version>1.2</oracle-internal-sdk-common-version>
-        <oracle-internal-secret-service-cp-java-client-version>1.1.5</oracle-internal-secret-service-cp-java-client-version>
-        <oracle-internal-splat-sdk-version>0.1.39867</oracle-internal-splat-sdk-version>
+        <oracle-internal-secret-service-cp-java-client-version>1.1.6</oracle-internal-secret-service-cp-java-client-version>
+        <oracle-internal-splat-sdk-version>0.1.39874</oracle-internal-splat-sdk-version>
         <oracle-internal-vault-java-sdk-version>2.0.4</oracle-internal-vault-java-sdk-version>
         <oracle-internal-vault-user-api-spec-version>1.0.78</oracle-internal-vault-user-api-spec-version>
         <oracle-internal-vault-user-java-client-version>1.0.2</oracle-internal-vault-user-java-client-version>

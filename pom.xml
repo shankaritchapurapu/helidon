@@ -168,7 +168,7 @@
                                     <helidonDependenciesRule>
                                         <namespace>JAVAX</namespace>
                                         <excludedGavRegExs>
-                                            <excludedGav>javax.servlet:javax.servlet-api:.*</excludedGav>
+                                            <excludedGav>jakarta.servlet:jakarta.servlet-api:.*</excludedGav>
                                         </excludedGavRegExs>
                                     </helidonDependenciesRule>
                                     <bannedDependencies>
@@ -182,13 +182,12 @@
                                             <exclude>lombok</exclude>
                                         </excludes>
                                     </bannedDependencies>
-                                    <!-- TODO: https://bitbucket.oci.oraclecorp.com/projects/SDK/repos/java-sdk/pull-requests/5217/overview -->
                                     <noMixedOciJavaSdkVersionsRule implementation="com.oracle.bmc.enforcer.rule.NoMixedOciJavaSdkVersionsRule">
                                         <allowedDependencies>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common:.*</allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:.*</allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common-httpclient:.*</allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-objectstorage-generated:.*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common:*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common-httpclient:*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-objectstorage-generated:*</allowedDependency>
                                         </allowedDependencies>
                                     </noMixedOciJavaSdkVersionsRule>
                                     <!-- https://maven.apache.org/enforcer/enforcer-rules/dependencyConvergence.html -->
@@ -200,10 +199,9 @@
                                         </scopes>
                                         <findAllDuplicates>true</findAllDuplicates>
                                         <ignoreWhenIdentical>true</ignoreWhenIdentical>
-                                        <!-- TODO: https://jira.oci.oraclecorp.com/projects/SPLAT/issues/SPLAT-6046 -->
-                                        <ignoreClasses>
-                                            <ignoreClass>com.oracle.pic.identity.authentication.**</ignoreClass>
-                                        </ignoreClasses>
+<!--                                        <ignoreClasses>-->
+<!--                                            <ignoreClass>com.oracle.pic.identity.authentication.**</ignoreClass>-->
+<!--                                        </ignoreClasses>-->
                                     </banDuplicateClasses>
                                 </rules>
                             </configuration>

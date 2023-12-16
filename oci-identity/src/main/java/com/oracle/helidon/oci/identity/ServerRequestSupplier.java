@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-package com.oracle.helidon.oci.identity.authentication;
+package com.oracle.helidon.oci.identity;
 
-import com.oracle.pic.identity.authentication.SecurityContext;
+import java.util.function.Supplier;
+
+import javax.ws.rs.core.Context;
+
+import io.helidon.webserver.ServerRequest;
 
 /**
- * Contract representing authentication into the oci native authentication libraries.
+ * Bridges from Jersey's {@link javax.ws.rs.core.Context} over to a CDI request-scoped producer.
+ * @see com.oracle.helidon.oci.identity.ContainerRequestContextSupplier
  */
-// inspired by https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-netty/browse/oci-service-identity/src/main/java/com/oracle/oci/sfw/netty/identity/authentication/Authenticator.java
-// TODO: https://jira.oci.oraclecorp.com/browse/WLMS-785
-public interface Authenticator {
+class ServerRequestSupplier implements Supplier<ServerRequest> {
+    @Context
+    private ServerRequest serverRequest;
 
-  SecurityContext authenticateRequest();
-
+    @Override
+    public ServerRequest get() {
+        return serverRequest;
+    }
 }
