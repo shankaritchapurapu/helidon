@@ -1,21 +1,21 @@
 
 The following version properties are referencing the newest available version:
-  ${helidon.version} ............................................ 2.6.4
-  ${oci-java-sdk-version} ...................................... 3.31.0
   ${oracle-internal-authproxy-filter-version} .................. 1.1.38
   ${oracle-internal-commons-metrics-lib-version} ............... 0.3.53
-  ${oracle-internal-commons-metrics-module-version} ............. 2.0.4
+  ${oracle-internal-commons-metrics-module-version} ............. 2.0.6
   ${oracle-internal-commons-metrics-reporter-version} .......... 0.0.51
   ${oracle-internal-commons-metrics-version} ................... 4.1.11
-  ${oracle-internal-commons-request-id-version} ................ 1.1.47
-  ${oracle-internal-exception-mapping-version} ................. 3.0.66
   ${oracle-internal-identity-common-version} ................ 2.1.0.469
-  ${oracle-internal-identity-version} ......................... 3.0.243
-  ${oracle-internal-logging-version} ............................ 3.5.8
   ${oracle-internal-secret-service-cp-java-client-version} ...... 1.1.6
-  ${oracle-internal-splat-sdk-version} ...................... 0.1.39874
   ${oracle-internal-vault-java-sdk-version} ..................... 2.0.4
   ${oracle-internal-vault-user-api-spec-version} ............... 1.0.78
   ${oracle-internal-vault-user-java-client-version} ............. 1.0.2
-All version properties are referencing the newest version available.
+The following version property updates are available:
+  ${helidon.version} ................................... 2.6.4 -> 2.6.5
+  ${oci-java-sdk-version} ............................ 3.31.0 -> 3.32.1
+  ${oracle-internal-commons-request-id-version} ...... 1.1.47 -> 1.1.48
+  ${oracle-internal-exception-mapping-version} ....... 3.0.66 -> 3.0.67
+  ${oracle-internal-identity-version} .............. 3.0.243 -> 3.0.255
+  ${oracle-internal-logging-version} ................... 3.5.8 -> 3.5.9
+  ${oracle-internal-splat-sdk-version} ......... 0.1.39874 -> 0.1.39915
 

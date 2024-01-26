@@ -27,7 +27,7 @@
         <oracle-internal-commons-core-regions-version>2.1.73</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-core-resources-version>1.2.337</oracle-internal-commons-core-resources-version>
         <oracle-internal-commons-metrics-lib-version>0.3.53</oracle-internal-commons-metrics-lib-version>
-        <oracle-internal-commons-metrics-module-version>2.0.4</oracle-internal-commons-metrics-module-version>
+        <oracle-internal-commons-metrics-module-version>2.0.6</oracle-internal-commons-metrics-module-version>
         <oracle-internal-commons-metrics-reporter-version>0.0.51</oracle-internal-commons-metrics-reporter-version>
         <oracle-internal-commons-metrics-version>4.1.11</oracle-internal-commons-metrics-version>
         <oracle-internal-commons-request-id-version>1.1.47</oracle-internal-commons-request-id-version>

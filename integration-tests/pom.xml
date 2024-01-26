@@ -19,5 +19,6 @@
         <module>oci-identity-test</module>
         <module>oci-request-id-test</module>
         <module>oci-swagger-maven-plugin-test</module>
+        <module>oci-t2-metrics-test</module>
     </modules>
 </project>
