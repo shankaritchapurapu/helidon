@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Oracle and/or its affiliates.
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
+import javax.enterprise.inject.spi.CDI;
 
 import io.helidon.common.LazyValue;
 import io.helidon.config.Config;
@@ -75,6 +76,10 @@ class RepeatableInputStreamer {
     static final String DEFAULT_ENCRYPTION_CIPHER = "AES/CBC/PKCS5Padding";
 
     private static boolean LOGGED;
+
+    private static final LazyValue<MetricsHelper> metricsHelper = LazyValue.create(() -> CDI.current().getBeanManager().getExtension(
+            MetricsHelper.class));
+
 
     private RepeatableInputStreamer() {
     }
@@ -125,6 +130,7 @@ class RepeatableInputStreamer {
 
             return new Stream(config, firstBlockIn, size, stream, tempFile, offlineOut);
         } catch (IOException e) {
+            metricsHelper.get().repeatableStreamExceptions().inc();
             throw new UncheckedIOException(e);
         }
     }
@@ -320,38 +326,48 @@ class RepeatableInputStreamer {
 
         @Override
         public synchronized int read() throws IOException {
-            if (readPos < 0) {
-                throw new IOException("stream is closed");
-            } else if (firstBlockIn.length == 0) {
-                return IOUtils.EOF;
-            } else if (readPos < firstBlockInRealLength) {
-                return (int) firstBlockIn[(int) readPos++];
-            } else if (readPos >= streamThreshold) {
-                IllegalStateException e = new IllegalStateException("read past streamThreshold: " + readPos);
-                close();
-                throw e;
-            } else if (offlineOut == null) {
-                int available = remainingIn.available();
-                if (available > 0) {
-                    // this is an insane state since there is more to read
-                    throw new IllegalStateException();
+            try {
+                if (readPos < 0) {
+                    throw new IOException("stream is closed");
+                } else if (firstBlockIn.length == 0) {
+                    return IOUtils.EOF;
+                } else if (readPos < firstBlockInRealLength) {
+                    return (int) firstBlockIn[(int) readPos++];
+                } else if (readPos >= streamThreshold) {
+                    IllegalStateException e = new IllegalStateException("read past streamThreshold: " + readPos);
+                    close();
+                    throw e;
+                } else if (offlineOut == null) {
+                    int available = remainingIn.available();
+                    if (available > 0) {
+                        // this is an insane state since there is more to read
+                        throw new IllegalStateException();
+                    }
+                    return IOUtils.EOF;
                 }
-                return IOUtils.EOF;
-            }
 
-            int byteRead = remainingIn.read();
-            readPos++;
-            if (byteRead == IOUtils.EOF) {
-                IOUtils.closeQuietly(offlineOut);
-                return IOUtils.EOF;
-            }
-            offlineOut.write(byteRead);
+                int byteRead = remainingIn.read();
+                readPos++;
+                if (byteRead == IOUtils.EOF) {
+                    IOUtils.closeQuietly(offlineOut);
+                    return IOUtils.EOF;
+                }
+                offlineOut.write(byteRead);
 
-            return byteRead;
+                return byteRead;
+            } catch (Exception ex) {
+                metricsHelper.get().repeatableStreamExceptions().inc();
+                throw ex;
+            }
         }
 
         @Override
         public synchronized void close() {
+            if (tempFile == null) {
+                metricsHelper.get().repeatableStreamInMemory().inc();
+            } else {
+                metricsHelper.get().repeatableStreamFileUsage().update(readPos);
+            }
             if (offlineOut != null) {
                 IOUtils.closeQuietly(offlineOut);
                 offlineOut = null;
@@ -398,6 +414,7 @@ class RepeatableInputStreamer {
 
                 return new ReplayStream(firstBlockIn, firstBlockInRealLength, offlineIn, this::deref);
             } catch (IOException e) {
+                metricsHelper.get().repeatableStreamExceptions().inc();
                 refCount.decrementAndGet();
                 throw new UncheckedIOException(e);
             }

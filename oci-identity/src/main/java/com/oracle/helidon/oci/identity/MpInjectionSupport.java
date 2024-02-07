@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Oracle and/or its affiliates.
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,8 @@ import io.helidon.security.SecurityContext;
 import io.helidon.security.Subject;
 
 import com.oracle.pic.commons.ssl.DynamicSslContextProviderConfig;
+import com.oracle.pic.identity.auth.AuthMetricsConstants;
+import com.oracle.pic.identity.auth.AuthMetricsFactory;
 import com.oracle.pic.identity.authentication.AuthServiceAuthenticationClient;
 import com.oracle.pic.identity.authentication.AuthenticatorClient;
 import com.oracle.pic.identity.authentication.PrincipalType;
@@ -68,9 +70,7 @@ public class MpInjectionSupport {
             builder.rootCertPath(config.rootCertPath());
         }
         if (config.metricsEnabled()) {
-            // TODO: https://jira.oci.oraclecorp.com/browse/WLMS-807
-            // see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/metrics-implementation
-            builder.withNoAuthMetrics();
+            builder.authMetrics(AuthMetricsFactory.getInstance(AuthMetricsConstants.COMMONS_LIB));
         } else {
             builder.withNoAuthMetrics();
         }
@@ -110,8 +110,7 @@ public class MpInjectionSupport {
                 .applicationName(appConfig.name());
 
         if (authConfig.metricsEnabled()) {
-            // TODO: https://jira.oci.oraclecorp.com/browse/WLMS-807
-            builder.withNoAuthMetrics();
+            builder.authMetrics(AuthMetricsFactory.getInstance(AuthMetricsConstants.COMMONS_LIB));
         } else {
             builder.withNoAuthMetrics();
         }

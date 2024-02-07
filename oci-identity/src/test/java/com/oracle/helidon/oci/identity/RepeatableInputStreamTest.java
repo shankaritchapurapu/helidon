@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Oracle and/or its affiliates.
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,20 +19,34 @@ package com.oracle.helidon.oci.identity;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import javax.annotation.Priority;
+import javax.enterprise.event.Observes;
+
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
+import io.helidon.metrics.api.RegistryFactory;
+import io.helidon.microprofile.metrics.MetricsCdiExtension;
+import io.helidon.microprofile.tests.junit5.HelidonTest;
 
 import com.oracle.helidon.oci.identity.RepeatableInputStreamer.Configuration;
 import org.apache.commons.io.IOUtils;
+import org.checkerframework.checker.units.qual.A;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.Histogram;
+import org.eclipse.microprofile.metrics.MetricRegistry;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static com.oracle.helidon.oci.identity.RepeatableInputStreamer.ReplayStream;
@@ -43,10 +57,32 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@HelidonTest
 class RepeatableInputStreamTest {
+
+    private static final int DEFAULT_CDI_OBSERVER_PRIORITY = javax.interceptor.Interceptor.Priority.APPLICATION + 500;
+
     byte[] contents;
+
+    private static Histogram fileUsage;
+    private static Counter inMemoryUses;
+
+    @BeforeAll
+    static void prepareMetrics() {
+        MetricRegistry registry = RegistryFactory.getInstance().getRegistry(MetricRegistry.Type.VENDOR);
+        fileUsage = List.copyOf(registry.getHistograms((metricID, metric) -> metricID.getName()
+                                .equals(MetricsHelper.FILE_METRIC_NAME))
+                                        .values())
+                .get(0);
+
+        inMemoryUses = List.copyOf(registry.getCounters((metricID, metric) -> metricID.getName()
+                                .equals(MetricsHelper.IN_MEMORY_METRIC_NAME))
+                                           .values())
+                .get(0);
+    }
 
     @Test
     void sanity() throws Exception {
@@ -302,6 +338,45 @@ class RepeatableInputStreamTest {
     }
 
     @Test
+    void checkMetricsWithFile() {
+
+        Config config = Config.builder()
+                .sources(ConfigSources.create(Map.of("memoryThreshold", "1", "useEncryption", "false")))
+                .build();
+        Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
+        assertThat(cfg.useEncryption(), is(false));
+
+        long fileBefore = fileUsage.getCount();
+        long inMemoryBefore = inMemoryUses.getCount();
+
+        boundedStream_n_streamIsReadCompletelyFirst("* Hello World!".getBytes(),
+                                                    null,
+                                                    cfg);
+        assertThat("File usage", fileUsage.getCount(), is(greaterThan(fileBefore)));
+        assertThat("In-memory usage", inMemoryUses.getCount(), is(equalTo(inMemoryBefore)));
+    }
+
+    @Test
+    void checkMetricsInMemory() {
+        byte[] content = "* Hello World!".getBytes();
+        Config config = Config.builder()
+                .sources(ConfigSources.create(Map.of("memoryThreshold", Integer.toString(content.length) + 1,
+                                                     "useEncryption", "false")))
+                .build();
+        Configuration cfg = RepeatableInputStreamer.loadConfig(config, true);
+        assertThat(cfg.useEncryption(), is(false));
+
+        long fileBefore = fileUsage.getCount();
+        long inMemoryBefore = inMemoryUses.getCount();
+
+        boundedStream_n_streamIsReadCompletelyFirst(content,
+                                                    null,
+                                                    cfg);
+        assertThat("File usage", fileUsage.getCount(), is(equalTo(fileBefore)));
+        assertThat("In-memory usage", inMemoryUses.getCount(), is(greaterThan(inMemoryBefore)));
+    }
+
+    @Test
     void noReplayAfterEOForClose() throws Exception {
         String input = "\tHello\nWorld! ";
         Stream stream = create(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)));
@@ -326,6 +401,32 @@ class RepeatableInputStreamTest {
                     .build();
             assertThrows(IllegalStateException.class, () -> RepeatableInputStreamer.loadConfig(config, true));
         }
+    }
+
+    @Test
+    void checkExtensionPriorities() {
+        int metricsCdiExtensionObserverPriority = observerPriority(MetricsCdiExtension.class, "registerService");
+        int metricsHelperExtensionObserverPriority = observerPriority(MetricsHelper.class, "prepare");
+        assertThat("Metrics helper priority vs. metrics CDI extension priority", metricsHelperExtensionObserverPriority,
+                   is(greaterThan(metricsCdiExtensionObserverPriority)));
+    }
+
+    private int observerPriority(Class<?> c, String methodName) {
+        Optional<Method> method = Arrays.stream(c.getDeclaredMethods())
+                .filter(m -> m.getName().equals(methodName))
+                .findFirst();
+        assertThat(c.getSimpleName() + " method " + methodName + " is present",
+                   method.isPresent(),
+                   is(true));
+
+        Optional<Parameter> observesParam = Arrays.stream(method.get().getParameters())
+                .filter(p -> p.isAnnotationPresent(Observes.class))
+                .findFirst();
+        assertThat("@Observes parameter is present on " + c.getSimpleName() + "#" + method.get().getName(),
+                   observesParam.isPresent(), is(true));
+
+        Priority priorityAnno = observesParam.get().getAnnotation(Priority.class);
+        return (priorityAnno == null) ? DEFAULT_CDI_OBSERVER_PRIORITY : priorityAnno.value();
     }
 
     void boundedStream_n_streamIsReadCompletelyFirst(int size,
