@@ -82,6 +82,11 @@
                 <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-oci-sdk-oci-internals-commons</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

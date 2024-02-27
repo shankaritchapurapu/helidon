@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.oracle.helidon.oci</groupId>
+        <artifactId>helidon-repackaged-oci</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>helidon-repackaged-oci-sdk-oci-internals-commons</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Repackaged: OCI sdk-oci-internals-commons</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.oracle.oci.internals.sdk</groupId>
+            <artifactId>java-sdk-oci-internals-commons</artifactId>
+            <version>1.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.8.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-transpile-plugin</artifactId>
+                <version>1.0-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>transpile-classes</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- Some package, different artefact com.oracle.oci.sdk:oci-java-sdk-addons-internal:3.31.0 -->
+                    <!--com.oracle.bmc.auth.internal.NoOpRequestSignerFactory -->
+                    <!--com.oracle.bmc.auth.internal.FixedContentResourcePrincipalFederationClient -->
+
+                    <!-- Rest can be transpiled(truly repackaged) -->
+                    <mapping>
+                        <map>com.oracle.oci.internals.sdk.http.internal.ExplicitlySetFilter:com.oracle.bmc.http.internal.ExplicitlySetFilter</map>
+                        <map>com.oracle.oci.internals.sdk.http.internal.ExplicitlySetBmcModel:com.oracle.bmc.http.internal.ExplicitlySetBmcModel</map>
+                    </mapping>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
