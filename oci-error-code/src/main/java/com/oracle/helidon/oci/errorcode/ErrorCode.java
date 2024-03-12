@@ -15,13 +15,13 @@
  */
 package com.oracle.helidon.oci.errorcode;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.Status.Family;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status.Family;
 
 /**
  * Based on {@code com.oracle.pic.commons.exceptions.server.ErrorCode} but without
- * depending on javax packages.
+ * depending on jakarta packages.
  */
 public enum ErrorCode {
 

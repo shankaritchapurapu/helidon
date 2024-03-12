@@ -15,13 +15,14 @@
 
     <modules>
         <module>transpile-maven-plugin</module>
+        <module>repackaged-oci-sdk-oci-internals-commons</module>
         <module>repackaged-oci-authentication-client</module>
         <module>repackaged-oci-authorization-sdk</module>
         <module>repackaged-oci-authproxy-filter</module>
         <module>repackaged-oci-vault-java-sdk</module>
         <module>repackaged-oci-vault-user-java-client</module>
-        <module>repackaged-oci-sdk-oci-internals-commons</module>
     </modules>
+
 
     <build>
         <pluginManagement>

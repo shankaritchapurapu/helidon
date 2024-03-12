@@ -16,19 +16,11 @@
 
 package com.oracle.helidon.maven.transpiler;
 
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class ClassMapping {
+record ClassMapping(ClassMeta from, ClassMeta to) {
     private static final Pattern PATTERN = Pattern.compile("([^:]*):([^:]*)");
-    private final ClassMeta from;
-    private final ClassMeta to;
-
-    ClassMapping(ClassMeta from, ClassMeta to) {
-        this.from = from;
-        this.to = to;
-    }
 
     static ClassMapping parse(String mapping) {
         Matcher m = PATTERN.matcher(mapping);
@@ -39,38 +31,4 @@ final class ClassMapping {
         var toFqdn = m.group(2);
         return new ClassMapping(ClassMeta.parse(fromFqdn), ClassMeta.parse(toFqdn));
     }
-
-    public ClassMeta from() {
-        return from;
-    }
-
-    public ClassMeta to() {
-        return to;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-        if (obj == null || obj.getClass() != this.getClass()) {
-            return false;
-        }
-        var that = (ClassMapping) obj;
-        return Objects.equals(this.from, that.from) &&
-                Objects.equals(this.to, that.to);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(from, to);
-    }
-
-    @Override
-    public String toString() {
-        return "ClassMapping[" +
-                "from=" + from + ", " +
-                "to=" + to + ']';
-    }
-
 }

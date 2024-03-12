@@ -16,7 +16,7 @@
     <name>Helidon OCI Pegasus Native Integrations Project</name>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
 
         <surefire.argLine>-Xmx1024m -Dfile.encoding=UTF-8</surefire.argLine>
@@ -31,9 +31,10 @@
         <version.plugin.compiler>3.8.1</version.plugin.compiler>
         <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
         <version.plugin.failsafe>3.0.0-M5</version.plugin.failsafe>
-        <version.plugin.helidon-build-tools>2.3.8</version.plugin.helidon-build-tools>
+        <version.plugin.helidon-build-tools>4.0.5</version.plugin.helidon-build-tools>
         <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
         <version.plugin.surefire>3.0.0-M5</version.plugin.surefire>
+        <version.plugin.shade>3.5.1</version.plugin.shade>
         <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
         <version.plugin.maven-directory-plugin>1.0</version.plugin.maven-directory-plugin>
         <version.plugin.maven-enforcer-plugin>3.4.1</version.plugin.maven-enforcer-plugin>
@@ -44,9 +45,11 @@
 
     <modules>
         <module>dependencies</module>
+        <module>oci-javax-shim</module>
         <module>repackaged-oci</module>
         <module>oci-error-code</module>
         <module>oci-identity</module>
+        <module>oci-secret-service</module>
         <module>oci-request-id</module>
         <module>oci-swagger-maven-plugin</module>
         <module>bom</module>
@@ -62,6 +65,12 @@
                 <version>${helidon.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>io.helidon.microprofile.testing</groupId>
+                <artifactId>helidon-microprofile-testing-junit5</artifactId>
+                <version>${helidon.version}</version>
             </dependency>
 
             <!-- misc. other 3rd party dependencies -->
@@ -166,9 +175,11 @@
                             <configuration>
                                 <rules>
                                     <helidonDependenciesRule>
-                                        <namespace>JAVAX</namespace>
+                                        <namespace>JAKARTA</namespace>
                                         <excludedGavRegExs>
                                             <excludedGav>jakarta.servlet:jakarta.servlet-api:.*</excludedGav>
+                                            <excludedGav>jakarta.el:jakarta.el-api:.*</excludedGav>
+                                            <excludedGav>javax.ws.rs:javax.ws.rs-api:.*</excludedGav>
                                         </excludedGavRegExs>
                                     </helidonDependenciesRule>
                                     <bannedDependencies>
@@ -245,6 +256,11 @@
                         <argLine>${failsafe.argLine} ${failsafe.coverage.argline}</argLine>
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>${version.plugin.shade}</version>
                 </plugin>
             </plugins>
         </pluginManagement>

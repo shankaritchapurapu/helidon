@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.enterprise.inject.Vetoed;
+import jakarta.enterprise.inject.Vetoed;
 
 import com.oracle.pic.identity.authentication.AuthenticationClient;
 import com.oracle.pic.identity.authentication.Principal;

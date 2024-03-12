@@ -21,7 +21,7 @@ import com.oracle.helidon.oci.identity.MetricsHelper;
  */
 module com.oracle.helidon.oci.identity {
     requires java.logging;
-    requires java.ws.rs;
+    requires jakarta.ws.rs;
 
     requires io.helidon.logging.common;
     requires io.helidon.logging.jul;
@@ -37,11 +37,11 @@ module com.oracle.helidon.oci.identity {
     requires metrics.implementation;
     requires io.helidon.security;
     requires authproxy.filter;
-    requires hk2.api;
+    requires org.glassfish.hk2.api;
     requires org.apache.commons.io;
     requires org.apache.commons.codec;
     requires io.helidon.config.mp;
-    requires jakarta.interceptor.api;
+    requires io.helidon.microprofile.metrics;
 
     uses com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
 
@@ -50,7 +50,7 @@ module com.oracle.helidon.oci.identity {
     provides org.glassfish.jersey.internal.spi.AutoDiscoverable
             with com.oracle.helidon.oci.identity.AuthenticationSupportAutoDiscoverable;
 
-    provides javax.enterprise.inject.spi.Extension with MetricsHelper;
+    provides jakarta.enterprise.inject.spi.Extension with MetricsHelper;
 
     // needed when running with modules - to make private methods accessible
     opens com.oracle.helidon.oci.identity to weld.core.impl, io.helidon.microprofile.cdi;

@@ -15,10 +15,10 @@
     <description>Maven dependency management for Helidon OCI native applications</description>
 
     <properties>
-        <helidon.version>2.6.4</helidon.version>
+        <helidon.version>4.0.3</helidon.version>
         <!-- Versions for libraries used in build -->
         <!-- <oci-java-sdk-version>${version.lib.oci}</oci-java-sdk-version>-->
-        <oci-java-sdk-version>3.31.0</oci-java-sdk-version>
+        <oci-java-sdk-version>3.31.1</oci-java-sdk-version>
 
         <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
 
@@ -40,14 +40,19 @@
         <oracle-internal-splat-sdk-version>0.1.39874</oracle-internal-splat-sdk-version>
         <oracle-internal-vault-java-sdk-version>2.0.4</oracle-internal-vault-java-sdk-version>
         <oracle-internal-vault-user-api-spec-version>1.0.78</oracle-internal-vault-user-api-spec-version>
-        <oracle-internal-vault-user-java-client-version>1.0.2</oracle-internal-vault-user-java-client-version>
+        <oracle-internal-vault-user-java-client-version>1.0.8</oracle-internal-vault-user-java-client-version>
 
-        <version.lib.cdi-api>2.0.2</version.lib.cdi-api>
-        <version.lib.jaxrs-api>2.1.6</version.lib.jaxrs-api>
-        <version.lib.org-glassfish>2.40</version.lib.org-glassfish>
+        <version.lib.cdi-api>4.0.1</version.lib.cdi-api>
+        <version.lib.jaxrs-api>3.1.0</version.lib.jaxrs-api>
+        <!-- TODO: Why is enforcer blocking 4.0.0? -->
+        <version.lib.xml.bind-api>3.0.1</version.lib.xml.bind-api>
+        <version.lib.org-glassfish>3.1.5</version.lib.org-glassfish>
+        <version.lib.hk2>3.0.4</version.lib.hk2>
 
         <version.lib.commons-io>2.13.0</version.lib.commons-io>
         <version.lib.commons-lang3>3.10</version.lib.commons-lang3>
+        <version.lib.commons-codec>1.15</version.lib.commons-codec>
+        <version.lib.commons-net>3.9.0</version.lib.commons-net>
         <version.lib.google-httpclient>1.43.3</version.lib.google-httpclient>
         <version.lib.httpclient>4.5.14</version.lib.httpclient>
         <version.lib.httpcore>4.4.16</version.lib.httpcore>
@@ -171,6 +176,17 @@
                 <artifactId>oci-java-sdk-workrequests</artifactId>
                 <version>${oci-java-sdk-version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-addons-internal</artifactId>
+                <version>${oci-java-sdk-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.annotation</groupId>
+                        <artifactId>javax.annotation-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
 
             <!-- see repackaged-oci-authproxy-filter -->
             <!-- https://bitbucket.oci.oraclecorp.com/projects/SECINF/repos/authproxy-filter -->
@@ -216,6 +232,10 @@
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>
                         <artifactId>javax.ws.rs-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-codec</groupId>
+                        <artifactId>commons-codec</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -273,6 +293,10 @@
                     <exclusion>
                         <groupId>org.projectlombok</groupId>
                         <artifactId>lombok</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-codec</groupId>
+                        <artifactId>commons-codec</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -412,6 +436,10 @@
                         <groupId>org.apache.httpcomponents</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>jakarta.activation</groupId>
+                        <artifactId>jakarta.activation-api</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
 
@@ -514,6 +542,10 @@
                     <exclusion>
                         <groupId>org.projectlombok</groupId>
                         <artifactId>lombok</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-codec</groupId>
+                        <artifactId>commons-codec</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -633,24 +665,36 @@
                 <version>${oracle-internal-vault-java-sdk-version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>aopalliance</groupId>
-                        <artifactId>aopalliance</artifactId>
+                        <groupId>org.glassfish.jersey.core</groupId>
+                        <artifactId>jersey-client</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>com.google.code.findbugs</groupId>
-                        <artifactId>*</artifactId>
+                        <groupId>org.glassfish.jersey.core</groupId>
+                        <artifactId>jersey-common</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>javax.annotation</groupId>
-                        <artifactId>javax.annotation-api</artifactId>
+                        <groupId>ch.qos.logback</groupId>
+                        <artifactId>logback-classic</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>javax.inject</groupId>
-                        <artifactId>javax.inject</artifactId>
+                        <groupId>com.oracle.oci.sdk</groupId>
+                        <artifactId>oci-java-sdk-addons-s2s</artifactId>
                     </exclusion>
                     <exclusion>
-                        <groupId>javax.ws.rs</groupId>
-                        <artifactId>javax.ws.rs-api</artifactId>
+                        <groupId>com.oracle.pic.identity.authorization</groupId>
+                        <artifactId>sdk</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.oci.sdk</groupId>
+                        <artifactId>oci-java-sdk-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.oci.sdk</groupId>
+                        <artifactId>oci-java-sdk-audit</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.oci.sdk</groupId>
+                        <artifactId>oci-java-sdk-database</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -677,6 +721,10 @@
                         <groupId>javax.ws.rs</groupId>
                         <artifactId>javax.ws.rs-api</artifactId>
                     </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.core</groupId>
+                        <artifactId>jersey-client</artifactId>
+                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -695,6 +743,10 @@
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>
                         <artifactId>javax.ws.rs-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>ch.qos.logback</groupId>
+                        <artifactId>logback-classic</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -744,6 +796,12 @@
             </dependency>
 
             <dependency>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <version>${version.lib.xml.bind-api}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.glassfish.jersey.core</groupId>
                 <artifactId>jersey-common</artifactId>
                 <version>${version.lib.org-glassfish}</version>
@@ -771,6 +829,11 @@
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${version.lib.commons-io}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>${version.lib.commons-net}</version>
             </dependency>
             <!-- TODO: file a tix on identity + sdk teams to not rely on this library -->
             <dependency>
@@ -804,6 +867,11 @@
                 <version>${version.lib.joda-time}</version>
             </dependency>
             <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${version.lib.commons-codec}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${version.lib.commons-lang3}</version>
@@ -812,6 +880,12 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>${version.lib.httpclient}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-codec</groupId>
+                        <artifactId>commons-codec</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
@@ -822,6 +896,21 @@
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
                 <version>${version.lib.javaassist}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.hk2</groupId>
+                <artifactId>hk2-locator</artifactId>
+                <version>${version.lib.hk2}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.hk2</groupId>
+                <artifactId>hk2-api</artifactId>
+                <version>${version.lib.hk2}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.hk2</groupId>
+                <artifactId>hk2-utils</artifactId>
+                <version>${version.lib.hk2}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

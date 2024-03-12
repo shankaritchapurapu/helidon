@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Based on {@code com.oracle.pic.commons.exceptions.server.RenderableException} but without
- * depending on javax packages.
+ * depending on jakarta packages.
  */
 public class ErrorDetail {
 

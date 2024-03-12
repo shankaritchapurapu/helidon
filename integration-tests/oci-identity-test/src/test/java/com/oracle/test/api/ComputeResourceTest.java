@@ -1,12 +1,13 @@
 package com.oracle.test.api;
 
-import javax.inject.Inject;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import io.helidon.microprofile.testing.junit5.HelidonTest;
 
-import io.helidon.microprofile.tests.junit5.HelidonTest;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+
 
 import com.oracle.helidon.oci.identity.AuthenticationSupportingFilter;
 import com.oracle.test.model.AttachIScsiVolumeRequest;

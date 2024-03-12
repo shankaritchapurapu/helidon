@@ -22,6 +22,10 @@
             <artifactId>metrics-module</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-javax-jaxrs-shim</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.pic.telemetry.commons</groupId>
             <artifactId>metrics-lib</artifactId>
         </dependency>
@@ -31,7 +35,7 @@
         </dependency>
         <dependency>
             <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-common-httpclient-jersey</artifactId>
+            <artifactId>oci-java-sdk-common-httpclient-jersey3</artifactId>
         </dependency>
         <dependency>
             <groupId>jakarta.inject</groupId>

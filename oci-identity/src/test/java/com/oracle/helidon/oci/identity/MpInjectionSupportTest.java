@@ -19,15 +19,15 @@ package com.oracle.helidon.oci.identity;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.enterprise.context.ContextNotActiveException;
-import javax.enterprise.context.control.RequestContextController;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.ws.rs.client.WebTarget;
+import jakarta.enterprise.context.ContextNotActiveException;
+import jakarta.enterprise.context.control.RequestContextController;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.ws.rs.client.WebTarget;
 
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
-import io.helidon.microprofile.tests.junit5.HelidonTest;
+import io.helidon.microprofile.testing.junit5.HelidonTest;
 import io.helidon.security.Principal;
 import io.helidon.security.SecurityContext;
 import io.helidon.security.Subject;

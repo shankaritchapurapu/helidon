@@ -19,10 +19,10 @@ package com.oracle.helidon.oci.requestid;
 import com.oracle.pic.commons.rid.RequestIdUtils;
 import io.helidon.common.context.Context;
 import io.helidon.common.context.Contexts;
-import javax.ws.rs.client.ClientRequestContext;;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
+import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Request;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 

@@ -36,12 +36,22 @@
             <!-- Helidon OCI artifacts -->
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-javax-jaxrs-shim</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-error-code</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-identity</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-secret-service</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
@@ -54,7 +64,6 @@
                 <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
-
 
             <!-- Helidon OCI repackaged artifacts -->
             <dependency>

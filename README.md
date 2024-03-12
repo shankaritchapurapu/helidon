@@ -11,9 +11,9 @@ If, however, you are part of the customer or service enclave, and you need to in
 libraries that OCI teams produce (that are not part of the public OCI SDK), then you are at the right place here.
 
 ## Prerequisites
-- JDK 17 or higher (not that while Helidon 2.x only requires Java 11 or higher, the OCI SDK requires Java 17 or higher)
+- JDK 21 or higher
 - Maven 3.6.1 or higher
-- Helidon 2.6.3 or higher
+- Helidon 4.0.0 or higher
 
 ## Usage
 Most users should be generating their service using the [Helidon Service Generator](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-service-generator).

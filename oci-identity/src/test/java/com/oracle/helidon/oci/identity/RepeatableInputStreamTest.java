@@ -31,14 +31,14 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import javax.annotation.Priority;
-import javax.enterprise.event.Observes;
+import jakarta.annotation.Priority;
+import jakarta.enterprise.event.Observes;
 
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
-import io.helidon.metrics.api.RegistryFactory;
 import io.helidon.microprofile.metrics.MetricsCdiExtension;
-import io.helidon.microprofile.tests.junit5.HelidonTest;
+import io.helidon.microprofile.metrics.RegistryFactory;
+import io.helidon.microprofile.testing.junit5.HelidonTest;
 
 import com.oracle.helidon.oci.identity.RepeatableInputStreamer.Configuration;
 import org.apache.commons.io.IOUtils;
@@ -63,7 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @HelidonTest
 class RepeatableInputStreamTest {
 
-    private static final int DEFAULT_CDI_OBSERVER_PRIORITY = javax.interceptor.Interceptor.Priority.APPLICATION + 500;
+    private static final int DEFAULT_CDI_OBSERVER_PRIORITY = jakarta.interceptor.Interceptor.Priority.APPLICATION + 500;
 
     byte[] contents;
 
@@ -72,7 +72,7 @@ class RepeatableInputStreamTest {
 
     @BeforeAll
     static void prepareMetrics() {
-        MetricRegistry registry = RegistryFactory.getInstance().getRegistry(MetricRegistry.Type.VENDOR);
+        MetricRegistry registry = RegistryFactory.getInstance().getRegistry(MetricRegistry.VENDOR_SCOPE);
         fileUsage = List.copyOf(registry.getHistograms((metricID, metric) -> metricID.getName()
                                 .equals(MetricsHelper.FILE_METRIC_NAME))
                                         .values())

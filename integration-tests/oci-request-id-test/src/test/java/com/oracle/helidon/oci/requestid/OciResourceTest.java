@@ -21,10 +21,11 @@ import java.util.logging.LogRecord;
 import java.util.logging.StreamHandler;
 
 import io.helidon.logging.jul.HelidonFormatter;
-import io.helidon.microprofile.tests.junit5.HelidonTest;
-import javax.inject.Inject;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
+import io.helidon.microprofile.testing.junit5.HelidonTest;
+
+import jakarta.inject.Inject;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;

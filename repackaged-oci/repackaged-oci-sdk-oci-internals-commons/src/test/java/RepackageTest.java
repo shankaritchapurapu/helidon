@@ -33,12 +33,12 @@ public class RepackageTest {
         ObjectMapper om = new ObjectMapper();
         om.setFilterProvider(filterProvider);
 
-        Car car = om.readValue("\n" +
-                                       "{\n" +
-                                         "\"color\" : \"blue\",\n" +
-                                         "\"type\" : \"sedan\"\n" +
-                                       "}\n" +
-                                       "\n", Car.class);
+        Car car = om.readValue("""
+                                       {
+                                         "color" : "blue",
+                                         "type" : "sedan"
+                                       }
+                                       """, Car.class);
 
         assertThat(car.getType(), is("sedan"));
     }

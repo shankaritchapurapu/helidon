@@ -18,11 +18,11 @@ package com.oracle.helidon.oci.identity;
 
 import java.util.function.Supplier;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.Context;
 
 /**
- * Bridges from Jersey's {@link javax.ws.rs.container.ContainerRequestContext} over to a CDI request-scoped producer.
+ * Bridges from Jersey's {@link jakarta.ws.rs.container.ContainerRequestContext} over to a CDI request-scoped producer.
  * @see com.oracle.helidon.oci.identity.ServerRequestSupplier
  */
 class ContainerRequestContextSupplier implements Supplier<ContainerRequestContext> {

@@ -2,6 +2,8 @@ package com.oracle.test.api;
 
 import java.util.List;
 
+import io.helidon.microprofile.testing.junit5.HelidonTest;
+
 import com.oracle.test.model.AttachIScsiVolumeRequest;
 import com.oracle.test.model.AttachVolumeRequest;
 import com.oracle.test.model.IScsiVolumeAttachment;
@@ -9,12 +11,11 @@ import com.oracle.test.model.Instance;
 import com.oracle.test.model.Region;
 import com.oracle.test.model.VolumeAttachment;
 
-import io.helidon.microprofile.tests.junit5.HelidonTest;
 
-import javax.inject.Inject;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
 
 import org.junit.jupiter.api.Test;
 

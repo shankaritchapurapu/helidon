@@ -24,7 +24,7 @@ import java.util.Map;
  * module.
  * <p>
  * Similar to {@code com.oracle.pic.commons.exceptions.server.RenderableException}
- * but without depending on javax packages.
+ * but without depending on jakarta packages.
  */
 public final class RenderableException extends RuntimeException {
 

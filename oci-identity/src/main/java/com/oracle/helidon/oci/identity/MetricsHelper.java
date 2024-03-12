@@ -15,22 +15,21 @@
  */
 package com.oracle.helidon.oci.identity;
 
-import javax.annotation.Priority;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.Initialized;
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.spi.Extension;
+import io.helidon.microprofile.metrics.RegistryFactory;
 
-import io.helidon.metrics.api.RegistryFactory;
+import jakarta.annotation.Priority;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Initialized;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.spi.Extension;
 
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.Histogram;
 import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.MetricRegistry;
-import org.eclipse.microprofile.metrics.MetricType;
 import org.eclipse.microprofile.metrics.MetricUnits;
 
-import static javax.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
+import static jakarta.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 
 /**
  * Helper for metrics in support of OCI identity integration.
@@ -61,19 +60,19 @@ public class MetricsHelper implements Extension {
 
     // Priority must exceed that of the MetricsCdiExtension's observer of @Initialized(ApplicationScoped.class).
     void prepare(@Observes @Priority(LIBRARY_BEFORE + 50) @Initialized(ApplicationScoped.class) Object event) {
-        MetricRegistry registry = RegistryFactory.getInstance().getRegistry(MetricRegistry.Type.VENDOR);
+        MetricRegistry registry = RegistryFactory.getInstance().getRegistry(MetricRegistry.VENDOR_SCOPE);
         repeatableStreamInMemory = registry
                 .counter(Metadata.builder()
                                  .withName(IN_MEMORY_METRIC_NAME)
                                  .withDescription("Repeatable stream in-memory uses")
-                                 .withType(MetricType.COUNTER)
+//                                 .withType(MetricType.COUNTER)
                                  .build());
 
         repeatableStreamFileUsage = registry
                 .histogram(Metadata.builder()
                                    .withName(FILE_METRIC_NAME)
                                    .withDescription("Repeatable stream file usage")
-                                   .withType(MetricType.HISTOGRAM)
+//                                   .withType(MetricType.HISTOGRAM)
                                    .withUnit(MetricUnits.KILOBYTES)
                                    .build());
 
@@ -81,7 +80,7 @@ public class MetricsHelper implements Extension {
                 .counter(Metadata.builder()
                                  .withName(EXCEPTION_METRIC_NAME)
                                  .withDescription("Repeatable stream exceptions")
-                                 .withType(MetricType.COUNTER)
+//                                 .withType(MetricType.COUNTER)
                                  .build());
     }
 

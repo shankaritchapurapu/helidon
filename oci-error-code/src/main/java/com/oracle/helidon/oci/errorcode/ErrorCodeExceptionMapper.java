@@ -15,9 +15,9 @@
  */
 package com.oracle.helidon.oci.errorcode;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
 
 /**
  * Maps a {@link RenderableException} to a response with JSON payload as described in

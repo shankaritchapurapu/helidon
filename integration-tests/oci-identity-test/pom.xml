@@ -13,10 +13,7 @@
     <name>Integration Test: Identity</name>
 
     <properties>
-        <enforcer.skip>true</enforcer.skip>
-
-<!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
-        <version.plugin.jandex>1.1.0</version.plugin.jandex>
+        <version.plugin.jandex>3.1.2</version.plugin.jandex>
         <version.lib.jackson.databind.nullable>0.2.3</version.lib.jackson.databind.nullable>
     </properties>
 
@@ -33,14 +30,6 @@
         <dependency>
             <groupId>io.helidon.microprofile.cdi</groupId>
             <artifactId>helidon-microprofile-cdi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.enterprise</groupId>
-            <artifactId>jakarta.enterprise.cdi-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.ws.rs</groupId>
-            <artifactId>jakarta.ws.rs-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -71,6 +60,7 @@
             <groupId>org.jboss</groupId>
             <artifactId>jandex</artifactId>
             <scope>runtime</scope>
+            <version>${version.plugin.jandex}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -83,8 +73,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.helidon.microprofile.tests</groupId>
-            <artifactId>helidon-microprofile-tests-junit5</artifactId>
+            <groupId>io.helidon.microprofile.testing</groupId>
+            <artifactId>helidon-microprofile-testing-junit5</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -101,7 +91,7 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.jboss.jandex</groupId>
+                <groupId>io.smallrye</groupId>
                 <artifactId>jandex-maven-plugin</artifactId>
                 <version>${version.plugin.jandex}</version>
                 <executions>
@@ -129,7 +119,7 @@
                             <specPath>${project.basedir}/reference-spec.yaml</specPath>
                             <additionalProperties>
                                 <!-- Telling SDK and generator to use Jakarta namespace or not -->
-                                <useJakartaAnnotations>false</useJakartaAnnotations>
+                                <useJakartaAnnotations>true</useJakartaAnnotations>
                                 <!-- This is shared between SDK model and our service gen -->
                                 <enableValidation>true</enableValidation>
                                 <!-- Turns on identity and authentication -->
