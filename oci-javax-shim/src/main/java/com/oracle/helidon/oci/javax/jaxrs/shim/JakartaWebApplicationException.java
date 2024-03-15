@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-module helidon.oci.javax.shim {
-    requires javax.ws.rs.api;
-    requires jakarta.ws.rs;
-    requires oci.java.sdk.common.httpclient;
+package com.oracle.helidon.oci.javax.jaxrs.shim;
 
-    exports com.oracle.helidon.oci.javax.jaxrs.shim;
+import javax.ws.rs.WebApplicationException;
 
-    provides javax.ws.rs.client.ClientBuilder with com.oracle.helidon.oci.javax.jaxrs.shim.JavaxClientBuilder;
-    provides javax.ws.rs.ext.RuntimeDelegate with com.oracle.helidon.oci.javax.jaxrs.shim.JavaxRuntimeDelegate;
+public class JakartaWebApplicationException extends jakarta.ws.rs.WebApplicationException {
+
+    public JakartaWebApplicationException(WebApplicationException delegate) {
+        super(delegate.getMessage(), delegate, new JakartaResponse(delegate.getResponse()));
+    }
 }

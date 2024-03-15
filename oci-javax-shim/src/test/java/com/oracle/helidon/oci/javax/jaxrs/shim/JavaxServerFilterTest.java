@@ -43,6 +43,12 @@ public class JavaxServerFilterTest {
     @Inject
     private WebTarget target;
 
+    // called by Jersey's auto-discoverable
+    // register server filter here
+    static void configure(jakarta.ws.rs.core.FeatureContext ctx) {
+        ctx.register(new JakartaServerFilter(JavaxServerFilterTest.JavaxTestFilter.class));
+    }
+
     @GET
     public String testGet(@HeaderParam(TEST_HEADER) String testHeader) {
         return testHeader;
@@ -55,10 +61,44 @@ public class JavaxServerFilterTest {
         }
     }
 
-    // called by Jersey's auto-discoverable
-    // register server filter here
-    static void configure(jakarta.ws.rs.core.FeatureContext ctx) {
-        ctx.register(new JakartaServerFilter(JavaxServerFilterTest.JavaxTestFilter.class));
+    @Test
+    void filterForbiddenErrorTest() {
+        try (var res = target.path(PATH)
+                .request()
+                .header("throw", "javax.ws.rs.ForbiddenException")
+                .get()) {
+            assertThat(res.getStatus(), is(403));
+        }
+    }
+
+    @Test
+    void filterNotFoundErrorTest() {
+        try (var res = target.path(PATH)
+                .request()
+                .header("throw", "javax.ws.rs.NotFoundException")
+                .get()) {
+            assertThat(res.getStatus(), is(404));
+        }
+    }
+
+    @Test
+    void filterBadRequestErrorTest() {
+        try (var res = target.path(PATH)
+                .request()
+                .header("throw", "javax.ws.rs.BadRequestException")
+                .get()) {
+            assertThat(res.getStatus(), is(400));
+        }
+    }
+
+    @Test
+    void filterNotSupportedErrorTest() {
+        try (var res = target.path(PATH)
+                .request()
+                .header("throw", "javax.ws.rs.NotSupportedException")
+                .get()) {
+            assertThat(res.getStatus(), is(415));
+        }
     }
 
     public static class JavaxTestFilter implements javax.ws.rs.container.ContainerRequestFilter {
@@ -66,6 +106,16 @@ public class JavaxServerFilterTest {
         @Override
         public void filter(javax.ws.rs.container.ContainerRequestContext ctx) throws IOException {
             ctx.getHeaders().add(TEST_HEADER, TEST_VALUE_FROM_FILTER);
+
+            String exceptionFqdn = ctx.getHeaders().getFirst("throw");
+            if (exceptionFqdn != null) {
+                try {
+                    Class<?> exception = Thread.currentThread().getContextClassLoader().loadClass(exceptionFqdn);
+                    throw (RuntimeException) exception.getConstructor().newInstance();
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 }
