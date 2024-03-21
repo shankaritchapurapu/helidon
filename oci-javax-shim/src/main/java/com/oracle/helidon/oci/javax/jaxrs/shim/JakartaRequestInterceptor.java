@@ -33,7 +33,7 @@ import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.core.MultivaluedMap;
 
-class JakartaRequestInterceptor implements ClientRequestFilter {
+public class JakartaRequestInterceptor implements ClientRequestFilter {
 
     private final RequestInterceptor delegate;
 

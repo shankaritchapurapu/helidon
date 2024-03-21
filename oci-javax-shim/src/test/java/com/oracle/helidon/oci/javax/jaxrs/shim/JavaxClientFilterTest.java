@@ -18,6 +18,9 @@ package com.oracle.helidon.oci.javax.jaxrs.shim;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -106,6 +109,22 @@ public class JavaxClientFilterTest {
                 .target(serverUri);
 
         assertThat(javaxTarget.path("/test1").request().get().readEntity(String.class),
+                   is("Frank says he's got a header from Jakarta client req filter!"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("javaxBuilderJakartaFilterSource")
+    void javaxClientWithJakartaFilterRx(Registrar registrar) throws ExecutionException, InterruptedException, TimeoutException {
+        javax.ws.rs.client.WebTarget javaxTarget = registrar.fn().apply(javax.ws.rs.client.ClientBuilder.newBuilder())
+                .build()
+                .target(serverUri);
+
+        assertThat(javaxTarget.path("/test1")
+                           .request()
+                           .rx()
+                           .get(String.class)
+                           .toCompletableFuture()
+                           .get(20, TimeUnit.SECONDS),
                    is("Frank says he's got a header from Jakarta client req filter!"));
     }
 

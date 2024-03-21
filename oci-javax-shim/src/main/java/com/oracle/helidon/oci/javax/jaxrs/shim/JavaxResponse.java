@@ -199,6 +199,12 @@ public class JavaxResponse extends Response {
         }
 
         @Override
+        public ResponseBuilder status(int status, String reasonPhrase) {
+            delegate.status(status, reasonPhrase);
+            return this;
+        }
+
+        @Override
         public ResponseBuilder entity(Object entity) {
             delegate.entity(entity);
             return this;

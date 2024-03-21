@@ -19,6 +19,9 @@ package com.oracle.pic.vault.util;
 import java.security.KeyStore;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -238,6 +241,30 @@ public class ProxyHttpClientBuilder extends javax.ws.rs.client.ClientBuilder {
     @Override
     public ClientBuilder hostnameVerifier(HostnameVerifier verifier) {
         delegate.hostnameVerifier(verifier);
+        return this;
+    }
+
+    @Override
+    public ClientBuilder executorService(ExecutorService executorService) {
+        delegate.executorService(executorService);
+        return this;
+    }
+
+    @Override
+    public ClientBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
+        delegate.scheduledExecutorService(scheduledExecutorService);
+        return this;
+    }
+
+    @Override
+    public ClientBuilder connectTimeout(long timeout, TimeUnit unit) {
+        delegate.connectTimeout(timeout, unit);
+        return this;
+    }
+
+    @Override
+    public ClientBuilder readTimeout(long timeout, TimeUnit unit) {
+        delegate.readTimeout(timeout, unit);
         return this;
     }
 }

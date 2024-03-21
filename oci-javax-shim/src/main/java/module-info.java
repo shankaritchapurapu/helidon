@@ -15,7 +15,7 @@
  */
 
 module helidon.oci.javax.shim {
-    requires javax.ws.rs.api;
+    requires java.ws.rs;
     requires jakarta.ws.rs;
     requires oci.java.sdk.common.httpclient;
 

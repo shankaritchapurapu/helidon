@@ -21,9 +21,11 @@ import java.util.Locale;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.client.AsyncInvoker;
+import javax.ws.rs.client.CompletionStageRxInvoker;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.InvocationCallback;
+import javax.ws.rs.client.RxInvoker;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.GenericType;
@@ -177,6 +179,16 @@ public class JavaxInvocation implements Invocation {
         @Override
         public Invocation.Builder property(String name, Object value) {
             return new Builder(delegate.property(name, value));
+        }
+
+        @Override
+        public CompletionStageRxInvoker rx() {
+            return new JavaxCompletionStageRxInvoker(delegate.rx());
+        }
+
+        @Override
+        public <T extends RxInvoker> T rx(Class<T> clazz) {
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override

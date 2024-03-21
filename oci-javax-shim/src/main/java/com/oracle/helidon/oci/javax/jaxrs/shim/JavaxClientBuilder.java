@@ -17,7 +17,9 @@
 package com.oracle.helidon.oci.javax.jaxrs.shim;
 
 import java.security.KeyStore;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -73,6 +75,30 @@ public class JavaxClientBuilder extends ClientBuilder implements JavaxAbstractCo
     @Override
     public ClientBuilder hostnameVerifier(HostnameVerifier verifier) {
         return new JavaxClientBuilder(delegate.hostnameVerifier(verifier));
+    }
+
+    @Override
+    public ClientBuilder executorService(ExecutorService executorService) {
+        delegate.executorService(executorService);
+        return this;
+    }
+
+    @Override
+    public ClientBuilder scheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
+        delegate.scheduledExecutorService(scheduledExecutorService);
+        return this;
+    }
+
+    @Override
+    public ClientBuilder connectTimeout(long timeout, TimeUnit unit) {
+        delegate.connectTimeout(timeout, unit);
+        return this;
+    }
+
+    @Override
+    public ClientBuilder readTimeout(long timeout, TimeUnit unit) {
+        delegate.readTimeout(timeout, unit);
+        return this;
     }
 
     @Override
