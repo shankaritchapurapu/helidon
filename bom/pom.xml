@@ -63,6 +63,11 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-splat</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
