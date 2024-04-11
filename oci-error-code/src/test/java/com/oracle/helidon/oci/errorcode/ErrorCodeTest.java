@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Oracle and/or its affiliates.
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,9 +62,9 @@ class ErrorCodeTest {
 
     @Test
     void testErrorMp() {
-        TestResoureClient client = RestClientBuilder.newBuilder()
+        TestResourceClient client = RestClientBuilder.newBuilder()
                 .baseUri(webTarget.getUri())
-                .build(TestResoureClient.class);
+                .build(TestResourceClient.class);
         try (Response response = client.error()) {
             fail("Response was not mapped to exception " + response);
         } catch (RenderableException e) {
@@ -76,9 +76,9 @@ class ErrorCodeTest {
 
     @Test
     void testErrorMp2() {
-        TestResoureClient client = RestClientBuilder.newBuilder()
+        TestResourceClient client = RestClientBuilder.newBuilder()
                 .baseUri(webTarget.getUri())
-                .build(TestResoureClient.class);
+                .build(TestResourceClient.class);
         try (Response response = client.error2()) {
             fail("Response was not mapped to exception " + response);
         } catch (RenderableException e) {
@@ -114,7 +114,7 @@ class ErrorCodeTest {
 
     @Path("/")
     @RegisterProvider(ErrorCodeResponseMapper.class)        // maps to RenderableException
-    public interface TestResoureClient {
+    public interface TestResourceClient {
 
         @GET
         @Path("error")

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Oracle and/or its affiliates.
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.util.Map;
 
 /**
  * Applications can throw instances of this class and expect a response
- * to be rendered according othe OCI error code rules by including this
+ * to be rendered according to the OCI error code rules by including this
  * module.
  * <p>
  * Similar to {@code com.oracle.pic.commons.exceptions.server.RenderableException}
