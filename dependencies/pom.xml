@@ -654,6 +654,22 @@
                 </exclusions>
             </dependency>
 
+            <dependency>
+                <groupId>com.oracle.pic.telemetry.overlay.metrics</groupId>
+                <artifactId>public-telemetry-reporter</artifactId>
+                <version>${oracle-internal-commons-metrics-module-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.code.findbugs</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
             <!-- See repackaged-oci-vault-java-sdk -->
             <!-- Secret Service
                    Confluence: https://confluence.oci.oraclecorp.com/x/tajZ
