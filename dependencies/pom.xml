@@ -92,6 +92,16 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-secrets</artifactId>
+                <version>${oci-java-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-addons-oke-workload-identity</artifactId>
+                <version>${oci-java-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-addons-s2s</artifactId>
                 <version>${oci-java-sdk-version}</version>
                 <exclusions>

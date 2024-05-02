@@ -49,6 +49,7 @@
         <module>repackaged-oci</module>
         <module>oci-error-code</module>
         <module>oci-identity</module>
+        <module>oci-metrics</module>
         <module>oci-secret-service</module>
         <module>oci-request-id</module>
         <module>oci-splat</module>
