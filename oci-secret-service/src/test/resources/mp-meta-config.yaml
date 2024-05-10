@@ -13,11 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#profile: TEST
-add-default-sources: true
-add-discovered-converters: true
 add-discovered-sources: true
-
 
 sources:
   - type: 'environment-variables'

@@ -16,15 +16,20 @@
 
 package com.oracle.helidon.oci.secret;
 
+import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
-import java.security.PrivateKey;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.cert.Certificate;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
@@ -34,35 +39,33 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 
+import io.helidon.common.LazyValue;
+import io.helidon.common.configurable.Resource;
+import io.helidon.common.pki.PemReader;
 import io.helidon.common.tls.ConfiguredTlsManager;
 import io.helidon.common.tls.TlsConfig;
 import io.helidon.config.Config;
-import io.helidon.faulttolerance.Async;
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
 
-import com.oracle.bmc.auth.InstancePrincipalsAuthenticationDetailsProvider;
-//import com.oracle.pic.vault.SecretServiceConfig;
-//import com.oracle.pic.vault.VaultClient;
+import com.oracle.pic.commons.crypto.KeystoreGenerator;
+import org.eclipse.microprofile.config.ConfigProvider;
+
+import static java.lang.System.Logger.Level.DEBUG;
+import static java.lang.System.Logger.Level.WARNING;
 
 /**
  * The default implementation (service loader and provider-driven) implementation of {@link SecretServiceTlsManager}.
- *
  */
 class DefaultSecretServiceTlsManager extends ConfiguredTlsManager implements SecretServiceTlsManager {
-    static final String TYPE = "oci-certificates-tls-manager";
+    static final String TYPE = "oci-ssv2";
     private static final System.Logger LOGGER = System.getLogger(DefaultSecretServiceTlsManager.class.getName());
 
     private final SecretServiceTlsManagerConfig cfg;
-    private final AtomicReference<String> lastVersionDownloaded = new AtomicReference<>("");
+    private final AtomicReference<Integer> lastPkiHash = new AtomicReference<>(0);
+    private final KeystoreGenerator ksg = new KeystoreGenerator();
+    private final LazyValue<ScheduledExecutorService> asyncExec = LazyValue.create(Executors::newSingleThreadScheduledExecutor);
 
-    // these will only be non-null when enabled
-    private ScheduledExecutorService asyncExecutor;
-    private Async async;
     private TlsConfig tlsConfig;
-//    private final VaultClient vaultClient = null;
-    private String VAULT_SECRET_KEY = "secret";
+    private org.eclipse.microprofile.config.Config mpConfig;
 
     DefaultSecretServiceTlsManager(SecretServiceTlsManagerConfig cfg) {
         this(cfg, "@default", null);
@@ -80,51 +83,36 @@ class DefaultSecretServiceTlsManager extends ConfiguredTlsManager implements Sec
         }
     }
 
-    @Override // TlsManager
+    @Override
     public void init(TlsConfig tls) {
         this.tlsConfig = tls;
-        Services services = InjectionServices.realizedServices();
-        this.asyncExecutor = Executors.newSingleThreadScheduledExecutor();
-        this.async = Async.builder().executor(asyncExecutor).build();
+        this.mpConfig = ConfigProvider.getConfig();
 
         // the initial loading of the tls
         loadContext(true);
 
-        // register for any available graceful shutdown events
-        Optional<ServiceProvider<LifecycleHook>> shutdownHook = services.lookupFirst(LifecycleHook.class, false);
-        shutdownHook.ifPresent(sp -> sp.get().registerShutdownConsumer(this::shutdown));
+        ShutdownHookBean.addShutdownHook(this::shutdown);
 
-        // now schedule for reload checking
-        String taskIntervalDescription =
-                io.helidon.scheduling.Scheduling.cron()
-                        .executor(asyncExecutor)
-                        .expression(cfg.schedule())
-                        .task(inv -> maybeReload())
-                        .build()
-                        .description();
-        LOGGER.log(System.Logger.Level.DEBUG, () ->
-                SecretServiceTlsManagerConfig.class.getSimpleName() + " scheduled: " + taskIntervalDescription);
-    }
+        // Scheduled reloading enabled
+        if (cfg.reload().enabled()) {
 
-    private void shutdown(Object event) {
-        try {
-            LOGGER.log(System.Logger.Level.DEBUG, "Shutting down");
-            asyncExecutor.shutdownNow();
-        } catch (Exception e) {
-            LOGGER.log(System.Logger.Level.WARNING, "Shut down failed", e);
+            // now schedule for reload checking
+            String taskIntervalDescription =
+                    io.helidon.scheduling.Scheduling.cron()
+                            .executor(asyncExec.get())
+                            .expression(cfg.reload().cron())
+                            .task(inv -> maybeReload())
+                            .build()
+                            .description();
+
+            LOGGER.log(DEBUG,
+                       () -> SecretServiceTlsManagerConfig.class.getSimpleName() + " scheduled: " + taskIntervalDescription);
         }
     }
 
     @Override // RuntimeType
     public SecretServiceTlsManagerConfig prototype() {
         return cfg;
-    }
-
-    // ConfiguredTlsManager
-    private void maybeReload() {
-        if (loadContext(false)) {
-            LOGGER.log(System.Logger.Level.DEBUG, "Certificates were downloaded and dynamically updated");
-        }
     }
 
     /**
@@ -137,55 +125,68 @@ class DefaultSecretServiceTlsManager extends ConfiguredTlsManager implements Sec
         maybeReload();
     }
 
-    /**
-     * Will download new certificates, and if those are determined to be changed will affect the reload of the new key and trust
-     * managers.
-     *
-     * @return true if a reload occurred
-     */
     boolean loadContext(boolean initialLoad) {
         try {
-            // download all of our security collateral from OCI
-//            SecretServiceDownloader.Certificates certificates = cd.loadCertificates(cfg.certOcid());
-//            if (lastVersionDownloaded.get().equals(certificates.version())) {
-//                assert (!initialLoad);
-//                return false;
-//            }
+            PkiConfig pki = cfg.pki();
+            String certJsonBlob = pki
+                    .secret()
+                    .map(pkiCertificatePath -> {
+                        String configKey = pki.prefix() + pkiCertificatePath;
+                        if (LOGGER.isLoggable(DEBUG)) {
+                            LOGGER.log(DEBUG, "Retrieving the SSv2 PKI secret " + configKey);
+                        }
+                        // Loading the secret from config, SecretServiceMpConfigSource is going take care of the download.
+                        return mpConfig.getValue(configKey, String.class);
+                    })
+                    .or(() -> pki.resource().map(Resource::string))
+                    .orElseThrow();
 
-            // reset start time for the next update phase
-            Certificate ca = null;
-//            Certificate ca = cd.loadCACertificate(cfg.caOcid());
-
-//            PrivateKey key = pd.loadKey(cfg.keyOcid(), cfg.vaultCryptoEndpoint());
-
-//            VaultClient vaultClient = new VaultClient(
-//                    SecretServiceConfig.builder().build(),
-//                    InstancePrincipalsAuthenticationDetailsProvider.builder().build()
-//            );
-
-            Map<String, String> rawSecret = Map.of();//vaultClient.getSecret(cfg.pkiCertificatePath()).getData();
-            // vault client's getSecret returns a map of key-value pairs
-            // however, in practice there is only one key which is 'secret'
-            if (rawSecret.size() != 1) {
-                throw new RuntimeException("Too many SSv2 secret entries: " + rawSecret.size());
-            } else if (!rawSecret.containsKey(VAULT_SECRET_KEY)) {
-                throw new RuntimeException("SSv2 vault secret key is missing");
+            int hash = certJsonBlob.hashCode();
+            if (lastPkiHash.getAndSet(hash) == hash) {
+                // Same mTls material, no need to reload tls context
+                if (LOGGER.isLoggable(DEBUG)) {
+                    LOGGER.log(DEBUG, "Identical mTls material, skipping TLS context reload");
+                }
+                return false;
             }
-            LOGGER.log(System.Logger.Level.INFO, "retrieving the SSv2 secret");
-            String certJsonBlob = rawSecret.get(VAULT_SECRET_KEY);
-            PrivateKey key = null;
-            SecureRandom secureRandom = secureRandom(tlsConfig);
-            //TODO: see com.oracle.cloudsql.frameworks.core.http.AutoReloadingSslContext
-            KeyManagerFactory kmf = buildKmf(tlsConfig, secureRandom, key, new Certificate[0]);
 
+            PkiCertificate crt = PkiCertificate.newInstance(certJsonBlob, pki.password());
+
+            SecureRandom secureRandom = secureRandom(tlsConfig);
+
+            // See com.oracle.cloudsql.frameworks.core.http.AutoReloadingSslContext
+            String keystorePassword = UUID.randomUUID().toString();
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            byte[] intermediate = crt.getIntermediatesAsPEM().getBytes();
+            byte[] leaf = crt.getLeafCertAsPEM().getBytes();
+            byte[] privateKey = crt.getKeyAsPEM().getBytes();
+            var keystore = this.ksg.createKeyStoreWithCertChainAndPrivateKey(leaf,
+                                                                             intermediate,
+                                                                             privateKey,
+                                                                             null,
+                                                                             keystorePassword);
+            kmf.init(keystore, keystorePassword.toCharArray());
             TrustManagerFactory tmf;
             if (tlsConfig.trustAll()) {
                 tmf = trustAllTmf();
             } else {
                 tmf = createTmf(tlsConfig);
-                KeyStore keyStore = internalKeystore(tlsConfig);
-                keyStore.setCertificateEntry("trust-ca", ca);
-                tmf.init(keyStore);
+                KeyStore trustStore = internalKeystore(tlsConfig);
+                trustStore.load(null, null);
+
+                List<X509Certificate> trustCaList = new ArrayList<>(tlsConfig.trust());
+
+                // Load trust CAs
+                try {
+                    trustCaList.addAll(PemReader.readCertificates(cfg.trust().stream()));
+                } catch (Exception e) {
+                    LOGGER.log(WARNING, "Failed to load trust CAs: " + cfg.trust(), e);
+                }
+
+                for (int i = 0; i < trustCaList.size(); i++) {
+                    trustStore.setCertificateEntry("trust-server-ca-" + (i + 1), trustCaList.get(i));
+                }
+                tmf.init(trustStore);
             }
 
             Optional<X509KeyManager> keyManager = Arrays.stream(kmf.getKeyManagers())
@@ -193,7 +194,7 @@ class DefaultSecretServiceTlsManager extends ConfiguredTlsManager implements Sec
                     .map(X509KeyManager.class::cast)
                     .findFirst();
             if (keyManager.isEmpty()) {
-                throw new RuntimeException("Unable to find X.509 key manager in download: " + cfg.pkiCertificatePath());
+                throw new RuntimeException("Unable to find X.509 key manager in download: " + pki);
             }
 
             Optional<X509TrustManager> trustManager = Arrays.stream(tmf.getTrustManagers())
@@ -201,7 +202,7 @@ class DefaultSecretServiceTlsManager extends ConfiguredTlsManager implements Sec
                     .map(X509TrustManager.class::cast)
                     .findFirst();
             if (trustManager.isEmpty()) {
-                throw new RuntimeException("Unable to find X.509 trust manager in download: " + cfg.pkiCertificatePath());
+                throw new RuntimeException("Unable to find X.509 trust manager in download: " + pki);
             }
 
             if (initialLoad) {
@@ -211,9 +212,26 @@ class DefaultSecretServiceTlsManager extends ConfiguredTlsManager implements Sec
             }
 
             return true;
-        } catch (KeyStoreException e) {
-            throw new IllegalStateException("Error while loading context from OCI", e);
+        } catch (KeyStoreException | UnrecoverableKeyException | CertificateException | NoSuchAlgorithmException |
+                 IOException e) {
+            throw new IllegalStateException("Error while loading context from SSv2", e);
         }
     }
 
+    private void shutdown(Object event) {
+        try {
+            LOGGER.log(DEBUG, "Shutting down");
+            if (asyncExec.isLoaded() && !asyncExec.get().isShutdown()) {
+                asyncExec.get().shutdownNow();
+            }
+        } catch (Exception e) {
+            LOGGER.log(WARNING, "Shut down failed", e);
+        }
+    }
+
+    private void maybeReload() {
+        if (loadContext(false)) {
+            LOGGER.log(DEBUG, "Certificates were downloaded and dynamically updated");
+        }
+    }
 }

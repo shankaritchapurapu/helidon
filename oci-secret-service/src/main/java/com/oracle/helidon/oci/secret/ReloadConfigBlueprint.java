@@ -16,17 +16,25 @@
 
 package com.oracle.helidon.oci.secret;
 
-import java.util.function.Consumer;
+import io.helidon.builder.api.Option;
+import io.helidon.builder.api.Prototype;
 
-import io.helidon.inject.api.Contract;
+@Prototype.Blueprint
+@Prototype.Configured
+interface ReloadConfigBlueprint {
+    /**
+     * The schedule for trigger a reload, downloading PKI material from SSv2.
+     *
+     * @return the schedule for reload
+     */
+    @Option.Default("*/30 * * * * ? *")
+    String cron();
 
-// consider making this public and relocating this to somewhere under common or inject
-// it is here to ensure proper shutdown (decoupled from mp) and presenting non-intermittent test failures
-@Contract
-interface LifecycleHook {
-
-    void registerStartupConsumer(Consumer<Object> consumer);
-
-    void registerShutdownConsumer(Consumer<Object> consumer);
-
+    /**
+     * Enable or disable
+     * @return
+     */
+    @Option.Configured
+    @Option.DefaultBoolean(true)
+    boolean enabled();
 }

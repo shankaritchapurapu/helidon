@@ -16,26 +16,15 @@
 
 package com.oracle.helidon.oci.secret;
 
-import java.io.ByteArrayInputStream;
 import java.lang.System.Logger;
 import java.util.Optional;
 import java.util.Set;
 
-import io.helidon.common.LazyValue;
 import io.helidon.config.Config;
-import io.helidon.config.ConfigSources;
-import io.helidon.config.spi.ConfigNode;
-import io.helidon.config.spi.ConfigParser;
-import io.helidon.config.yaml.YamlConfigParser;
 
-import com.oracle.bmc.auth.InstancePrincipalsAuthenticationDetailsProvider;
-import com.oracle.pic.vault.SecretServiceConfig;
-import com.oracle.pic.vault.VaultClient;
 import jakarta.annotation.Priority;
-import org.bouncycastle.util.encoders.Base64;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 
-import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -66,45 +55,31 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Priority(5000)
 public class SecretServiceMpConfigSource implements ConfigSource {
 
+    static final String DEFAULT_PREFIX = "oci.ssv2";
     private static final Logger LOGGER = System.getLogger(SecretServiceMpConfigSource.class.getName());
-
-    private static final String REGION_MASK = "<<region>>";
-    private static final String DEF_CONF = """
-            prefix: oci.ssv2
-            endpoint: "https://secret-service-ce.<<region>>.oracleiaas.com/v1"
-            tlsConfig.caBundle: "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
-            cacheConfig:
-              cacheType: IN_MEMORY_CACHE
-            retryConfig:
-              maxRetries: 3
-            authProvider:
-              timeout: 500
-              retries: 8
-            """;
+    static SecretServiceClient DEFAULT_CLIENT;
 
     private final String prefix;
-    private final LazyValue<VaultClient> secretsClient;
-    private final SecretServiceConfig secretServiceConfig;
     private final int ordinal;
-    private final Config config;
-    private final AuthProviderConfig authProviderConfig;
+    private SecretServiceClient secretServiceClient;
 
     public SecretServiceMpConfigSource() {
-        this.config = prepareConfig(Config.empty());
-        this.ordinal = 200;
-        this.prefix = config.get("prefix").asString().orElseThrow();
-        this.secretServiceConfig = this.config.as(SecretServiceConfig.class).orElseThrow();
-        this.authProviderConfig = config.get("authProvider").map(AuthProviderConfig::create).orElseThrow();
-        this.secretsClient = LazyValue.create(this::initClient);
+        this.ordinal = 83;
+        this.prefix = SecretServiceClient.DEFAULT_PREFIX;
+        // Meta-configured default wins
+        if (DEFAULT_CLIENT == null) {
+            DEFAULT_CLIENT = SecretServiceClient.create(Config.empty());
+        }
     }
 
     SecretServiceMpConfigSource(Config metaConfig, int ordinal) {
-        this.config = prepareConfig(metaConfig);
+        this.prefix = metaConfig.get("prefix").asString().orElseThrow();
+        if (DEFAULT_PREFIX.equals(prefix)) {
+            DEFAULT_CLIENT = SecretServiceClient.create(metaConfig);
+        } else {
+            this.secretServiceClient = SecretServiceClient.create(metaConfig);
+        }
         this.ordinal = ordinal;
-        this.prefix = config.get("prefix").asString().orElseThrow();
-        this.secretServiceConfig = config.as(SecretServiceConfig.class).orElseThrow();
-        this.authProviderConfig = config.get("authProvider").map(AuthProviderConfig::create).orElseThrow();
-        this.secretsClient = LazyValue.create(this::initClient);
     }
 
     @Override
@@ -120,16 +95,13 @@ public class SecretServiceMpConfigSource implements ConfigSource {
     @Override
     public String getValue(String propertyName) {
         Prop prop = parse(propertyName);
-        if (!prop.hasPrefix() || prop.name().isBlank()) {
+        if (!prop.hasPrefix() || prop.path().isBlank()) {
             return null;
         }
 
-        String base64 = this.secretsClient.get()
-                .getSecret(prop.path())
-                .getData()
-                .get("secret");
-
-        return new String(Base64.decode(base64), UTF_8);
+        return client().getSecret(prop.path())
+                .map(bytes -> new String(bytes, UTF_8))
+                .orElse(null);
     }
 
     @Override
@@ -137,15 +109,16 @@ public class SecretServiceMpConfigSource implements ConfigSource {
         return "oci-secret-service";
     }
 
-    VaultClient initClient() {
-        var provider = InstancePrincipalsAuthenticationDetailsProvider.builder()
-                .timeoutForEachRetry(Math.toIntExact(authProviderConfig.timeout()))
-                .detectEndpointRetries(authProviderConfig.retries())
-                .build();
-        var region = provider.getRegion().getRegionId();
-        resolveEndpoint(region);
-        LOGGER.log(DEBUG, "Initializing vault client with configuration: " + secretServiceConfig);
-        return new VaultClient(secretServiceConfig, provider);
+    SecretServiceClient client() {
+        if (DEFAULT_CLIENT != null) {
+            return DEFAULT_CLIENT;
+        }
+
+        if (secretServiceClient != null) {
+            return secretServiceClient;
+        }
+
+        throw new IllegalStateException("No initialized client found");
     }
 
     Prop parse(String propName) {
@@ -164,47 +137,14 @@ public class SecretServiceMpConfigSource implements ConfigSource {
 
         boolean hasPrefix = rawName.startsWith(prefix);
         String path = null;
-        String name;
         if (hasPrefix && prefix.length() != rawName.length()) {
-            name = rawName.substring(prefix.length() + 1);
-            path = "/" + name.replaceAll("\\.", "/");
+            path = rawName.substring(prefix.length());
         } else {
-            name = rawName;
+            path = rawName;
         }
-        return new Prop(profile,
-                        hasPrefix,
-                        name,
-                        path);
+        return new Prop(profile, hasPrefix, path);
     }
 
-    SecretServiceConfig getSecretServiceConfig() {
-        return secretServiceConfig;
-    }
-
-    void resolveEndpoint(String region) {
-        var endpoint = secretServiceConfig.getEndpoint();
-        secretServiceConfig.setEndpoint(endpoint.replaceAll(REGION_MASK, region));
-    }
-
-    private Config prepareConfig(Config metaConfig) {
-        ConfigNode.ObjectNode defaultConfig = YamlConfigParser.create()
-                .parse(ConfigParser.Content.builder()
-                               .data(new ByteArrayInputStream(DEF_CONF.getBytes(UTF_8)))
-                               .charset(UTF_8)
-                               .build());
-        return Config.builder()
-                .addSource(ConfigSources.create(metaConfig))
-                .addSource(ConfigSources.create(defaultConfig))
-                .build();
-    }
-
-    record Prop(Optional<String> profile, boolean hasPrefix, String name, String path) {
-    }
-
-    record AuthProviderConfig(long timeout, int retries) {
-        static AuthProviderConfig create(io.helidon.common.config.Config c) {
-            return new AuthProviderConfig(c.get("timeout").asLong().orElseThrow(),
-                                          c.get("retries").asInt().orElseThrow());
-        }
+    record Prop(Optional<String> profile, boolean hasPrefix, String path) {
     }
 }

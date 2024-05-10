@@ -25,6 +25,9 @@ import io.helidon.config.mp.spi.MpMetaConfigProvider;
 
 import org.eclipse.microprofile.config.spi.ConfigSource;
 
+/**
+ * OCI SSv2 MP config provider.
+ */
 public class SecretServiceMpMetaConfigProvider implements MpMetaConfigProvider, Prioritized {
     @Override
     public Set<String> supportedTypes() {
@@ -33,11 +36,11 @@ public class SecretServiceMpMetaConfigProvider implements MpMetaConfigProvider, 
 
     @Override
     public List<? extends ConfigSource> create(String type, Config metaConfig, String profile) {
-        return List.of(new SecretServiceMpConfigSource(metaConfig, 300));
+        return List.of(new SecretServiceMpConfigSource(metaConfig, 93));
     }
 
     @Override
     public int priority() {
-        return 300;
+        return 93;
     }
 }

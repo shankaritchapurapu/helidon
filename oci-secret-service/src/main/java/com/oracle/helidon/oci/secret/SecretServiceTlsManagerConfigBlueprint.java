@@ -16,9 +16,10 @@
 
 package com.oracle.helidon.oci.secret;
 
+import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
+import io.helidon.common.configurable.Resource;
 import io.helidon.config.metadata.Configured;
-import io.helidon.config.metadata.ConfiguredOption;
 
 /**
  * Blueprint configuration for {@link OciCertificatesTlsManager}.
@@ -28,15 +29,27 @@ import io.helidon.config.metadata.ConfiguredOption;
 interface SecretServiceTlsManagerConfigBlueprint extends Prototype.Factory<SecretServiceTlsManager> {
 
     /**
-     * The schedule for trigger a reload check, testing whether there is a new {@link io.helidon.common.tls.Tls} instance
-     * available.
+     * The schedule for trigger a reload, downloading PKI material from SSv2.
      *
      * @return the schedule for reload
      */
-    @ConfiguredOption
-    String schedule();
+    @Option.Configured
+    ReloadConfig reload();
 
-    @ConfiguredOption
-    String pkiCertificatePath();
+    /**
+     * The SSv2 path to PKI provided certificate material.
+     *
+     * @return the secret service path
+     */
+    @Option.Configured
+    PkiConfig pki();
+
+    /**
+     * CA trust path.
+     *
+     * @return path to CA pem file
+     */
+    @Option.Configured
+    Resource trust();
 
 }

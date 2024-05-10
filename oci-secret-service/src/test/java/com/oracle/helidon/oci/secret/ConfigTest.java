@@ -25,19 +25,20 @@ class ConfigTest {
     void propNameParsing() {
         SecretServiceMpConfigSource cs = new SecretServiceMpConfigSource();
 
-        assertFalse(cs.parse("oci.vault.helidon1.test-kec").hasPrefix());
-        assertTrue(cs.parse("oci.ssv2.helidon2.test-kec").hasPrefix());
-        assertEquals("test-kec", cs.parse("oci.ssv2.test-kec").name());
-        assertTrue(cs.parse("oci.ssv2.test-kec").profile().isEmpty());
-        assertFalse(cs.parse("%TEST.oci.test.test-kec").hasPrefix());
-        assertTrue(cs.parse("%TEST.oci.ssv2.test-kec").hasPrefix());
-        assertEquals("test-kec", cs.parse("%TEST.oci.ssv2.test-kec").name());
-        assertTrue(cs.parse("%TEST.oci.ssv2.test-kec").profile().isPresent());
+        assertFalse(cs.parse("oci.vault/helidon1/test-kec").hasPrefix());
+        assertTrue(cs.parse("oci.ssv2/helidon2/test-kec").hasPrefix());
+        assertTrue(cs.parse("oci.ssv2/secret/helidontest/test-secret/latest").hasPrefix());
+        assertEquals("/test-kec", cs.parse("oci.ssv2/test-kec").path());
+        assertTrue(cs.parse("oci.ssv2/test-kec").profile().isEmpty());
+        assertFalse(cs.parse("%TEST.oci.test/test-kec").hasPrefix());
+        assertTrue(cs.parse("%TEST.oci.ssv2/test-kec").hasPrefix());
+        assertEquals("/test-kec", cs.parse("%TEST.oci.ssv2/test-kec").path());
+        assertTrue(cs.parse("%TEST.oci.ssv2/test-kec").profile().isPresent());
 
         assertEquals("/secret/helidon/test-secret/latest",
-                     cs.parse("oci.ssv2.secret.helidon.test-secret.latest").path());
+                     cs.parse("oci.ssv2/secret/helidon/test-secret/latest").path());
         assertEquals("/secret/helidon/test-secret/latest",
-                     cs.parse("%TEST.oci.ssv2.secret.helidon.test-secret.latest").path());
+                     cs.parse("%TEST.oci.ssv2/secret/helidon/test-secret/latest").path());
     }
 
     @Test
@@ -70,12 +71,12 @@ class ConfigTest {
 
         SecretServiceMpConfigSource cs = new SecretServiceMpConfigSource(MpConfig.toHelidonConfig(mpConfig), 150);
 
-        SecretServiceConfig secretServiceConfig = cs.getSecretServiceConfig();
+        SecretServiceConfig secretServiceConfig = cs.client().getSecretServiceConfig();
 
         assertThat(secretServiceConfig.getEndpoint(), is("https://secret-service-ce.<<region>>.kec.com/v1"));
         assertThat(secretServiceConfig.getCacheConfig().getCacheType(), is(CacheConfig.CacheType.NO_CACHE));
 
-        cs.resolveEndpoint("cz-prague-3");
+        cs.client().resolveEndpoint("cz-prague-3");
 
         assertThat(secretServiceConfig.getEndpoint(), is("https://secret-service-ce.cz-prague-3.kec.com/v1"));
         assertThat(secretServiceConfig.getTlsConfig().getCaBundle(), is("/tmp/ca.pem"));
