@@ -34,6 +34,7 @@ sources:
       minRetryDelayInMs: 100
     authProvider:
       timeout: 500
+      instance-metadata-uri: "http://169.254.169.254/opc/v2/"
       retries: 8
 ```
 ## Secret Service TLS Manager

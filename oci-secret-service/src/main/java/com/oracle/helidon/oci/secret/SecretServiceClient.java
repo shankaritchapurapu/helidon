@@ -63,7 +63,7 @@ class SecretServiceClient {
         this.config = prepareConfig(metaConfig);
         this.enabled = config.get("enabled").asBoolean().orElse(Boolean.TRUE);
         this.secretServiceConfig = config.as(SecretServiceConfig.class).orElseThrow();
-        this.authProviderConfig = config.get("authProvider").map(AuthProviderConfig::create).orElseThrow();
+        this.authProviderConfig = config.get("authProvider").as(AuthProviderConfig.class).orElseThrow();
         this.secretsClient = LazyValue.create(this::initClient);
     }
 
@@ -73,12 +73,17 @@ class SecretServiceClient {
 
     VaultClient initClient() {
         var provider = InstancePrincipalsAuthenticationDetailsProvider.builder()
-                .timeoutForEachRetry(Math.toIntExact(authProviderConfig.timeout()))
+                .timeoutForEachRetry(authProviderConfig.timeout())
+                .metadataBaseUrl(authProviderConfig.instanceMetadataUri())
+                .federationEndpoint(authProviderConfig.federationEndpoint().orElse(null))
                 .detectEndpointRetries(authProviderConfig.retries())
                 .build();
+
         var region = provider.getRegion().getRegionId();
         resolveEndpoint(region);
-        LOGGER.log(DEBUG, "Initializing vault client with configuration: " + secretServiceConfig);
+        if (LOGGER.isLoggable(DEBUG)) {
+            LOGGER.log(DEBUG, "Initializing vault client with configuration: " + secretServiceConfig);
+        }
         return new VaultClient(secretServiceConfig, provider);
     }
 
@@ -114,12 +119,5 @@ class SecretServiceClient {
                 .addSource(ConfigSources.create(metaConfig))
                 .addSource(ConfigSources.create(defaultConfig))
                 .build();
-    }
-
-    record AuthProviderConfig(long timeout, int retries) {
-        static AuthProviderConfig create(io.helidon.common.config.Config c) {
-            return new AuthProviderConfig(c.get("timeout").asLong().orElseThrow(),
-                                          c.get("retries").asInt().orElseThrow());
-        }
     }
 }

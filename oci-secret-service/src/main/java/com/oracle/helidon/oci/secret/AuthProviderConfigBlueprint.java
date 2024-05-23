@@ -16,40 +16,51 @@
 
 package com.oracle.helidon.oci.secret;
 
+import java.util.Optional;
+
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
-import io.helidon.common.configurable.Resource;
 import io.helidon.config.metadata.Configured;
 
 /**
- * Blueprint configuration for {@link com.oracle.helidon.oci.secret.DefaultSecretServiceTlsManager}.
+ * Blueprint configuration for {@link com.oracle.helidon.oci.secret.SecretServiceClient}'s authorisation provider.
  */
 @Prototype.Blueprint
 @Configured
-interface SecretServiceTlsManagerConfigBlueprint extends Prototype.Factory<SecretServiceTlsManager> {
+interface AuthProviderConfigBlueprint {
 
     /**
-     * The schedule for trigger a reload, downloading PKI material from SSv2.
+     * Configures the custom timeout for each retry to use for detecting endpoint in milliseconds.
      *
-     * @return the schedule for reload
+     * @return the custom timeout
      */
     @Option.Configured
-    ReloadConfig reload();
+    @Option.DefaultInt(500)
+    int timeout();
 
     /**
-     * The SSv2 path to PKI provided certificate material.
+     * Configures the custom retries to use for detecting endpoint.
      *
-     * @return the secret service path
+     * @return the number of retries
      */
     @Option.Configured
-    PkiConfig pki();
+    @Option.DefaultInt(8)
+    int retries();
 
     /**
-     * CA trust path.
+     * Configure the metadata endpoint to use when retrieving the instance data and principal for federation.
      *
-     * @return path to CA pem file
+     * @return the metadata base url
      */
     @Option.Configured
-    Resource trust();
+    @Option.Default("http://169.254.169.254/opc/v2/")
+    String instanceMetadataUri();
 
+    /**
+     * Configures the custom federationEndpoint to use.
+     *
+     * @return the federation endpoint
+     */
+    @Option.Configured
+    Optional<String> federationEndpoint();
 }
