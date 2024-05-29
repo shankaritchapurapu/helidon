@@ -1,7 +1,7 @@
 # Splat
 
 ## Overview
-This module provides support for OCI SplatMtlsFilter integration as a requirement for setting up mTLS between Splat and the Helidon application.
+This module provides support for OCI SplatMtlsFilter integration as a requirement for setting up mTLS between Splat and the Helidon application. [SplatMtlsFilter is a JaxRs ContainerRequestFilter](https://bitbucket.oci.oraclecorp.com/projects/PLATFORM/repos/mpapi/browse/splat-sdk/src/main/java/com/oracle/pic/platform/splat/sdk/mtls/SplatMtlsFilter.java) written by the Splat team and is used to validate whether authorization has been performed at Splat. Please see [Step 2 - Option 2 of Section 3. 3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/display/PLAT/2.+Splat+Onboarding#id-2.SplatOnboarding-Implementation.2) for more details about the requirement. Additional links are provided in the _References_ section below that can give more details about Splat in general. 
 
 ## Configuration
 Start by including a dependency to this module in your pom file as shown below. All relevant
@@ -48,4 +48,7 @@ mvn clean install
 ```
 
 ## References
-* [3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=PLAT&title=2.+Splat+Onboarding#id-2.SplatOnboarding-3.IntroduceaSplat-onlyportprotectedbymTLS)
+* [Splat User Guide](https://confluence.oci.oraclecorp.com/display/PLAT/Splat+-+User+Guide)
+* [Splat Concepts](https://confluence.oci.oraclecorp.com/display/PLAT/1.+Splat+Concepts)
+* [Splat Onboarding](https://confluence.oci.oraclecorp.com/display/PLAT/2.+Splat+Onboarding)
+* [Splat Features](https://confluence.oci.oraclecorp.com/display/PLAT/3.+Splat+Features)
