@@ -28,7 +28,7 @@ public class OciMetricsCdiExtension implements Extension {
     public OciMetricsCdiExtension() {
     }
 
-    void prep(@Observes BeforeBeanDiscovery bbd) {
+    protected void addAnnotatedTypes(@Observes BeforeBeanDiscovery bbd) {
         bbd.addAnnotatedType(InternalOciMetricsBean.class, InternalOciMetricsBean.class.getName());
         bbd.addAnnotatedType(InstanceMetadataLoader.class, InstanceMetadataLoader.class.getName());
     }

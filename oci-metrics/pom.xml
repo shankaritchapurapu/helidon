@@ -51,7 +51,7 @@
         </dependency>
         <dependency>
             <groupId>io.helidon.integrations.oci.metrics</groupId>
-            <artifactId>helidon-integrations-oci-metrics-cdi</artifactId>
+            <artifactId>helidon-integrations-oci-metrics</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.logging</groupId>

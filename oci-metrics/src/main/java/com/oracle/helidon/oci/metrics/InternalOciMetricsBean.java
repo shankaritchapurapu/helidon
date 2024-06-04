@@ -22,6 +22,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jakarta.annotation.Priority;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.Initialized;
+import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Singleton;
@@ -31,12 +34,15 @@ import jakarta.json.JsonObject;
 import io.helidon.common.Errors;
 import io.helidon.config.Config;
 import io.helidon.integrations.oci.metrics.OciMetricsSupport;
-import io.helidon.integrations.oci.metrics.cdi.OciMetricsBean;
+import io.helidon.integrations.oci.metrics.OciMetricsSupportFactory;
+import io.helidon.microprofile.server.RoutingBuilders;
 
 import com.oracle.bmc.monitoring.Monitoring;
 import com.oracle.pic.telemetry.commons.metrics.Metrics;
 import com.oracle.pic.telemetry.commons.metrics.TelemetryReporter;
 import com.oracle.pic.telemetry.commons.metrics.TelemetryReporterBuilder;
+
+import static jakarta.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 
 /**
  * Internal OCI metrics implementation of the integration set-up bean.
@@ -47,7 +53,7 @@ import com.oracle.pic.telemetry.commons.metrics.TelemetryReporterBuilder;
 @Priority(Interceptor.Priority.LIBRARY_BEFORE)
 @Alternative
 @Singleton
-class InternalOciMetricsBean extends OciMetricsBean {
+class InternalOciMetricsBean extends OciMetricsSupportFactory {
 
     // Instance metadata key names
     private static final String DISPLAY_NAME = "displayName";
@@ -61,6 +67,12 @@ class InternalOciMetricsBean extends OciMetricsBean {
     private String project;
     private String fleet;
     private JsonObject instanceMetadata;
+
+    // Make Priority higher than MetricsCdiExtension so this will only start after MetricsCdiExtension has completed.
+    void registerOciMetrics(@Observes @Priority(LIBRARY_BEFORE + 20) @Initialized(ApplicationScoped.class) Object ignore,
+                            Config rootConfig, Monitoring monitoringClient) {
+        registerOciMetrics(rootConfig, monitoringClient);
+    }
 
     @Override
     protected String configKey() {
@@ -105,7 +117,7 @@ class InternalOciMetricsBean extends OciMetricsBean {
                                                                        () -> collector.fatal(
                                                                                "required OCi metrics config setting for fleet is "
                                                                                        + "missing"));
-            result.compartmentId(MetricsCompartmentHelper.t2CompartmentIdForRegion(instanceMetadata.getString(REGION)));
+            result.compartmentId(MetricsCompartmentHelper.t2CompartmentIdForRegion(instanceMetadata.getString(CANONICAL_REGION_NAME)));
 
             Errors errors = collector.collect();
             if (errors.hasFatal()) {
@@ -118,6 +130,10 @@ class InternalOciMetricsBean extends OciMetricsBean {
     @Override
     protected void activateOciMetricsSupport(Config rootConfig, Config ociMetricsConfig, OciMetricsSupport.Builder builder) {
         if (builder.enabled()) {
+            OciMetricsSupport ociMetricsSupport = builder.build();
+            RoutingBuilders.create(ociMetricsConfig)
+                    .routingBuilder()
+                    .register(ociMetricsSupport);
             if (Metrics.isActive()) {
                 LOGGER.log(Level.WARNING, "OCI metrics system is already initialized; unable to share the telemetry reporter");
             } else {
@@ -139,7 +155,6 @@ class InternalOciMetricsBean extends OciMetricsBean {
 
                 Metrics.init(reporter, Map.of("host", hostName));
             }
-            super.activateOciMetricsSupport(rootConfig, ociMetricsConfig, builder);
         }
     }
 }

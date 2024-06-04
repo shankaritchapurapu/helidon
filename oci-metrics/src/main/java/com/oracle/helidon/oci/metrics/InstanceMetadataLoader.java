@@ -68,6 +68,11 @@ class InstanceMetadataLoader {
     }
 
     private JsonObject loadInstanceMetadata(Config helidonOciConfig) {
+        if (!helidonOciConfig.get("metrics.enabled")
+                .asBoolean()
+                .orElse(false)) {
+            return null;
+        }
         String instanceMetadataUri = helidonOciConfig.get(INSTANCE_METADATA_URI_CONFIG_SUFFIX).asString()
                 .orElse(METADATA_SERVICE_BASE_URL);
         long connectTimeout = helidonOciConfig.get(CONNECTION_TIMEOUT_CONFIG_KEY).asLong()
@@ -80,6 +85,7 @@ class InstanceMetadataLoader {
                 .readTimeout(readTimeout, TimeUnit.MILLISECONDS)
                 .build()) {
             Response response = client.target(instanceMetadataUri)
+                    .path("instance")
                     .request(MediaType.APPLICATION_JSON)
                     .header("Authorization", "Bearer Oracle")
                     .get();
