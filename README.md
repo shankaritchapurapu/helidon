@@ -51,6 +51,9 @@ an ssh tunnel to the remote Instance Metadata Service for testing the code local
    ```
 
 The [OCI T2 metrics test](integration-tests/oci-t2-metrics-test) will show a complete example of this approach
+
+## Integration with Lumberjack for Application Logging
+For more details on how to integrate with Lumberjack logging service, please check out [logging.md](logging.md).
    
 
 
