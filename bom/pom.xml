@@ -42,8 +42,18 @@
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
+                <groupId>com.oracle.helidon.oci.error.code</groupId>
                 <artifactId>helidon-oci-error-code</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci.error.code</groupId>
+                <artifactId>helidon-oci-error-code-microprofile</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci.error.code</groupId>
+                <artifactId>helidon-oci-error-code-webserver</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
