@@ -16,20 +16,22 @@
 
 package com.oracle.helidon.oci.requestid;
 
+import io.helidon.common.Weight;
 import io.helidon.common.context.Contexts;
-import com.oracle.helidon.oci.requestid.generator.OpcRequestIdGenerator;
+import io.helidon.http.Header;
+import io.helidon.http.HeaderName;
+import io.helidon.http.HeaderNames;
+import io.helidon.http.HeaderValues;
+import io.helidon.http.ServerRequestHeaders;
 import io.helidon.logging.common.HelidonMdc;
+import io.helidon.webserver.http.Filter;
+import io.helidon.webserver.http.FilterChain;
+import io.helidon.webserver.http.RoutingRequest;
+import io.helidon.webserver.http.RoutingResponse;
 
-import jakarta.annotation.Priority;
-import jakarta.ws.rs.Priorities;
-import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.container.ContainerRequestFilter;
-import jakarta.ws.rs.container.ContainerResponseContext;
-import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.container.PreMatching;
-import jakarta.ws.rs.core.Request;
 
-import static com.oracle.helidon.oci.requestid.OciHeaderNames.OPC_REQUEST_ID;
+import static com.oracle.helidon.oci.requestid.OciRequestId.OCI_REQUEST_ID;
 
 /**
  * Ensures all client requests include the opc-request-id header: which is either
@@ -38,24 +40,40 @@ import static com.oracle.helidon.oci.requestid.OciHeaderNames.OPC_REQUEST_ID;
  * processing of the request.
  */
 @PreMatching
-@Priority(Priorities.AUTHENTICATION - 100)
-class RequestIdServerFilter implements ContainerRequestFilter, ContainerResponseFilter {
+// after Context, before AccessLog
+@Weight(1050)
+class RequestIdServerFilter implements Filter {
+    static final HeaderName OCI_REQUEST_ID_HEADER = HeaderNames.create(OCI_REQUEST_ID);
 
     @Override
-    public void filter(ContainerRequestContext requestContext) {
-        String requestId = OpcRequestIdGenerator.getOpcRequestId(requestContext.getHeaderString(OPC_REQUEST_ID));
-        requestContext.getHeaders().add(OPC_REQUEST_ID, requestId);
+    public void filter(FilterChain filterChain, RoutingRequest routingRequest, RoutingResponse routingResponse) {
+        ServerRequestHeaders headers = routingRequest.headers();
+
+        OciRequestId requestId;
+
+        Header requestIdHeader;
+
+        if (headers.contains(OCI_REQUEST_ID_HEADER)) {
+            Header receivedHeader = headers.get(OCI_REQUEST_ID_HEADER);
+
+            requestId = OciRequestId.parseUpstreamRequest(receivedHeader.getString());
+            requestIdHeader = HeaderValues.create(OCI_REQUEST_ID_HEADER,
+                                                  requestId.upstreamHeaderValue());
+        } else {
+            requestId = OciRequestId.generate();
+            requestIdHeader = HeaderValues.create(OCI_REQUEST_ID_HEADER, requestId.upstreamHeaderValue());
+        }
+
+        routingRequest.header(requestIdHeader);
 
         // register requestId in useful contexts
-        HelidonMdc.set(OPC_REQUEST_ID, requestId);
-        Contexts.context().ifPresent(c -> c.register(Request.class, requestId));
-    }
+        HelidonMdc.set(OCI_REQUEST_ID, requestId.upstreamHeaderValue());
+        Contexts.context().ifPresent(c -> c.register(requestId));
 
-    @Override
-    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
-        String requestId = responseContext.getHeaderString(OPC_REQUEST_ID);
-        if (requestId == null || requestId.isEmpty()) {
-            responseContext.getHeaders().add(OPC_REQUEST_ID, requestContext.getHeaderString(OPC_REQUEST_ID));
-        }
+        // must use the upstream header value, as this is the response to our client
+        routingResponse.headers()
+                .set(requestIdHeader);
+
+        filterChain.proceed();
     }
 }

@@ -18,17 +18,27 @@
  * Helidon support for opc-request-id.
  */
 module com.oracle.helidon.oci.requestid {
-    requires jakarta.ws.rs;
-
-    requires io.helidon.logging.common;
-    requires io.helidon.logging.jul;
-    requires io.helidon.microprofile.server;
-
+    // OCI request id support
     requires request.id;
-    requires java.logging;
+
+    // web server filter
+    requires io.helidon.logging.common;
+    requires io.helidon.webserver;
+    requires io.helidon.common.context;
+    requires io.helidon.http.media;
+
+    // jersey client filter
+    requires jakarta.ws.rs;
+    requires jersey.common;
+    requires jakarta.annotation;
+    requires jakarta.cdi;
+    requires io.helidon.microprofile.server;
 
     exports com.oracle.helidon.oci.requestid;
 
     provides org.glassfish.jersey.internal.spi.AutoDiscoverable
             with com.oracle.helidon.oci.requestid.RequestIdAutoDiscoverable;
+
+    provides io.helidon.webserver.spi.ServerFeatureProvider
+            with com.oracle.helidon.oci.requestid.RequestIdServerFeatureProvider;
 }

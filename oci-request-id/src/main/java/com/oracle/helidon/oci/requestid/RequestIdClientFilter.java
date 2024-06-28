@@ -15,11 +15,6 @@
  */
 package com.oracle.helidon.oci.requestid;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import com.oracle.pic.commons.rid.RequestIdUtils;
-
 import io.helidon.common.context.Contexts;
 
 import jakarta.annotation.Priority;
@@ -27,7 +22,8 @@ import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Request;
+
+import static com.oracle.helidon.oci.requestid.OciRequestIdImpl.DELIMITER;
 
 /**
  * Forwards the opc-request-id header value on every REST client request. Only
@@ -35,28 +31,20 @@ import jakarta.ws.rs.core.Request;
  */
 @Priority(Priorities.AUTHENTICATION - 100)
 class RequestIdClientFilter implements ClientRequestFilter {
-    private static final Logger LOGGER = Logger.getLogger(ClientRequestFilter.class.getName());
-
     @Override
     public void filter(ClientRequestContext requestContext) {
-        String requestId = requestContext.getHeaderString(OciHeaderNames.OPC_REQUEST_ID);
+        String requestId = requestContext.getHeaderString(OciRequestId.OCI_REQUEST_ID);
 
         // if empty or more than 2-tuple, fix it
-        if (requestId == null || requestId.isEmpty() || requestId.split("/").length > 2) {
+        if (requestId == null || requestId.isEmpty() || requestId.split(DELIMITER).length > 2) {
             MultivaluedMap<String, Object> headers = requestContext.getHeaders();
-            if (requestId != null) {
-                headers.remove(OciHeaderNames.OPC_REQUEST_ID);
-            }
 
             // find request id in our context and use it
-            Contexts.context().flatMap(c -> c.get(Request.class, String.class))
+            Contexts.context()
+                    .flatMap(c -> c.get(OciRequestId.class))
                     .ifPresent(id -> {
-                        String clientRequestId = RequestIdUtils.getDownStreamRequestId(id);
-                        if (clientRequestId != null) {
-                            headers.add(OciHeaderNames.OPC_REQUEST_ID, clientRequestId);
-                        } else {
-                            LOGGER.log(Level.WARNING, "Cannot forward opc-request-id header");
-                        }
+                        String clientRequestId = id.downstreamHeaderValue();
+                        headers.putSingle(OciRequestId.OCI_REQUEST_ID, clientRequestId);
                     });
         }
     }

@@ -28,7 +28,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 
-import static com.oracle.helidon.oci.requestid.OciHeaderNames.OPC_REQUEST_ID;
+import static com.oracle.helidon.oci.requestid.OciRequestId.OCI_REQUEST_ID;
 
 @Path("/oci")
 public class OciResource {
@@ -38,30 +38,44 @@ public class OciResource {
     private UriInfo uriInfo;
 
     @GET
-    public Response test(@HeaderParam(OPC_REQUEST_ID) String requestId) {
+    public Response test(@HeaderParam(OCI_REQUEST_ID) String upstreamRequestId) {
+        // this request id is the full id with a new generated span id
         LOGGER.info("Resource /oci");
-        return Response.ok(requestId).build();
+        return Response.ok(upstreamRequestId).build();
     }
 
     @GET
     @Path("client")
-    public Response testClient() {
+    public Response testClient(@HeaderParam(OCI_REQUEST_ID) String upstreamRequestId) {
         LOGGER.info("Resource /oci/client");
         Client client = ClientBuilder.newBuilder().build();
         URI uri = uriInfo.getBaseUriBuilder().path("oci").build();       // self get
-        Response response = client.target(uri).request().get();
-        String requestId = response.readEntity(String.class);
-        return Response.ok(requestId).build();
+        Response downstreamResponse = client.target(uri).request().get();
+
+        return Response.ok()
+                .header("x-oci-upstream", upstreamRequestId) // received from remote call (our span id)
+                // returned from remote call (their span id)
+                .header("x-oci-downstream-request", downstreamResponse.readEntity(String.class))
+                // returned from remote call (their span id)
+                .header("x-oci-downstream-response", downstreamResponse.getHeaderString(OCI_REQUEST_ID))
+                .build();
     }
 
     @GET
     @Path("mpclient")
-    public Response testMpClient() {
+    public Response testMpClient(@HeaderParam(OCI_REQUEST_ID) String upstreamRequestId) {
         LOGGER.info("Resource /oci/mpclient");
         OciResourceClient client = RestClientBuilder.newBuilder()
                 .baseUri(uriInfo.getBaseUri())
                 .build(OciResourceClient.class);
-        return client.test();       // self get
+        Response downstreamResponse = client.test();       // self get
+        return Response.ok()
+                .header("x-oci-upstream", upstreamRequestId) // received from remote call (our span id)
+                // returned from remote call (their span id)
+                .header("x-oci-downstream-request", downstreamResponse.readEntity(String.class))
+                // returned from remote call (their span id)
+                .header("x-oci-downstream-response", downstreamResponse.getHeaderString(OCI_REQUEST_ID))
+                .build();
     }
 
     @Path("/oci")

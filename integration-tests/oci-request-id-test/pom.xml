@@ -34,6 +34,10 @@
             <artifactId>helidon-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.logging</groupId>
+            <artifactId>helidon-logging-jul</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.helidon.oci</groupId>
             <artifactId>helidon-oci-request-id</artifactId>
             <version>${project.version}</version>

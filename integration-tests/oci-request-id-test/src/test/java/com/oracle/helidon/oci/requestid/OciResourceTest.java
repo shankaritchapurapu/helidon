@@ -28,9 +28,12 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
+import static com.oracle.helidon.oci.requestid.OciRequestId.OCI_REQUEST_ID;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isEmptyString;
+import static org.hamcrest.Matchers.not;
 
 /**
  * Test request ID support. It requires dependency {@code com.oracle.helidon.oci:helidon-oci-request-id}
@@ -49,7 +52,7 @@ class OciResourceTest {
     void testRequestId() {
         Response response = webTarget.path("oci").request().get();
         assertThat(response.getStatus(), is(Response.Status.OK.getStatusCode()));
-        String responseId = response.getHeaderString(OciHeaderNames.OPC_REQUEST_ID);
+        String responseId = response.getHeaderString(OCI_REQUEST_ID);
         assertThat(responseId.split("/").length, is(3));
         String requestId = response.readEntity(String.class);
         assertThat(requestId, is(responseId));
@@ -60,7 +63,32 @@ class OciResourceTest {
      */
     @Test
     void testClientRequestId() {
-        testClientRequestIdAt("oci/client");
+        testClientRequestNoCustomerId("oci/client");
+    }
+
+    /**
+     * Checks returned opc-request-id is a downstream ID using JAX-RS Client (server side).
+     */
+    @Test
+    void testClientRequestIdWithCustomerId() {
+        String customerId = "customerId";
+        testClientRequestCustomerId("oci/client", customerId, customerId);
+    }
+
+    /**
+     * Checks returned opc-request-id is a downstream ID using JAX-RS Client (server side).
+     */
+    @Test
+    void testClientRequestIdWithCustomerIdInvalidChars() {
+        testClientRequestCustomerId("oci/client", "customer{Id", "customerId");
+    }
+
+    /**
+     * Checks returned opc-request-id is a downstream ID using JAX-RS Client (server side).
+     */
+    @Test
+    void testClientRequestIdWithCustomerIdAndTraceId() {
+        testClientRequestCustomerIdAndTraceId("oci/client", "customer-id", "trace-id");
     }
 
     /**
@@ -68,7 +96,7 @@ class OciResourceTest {
      */
     @Test
     void testMpClientRequestId() {
-        testClientRequestIdAt("oci/mpclient");
+        testClientRequestNoCustomerId("oci/mpclient");
     }
 
     /**
@@ -80,6 +108,72 @@ class OciResourceTest {
         String requestId = webTarget.path("oci").request().get(String.class);
         String log = TestStreamHandler.output.toString();
         assertThat(log, containsString(requestId));
+    }
+
+    /**
+     * Verifies that returned request ID is a downstream ID.
+     *
+     * @param path resource path
+     */
+    private void testClientRequestNoCustomerId(String path) {
+        // customer request (no id) ""
+        Response response = webTarget.path(path).request().get();
+
+        verifyResponse(response, "", null);
+    }
+
+    private void verifyResponse(Response response, String expectedCustomerId, String expectedTraceId) {
+        assertThat(response.getStatus(), is(Response.Status.OK.getStatusCode()));
+        // response id must be the same as upstream request id (x-oci-upstream)
+        String serverRequest = response.getHeaderString("x-oci-upstream");
+        assertThat("The same id must be returned to the caller, that was generated for the request",
+                   response.getHeaderString(OCI_REQUEST_ID),
+                   is(serverRequest));
+
+        String[] idParts = serverRequest.split("/");
+        assertThat("ID should always have all three parts: " + serverRequest, idParts.length, is(3));
+        String customerId = idParts[0];
+        String traceId = idParts[1];
+        String spanId = idParts[2];
+        assertThat("Customer id must be preserved across all requests", customerId, is(expectedCustomerId));
+        if (expectedTraceId != null) {
+            assertThat("Trace id must be preserved across all requests", traceId, is(expectedTraceId));
+        }
+        assertThat(spanId, not(isEmptyString()));
+
+        serverRequest = response.getHeaderString("x-oci-downstream-request");
+        idParts = serverRequest.split("/");
+        // downstream request and response ids must be the same as well
+        assertThat("The same id must be returned to the caller, that was generated for the request (downstream)",
+                   response.getHeaderString("x-oci-downstream-request"),
+                   is(response.getHeaderString("x-oci-downstream-response")));
+        assertThat("ID should always have all three parts: " + serverRequest, idParts.length, is(3));
+        assertThat("Customer id must be preserved across all requests", idParts[0], is(customerId));
+        assertThat("Trace id must be preserved across all requests", idParts[1], is(traceId));
+        assertThat("Span ID must change for each request/response exchange", idParts[2], not(spanId));
+    }
+
+    private void testClientRequestCustomerId(String path, String customerId, String expectedCustomerId) {
+        // customer request (no id) ""
+        Response response = webTarget.path(path)
+                .request()
+                .header(OCI_REQUEST_ID, customerId)
+                .get();
+        verifyResponse(response, expectedCustomerId, null);
+    }
+
+    /**
+     * Verifies that returned request ID is a downstream ID.
+     *
+     * @param path resource path
+     */
+    private void testClientRequestCustomerIdAndTraceId(String path, String customerId, String traceId) {
+        // customer request (no id) ""
+        Response response = webTarget.path(path)
+                .request()
+                .header(OCI_REQUEST_ID, customerId + "/" + traceId)
+                .get();
+        verifyResponse(response, customerId, traceId);
     }
 
     /**
@@ -105,17 +199,5 @@ class OciResourceTest {
         public void close() {
             flush();
         }
-    }
-
-    /**
-     * Verifies that returned request ID is a downstream ID.
-     *
-     * @param path resource path
-     */
-    private void testClientRequestIdAt(String path) {
-        Response response = webTarget.path(path).request().get();
-        assertThat(response.getStatus(), is(Response.Status.OK.getStatusCode()));
-        String requestId = response.readEntity(String.class);
-        assertThat(requestId.split("/").length, is(2));        // downstream ID
     }
 }

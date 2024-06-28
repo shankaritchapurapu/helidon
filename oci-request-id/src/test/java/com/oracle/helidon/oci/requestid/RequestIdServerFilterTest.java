@@ -18,72 +18,100 @@ package com.oracle.helidon.oci.requestid;
 
 import io.helidon.common.context.Context;
 import io.helidon.common.context.Contexts;
+import io.helidon.common.testing.http.junit5.HttpHeaderMatcher;
+import io.helidon.http.Header;
+import io.helidon.http.ServerRequestHeaders;
+import io.helidon.http.ServerResponseHeaders;
+import io.helidon.http.WritableHeaders;
 import io.helidon.logging.jul.JulMdc;
-import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.container.ContainerResponseContext;
-import jakarta.ws.rs.core.MultivaluedHashMap;
-import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Request;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import io.helidon.webserver.http.FilterChain;
+import io.helidon.webserver.http.RoutingRequest;
+import io.helidon.webserver.http.RoutingResponse;
 
+import org.junit.jupiter.api.Test;
+
+import static com.oracle.helidon.oci.requestid.RequestIdServerFilter.OCI_REQUEST_ID_HEADER;
+import static io.helidon.common.testing.junit5.OptionalMatcher.optionalValue;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class RequestIdServerFilterTest {
 
     @Test
-    void testRequestFilter() {
-        MultivaluedMap<String, String> map = new MultivaluedHashMap<>();
-        ContainerRequestContext requestContext = newRequestContext(map);
+    void testFilter() {
+        WritableHeaders<?> reqHeaders = WritableHeaders.create();
+        ServerResponseHeaders resHeaders = ServerResponseHeaders.create();
 
         RequestIdServerFilter filter = new RequestIdServerFilter();
-        filter.filter(requestContext);
-        assertThat(map.containsKey(OciHeaderNames.OPC_REQUEST_ID), is(true));
-    }
+        filter.filter(mockFilterChain(),
+                      mockRoutingRequest(reqHeaders),
+                      mockRoutingResponse(resHeaders));
 
-    @Test
-    void testResponseFilter() {
-        MultivaluedMap<String, String> requestMap = new MultivaluedHashMap<>();
-        ContainerRequestContext requestContext = newRequestContext(requestMap);
-        MultivaluedMap<String, Object> responseMap = new MultivaluedHashMap<>();
-        ContainerResponseContext responseContext = newResponseContext(responseMap);
-
-        RequestIdServerFilter filter = new RequestIdServerFilter();
-        filter.filter(requestContext, responseContext);
-        assertThat(requestMap.getFirst(OciHeaderNames.OPC_REQUEST_ID), is(responseMap.getFirst(OciHeaderNames.OPC_REQUEST_ID)));
+        assertThat("Request header must be added", reqHeaders, HttpHeaderMatcher.hasHeader(OCI_REQUEST_ID_HEADER));
+        assertThat("Response header must be added", resHeaders, HttpHeaderMatcher.hasHeader(OCI_REQUEST_ID_HEADER));
+        assertThat("Response header must match request header",
+                   reqHeaders.get(OCI_REQUEST_ID_HEADER),
+                   is(resHeaders.get(OCI_REQUEST_ID_HEADER)));
     }
 
     @Test
     void testLoggingMdc() {
-        ContainerRequestContext requestContext = newRequestContext(null);
+        WritableHeaders<?> reqHeaders = WritableHeaders.create();
+        ServerResponseHeaders resHeaders = ServerResponseHeaders.create();
+
         RequestIdServerFilter filter = new RequestIdServerFilter();
-        filter.filter(requestContext);
-        assertThat(JulMdc.get(OciHeaderNames.OPC_REQUEST_ID), notNullValue());
+        filter.filter(mockFilterChain(),
+                      mockRoutingRequest(reqHeaders),
+                      mockRoutingResponse(resHeaders));
+
+        assertThat(JulMdc.get(OciRequestId.OCI_REQUEST_ID), notNullValue());
+        assertThat(JulMdc.get(OciRequestId.OCI_REQUEST_ID), is(reqHeaders.get(OCI_REQUEST_ID_HEADER).getString()));
     }
 
     @Test
     void testContext() {
+        WritableHeaders<?> reqHeaders = WritableHeaders.create();
+        ServerResponseHeaders resHeaders = ServerResponseHeaders.create();
+
         Context context = Context.create();
         Contexts.runInContext(context, () -> {
-            ContainerRequestContext requestContext = newRequestContext(null);
             RequestIdServerFilter filter = new RequestIdServerFilter();
-            filter.filter(requestContext);
+            filter.filter(mockFilterChain(),
+                          mockRoutingRequest(reqHeaders),
+                          mockRoutingResponse(resHeaders));
         });
-        assertThat(context.get(Request.class, String.class).isPresent(), is(true));
+        assertThat(context.get(OciRequestId.class)
+                           .map(OciRequestId::upstreamHeaderValue),
+                   optionalValue(is(reqHeaders.get(OCI_REQUEST_ID_HEADER).getString())));
     }
 
-    private ContainerRequestContext newRequestContext(MultivaluedMap<String, String> map) {
-        ContainerRequestContext requestContext = Mockito.mock(ContainerRequestContext.class);
-        when(requestContext.getHeaders()).thenReturn(map == null ? new MultivaluedHashMap<>() : map);
-        return requestContext;
+    private static FilterChain mockFilterChain() {
+        return mock(FilterChain.class);
     }
 
-    private ContainerResponseContext newResponseContext(MultivaluedMap<String, Object> map) {
-        ContainerResponseContext responseContext = Mockito.mock(ContainerResponseContext.class);
-        when(responseContext.getHeaders()).thenReturn(map == null ? new MultivaluedHashMap<>() : map);
-        return responseContext;
+    private static RoutingRequest mockRoutingRequest(WritableHeaders<?> headers) {
+        ServerRequestHeaders requestHeaders = ServerRequestHeaders.create(headers);
+        RoutingRequest mock = mock(RoutingRequest.class);
+        when(mock.headers()).thenReturn(requestHeaders);
+
+        doAnswer(invocation -> {
+            headers.set(invocation.getArgument(0));
+            return null;
+        }).when(mock)
+                .header(any(Header.class));
+
+        return mock;
+    }
+
+    private static RoutingResponse mockRoutingResponse(ServerResponseHeaders headers) {
+        RoutingResponse mock = mock(RoutingResponse.class);
+
+        when(mock.headers()).thenReturn(headers);
+        return mock;
     }
 }

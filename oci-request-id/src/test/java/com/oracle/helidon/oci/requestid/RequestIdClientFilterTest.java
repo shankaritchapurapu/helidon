@@ -16,13 +16,13 @@
 
 package com.oracle.helidon.oci.requestid;
 
-import com.oracle.pic.commons.rid.RequestIdUtils;
 import io.helidon.common.context.Context;
 import io.helidon.common.context.Contexts;
+
+import com.oracle.pic.commons.rid.RequestIdUtils;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Request;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -36,14 +36,14 @@ class RequestIdClientFilterTest {
     void testRequestIdDownstream() {
         String requestId = "00000/11111/22222";
         Context context = Context.create();
-        context.register(Request.class, requestId);
+        context.register(OciRequestId.parseUpstreamRequest(requestId));
 
         Contexts.runInContext(context, () -> {
             MultivaluedMap<String, Object> map = new MultivaluedHashMap<>();
             ClientRequestContext requestContext = newRequestContext(map);
             RequestIdClientFilter filter = new RequestIdClientFilter();
             filter.filter(requestContext);
-            assertThat(map.getFirst(OciHeaderNames.OPC_REQUEST_ID), is(RequestIdUtils.getDownStreamRequestId(requestId)));
+            assertThat(map.getFirst(OciRequestId.OCI_REQUEST_ID), is(RequestIdUtils.getDownStreamRequestId(requestId)));
         });
     }
 
