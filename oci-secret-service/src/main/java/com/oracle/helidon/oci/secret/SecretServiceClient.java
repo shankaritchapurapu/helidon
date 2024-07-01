@@ -25,8 +25,11 @@ import io.helidon.config.ConfigSources;
 import io.helidon.config.spi.ConfigNode;
 import io.helidon.config.spi.ConfigParser;
 import io.helidon.config.yaml.YamlConfigParser;
+import io.helidon.service.registry.GlobalServiceRegistry;
+import io.helidon.service.registry.ServiceRegistry;
 
-import com.oracle.bmc.auth.InstancePrincipalsAuthenticationDetailsProvider;
+import com.oracle.bmc.Region;
+import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.pic.vault.SecretServiceConfig;
 import com.oracle.pic.vault.VaultClient;
 import org.bouncycastle.util.encoders.Base64;
@@ -47,23 +50,18 @@ class SecretServiceClient {
               cacheType: IN_MEMORY_CACHE
             retryConfig:
               maxRetries: 3
-            authProvider:
-              timeout: 500
-              retries: 8
             """;
     private static volatile SecretServiceClient DEFAULT_CLIENT;
 
     private final LazyValue<VaultClient> secretsClient;
     private final SecretServiceConfig secretServiceConfig;
     private final Config config;
-    private final AuthProviderConfig authProviderConfig;
     private final Boolean enabled;
 
     private SecretServiceClient(Config metaConfig) {
         this.config = prepareConfig(metaConfig);
         this.enabled = config.get("enabled").asBoolean().orElse(Boolean.TRUE);
         this.secretServiceConfig = config.as(SecretServiceConfig.class).orElseThrow();
-        this.authProviderConfig = config.get("authProvider").as(AuthProviderConfig.class).orElseThrow();
         this.secretsClient = LazyValue.create(this::initClient);
     }
 
@@ -72,15 +70,11 @@ class SecretServiceClient {
     }
 
     VaultClient initClient() {
-        var provider = InstancePrincipalsAuthenticationDetailsProvider.builder()
-                .timeoutForEachRetry(authProviderConfig.timeout())
-                .metadataBaseUrl(authProviderConfig.instanceMetadataUri())
-                .federationEndpoint(authProviderConfig.federationEndpoint().orElse(null))
-                .detectEndpointRetries(authProviderConfig.retries())
-                .build();
+        ServiceRegistry registry = GlobalServiceRegistry.registry();
+        var provider = registry.get(BasicAuthenticationDetailsProvider.class);
+        var region = registry.get(Region.class);
 
-        var region = provider.getRegion().getRegionId();
-        resolveEndpoint(region);
+        resolveEndpoint(region.getRegionCode());
         if (LOGGER.isLoggable(DEBUG)) {
             LOGGER.log(DEBUG, "Initializing vault client with configuration: " + secretServiceConfig);
         }

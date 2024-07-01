@@ -54,15 +54,18 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 @Priority(5000)
 public class SecretServiceMpConfigSource implements ConfigSource {
+    private static final Logger LOGGER = System.getLogger(SecretServiceMpConfigSource.class.getName());
 
     static final String DEFAULT_PREFIX = "oci.ssv2";
-    private static final Logger LOGGER = System.getLogger(SecretServiceMpConfigSource.class.getName());
     static SecretServiceClient DEFAULT_CLIENT;
 
     private final String prefix;
     private final int ordinal;
     private SecretServiceClient secretServiceClient;
 
+    /**
+     * Constructor required as this may be loaded via {@link java.util.ServiceLoader}.
+     */
     public SecretServiceMpConfigSource() {
         this.ordinal = 83;
         this.prefix = SecretServiceClient.DEFAULT_PREFIX;
@@ -99,9 +102,15 @@ public class SecretServiceMpConfigSource implements ConfigSource {
             return null;
         }
 
-        return client().getSecret(prop.path())
-                .map(bytes -> new String(bytes, UTF_8))
-                .orElse(null);
+        try {
+            return client().getSecret(prop.path())
+                    .map(bytes -> new String(bytes, UTF_8))
+                    .orElse(null);
+        } catch (Exception e) {
+            // config sources should not throw exceptions
+            LOGGER.log(Logger.Level.WARNING, "Failed to obtain secret with the correct prefix. Property: " + propertyName, e);
+            return null;
+        }
     }
 
     @Override

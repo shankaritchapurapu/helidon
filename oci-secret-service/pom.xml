@@ -80,11 +80,6 @@
         </dependency>
         <dependency>
             <groupId>io.helidon.config</groupId>
-            <artifactId>helidon-config-metadata</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.config</groupId>
             <artifactId>helidon-config-object-mapping</artifactId>
         </dependency>
         <dependency>
@@ -100,20 +95,12 @@
             <artifactId>helidon-common-key-util</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.fault-tolerance</groupId>
-            <artifactId>helidon-fault-tolerance</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.helidon.config</groupId>
             <artifactId>helidon-config-yaml</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.scheduling</groupId>
             <artifactId>helidon-scheduling</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.inject.configdriven</groupId>
-            <artifactId>helidon-inject-configdriven-runtime</artifactId>
         </dependency>
 
         <dependency>
@@ -173,88 +160,25 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-testCompile</id>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <forceJavacCompilerUse>true</forceJavacCompilerUse>
-                            <compilerArgs>
-                                <arg>-Ainject.ignoreUnsupportedAnnotations=true</arg>
-                            </compilerArgs>
-                            <annotationProcessorPaths>
-                                <path>
-                                    <groupId>io.helidon.inject.configdriven</groupId>
-                                    <artifactId>helidon-inject-configdriven-processor</artifactId>
-                                    <version>${helidon.version}</version>
-                                </path>
-                                <path>
-                                    <groupId>io.helidon.builder</groupId>
-                                    <artifactId>helidon-builder-processor</artifactId>
-                                    <version>${helidon.version}</version>
-                                </path>
-                                <path>
-                                    <groupId>io.helidon.common.processor</groupId>
-                                    <artifactId>helidon-common-processor-helidon-copyright</artifactId>
-                                    <version>${helidon.version}</version>
-                                </path>
-                                <path>
-                                    <groupId>io.helidon.config</groupId>
-                                    <artifactId>helidon-config-metadata-processor</artifactId>
-                                    <version>${helidon.version}</version>
-                                </path>
-                            </annotationProcessorPaths>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>default-compile</id>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <configuration>
-                            <forceJavacCompilerUse>true</forceJavacCompilerUse>
-                            <compilerArgs>
-                                <arg>-Ainject.ignoreUnsupportedAnnotations=true</arg>
-                            </compilerArgs>
-                            <annotationProcessorPaths>
-                                <path>
-                                    <groupId>io.helidon.inject.configdriven</groupId>
-                                    <artifactId>helidon-inject-configdriven-processor</artifactId>
-                                    <version>${helidon.version}</version>
-                                </path>
-                                <path>
-                                    <groupId>io.helidon.builder</groupId>
-                                    <artifactId>helidon-builder-processor</artifactId>
-                                    <version>${helidon.version}</version>
-                                </path>
-                                <path>
-                                    <groupId>io.helidon.common.processor</groupId>
-                                    <artifactId>helidon-common-processor-helidon-copyright</artifactId>
-                                    <version>${helidon.version}</version>
-                                </path>
-                            </annotationProcessorPaths>
-                        </configuration>
-                    </execution>
-                </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>io.helidon.builder</groupId>
-                        <artifactId>helidon-builder-processor</artifactId>
-                        <version>${helidon.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>io.helidon.inject.configdriven</groupId>
-                        <artifactId>helidon-inject-configdriven-processor</artifactId>
-                        <version>${helidon.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>io.helidon.common.processor</groupId>
-                        <artifactId>helidon-common-processor-helidon-copyright</artifactId>
-                        <version>${helidon.version}</version>
-                    </dependency>
-                </dependencies>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>io.helidon.builder</groupId>
+                            <artifactId>helidon-builder-processor</artifactId>
+                            <version>${helidon.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.helidon.common.processor</groupId>
+                            <artifactId>helidon-common-processor-helidon-copyright</artifactId>
+                            <version>${helidon.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.helidon.config</groupId>
+                            <artifactId>helidon-config-metadata-processor</artifactId>
+                            <version>${helidon.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
             </plugin>
         </plugins>
     </build>

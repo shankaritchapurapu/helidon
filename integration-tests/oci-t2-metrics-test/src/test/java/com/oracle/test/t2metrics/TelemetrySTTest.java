@@ -1,5 +1,6 @@
-package com.oracle.test.t2metics;
+package com.oracle.test.t2metrics;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -7,72 +8,47 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
+import io.helidon.common.config.ConfigException;
+import io.helidon.integrations.oci.OciConfig;
+import io.helidon.logging.common.LogConfig;
+import io.helidon.service.registry.GlobalServiceRegistry;
+
 import com.oracle.bmc.ClientConfiguration;
-import com.oracle.bmc.auth.ConfigFileAuthenticationDetailsProvider;
-import com.oracle.bmc.auth.InstancePrincipalsAuthenticationDetailsProvider;
+import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.monitoring.MonitoringClient;
 import com.oracle.bmc.monitoring.model.Datapoint;
 import com.oracle.bmc.monitoring.model.MetricDataDetails;
 import com.oracle.bmc.monitoring.model.PostMetricDataDetails;
 import com.oracle.bmc.monitoring.requests.PostMetricDataRequest;
 import com.oracle.bmc.retrier.RetryConfiguration;
-
 import com.oracle.pic.telemetry.commons.metrics.Metrics;
 import com.oracle.pic.telemetry.commons.metrics.TelemetryReporter;
 import com.oracle.pic.telemetry.commons.metrics.TelemetryReporterBuilder;
-import com.oracle.pic.telemetry.overlay.clients.InstanceMetadata;
-import com.oracle.pic.telemetry.overlay.clients.OverlayInstanceMetadataClient;
-
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.core.Request;
 import jakarta.ws.rs.core.Response;
-
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
 
 class TelemetrySTTest {
     private static final String PROJECT = "xxxx";
     private static final String FLEET_T2 = "t2-api";
     private static final String FLEET_MONITORING = "monitoring-sdk";
     private static final String METRIC_NAME = "t2metric";
-    private static final String INSTANCE_METADATA_BASE_URL = "http://localhost:8000/opc/v2/";
-    private static final String INSTANCE_METADATA_INSTANCE_URL = INSTANCE_METADATA_BASE_URL + "instance/";
+    private static final Logger LOGGER = Logger.getLogger(TelemetrySTTest.class.getName());
+
     private static MonitoringClient monitoringClient;
     private static String requestId;
-    public enum InstanceMetadataProperty {
-        /*
-         * The name should match metadata property name here https://docs.cloud.oracle.com/iaas/Content/Compute/Tasks/gettingmetadata.htm
-         */
-        DISPLAY_NAME("displayName"),
-        COMPARTMENT_ID("compartmentId"),
-        CANONICAL_REGION_NAME("canonicalRegionName"),
-        OCI_AD_NAME("ociAdName"),
-        FAULT_DOMAIN("faultDomain"),
-        HOST_NAME("hostname");
-        String name;
-        InstanceMetadataProperty(String name) {
-            this.name = name;
-        }
-    }
-    private static final Logger LOGGER = Logger.getLogger(TelemetrySTTest.class.getName());
 
     @BeforeAll
     static void beforeAll() {
-        LOGGER.info("Instantiating Instance Principal");
-        InstancePrincipalsAuthenticationDetailsProvider instancePrincipalAuth =
-                InstancePrincipalsAuthenticationDetailsProvider.builder()
-                        .metadataBaseUrl(INSTANCE_METADATA_BASE_URL)
-                        .detectEndpointRetries(1)
-                        .timeoutForEachRetry(3000)
-                        .build();
+        LogConfig.configureRuntime();
+        LOGGER.info("Instantiating Authentication Details Provider");
+
+        // configured from oci-config.yaml on test classpath
+        BasicAuthenticationDetailsProvider adp = GlobalServiceRegistry.registry()
+                .get(BasicAuthenticationDetailsProvider.class);
+
         LOGGER.info("Instantiating Monitoring Client");
         monitoringClient = MonitoringClient.builder()
                 .configuration(ClientConfiguration.builder()
@@ -80,7 +56,7 @@ class TelemetrySTTest {
                                        .readTimeoutMillis(3000)
                                        .retryConfiguration(RetryConfiguration.SDK_DEFAULT_RETRY_CONFIGURATION)
                                        .build())
-                .build(instancePrincipalAuth);
+                .build(adp);
         String endpoint = monitoringClient.getEndpoint().replaceFirst("telemetry\\.", "telemetry-ingestion.");
         LOGGER.info("Setting monitoring endpoint to '" + endpoint + "'");
         monitoringClient.setEndpoint(endpoint);
@@ -151,7 +127,12 @@ class TelemetrySTTest {
 
     // Used to extract a field from Instance Metadata Service
     private static String getFieldValueByName(InstanceMetadataProperty field) {
-        String uri = String.format(INSTANCE_METADATA_BASE_URL + "instance/%s", field.name);
+        OciConfig ociConfig = GlobalServiceRegistry.registry()
+                .get(OciConfig.class);
+        URI imdsBaseUri = ociConfig.imdsBaseUri()
+                .orElseThrow(() -> new ConfigException("imds-base-uri must be configured in oci-config.yaml"));
+        String uri = String.format(imdsBaseUri + "instance/%s",
+                                   field.name);
         try {
             Client client = ClientBuilder.newBuilder()
                     .connectTimeout(10, TimeUnit.SECONDS)
@@ -164,6 +145,24 @@ class TelemetrySTTest {
             System.out.print("Failed to get " + field.name + " from Instance Metadata Service: " + exc);
         }
         return null;
+    }
+
+    public enum InstanceMetadataProperty {
+        /*
+         * The name should match metadata property name here https://docs.cloud.oracle
+         * .com/iaas/Content/Compute/Tasks/gettingmetadata.htm
+         */
+        DISPLAY_NAME("displayName"),
+        COMPARTMENT_ID("compartmentId"),
+        CANONICAL_REGION_NAME("canonicalRegionName"),
+        OCI_AD_NAME("ociAdName"),
+        FAULT_DOMAIN("faultDomain"),
+        HOST_NAME("hostname");
+        String name;
+
+        InstanceMetadataProperty(String name) {
+            this.name = name;
+        }
     }
 
     // private InstanceMetadata getInstanceMetadata() {

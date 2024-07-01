@@ -13,7 +13,7 @@ libraries that OCI teams produce (that are not part of the public OCI SDK), then
 ## Prerequisites
 - JDK 21 or higher
 - Maven 3.6.1 or higher
-- Helidon 4.0.0 or higher
+- Helidon 4.1.0 or higher
 
 ## Usage
 Most users should be generating their service using the [Helidon Service Generator](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-service-generator).
@@ -36,14 +36,14 @@ the OCI native service needs to be completed. Resource management is done using 
 [reference-infra repository](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/reference-infra/browse) can be modified to 
 add the needed resources. Below is example code to programmatically set the metadataBaseUrl and an example command to establish 
 an ssh tunnel to the remote Instance Metadata Service for testing the code locally.
-1. Set Instance Metadata Service base URL in your code to use local host and port:
-    ```java
-        InstancePrincipalsAuthenticationDetailsProvider.builder()
-                .metadataBaseUrl( "http://localhost:8000/opc/v2/")
-                .detectEndpointRetries(1)
-                .timeoutForEachRetry(3000)
-                .build();
-    
+
+1. Set Instance Metadata Service base URL (and some additional configuration) in `oci-config.yaml` either on classpath, or in the
+   current directory:
+    ```yaml
+      authentication-method: "instance-principal" # hardcode to instance-principal authentication
+      imds-timeout: "PT3S" # 3 seconds timeout, may be slower when tunneling
+      imds-base-uri: "http://localhost:8000/opc/v2/" # tunneled
+      imds-detect-retries: 1 # only try once, no need to try again if not available (unless you have bad connection)
     ```
 2. Run an ssh tunnel to use the chosen local host and port to forward data to the Instance Metadata Service in the remote host:
    ```shell

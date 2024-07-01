@@ -19,13 +19,12 @@ package com.oracle.helidon.oci.secret;
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.configurable.Resource;
-import io.helidon.config.metadata.Configured;
 
 /**
  * Blueprint configuration for {@link com.oracle.helidon.oci.secret.DefaultSecretServiceTlsManager}.
  */
 @Prototype.Blueprint
-@Configured
+@Prototype.Configured
 interface SecretServiceTlsManagerConfigBlueprint extends Prototype.Factory<SecretServiceTlsManager> {
 
     /**

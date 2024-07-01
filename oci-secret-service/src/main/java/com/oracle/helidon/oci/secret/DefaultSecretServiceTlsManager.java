@@ -39,6 +39,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 
+import io.helidon.Main;
 import io.helidon.common.LazyValue;
 import io.helidon.common.configurable.Resource;
 import io.helidon.common.pki.PemReader;
@@ -91,7 +92,7 @@ class DefaultSecretServiceTlsManager extends ConfiguredTlsManager implements Sec
         // the initial loading of the tls
         loadContext(true);
 
-        ShutdownHookBean.addShutdownHook(this::shutdown);
+        Main.addShutdownHandler(this::shutdown);
 
         // Scheduled reloading enabled
         if (cfg.reload().enabled()) {
@@ -218,7 +219,7 @@ class DefaultSecretServiceTlsManager extends ConfiguredTlsManager implements Sec
         }
     }
 
-    private void shutdown(Object event) {
+    private void shutdown() {
         try {
             LOGGER.log(DEBUG, "Shutting down");
             if (asyncExec.isLoaded() && !asyncExec.get().isShutdown()) {

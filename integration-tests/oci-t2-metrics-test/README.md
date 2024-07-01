@@ -3,7 +3,7 @@
 ## Overview
 This module contains tests related to integration with internal OCI Telemetry otherwise known as T2.
 
-## Testing with SSH Tuneling
+## Testing with SSH Tunneling
 Most OCI native integration including T2 metrics require access to the Instance Metadata Service. By Creating an SSH tunnel to forward connection from a local host to the remote host, then Instance Metadata Service can now be accessed locally. With this approach, the test application does not need to be deployed to the remote host thereby promoting fast iteration to code changes.
 
 ### Prerequisites

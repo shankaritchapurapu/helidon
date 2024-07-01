@@ -15,7 +15,7 @@
     <description>Maven dependency management for Helidon OCI native applications</description>
 
     <properties>
-        <helidon.version>4.0.9</helidon.version>
+        <helidon.version>4.1.0-SNAPSHOT</helidon.version>
         <!-- Versions for libraries used in build -->
         <!-- <oci-java-sdk-version>${version.lib.oci}</oci-java-sdk-version>-->
         <oci-java-sdk-version>3.39.0</oci-java-sdk-version>
