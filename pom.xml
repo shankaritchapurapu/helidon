@@ -45,18 +45,16 @@
 
     <modules>
         <module>dependencies</module>
-        <module>oci-javax-shim</module>
+        <module>common</module>
         <module>repackaged-oci</module>
-        <module>oci-error-code</module>
-        <module>oci-identity</module>
-        <module>oci-metrics</module>
-        <module>oci-secret-service</module>
-        <module>oci-request-id</module>
-        <module>oci-splat</module>
-        <module>oci-swagger-maven-plugin</module>
+        <module>identity</module>
+        <module>metrics</module>
+        <module>secret-service</module>
+        <module>splat</module>
+        <module>swagger-maven-plugin</module>
         <module>bom</module>
         <module>applications</module>
-        <module>integration-tests</module>
+        <module>tests</module>
     </modules>
 
     <dependencyManagement>

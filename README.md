@@ -26,15 +26,15 @@ mvn clean package
 ```
 
 ## How to locally test your OCI SDK Integration
-Almost all calls to OCI native service integration requires _Instance Principal Authentication_. Normally, you would have to 
-deploy and run this integration in an OCI instance as it needs the _Instance Metadata Service_. However, Instance Principal 
-provider that is used to create an _Instance Principal Authentication_ can be set to point to a new _Instance Metadata Service_ 
-base url. In combination with an ssh tunnel that can forward data from the chosen local endpoint to the actual 
-_Instance Metadata Service_ base url on the remote host, the application can now be run locally without the need to deploy it to 
-the remote instance. As a prerequisite for making this approach successful, all the necessary actions to onboard and provision 
-the OCI native service needs to be completed. Resource management is done using Shepherd, so the 
-[reference-infra repository](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/reference-infra/browse) can be modified to 
-add the needed resources. Below is example code to programmatically set the metadataBaseUrl and an example command to establish 
+Almost all calls to OCI native service integration requires _Instance Principal Authentication_. Normally, you would have to
+deploy and run this integration in an OCI instance as it needs the _Instance Metadata Service_. However, Instance Principal
+provider that is used to create an _Instance Principal Authentication_ can be set to point to a new _Instance Metadata Service_
+base url. In combination with an ssh tunnel that can forward data from the chosen local endpoint to the actual
+_Instance Metadata Service_ base url on the remote host, the application can now be run locally without the need to deploy it to
+the remote instance. As a prerequisite for making this approach successful, all the necessary actions to onboard and provision
+the OCI native service needs to be completed. Resource management is done using Shepherd, so the
+[reference-infra repository](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/reference-infra/browse) can be modified to
+add the needed resources. Below is example code to programmatically set the metadataBaseUrl and an example command to establish
 an ssh tunnel to the remote Instance Metadata Service for testing the code locally.
 
 1. Set Instance Metadata Service base URL (and some additional configuration) in `oci-config.yaml` either on classpath, or in the
@@ -54,7 +54,7 @@ The [OCI T2 metrics test](integration-tests/oci-t2-metrics-test) will show a com
 
 ## Integration with Lumberjack for Application Logging
 For more details on how to integrate with Lumberjack logging service, please check out [logging.md](logging.md).
-   
+
 
 
 ## Links
