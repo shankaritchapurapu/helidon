@@ -30,4 +30,6 @@ module com.oracle.helidon.oci.splat {
 
     requires core.regions;
     requires splat.sdk;
+    requires io.helidon.service.registry;
+    requires io.helidon.integrations.oci;
 }

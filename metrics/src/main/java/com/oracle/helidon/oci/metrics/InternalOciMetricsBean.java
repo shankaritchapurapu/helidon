@@ -26,16 +26,17 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.Initialized;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Alternative;
-import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Singleton;
 import jakarta.interceptor.Interceptor;
-import jakarta.json.JsonObject;
 
 import io.helidon.common.Errors;
 import io.helidon.config.Config;
+import io.helidon.integrations.oci.ImdsInstanceInfo;
 import io.helidon.integrations.oci.metrics.OciMetricsSupport;
 import io.helidon.integrations.oci.metrics.OciMetricsSupportFactory;
 import io.helidon.microprofile.server.RoutingBuilders;
+import io.helidon.service.registry.GlobalServiceRegistry;
+import io.helidon.service.registry.ServiceRegistry;
 
 import com.oracle.bmc.monitoring.Monitoring;
 import com.oracle.pic.telemetry.commons.metrics.Metrics;
@@ -54,19 +55,12 @@ import static jakarta.interceptor.Interceptor.Priority.LIBRARY_BEFORE;
 @Alternative
 @Singleton
 class InternalOciMetricsBean extends OciMetricsSupportFactory {
-
-    // Instance metadata key names
-    private static final String DISPLAY_NAME = "displayName";
-    private static final String CANONICAL_REGION_NAME = "canonicalRegionName";
-    private static final String OCI_AD_NAME = "ociAdName";
-    private static final String FAULT_DOMAIN = "faultDomain";
-    private static final String REGION = "region";
     private static final Logger LOGGER = Logger.getLogger(InternalOciMetricsBean.class.getName());
 
     private Monitoring monitoring;
     private String project;
     private String fleet;
-    private JsonObject instanceMetadata;
+    private ImdsInstanceInfo instanceInfo;
 
     // Make Priority higher than MetricsCdiExtension so this will only start after MetricsCdiExtension has completed.
     void registerOciMetrics(@Observes @Priority(LIBRARY_BEFORE + 20) @Initialized(ApplicationScoped.class) Object ignore,
@@ -91,7 +85,8 @@ class InternalOciMetricsBean extends OciMetricsSupportFactory {
             LOGGER.log(Level.FINE, "Setting monitoring endpoint to '" + adjustedEndpoint + "'");
         }
 
-        instanceMetadata = CDI.current().select(InstanceMetadataLoader.class).get().instanceMetadata();
+        ServiceRegistry registry = GlobalServiceRegistry.registry();
+        instanceInfo = registry.get(ImdsInstanceInfo.class);
 
         this.monitoring = monitoring;
 
@@ -117,7 +112,7 @@ class InternalOciMetricsBean extends OciMetricsSupportFactory {
                                                                        () -> collector.fatal(
                                                                                "required OCi metrics config setting for fleet is "
                                                                                        + "missing"));
-            result.compartmentId(MetricsCompartmentHelper.t2CompartmentIdForRegion(instanceMetadata.getString(CANONICAL_REGION_NAME)));
+            result.compartmentId(MetricsCompartmentHelper.t2CompartmentIdForRegion(instanceInfo.canonicalRegionName()));
 
             Errors errors = collector.collect();
             if (errors.hasFatal()) {
@@ -141,10 +136,10 @@ class InternalOciMetricsBean extends OciMetricsSupportFactory {
                         .monitoringClient(monitoring)
                         .project(project)
                         .fleet(fleet)
-                        .region(instanceMetadata.getString(CANONICAL_REGION_NAME))
-                        .hostname(instanceMetadata.getString(DISPLAY_NAME))
-                        .availabilityDomain(instanceMetadata.getString(OCI_AD_NAME))
-                        .faultDomain(instanceMetadata.getString(FAULT_DOMAIN))
+                        .region(instanceInfo.canonicalRegionName())
+                        .hostname(instanceInfo.displayName())
+                        .availabilityDomain(instanceInfo.ociAdName())
+                        .faultDomain(instanceInfo.faultDomain())
                         .build();
                 String hostName;
                 try {

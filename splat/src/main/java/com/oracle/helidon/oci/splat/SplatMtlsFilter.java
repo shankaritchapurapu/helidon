@@ -19,14 +19,16 @@ package com.oracle.helidon.oci.splat;
 import java.io.IOException;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.time.Duration;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.helidon.config.Config;
 import io.helidon.config.mp.MpConfig;
+
+import io.helidon.integrations.oci.ImdsInstanceInfo;
+import io.helidon.service.registry.GlobalServiceRegistry;
+
 import io.helidon.webserver.http.ServerRequest;
 
 import com.oracle.helidon.oci.javax.jaxrs.shim.JakartaServerFilter;
@@ -37,13 +39,9 @@ import jakarta.annotation.PostConstruct;
 import jakarta.ws.rs.ConstrainedTo;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.RuntimeType;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -59,10 +57,6 @@ public class SplatMtlsFilter implements ContainerRequestFilter {
     static final String SKIP_AUTHZ_VALIDATION_CHECK = "skip-authz-validation-check";
     static final String REJECT_X_REGION_CALLS = "reject-x-region-calls";
     static final String OCI_REGION_CONFIG_KEY = "oci.region";
-    static final String OCI_IMDS_URI_CONFIG_KEY = "oci.instance-metadata-uri";
-    private static final String DEFAULT_INSTANCE_METADATA_URI = "http://169.254.169.254/opc/v2/";
-    private static final Duration DEFAULT_INSTANCE_METADATA_CONNECT_TIMEOUT = Duration.ofSeconds(10);
-    private static final Duration DEFAULT_INSTANCE_METADATA_READ_TIMEOUT = Duration.ofSeconds(12);
     private static final String X509_CERTIFICATE_ATTRIBUTE = "javax.servlet.request.X509Certificate";
     private static final Logger LOGGER = Logger.getLogger(SplatMtlsFilter.class.getName());
     private JakartaServerFilter shimmedSplatMtlsFilter;
@@ -153,38 +147,11 @@ public class SplatMtlsFilter implements ContainerRequestFilter {
             LOGGER.info("Region config override: " + regionOverride);
             return regionOverride;
         }
-        return getRegionFromIMDS(config);
+        return getRegionFromIMDS();
     }
 
-    protected String getRegionFromIMDS(Config config) {
-        String instanceMetadataUri = config.get(OCI_IMDS_URI_CONFIG_KEY).asString().orElse(DEFAULT_INSTANCE_METADATA_URI);
-
-        String uri = String.format(instanceMetadataUri + "instance/canonicalRegionName");
-        Client client = ClientBuilder.newBuilder()
-                .connectTimeout(DEFAULT_INSTANCE_METADATA_CONNECT_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)
-                .readTimeout(DEFAULT_INSTANCE_METADATA_READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)
-                .build();
-        try {
-            Response response = client.target(uri)
-                    .request(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer Oracle")
-                    .get();
-            if (response.getStatus() >= 300) {
-                String errorMessage = String.format(
-                        "Region cannot be obtained from instance metadata: status = %d, entity = '%s'",
-                        response.getStatus(),
-                        response.readEntity(String.class));
-                terminate(new IllegalArgumentException(errorMessage));
-            }
-            String region = response.readEntity(String.class);
-            response.close();
-            return region;
-        } catch (Exception exc) {
-            String errorMessage =
-                    "Region was not retrieved from instance metadata: " + exc;
-            terminate(new IllegalArgumentException(errorMessage));
-        }
-        return null;
+    protected String getRegionFromIMDS() {
+        return GlobalServiceRegistry.registry().get(ImdsInstanceInfo.class).canonicalRegionName();
     }
 
     private static SplatMtlsFilterConfig setSplatMtlsFilterConfig(Config helidonSplatMtlsFilterConfig) {

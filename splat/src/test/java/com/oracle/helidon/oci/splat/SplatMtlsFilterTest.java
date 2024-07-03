@@ -258,7 +258,7 @@ class SplatMtlsFilterTest {
         }
 
         @Override
-        protected String getRegionFromIMDS(Config config) {
+        protected String getRegionFromIMDS() {
             this.regionFromIMDS = US_PHOENIX_1_REGION;
             return US_PHOENIX_1_REGION;
         }

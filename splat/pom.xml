@@ -46,6 +46,14 @@
             <artifactId>helidon-microprofile-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.service</groupId>
+            <artifactId>helidon-service-registry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.integrations.oci</groupId>
+            <artifactId>helidon-integrations-oci</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.helidon.oci</groupId>
             <artifactId>helidon-oci-javax-jaxrs-shim</artifactId>
         </dependency>
