@@ -1,17 +1,5 @@
 /*
  * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 package com.oracle.helidon.oci.errorcode;
 
@@ -24,8 +12,6 @@ import java.util.Optional;
  * Applications can throw instances of this class and expect a response
  * to be rendered according to the OCI error code rules.
  * <p>
- * Similar to {@code com.oracle.pic.commons.exceptions.server.RenderableException}
- * but without depending on jakarta packages.
  * Note that the exception itself is not renderable, you need to use {@link #errorDetail()}
  * to obtain the JSON serializable object.
  * <p>
@@ -34,11 +20,26 @@ import java.util.Optional;
  * It is sufficient to add these modules to your classpath, mappers are discovered through service loader.
  */
 public final class RenderableException extends RuntimeException {
+    /*
+     * Similar to {@code com.oracle.pic.commons.exceptions.server.RenderableException}
+     * but without depending on jakarta packages.
+     */
 
     private final ErrorDetail errorDetail;
+    private final ErrorCode errorCode;
 
     /**
      * Create an exception with required information.
+     * This will use the default message associated with the error code provided.
+     *
+     * @param code error code, must not be null
+     */
+    public RenderableException(ErrorCode code) {
+        this(code, code.errorMessage());
+    }
+
+    /**
+     * Create an exception with custom error message.
      *
      * @param code    error code, must not be null
      * @param message message, must not be null
@@ -50,11 +51,27 @@ public final class RenderableException extends RuntimeException {
         Objects.requireNonNull(code, "Error code must not be null");
         Objects.requireNonNull(message, "Message must not be null");
 
-        this.errorDetail = ErrorDetail.create(code, message, null, null, null);
+        this.errorCode = code;
+        this.errorDetail = ErrorDetail.create(code.errorCode(),
+                                              message,
+                                              null,
+                                              null,
+                                              null);
     }
 
     /**
      * Create an exception with required information and a cause.
+     *
+     * @param code  error code, must not be null
+     * @param cause cause of this exception
+     */
+    public RenderableException(ErrorCode code,
+                               Throwable cause) {
+        this(code, code.errorMessage(), cause);
+    }
+
+    /**
+     * Create an exception with custom error message and a cause.
      *
      * @param code    error code, must not be null
      * @param message message, must not be null
@@ -68,7 +85,12 @@ public final class RenderableException extends RuntimeException {
         Objects.requireNonNull(code, "Error code must not be null");
         Objects.requireNonNull(message, "Message must not be null");
 
-        this.errorDetail = ErrorDetail.create(code, message, null, null, null);
+        this.errorCode = code;
+        this.errorDetail = ErrorDetail.create(code.errorCode(),
+                                              message,
+                                              null,
+                                              null,
+                                              null);
     }
 
     /**
@@ -85,7 +107,12 @@ public final class RenderableException extends RuntimeException {
         Objects.requireNonNull(formatString, "Format string must not be null");
         Objects.requireNonNull(args, "Format arguments must not be null");
 
-        this.errorDetail = ErrorDetail.create(code, super.getMessage(), null, null, null);
+        this.errorCode = code;
+        this.errorDetail = ErrorDetail.create(code.errorCode(),
+                                              super.getMessage(),
+                                              null,
+                                              null,
+                                              null);
     }
 
     /**
@@ -107,8 +134,12 @@ public final class RenderableException extends RuntimeException {
         Objects.requireNonNull(code, "Error code must not be null");
         Objects.requireNonNull(message, "Message must not be null");
 
-        this.errorDetail = ErrorDetail.create(code, message, originalMessage,
-                                              originalMessageTemplate, messageArguments);
+        this.errorCode = code;
+        this.errorDetail = ErrorDetail.create(code.errorCode(),
+                                              message,
+                                              originalMessage,
+                                              originalMessageTemplate,
+                                              messageArguments);
     }
 
     /**
@@ -132,7 +163,8 @@ public final class RenderableException extends RuntimeException {
         Objects.requireNonNull(code, "Error code must not be null");
         Objects.requireNonNull(message, "Message must not be null");
 
-        this.errorDetail = ErrorDetail.create(code,
+        this.errorCode = code;
+        this.errorDetail = ErrorDetail.create(code.errorCode(),
                                               message,
                                               originalMessage,
                                               originalMessageTemplate,
@@ -154,7 +186,7 @@ public final class RenderableException extends RuntimeException {
      * @return error code
      */
     public ErrorCode errorCode() {
-        return errorDetail.getErrorCode();
+        return errorCode;
     }
 
     /**

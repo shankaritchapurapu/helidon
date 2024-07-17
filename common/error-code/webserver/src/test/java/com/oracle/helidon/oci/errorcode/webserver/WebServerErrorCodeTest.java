@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2024 Oracle and/or its affiliates.
+ */
 package com.oracle.helidon.oci.errorcode.webserver;
 
 import java.util.List;
@@ -13,7 +16,7 @@ import io.helidon.webserver.testing.junit5.ServerTest;
 import io.helidon.webserver.testing.junit5.SetUpFeatures;
 import io.helidon.webserver.testing.junit5.SetUpRoute;
 
-import com.oracle.helidon.oci.errorcode.ErrorCode;
+import com.oracle.helidon.oci.errorcode.ErrorCodes;
 import com.oracle.helidon.oci.errorcode.ErrorDetail;
 import com.oracle.helidon.oci.errorcode.RenderableException;
 import org.junit.jupiter.api.Test;
@@ -45,9 +48,9 @@ public class WebServerErrorCodeTest {
         ClientResponseTyped<ErrorDetail> response = client.get("/error1")
                 .request(ErrorDetail.class);
 
-        assertThat(response.status(), is(ErrorCode.InvalidParameter.status()));
+        assertThat(response.status(), is(ErrorCodes.InvalidParameter.status()));
         ErrorDetail errorDetail = response.entity();
-        assertThat(errorDetail.getErrorCode(), is(ErrorCode.InvalidParameter));
+        assertThat(errorDetail.getErrorCode(), is(ErrorCodes.InvalidParameter.errorCode()));
         assertThat(errorDetail.getMessage(), is("Invalid parameter sent"));
     }
 
@@ -56,9 +59,9 @@ public class WebServerErrorCodeTest {
         ClientResponseTyped<ErrorDetail> response = client.get("/error2")
                 .request(ErrorDetail.class);
 
-        assertThat(response.status(), is(ErrorCode.NotAuthenticated.status()));
+        assertThat(response.status(), is(ErrorCodes.NotAuthenticated.status()));
         ErrorDetail errorDetail = response.entity();
-        assertThat(errorDetail.getErrorCode(), is(ErrorCode.NotAuthenticated));
+        assertThat(errorDetail.getErrorCode(), is(ErrorCodes.NotAuthenticated.errorCode()));
         assertThat(errorDetail.getMessage(), is("User 'helidon' is not authenticated"));
         assertThat(errorDetail.getOriginalMessage(), is("Authentication failure for 'helidon'"));
         assertThat(errorDetail.getOriginalMessageTemplate(), is("Authentication failure for '{user}'"));
@@ -66,7 +69,7 @@ public class WebServerErrorCodeTest {
     }
 
     private static void error2(ServerRequest req, ServerResponse res) {
-        throw new RenderableException(ErrorCode.NotAuthenticated,
+        throw new RenderableException(ErrorCodes.NotAuthenticated,
                                       "User 'helidon' is not authenticated",
                                       "Authentication failure for 'helidon'",
                                       "Authentication failure for '{user}'",
@@ -74,6 +77,6 @@ public class WebServerErrorCodeTest {
     }
 
     private static void error1(ServerRequest req, ServerResponse res) {
-        throw new RenderableException(ErrorCode.InvalidParameter, "Invalid parameter sent");
+        throw new RenderableException(ErrorCodes.InvalidParameter, "Invalid parameter sent");
     }
 }

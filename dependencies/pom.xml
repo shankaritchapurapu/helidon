@@ -60,6 +60,7 @@
         <version.lib.joda-time>2.10.14</version.lib.joda-time>
         <version.lib.javaassist>3.29.2-GA</version.lib.javaassist>
         <version.lib.nimbus-jose-jwt>9.10.1</version.lib.nimbus-jose-jwt>
+        <version.lib.sleepycat-je>18.3.12</version.lib.sleepycat-je>
     </properties>
 
     <dependencyManagement>
@@ -937,6 +938,12 @@
                 <groupId>org.glassfish.hk2</groupId>
                 <artifactId>hk2-utils</artifactId>
                 <version>${version.lib.hk2}</version>
+            </dependency>
+            <dependency>
+                <!-- dependency of pic identity, with non-existent version -->
+                <groupId>com.sleepycat</groupId>
+                <artifactId>je</artifactId>
+                <version>${version.lib.sleepycat-je}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

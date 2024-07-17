@@ -1,17 +1,5 @@
 /*
  * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 package com.oracle.helidon.oci.errorcode.microprofile;
 
@@ -21,7 +9,7 @@ import io.helidon.http.Status;
 import io.helidon.microprofile.testing.junit5.AddBean;
 import io.helidon.microprofile.testing.junit5.HelidonTest;
 
-import com.oracle.helidon.oci.errorcode.ErrorCode;
+import com.oracle.helidon.oci.errorcode.ErrorCodes;
 import com.oracle.helidon.oci.errorcode.ErrorDetail;
 import com.oracle.helidon.oci.errorcode.RenderableException;
 import jakarta.inject.Inject;
@@ -51,7 +39,7 @@ class MpErrorCodeTest {
         Response response = webTarget.path("error").request().get();
         assertThat(response.getStatus(), is(Response.Status.BAD_REQUEST.getStatusCode()));
         ErrorDetail errorDetail = response.readEntity(ErrorDetail.class);
-        assertThat(errorDetail.getErrorCode(), is(ErrorCode.InvalidParameter));
+        assertThat(errorDetail.getErrorCode(), is(ErrorCodes.InvalidParameter.errorCode()));
         assertThat(errorDetail.getMessage(), is("Invalid parameter sent"));
     }
 
@@ -60,7 +48,7 @@ class MpErrorCodeTest {
         Response response = webTarget.path("error2").request().get();
         assertThat(response.getStatus(), is(Response.Status.UNAUTHORIZED.getStatusCode()));
         ErrorDetail errorDetail = response.readEntity(ErrorDetail.class);
-        assertThat(errorDetail.getErrorCode(), is(ErrorCode.NotAuthenticated));
+        assertThat(errorDetail.getErrorCode(), is(ErrorCodes.NotAuthenticated.errorCode()));
         assertThat(errorDetail.getMessage(), is("User 'helidon' is not authenticated"));
         assertThat(errorDetail.getOriginalMessage(), is("Authentication failure for 'helidon'"));
         assertThat(errorDetail.getOriginalMessageTemplate(), is("Authentication failure for '{user}'"));
@@ -76,7 +64,7 @@ class MpErrorCodeTest {
             fail("Response was not mapped to exception " + response);
         } catch (RenderableException e) {
             assertThat(e.errorCode().status().code(), is(Status.BAD_REQUEST_400.code()));
-            assertThat(e.errorCode(), is(ErrorCode.InvalidParameter));
+            assertThat(e.errorCode(), is(ErrorCodes.InvalidParameter));
             assertThat(e.getMessage(), is("Invalid parameter sent"));
             assertThat(e.originalMessage(), optionalEmpty());
             assertThat(e.originalMessageTemplate(), optionalEmpty());
@@ -93,7 +81,7 @@ class MpErrorCodeTest {
             fail("Response was not mapped to exception " + response);
         } catch (RenderableException e) {
             assertThat(e.errorCode().status().code(), is(Status.UNAUTHORIZED_401.code()));
-            assertThat(e.errorCode(), is(ErrorCode.NotAuthenticated));
+            assertThat(e.errorCode(), is(ErrorCodes.NotAuthenticated));
             assertThat(e.getMessage(), is("User 'helidon' is not authenticated"));
             assertThat(e.originalMessage(), optionalValue(is("Authentication failure for 'helidon'")));
             assertThat(e.originalMessageTemplate(), optionalValue(is("Authentication failure for '{user}'")));
@@ -120,13 +108,13 @@ class MpErrorCodeTest {
         @GET
         @Path("error")
         public Response error() {
-            throw new RenderableException(ErrorCode.InvalidParameter, "Invalid parameter sent");
+            throw new RenderableException(ErrorCodes.InvalidParameter, "Invalid parameter sent");
         }
 
         @GET
         @Path("error2")
         public Response error2() {
-            throw new RenderableException(ErrorCode.NotAuthenticated,
+            throw new RenderableException(ErrorCodes.NotAuthenticated,
                                           "User 'helidon' is not authenticated",
                                           "Authentication failure for 'helidon'",
                                           "Authentication failure for '{user}'",

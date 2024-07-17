@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2024 Oracle and/or its affiliates.
+ */
 package com.oracle.helidon.oci.errorcode.webserver;
 
 import io.helidon.common.config.Config;

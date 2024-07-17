@@ -8,9 +8,9 @@ The following version properties are referencing the newest available version:
   ${oracle-internal-vault-user-api-spec-version} ............... 1.0.78
   ${oracle-internal-vault-user-java-client-version} ............. 1.0.8
 The following version property updates are available:
-  ${oci-java-sdk-version} ............................ 3.39.0 -> 3.44.1
+  ${oci-java-sdk-version} ............................ 3.39.0 -> 3.44.3
   ${oracle-internal-authproxy-filter-version} ........ 1.1.38 -> 1.1.39
-  ${oracle-internal-commons-metrics-module-version} ... 2.0.6 -> 2.0.10
+  ${oracle-internal-commons-metrics-module-version} ... 2.0.6 -> 2.0.11
   ${oracle-internal-commons-request-id-version} ...... 1.1.47 -> 1.1.55
   ${oracle-internal-exception-mapping-version} ....... 3.0.66 -> 3.0.70
   ${oracle-internal-identity-common-version}  2.1.0.469 -> 2.2.0-release_csandhya_shenron_ID-32931.8

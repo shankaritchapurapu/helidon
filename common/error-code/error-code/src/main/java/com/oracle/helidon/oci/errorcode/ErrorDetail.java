@@ -1,17 +1,5 @@
 /*
- * Copyright (c) 2023 Oracle and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
  */
 package com.oracle.helidon.oci.errorcode;
 
@@ -25,8 +13,12 @@ import jakarta.json.bind.annotation.JsonbProperty;
 
 /**
  * Rendered type for error detail that supports both JSON-Binding and Jackson.
- * This class is not intended for direct use, use {@link com.oracle.helidon.oci.errorcode.RenderableException}
- * instead.
+ * This class is only intended to read entity from a server response (when you act as a client).
+ * To correctly handle server response (when you act as a server),
+ * throw {@link com.oracle.helidon.oci.errorcode.RenderableException}.
+ *
+ * @see com.oracle.helidon.oci.errorcode.ErrorCode
+ * @see com.oracle.helidon.oci.errorcode.ErrorCodes
  */
 public class ErrorDetail {
     /*
@@ -39,20 +31,17 @@ public class ErrorDetail {
     private static final String MESSAGE_ARGUMENTS = "messageArguments";
     private static final String MESSAGE = "message";
 
-    private final ErrorCode errorCode;
+    private final String errorCode;
     private final String originalMessage;
     private final String originalMessageTemplate;
     private final Map<String, String> messageArguments;
     private final String message;
 
-    private ErrorDetail(ErrorCode errorCode,
+    private ErrorDetail(String errorCode,
                         String message,
                         String originalMessage,
                         String originalMessageTemplate,
                         Map<String, String> messageArguments) {
-
-        Objects.requireNonNull(errorCode, "Error code must not be null");
-        Objects.requireNonNull(message, "Message must not be null");
 
         this.errorCode = errorCode;
         this.message = message;
@@ -61,6 +50,19 @@ public class ErrorDetail {
         this.messageArguments = messageArguments;
     }
 
+    /**
+     * Create an error detail for a specific error code, with default message.
+     *
+     * @param errorCode error code
+     * @return error detail for the provided code
+     */
+    public static ErrorDetail create(ErrorCode errorCode) {
+        return new ErrorDetail(errorCode.errorCode(),
+                               errorCode.errorMessage(),
+                               null,
+                               null,
+                               null);
+    }
     /**
      * Create a new instance.
      * This factory method accepts nulls, as it is used by JSON deserializers.
@@ -75,7 +77,7 @@ public class ErrorDetail {
     @JsonCreator
     public static ErrorDetail create(@JsonbProperty(CODE)
                                      @JsonProperty(CODE)
-                                     ErrorCode code,
+                                         String code,
                                      @JsonbProperty(MESSAGE)
                                      @JsonProperty(MESSAGE)
                                      String message,
@@ -87,6 +89,9 @@ public class ErrorDetail {
                                      String originalMessageTemplate,
                                      @JsonbProperty(MESSAGE_ARGUMENTS) @JsonProperty(MESSAGE_ARGUMENTS)
                                      Map<String, String> messageArguments) {
+        Objects.requireNonNull(code, "Error code must not be null");
+        Objects.requireNonNull(message, "Message must not be null");
+
         return new ErrorDetail(code, message, originalMessage, originalMessageTemplate, messageArguments);
     }
 
@@ -94,10 +99,11 @@ public class ErrorDetail {
      * Error code.
      *
      * @return error code
+     * @see com.oracle.helidon.oci.errorcode.ErrorCode#create(io.helidon.http.Status, ErrorDetail)
      */
     @JsonProperty(CODE)
     @JsonbProperty(CODE)
-    public ErrorCode getErrorCode() {
+    public String getErrorCode() {
         return errorCode;
     }
 
