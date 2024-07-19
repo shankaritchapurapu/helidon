@@ -65,8 +65,18 @@
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-request-id</artifactId>
+                <groupId>com.oracle.helidon.oci.common.requestid</groupId>
+                <artifactId>helidon-oci-common-request-id</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci.common.requestid</groupId>
+                <artifactId>helidon-oci-common-request-id-webserver</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci.common.requestid</groupId>
+                <artifactId>helidon-oci-common-request-id-microprofile</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>

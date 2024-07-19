@@ -28,7 +28,7 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
-import static com.oracle.helidon.oci.requestid.OciRequestId.OCI_REQUEST_ID;
+import static com.oracle.helidon.oci.common.requestid.OciRequestId.OCI_REQUEST_ID;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;

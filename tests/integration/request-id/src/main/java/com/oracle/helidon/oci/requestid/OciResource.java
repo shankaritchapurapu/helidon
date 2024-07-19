@@ -28,7 +28,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
 
-import static com.oracle.helidon.oci.requestid.OciRequestId.OCI_REQUEST_ID;
+import static com.oracle.helidon.oci.common.requestid.OciRequestId.OCI_REQUEST_ID;
 
 @Path("/oci")
 public class OciResource {

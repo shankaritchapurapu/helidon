@@ -9,8 +9,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.oracle.helidon.oci</groupId>
-        <artifactId>helidon-oci-integration-tests</artifactId>
+        <groupId>com.oracle.helidon.oci.tests.integration</groupId>
+        <artifactId>helidon-oci-tests-integration</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -20,6 +20,11 @@
     <name>OCI Dependencies Test</name>
     <packaging>pom</packaging>
     <description>These ensure that downstream usages of our ${basedir}/dependencies/pom.xml will work properly</description>
+
+    <properties>
+        <!-- Build service property to skip publishing to repo -->
+        <skipPublish>true</skipPublish>
+    </properties>
 
     <build>
         <plugins>

@@ -16,8 +16,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-request-id</artifactId>
+            <groupId>com.oracle.helidon.oci.common.requestid</groupId>
+            <artifactId>helidon-oci-common-request-id</artifactId>
         </dependency>
         <dependency>
             <groupId>com.oracle.helidon.oci</groupId>

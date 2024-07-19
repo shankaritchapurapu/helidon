@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright (c) 2024 Oracle and/or its affiliates.
+    Copyright (c) 2023, 2024 Oracle and/or its affiliates.
 
 -->
 
@@ -20,7 +20,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>Helidon OCI Pegasus Native Integrations Project</name>
+    <name>Helidon OCI Project</name>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
