@@ -16,7 +16,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>helidon-oci-dependencies-test</artifactId>
+    <artifactId>helidon-oci-tests-integration-dependencies</artifactId>
     <name>OCI Dependencies Test</name>
     <packaging>pom</packaging>
     <description>These ensure that downstream usages of our ${basedir}/dependencies/pom.xml will work properly</description>

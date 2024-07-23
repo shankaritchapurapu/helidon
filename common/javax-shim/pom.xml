@@ -3,16 +3,16 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>com.oracle.helidon.oci</groupId>
+        <groupId>com.oracle.helidon.oci.common</groupId>
         <artifactId>helidon-oci-common-project</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>helidon-oci-javax-jaxrs-shim</artifactId>
+    <artifactId>helidon-oci-common-javax-shim</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Helidon Javax JAX-RS shim layer</name>
+    <name>Helidon Javax shim layer for modules like JAX-RS</name>
 
     <properties>
     </properties>

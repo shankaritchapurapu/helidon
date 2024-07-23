@@ -16,7 +16,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>helidon-oci-request-id-test</artifactId>
+    <artifactId>helidon-oci-tests-integration-request-id</artifactId>
     <name>Integration Test: Request ID</name>
 
     <properties>

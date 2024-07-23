@@ -10,7 +10,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>helidon-oci-t2-metrics-test</artifactId>
+    <artifactId>helidon-oci-tests-integration-t2-metrics</artifactId>
     <name>Integration Test: T2 Metrics</name>
 
     <properties>
@@ -25,8 +25,8 @@
             <artifactId>metrics-module</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-javax-jaxrs-shim</artifactId>
+            <groupId>com.oracle.helidon.oci.common</groupId>
+            <artifactId>helidon-oci-common-javax-shim</artifactId>
         </dependency>
         <dependency>
             <groupId>com.oracle.pic.telemetry.commons</groupId>

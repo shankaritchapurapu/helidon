@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-
     Copyright (c) 2023, 2024 Oracle and/or its affiliates.
-
 -->
 
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.oracle.helidon.oci</groupId>
@@ -59,7 +57,6 @@
         <module>dependencies</module>
         <module>common</module>
         <module>repackaged-oci</module>
-        <module>identity</module>
         <module>metrics</module>
         <module>secret-service</module>
         <module>splat</module>
@@ -196,8 +193,8 @@
                                     <bannedDependencies>
                                         <searchTransitive>true</searchTransitive>
                                         <excludes>
-<!--                                            <exclude>bc-fips</exclude>-->
-<!--                                            <exclude>bcpkix-fips</exclude>-->
+                                            <!--                                            <exclude>bc-fips</exclude>-->
+                                            <!--                                            <exclude>bcpkix-fips</exclude>-->
                                             <exclude>io.dropwizard</exclude>
                                             <exclude>com.oracle.pic.commons:service-core</exclude>
                                             <exclude>junit</exclude>
@@ -221,9 +218,9 @@
                                         </scopes>
                                         <findAllDuplicates>true</findAllDuplicates>
                                         <ignoreWhenIdentical>true</ignoreWhenIdentical>
-<!--                                        <ignoreClasses>-->
-<!--                                            <ignoreClass>com.oracle.pic.identity.authentication.**</ignoreClass>-->
-<!--                                        </ignoreClasses>-->
+                                        <!--                                        <ignoreClasses>-->
+                                        <!--                                            <ignoreClass>com.oracle.pic.identity.authentication.**</ignoreClass>-->
+                                        <!--                                        </ignoreClasses>-->
                                     </banDuplicateClasses>
                                 </rules>
                             </configuration>

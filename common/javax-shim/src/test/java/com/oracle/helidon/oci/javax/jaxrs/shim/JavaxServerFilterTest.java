@@ -21,6 +21,7 @@ import java.io.IOException;
 import io.helidon.microprofile.testing.junit5.AddBean;
 import io.helidon.microprofile.testing.junit5.HelidonTest;
 
+import com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaServerFilter;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;

@@ -23,7 +23,6 @@
 
     <modules>
         <module>dependencies</module>
-        <module>identity</module>
         <module>request-id</module>
         <module>swagger-maven-plugin</module>
         <module>t2-metrics</module>

@@ -30,28 +30,23 @@
         <dependencies>
             <!-- Helidon OCI artifacts -->
             <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-javax-jaxrs-shim</artifactId>
+                <groupId>com.oracle.helidon.oci.common</groupId>
+                <artifactId>helidon-oci-common-javax-shim</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci.error.code</groupId>
-                <artifactId>helidon-oci-error-code</artifactId>
+                <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
+                <artifactId>helidon-oci-common-error-code</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci.error.code</groupId>
-                <artifactId>helidon-oci-error-code-microprofile</artifactId>
+                <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
+                <artifactId>helidon-oci-common-error-code-microprofile</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci.error.code</groupId>
-                <artifactId>helidon-oci-error-code-webserver</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-identity</artifactId>
+                <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
+                <artifactId>helidon-oci-common-error-code-webserver</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
@@ -93,27 +88,7 @@
             <!-- Helidon OCI repackaged artifacts -->
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-authentication-client</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-authproxy-filter</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-repackaged-oci-vault-java-sdk</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-vault-user-java-client</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>

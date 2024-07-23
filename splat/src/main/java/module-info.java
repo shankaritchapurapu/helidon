@@ -18,7 +18,7 @@
  * Helidon support for oci-splat.
  */
 module com.oracle.helidon.oci.splat {
-    requires helidon.oci.javax.shim;
+    requires helidon.oci.common.javax.shim;
 
     requires java.logging;
 

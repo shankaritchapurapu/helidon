@@ -54,8 +54,8 @@
             <artifactId>helidon-integrations-oci</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-javax-jaxrs-shim</artifactId>
+            <groupId>com.oracle.helidon.oci.common</groupId>
+            <artifactId>helidon-oci-common-javax-shim</artifactId>
         </dependency>
         <dependency>
             <groupId>com.oracle.helidon.oci</groupId>

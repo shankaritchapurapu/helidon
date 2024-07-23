@@ -31,7 +31,7 @@ import io.helidon.service.registry.GlobalServiceRegistry;
 
 import io.helidon.webserver.http.ServerRequest;
 
-import com.oracle.helidon.oci.javax.jaxrs.shim.JakartaServerFilter;
+import com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaServerFilter;
 import com.oracle.pic.commons.util.Region;
 import com.oracle.pic.platform.splat.sdk.config.SplatMtlsFilterConfig;
 

@@ -10,7 +10,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>helidon-oci-tests-error-code-jsonb</artifactId>
+    <artifactId>helidon-oci-tests-integration-error-code-jsonb</artifactId>
     <name>Integration Test: Error Code - JSON-B</name>
 
     <properties>
@@ -20,12 +20,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.oracle.helidon.oci.error.code</groupId>
-            <artifactId>helidon-oci-error-code</artifactId>
+            <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
+            <artifactId>helidon-oci-common-error-code</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.helidon.oci.error.code</groupId>
-            <artifactId>helidon-oci-error-code-microprofile</artifactId>
+            <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
+            <artifactId>helidon-oci-common-error-code-microprofile</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.microprofile.server</groupId>

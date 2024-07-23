@@ -18,6 +18,7 @@ package com.oracle.helidon.oci.javax.jaxrs.shim;
 
 import java.io.IOException;
 
+import com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaServerFilter;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.Assertions;
