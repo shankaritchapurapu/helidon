@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-
     Copyright (c) 2024 Oracle and/or its affiliates.
-
 -->
 
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -18,7 +16,7 @@
     <artifactId>helidon-oci-common-error-code-microprofile</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>Error Code MicroProfile</name>
+    <name>Helidon OCI Common Error Code MicroProfile</name>
     <description>Integration with Jersey to provide correct mapping of exceptions, and with REST Client for client calls.
     </description>
 

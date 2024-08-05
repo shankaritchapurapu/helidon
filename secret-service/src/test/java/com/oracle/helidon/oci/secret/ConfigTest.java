@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Oracle and/or its affiliates.
+ */
+
 package com.oracle.helidon.oci.secret;
 
 import java.io.StringReader;

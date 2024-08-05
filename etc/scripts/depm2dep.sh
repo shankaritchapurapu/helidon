@@ -1,3 +1,7 @@
+#
+# Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+#
+
 #!awk -f
 #
 # Extracts the <dependencyManagement> section out of a pom file and

@@ -1,22 +1,24 @@
 /*
  * Copyright (c) 2024 Oracle and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 package com.oracle.helidon.oci.common.javax.jaxrs.shim;
 
+/**
+ *
+ */
 public class JaxRsShim {
+
+    private JaxRsShim() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
+    /**
+     *
+     * @param <T>       entity Java type.
+     * @param javaxEntity entity data
+     * @return entity instance
+     */
     public static <T> jakarta.ws.rs.client.Entity<T> toJakarta(javax.ws.rs.client.Entity<T> javaxEntity) {
         T payload = javaxEntity.getEntity();
         javax.ws.rs.core.Variant variant = javaxEntity.getVariant();
@@ -28,6 +30,12 @@ public class JaxRsShim {
         return jakarta.ws.rs.client.Entity.entity(payload, jakartaVariant);
     }
 
+    /**
+     *
+     * @param <T>       entity Java type.
+     * @param jakartaEntity entity data
+     * @return entity instance
+     */
     public static <T> javax.ws.rs.client.Entity<T> toJavax(jakarta.ws.rs.client.Entity<T> jakartaEntity) {
         T payload = jakartaEntity.getEntity();
         jakarta.ws.rs.core.Variant variant = jakartaEntity.getVariant();
@@ -39,10 +47,20 @@ public class JaxRsShim {
         return javax.ws.rs.client.Entity.entity(payload, jakartaVariant);
     }
 
+    /**
+     *
+     * @param in entity tag
+     * @return entity tag
+     */
     public static jakarta.ws.rs.core.EntityTag toJakarta(javax.ws.rs.core.EntityTag in) {
         return new jakarta.ws.rs.core.EntityTag(in.getValue(), in.isWeak());
     }
 
+    /**
+     *
+     * @param in entity tag
+     * @return entity tag
+     */
     public static javax.ws.rs.core.EntityTag toJavax(jakarta.ws.rs.core.EntityTag in) {
         return new javax.ws.rs.core.EntityTag(in.getValue(), in.isWeak());
     }

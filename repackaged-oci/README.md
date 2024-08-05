@@ -3,6 +3,7 @@
 These are all repackaged OCI library modules.
 
 Many of the internal common libraries have what the Helidon team would label as "bad dependencies". These include:
+
 * Dropwizard dependencies.
 * Servlet dependencies.
 * Deprecated/legacy library dependencies (e.g., jsr305).
@@ -10,7 +11,6 @@ Many of the internal common libraries have what the Helidon team would label as 
 
 The Helidon team is providing repacked libraries here to compensate for this temporarily while we work with these teams to help
 fix these libraries at the source.
-
 
 ## Disclaimer
 

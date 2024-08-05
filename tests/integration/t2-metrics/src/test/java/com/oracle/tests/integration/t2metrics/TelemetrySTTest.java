@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Oracle and/or its affiliates.
+ */
+
 package com.oracle.tests.integration.t2metrics;
 
 import java.time.Instant;

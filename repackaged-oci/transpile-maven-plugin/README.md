@@ -24,7 +24,9 @@ and all references for all the repackaged classes inside aligns with new package
     </configuration>
 </plugin>
 ```
+
 Moves classes:
+
 ```shell
 com                         ->     com                       
 └── from                    ->     └── to                  
@@ -33,7 +35,9 @@ com                         ->     com
         ├── ClassB.java     ->             ├── ClassB.java   
         └── ClassC.java     ->             └── ClassC.java    
 ```
+
 And augments bytecode:
+
 ```diff
 -package com.from.pkg;
 +package com.to.pkg;

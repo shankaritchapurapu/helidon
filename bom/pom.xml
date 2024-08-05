@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-
     Copyright (c) 2023, 2024 Oracle and/or its affiliates.
-
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -30,11 +28,6 @@
         <dependencies>
             <!-- Helidon OCI artifacts -->
             <dependency>
-                <groupId>com.oracle.helidon.oci.common</groupId>
-                <artifactId>helidon-oci-common-javax-shim</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
                 <artifactId>helidon-oci-common-error-code</artifactId>
                 <version>${helidon.oci.version}</version>
@@ -50,13 +43,8 @@
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-metrics</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-secret-service</artifactId>
+                <groupId>com.oracle.helidon.oci.common</groupId>
+                <artifactId>helidon-oci-common-javax-shim</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
@@ -72,6 +60,16 @@
             <dependency>
                 <groupId>com.oracle.helidon.oci.common.requestid</groupId>
                 <artifactId>helidon-oci-common-request-id-microprofile</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-metrics</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-secret-service</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>

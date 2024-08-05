@@ -1,3 +1,7 @@
+#
+# Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+#
+
 swagger: "2.0"
 info:
   version: 1.0.0
@@ -31,9 +35,9 @@ x-anchors:
         Oracle about a particular request, please provide the request ID.
       type: string
     retry-after: &ref-retry-after
-        type: number
-        format: float
-        description: A decimal number representing the number of seconds the client should wait before polling this endpoint again.
+      type: number
+      format: float
+      description: A decimal number representing the number of seconds the client should wait before polling this endpoint again.
 
 paths:
   /proxyFleets:
@@ -74,11 +78,11 @@ paths:
         default:
           $ref: '#/responses/Error'
       summary: ListProxyFleets
-      tags: [SplatRegistrar]
+      tags: [ SplatRegistrar ]
 
   /regions:
     get:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: |
         Get a list of regions. This is an example of a long comment
         that spans multiple lines. The third line
@@ -109,7 +113,7 @@ paths:
 
   /regions/{instance-id}:
     get:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: Get a region
       operationId: GetRegion
       parameters:
@@ -124,7 +128,7 @@ paths:
 
   /regions/{instance-id}/domains:
     get:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: Get a list of availability domains for region
       operationId: ListAvailabilityDomains
       parameters:
@@ -154,7 +158,7 @@ paths:
 
   /instances:
     get:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: List all instances
       operationId: ListInstances
       responses:
@@ -180,7 +184,7 @@ paths:
         default:
           $ref: '#/responses/Error'
     post:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: Launch a new instance
       operationId: LaunchInstance
       parameters:
@@ -202,7 +206,7 @@ paths:
 
   /instances/{instance-id}:
     get:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: Retrieve an instance
       operationId: GetInstance
       parameters:
@@ -217,7 +221,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
     delete:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: Terminate an instance
       operationId: TerminateInstance
       parameters:
@@ -230,7 +234,7 @@ paths:
 
   /instances/{instance-id}/volumeAttachments:
     get:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: List the volume attachments for an instance
       operationId: ListVolumeAttachments
       parameters:
@@ -259,7 +263,7 @@ paths:
         default:
           $ref: '#/responses/Error'
     post:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: Attach a volume to an instance
       operationId: AttachVolume
       parameters:
@@ -280,26 +284,26 @@ paths:
 
   /instanceConsoleHistories/{instance-id}/data:
     get:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: |
         Gets the actual console history data (not the metadata).
         See [CaptureConsoleHistory] (#captureConsoleHistory)
         for details about using the console history operations.
       operationId: ShowConsoleHistoryData
       parameters:
-      - $ref: '#/parameters/InstanceIdentifierPathParam'
-      - description: Instance id
-        format: int32
-        in: query
-        minimum: 0
-        name: offset
-        type: integer
-      - description: Length of snapshot data to retrieve
-        format: int32
-        in: query
-        minimum: 10240
-        name: length
-        type: integer
+        - $ref: '#/parameters/InstanceIdentifierPathParam'
+        - description: Instance id
+          format: int32
+          in: query
+          minimum: 0
+          name: offset
+          type: integer
+        - description: Length of snapshot data to retrieve
+          format: int32
+          in: query
+          minimum: 10240
+          name: length
+          type: integer
       responses:
         200:
           description: Console history data
@@ -319,7 +323,7 @@ paths:
 
   /void-post-with-arg:
     post:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: exercise the void post(arg) generation path
       operationId: VoidPostWithArg
       parameters:
@@ -336,7 +340,7 @@ paths:
 
   /void-post-with-no-arg:
     post:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: exercise the void post() generation path
       operationId: VoidPostWithNoArg
       responses:
@@ -347,7 +351,7 @@ paths:
 
   /instances/{instance-id}/volumeAttachments/{volume-attachment-id}:
     get:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: Retrieve a volume attachment
       operationId: GetVolumeAttachment
       parameters:
@@ -361,7 +365,7 @@ paths:
         default:
           $ref: '#/responses/Error'
     delete:
-      tags: ['compute']
+      tags: [ 'compute' ]
       description: Detach a volume attachment
       operationId: DetachVolume
       parameters:
@@ -376,7 +380,7 @@ paths:
   /nonJsonBody/binaryString:
     put:
       tags:
-      - "compute"
+        - "compute"
       operationId: "PutBinaryString"
       consumes:
         - "application/octet-stream"
@@ -396,7 +400,7 @@ paths:
   /nonJsonBody/binaryStringWithLargeObject:
     put:
       tags:
-      - "compute"
+        - "compute"
       operationId: "PutLargeBinaryString"
       x-obmcs-large-response-payload: true
       consumes:
@@ -416,10 +420,10 @@ paths:
   /nonJsonReturns/binaryString:
     get:
       tags:
-      - "compute"
+        - "compute"
       operationId: "GetBinaryString"
       produces:
-      - "application/octet-stream"
+        - "application/octet-stream"
       responses:
         200:
           schema:
@@ -429,10 +433,10 @@ paths:
   /nonJsonReturns/binaryStringWithLargeObject:
     get:
       tags:
-      - "compute"
+        - "compute"
       operationId: "GetBinaryStringWithLargeObject"
       produces:
-      - "application/octet-stream"
+        - "application/octet-stream"
       x-obmcs-large-response-payload: true
       responses:
         200:
@@ -442,7 +446,7 @@ paths:
 
   /things:
     get:
-      tags: ['things']
+      tags: [ 'things' ]
       description: Test
       operationId: ListThings
       responses:
@@ -458,7 +462,7 @@ paths:
             $ref: '#/definitions/Error'
 
     put:
-      tags: ['things']
+      tags: [ 'things' ]
       description: Update a thing
       operationId: UpdateThing
       parameters:
@@ -479,7 +483,7 @@ paths:
 
   /things/empty-body-put:
     put:
-      tags: ['things']
+      tags: [ 'things' ]
       description: Update a thing
       operationId: UpdateThingEmptyInput
       responses:
@@ -494,13 +498,13 @@ paths:
 
   /things/empty-body-and-response-put:
     put:
-      tags: ['things']
+      tags: [ 'things' ]
       description: Update a thing
       operationId: UpdateThingEmptyInputAndOutput
 
   /things/empty-body-post:
     post:
-      tags: ['things']
+      tags: [ 'things' ]
       operationId: createThingWithoutBody
       responses:
         200:
@@ -510,7 +514,7 @@ paths:
 
   /things/empty-body-post-without-a-response:
     post:
-      tags: ['things']
+      tags: [ 'things' ]
       operationId: createThingWithoutBodyOrResponse
       responses:
         200:
@@ -518,7 +522,7 @@ paths:
 
   /things/empty-body-patch-without-a-response:
     patch:
-      tags: ['things']
+      tags: [ 'things' ]
       operationId: patchThingWithoutBodyOrResponse
       responses:
         200:
@@ -526,7 +530,7 @@ paths:
 
   /things/empty-body-patch:
     patch:
-      tags: ['things']
+      tags: [ 'things' ]
       operationId: patchThingWithoutBody
       responses:
         200:
@@ -536,7 +540,7 @@ paths:
 
   /things/patch-without-a-response:
     patch:
-      tags: ['things']
+      tags: [ 'things' ]
       operationId: patchThingWithoutResponse
       parameters:
         - name: UpdateThingRequest
@@ -550,7 +554,7 @@ paths:
 
   /things/return-array-post:
     post:
-      tags: ['things']
+      tags: [ 'things' ]
       description: post call that returns an array of things
       operationId: ReturnArrayPost
       parameters:
@@ -575,7 +579,7 @@ paths:
 
   /items/{id}:
     head:
-      tags: ['things']
+      tags: [ 'things' ]
       description: Terminate an instance
       operationId: getItemHeaderById
       parameters:
@@ -588,7 +592,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
     get:
-      tags: ['things']
+      tags: [ 'things' ]
       description: Terminate an instance
       operationId: getItemById
       produces: multipart/form-data
@@ -605,7 +609,7 @@ paths:
           schema:
             $ref: '#/definitions/Error'
     put:
-      tags: ['things']
+      tags: [ 'things' ]
       description: Update a thing
       operationId: putItemById
       consumes: multipart/form-data
@@ -627,7 +631,7 @@ paths:
 
   /things/patch:
     patch:
-      tags: ['things']
+      tags: [ 'things' ]
       operationId: patchThing
       parameters:
         - name: UpdateThingRequest
@@ -643,7 +647,7 @@ paths:
 
   /potatoes:
     post:
-      tags: ['Potato']
+      tags: [ 'Potato' ]
       operationId: AddPotatoes
       parameters:
         - name: PotatoList
@@ -662,7 +666,7 @@ paths:
               $ref: '#/definitions/Potato'
   /potatoes/{potato-id}:
     delete:
-      tags: ['Potato']
+      tags: [ 'Potato' ]
       operationId: DeletePotato
       parameters:
         - $ref: '#/parameters/PotatoIdPathParam'
@@ -672,7 +676,7 @@ paths:
             $ref: '#/definitions/Potato'
   /tomatoes/{tomato-id}:
     get:
-      tags: ['Tomato']
+      tags: [ 'Tomato' ]
       operationId: GetTomato
       parameters:
         - $ref: '#/parameters/TomatoIdPathParam'
@@ -683,7 +687,7 @@ paths:
 
   /simpleRobots:
     get:
-      tags: ['simpleRobot']
+      tags: [ 'simpleRobot' ]
       x-obmcs-splat:
         # specify the routing strategy
         # strategy: route-to-any-ad OR route-to-inferred-ad
@@ -692,7 +696,7 @@ paths:
         # E.g. how to infer AD from the request body https://bitbucket.oci.oraclecorp.com/projects/CIM/repos/instance-agent-service/browse/instance-agent-service-spec/specs/service-api.yaml#63
         routing:
           strategy: route-to-any-ad
-        serviceList: ['robots-control-plane-api']
+        serviceList: [ 'robots-control-plane-api' ]
         # Maximum number of invocation attempts that should be made to the downstream service.
         # Any non-5xx response ends the attempts.
         maximumAttemptCount: 3
@@ -706,8 +710,8 @@ paths:
         - $ref: '#/parameters/DisplayNameQueryParam'
         - $ref: '#/parameters/SortOrderQueryParam'
         - $ref: '#/parameters/SortByQueryParam'
-# It is recommended to use the UDX ticket number as group name to enable/disable the feature.
-# The UDX ticket number used here is only an example.
+        # It is recommended to use the UDX ticket number as group name to enable/disable the feature.
+        # The UDX ticket number used here is only an example.
         # Add the new feature that you want to enable/disable here. Similar login applies to methods as well.
         # - $ref: '#/parameters/NewParameterExample'
         - $ref: '#/parameters/OpcRequestIdHeader'
@@ -735,7 +739,7 @@ paths:
 
   /fileStorage/{multi-segment-path}:
     get:
-      tags: ["fileStorage"]
+      tags: [ "fileStorage" ]
       operationId: GetFileObject
       parameters:
         - $ref: '#/parameters/MultiSegmentPathParam'
@@ -813,11 +817,11 @@ definitions:
       location:
         type: string
         description: the location of the fleet, SUBSTRATE/OVERLAY
-        enum: [SUBSTRATE, OVERLAY]
+        enum: [ SUBSTRATE, OVERLAY ]
       lifecycleState:
         type: string
         description: the status of the fleet, ACTIVE/DELETED
-        enum: [ACTIVE, DELETED]
+        enum: [ ACTIVE, DELETED ]
       services:
         type: array
         description: an array of service names on the fleet
@@ -830,9 +834,9 @@ definitions:
         description: The colors found on this tomato.
         items:
           enum:
-          - RED
-          - GREEN
-          - YELLOW
+            - RED
+            - GREEN
+            - YELLOW
           type: string
         type: array
         maxItems: 3
@@ -841,11 +845,11 @@ definitions:
         description: The flavor profile for this tomato.
         items:
           enum:
-          - SALTY
-          - SPICY
-          - SWEET
-          - BITTER
-          - SOUR
+            - SALTY
+            - SPICY
+            - SWEET
+            - BITTER
+            - SOUR
           type: string
         type: array
         maxItems: 5
@@ -1111,24 +1115,24 @@ definitions:
     discriminator: childType
     properties:
       childType:
-       type: string
-       default: 'TypeA'
+        type: string
+        default: 'TypeA'
 
   ChildTypeA:
     allOf:
-    - $ref: '#/definitions/ParentWithDefault'
-    - discriminator: 'TypeA'
-      properties:
-        childAField:
-          type: string
+      - $ref: '#/definitions/ParentWithDefault'
+      - discriminator: 'TypeA'
+        properties:
+          childAField:
+            type: string
 
   ChildTypeB:
     allOf:
-    - $ref: '#/definitions/ParentWithDefault'
-    - discriminator: 'TypeB'
-      properties:
-        childBField:
-          type: string
+      - $ref: '#/definitions/ParentWithDefault'
+      - discriminator: 'TypeB'
+        properties:
+          childBField:
+            type: string
 
   Error:
     required:

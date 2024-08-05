@@ -1,8 +1,11 @@
-<ruleset comparisonMethod="maven"
-         xmlns="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0 https://www.mojohaus.org/versions-maven-plugin/xsd/rule-2.0.0.xsd">
+<!--
+    Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+-->
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        comparisonMethod="maven" xmlns="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0"
+        xsi:schemaLocation="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0 https://www.mojohaus.org/versions-maven-plugin/xsd/rule-2.0.0.xsd">
     <ignoreVersions>
-<!--        <ignoreVersion type="regex">.*[-_\.](|alpha|Alpha|ALPHA|b|beta|Beta|BETA|rc|RC|M|EA|dev|DEV|snapshot|SNAPSHOT)[-_\.]?[0-9].[0-9]</ignoreVersion>-->
+        <!--        <ignoreVersion type="regex">.*[-_\.](|alpha|Alpha|ALPHA|b|beta|Beta|BETA|rc|RC|M|EA|dev|DEV|snapshot|SNAPSHOT)[-_\.]?[0-9].[0-9]</ignoreVersion>-->
         <ignoreVersion type="regex">.*experimental.*</ignoreVersion>
         <ignoreVersion type="regex">.*uptake.*</ignoreVersion>
     </ignoreVersions>

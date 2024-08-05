@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+ */
+
 package com.oracle.helidon.oci.maven.swagger;
 
 import java.io.File;
@@ -33,8 +37,8 @@ import org.apache.maven.project.MavenProject;
 public class OracleSwaggerMojo extends AbstractMojo {
     private static final String DUMMY_TEST_DIR =
             "dummy_tests"; // not used, but needed by SDK codegen
-    private static final String DEFAULT_LOMBOK_SLF4J_LOGGER_NAME =
-            "log"; // default name used by lombok, which is not used by sdk codegen
+    private static final String DEFAULT_LOGGER_NAME =
+            "log"; // default name used for logging, which is not used by sdk codegen
     private static final String DEFAULT_TRUE = Boolean.TRUE.toString();
     private static final String DEFAULT_FALSE = Boolean.FALSE.toString();
 
@@ -56,14 +60,14 @@ public class OracleSwaggerMojo extends AbstractMojo {
     private String outputDir;
 
     /**
-     * The package name to prefix all generated classes with, ex, "com.oracle.oci.myservice"
+     * The package name to prefix all generated classes with, ex, "com.oracle.oci.myservice".
      */
     @Parameter(required = true)
     @Setter
     private String basePackage;
 
     /**
-     * A map of classes and the import that should be used for that class
+     * A map of classes and the import that should be used for that class.
      */
     @Parameter(name = "importMappings")
     @Setter
@@ -76,7 +80,9 @@ public class OracleSwaggerMojo extends AbstractMojo {
     /**
      * Additional properties to pass forward to the SDK code generator.
      */
-    @Parameter @Setter private Map<String, Object> additionalProperties;
+    @Parameter
+    @Setter
+    private Map<String, Object> additionalProperties;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -118,6 +124,61 @@ public class OracleSwaggerMojo extends AbstractMojo {
         }
     }
 
+    /**
+     * In Swagger, you can specify <importMappings/> with multiple <importMapping/> child nodes.
+     * Generally, each importMapping should be a single map from Swagger class to external model class,
+     * but you can specify multiple maps separated by commas. Example:
+     *
+     * <importMappings>
+     *     <importMapping>
+     *         ClassA=com.oracle.pic.ClassA
+     *     </importMapping>
+     *     <importMapping>
+     *         ClassB=com.oracle.pic.ClassB,ClassC=com.oracle.pic.ClassC,ClassD=com.oracle.pic.ClassD
+     *     </importMapping>
+     * </importMappings>
+     *
+     * @return Map Swagger class to external model class
+     */
+    public Map<String, String> createMapFromImportMappings() {
+        Map<String, String> ret = new HashMap<>();
+        for (String importMapping : importMappings) {
+            for (Map.Entry<String, String> entry
+                    : createMapFromKeyValuePairs(importMapping).entrySet()) {
+                ret.put(entry.getKey().trim(), entry.getValue().trim());
+            }
+        }
+        return ret;
+    }
+
+    // even if client generation is disabled, a bunch of stuff gets generated that we don't want.
+    private static void deleteExtras(String basePath) throws MojoExecutionException {
+        String internalFolder = basePath + File.separatorChar + "internal";
+        String requestsFolder = basePath + File.separatorChar + "requests";
+        String responsesFolder = basePath + File.separatorChar + "responses";
+        try {
+            FileUtils.deleteDirectory(new File(internalFolder));
+            FileUtils.deleteDirectory(new File(requestsFolder));
+            FileUtils.deleteDirectory(new File(responsesFolder));
+            new File(basePath, "SdkClientsMetadata.java").delete();
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to remove extra classes", e);
+        }
+    }
+
+    private static Map<String, String> createMapFromKeyValuePairs(String commaSeparatedKVPairs) {
+        final List<Pair<String, String>> pairs =
+                OptionUtils.parseCommaSeparatedTuples(commaSeparatedKVPairs);
+
+        Map<String, String> result = new HashMap<>();
+
+        for (Pair<String, String> pair : pairs) {
+            result.put(pair.getLeft(), pair.getRight());
+        }
+
+        return result;
+    }
+
     private void setAdditionalProperties() {
         if (!additionalProperties.containsKey(OracleJavaSdkCodegen.OPTION_ANNOTATION_PACKAGE)) {
             additionalProperties.put(OracleJavaSdkCodegen.OPTION_ANNOTATION_PACKAGE, "jakarta");
@@ -152,7 +213,7 @@ public class OracleSwaggerMojo extends AbstractMojo {
 
         // assuming most teams will not override the lombok default name, so configure SDK to use the default logger name
         modelAdditionalProperties.putIfAbsent(
-                OracleJavaSdkCodegen.OPTION_LOGGER_NAME, DEFAULT_LOMBOK_SLF4J_LOGGER_NAME);
+                OracleJavaSdkCodegen.OPTION_LOGGER_NAME, DEFAULT_LOGGER_NAME);
 
         // unless told otherwise, use case-insensitive enums
         modelAdditionalProperties.putIfAbsent(
@@ -168,21 +229,6 @@ public class OracleSwaggerMojo extends AbstractMojo {
                         + File.separatorChar
                         + basePackage.replace('.', File.separatorChar);
         deleteExtras(generatedPath);
-    }
-
-    // even if client generation is disabled, a bunch of stuff gets generated that we don't want.
-    private static void deleteExtras(String basePath) throws MojoExecutionException {
-        String internalFolder = basePath + File.separatorChar + "internal";
-        String requestsFolder = basePath + File.separatorChar + "requests";
-        String responsesFolder = basePath + File.separatorChar + "responses";
-        try {
-            FileUtils.deleteDirectory(new File(internalFolder));
-            FileUtils.deleteDirectory(new File(requestsFolder));
-            FileUtils.deleteDirectory(new File(responsesFolder));
-            new File(basePath, "SdkClientsMetadata.java").delete();
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to remove extra classes", e);
-        }
     }
 
     private void generateApis() throws MojoExecutionException, MojoFailureException {
@@ -225,42 +271,5 @@ public class OracleSwaggerMojo extends AbstractMojo {
         } catch (AssertionError e) {
             throw new MojoFailureException("Failed to parse Swagger spec from: " + specPath, e);
         }
-    }
-
-    /**
-     * In Swagger, you can specify <importMappings> with multiple <importMapping> child nodes.
-     * Generally, each importMapping should be a single map from Swagger class to external model class,
-     * but you can specify multiple maps separated by commas. Example:
-     * <importMappings>
-     *     <importMapping>
-     *         ClassA=com.oracle.pic.ClassA
-     *     </importMapping>
-     *     <importMapping>
-     *         ClassB=com.oracle.pic.ClassB,ClassC=com.oracle.pic.ClassC,ClassD=com.oracle.pic.ClassD
-     *     </importMapping>
-     * </importMappings>
-     */
-    public Map<String, String> createMapFromImportMappings() {
-        Map<String, String> ret = new HashMap<>();
-        for (String importMapping : importMappings) {
-            for (Map.Entry<String, String> entry :
-                    createMapFromKeyValuePairs(importMapping).entrySet()) {
-                ret.put(entry.getKey().trim(), entry.getValue().trim());
-            }
-        }
-        return ret;
-    }
-
-    private static Map<String, String> createMapFromKeyValuePairs(String commaSeparatedKVPairs) {
-        final List<Pair<String, String>> pairs =
-                OptionUtils.parseCommaSeparatedTuples(commaSeparatedKVPairs);
-
-        Map<String, String> result = new HashMap<>();
-
-        for (Pair<String, String> pair : pairs) {
-            result.put(pair.getLeft(), pair.getRight());
-        }
-
-        return result;
     }
 }

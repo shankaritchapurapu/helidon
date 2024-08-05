@@ -1,17 +1,5 @@
 /*
  * Copyright (c) 2024 Oracle and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 package com.oracle.helidon.oci.metrics;
 
@@ -22,10 +10,16 @@ import com.oracle.pic.commons.util.Region;
 /**
  * Maps region to T2 metrics compartment ID.
  *
- * @see <a href="https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/metrics-overlay/browse/public-telemetry-reporter/src/main/java/com/oracle/pic/telemetry/commons/metrics/TelemetryReporterBuilder.java#169-189">T2 logic</a>
- * @see <a href="https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEVCENTRAL&title=Overlay+Telemetry+%2528T2%2529+Basics#OverlayTelemetry(T2)Basics-T2CompartmentIDbyRealm">T2 metrics compartments</a></a>
+ * @see
+ * <a href="https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/metrics-overlay/browse/public-telemetry-reporter/src/main/java/com/oracle/pic/telemetry/commons/metrics/TelemetryReporterBuilder.java#169-189">T2 logic</a>
+ * @see
+ * <a href="https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEVCENTRAL&title=Overlay+Telemetry+%2528T2%2529+Basics#OverlayTelemetry(T2)Basics-T2CompartmentIDbyRealm">T2 metrics compartments</a>
  */
 class MetricsCompartmentHelper {
+
+    private MetricsCompartmentHelper() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
 
     private static final Map<String, String> REALM_TO_METRICS_COMPARTMENT = Map.of(
             // "region1" is a convenience 'pseudo-realm" name for this class only.

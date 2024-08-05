@@ -118,20 +118,20 @@ public enum ErrorCodes implements ErrorCode {
      * External server unreachable (Service Unavailable).
      */
     ExternalServerUnreachable(SERVICE_UNAVAILABLE_503,
-                              "A connection with an external system needed to fulfill the " +
-                                      "request could not be established."),
+                              "A connection with an external system needed to fulfill the "
+                                      + "request could not be established."),
     /**
      * External server timeout (Service Unavailable).
      */
     ExternalServerTimeout(SERVICE_UNAVAILABLE_503,
-                          "A connection with an external system needed to fulfill the " +
-                                  "request timed out before a response was received."),
+                          "A connection with an external system needed to fulfill the "
+                                  + "request timed out before a response was received."),
     /**
      * External server invalid response (Service Unavailable).
      */
     ExternalServerInvalidResponse(SERVICE_UNAVAILABLE_503,
-                                  "A connection with an external system needed to fulfill the " +
-                                          "request resulted in an unacceptable response."),
+                                  "A connection with an external system needed to fulfill the "
+                                          + "request resulted in an unacceptable response."),
     /**
      * Unprocessable entity (Unprocessable Content).
      */

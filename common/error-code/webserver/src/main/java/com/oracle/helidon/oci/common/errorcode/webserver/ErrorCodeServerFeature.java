@@ -13,7 +13,14 @@ import io.helidon.webserver.spi.ServerFeature;
 
 import com.oracle.helidon.oci.common.errorcode.RenderableException;
 
+/**
+ * Provide a way to support OCI error codes with Helidon server configuration.
+ * See {@link io.helidon.webserver.spi.ServerFeature}.
+ */
 public class ErrorCodeServerFeature implements ServerFeature {
+    /**
+     * Default feature name.
+     */
     public static final String TYPE = "oci-error-code";
     private final String name;
 
@@ -21,10 +28,22 @@ public class ErrorCodeServerFeature implements ServerFeature {
         this.name = name;
     }
 
+    /**
+     * Create a new instance with provided configuration.
+     *
+     * @param config of the feature
+     * @param name of the feature
+     * @return new instance
+     */
     public static ErrorCodeServerFeature create(Config config, String name) {
         return new ErrorCodeServerFeature(name);
     }
 
+    /**
+     * Create a new instance with default configuration.
+     *
+     * @return new instance
+     */
     public static ServerFeature create() {
         return create(Config.empty(), TYPE);
     }

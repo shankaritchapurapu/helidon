@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<!--
+    Copyright (c) 2024 Oracle and/or its affiliates.
+-->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.oracle.helidon.oci</groupId>
@@ -13,7 +17,7 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Repackaged: OCI sdk-oci-internals-commons</name>
+    <name>Helidon OCI Repackaged OCI sdk-oci-internals-commons</name>
 
     <dependencies>
         <dependency>
@@ -60,8 +64,12 @@
 
                     <!-- Rest can be transpiled(truly repackaged) -->
                     <mapping>
-                        <map>com.oracle.oci.internals.sdk.http.internal.ExplicitlySetFilter:com.oracle.bmc.http.internal.ExplicitlySetFilter</map>
-                        <map>com.oracle.oci.internals.sdk.http.internal.ExplicitlySetBmcModel:com.oracle.bmc.http.internal.ExplicitlySetBmcModel</map>
+                        <map>
+                            com.oracle.oci.internals.sdk.http.internal.ExplicitlySetFilter:com.oracle.bmc.http.internal.ExplicitlySetFilter
+                        </map>
+                        <map>
+                            com.oracle.oci.internals.sdk.http.internal.ExplicitlySetBmcModel:com.oracle.bmc.http.internal.ExplicitlySetBmcModel
+                        </map>
                     </mapping>
                 </configuration>
             </plugin>

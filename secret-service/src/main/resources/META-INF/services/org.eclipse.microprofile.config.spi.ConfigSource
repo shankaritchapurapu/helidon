@@ -1,1 +1,4 @@
+#
+# Copyright (c) 2024 Oracle and/or its affiliates.
+#
 com.oracle.helidon.oci.secret.SecretServiceMpConfigSource

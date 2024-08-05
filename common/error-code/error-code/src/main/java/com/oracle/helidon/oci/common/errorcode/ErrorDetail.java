@@ -63,6 +63,7 @@ public class ErrorDetail {
                                null,
                                null);
     }
+
     /**
      * Create a new instance.
      * This factory method accepts nulls, as it is used by JSON deserializers.
@@ -72,12 +73,13 @@ public class ErrorDetail {
      * @param originalMessage         original message (nullable)
      * @param originalMessageTemplate original message template (nullable)
      * @param messageArguments        message arguments (nullable)
+     * @return error detail for the provided code
      */
     @JsonbCreator
     @JsonCreator
     public static ErrorDetail create(@JsonbProperty(CODE)
                                      @JsonProperty(CODE)
-                                         String code,
+                                     String code,
                                      @JsonbProperty(MESSAGE)
                                      @JsonProperty(MESSAGE)
                                      String message,

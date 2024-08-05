@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-
     Copyright (c) 2024 Oracle and/or its affiliates.
-
 -->
 
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
@@ -48,25 +46,11 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <distributionManagement>
-        <!--        <snapshotRepository>-->
-        <!--            <id>ossrh-snapshots</id>-->
-        <!--            <name>Helidon Snapshot Repository</name>-->
-        <!--            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>-->
-        <!--        </snapshotRepository>-->
-        <!--        <repository>-->
-        <!--            <id>ossrh</id>-->
-        <!--            <name>Helidon Release Repository</name>-->
-        <!--            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
-        <!--        </repository>-->
-    </distributionManagement>
-
     <properties>
         <version.plugin.clean>3.2.0</version.plugin.clean>
         <version.plugin.deploy>3.1.1</version.plugin.deploy>
         <version.plugin.gpg>1.6</version.plugin.gpg>
         <version.plugin.install>3.1.1</version.plugin.install>
-        <!--        <version.plugin.nexus-staging>1.6.13</version.plugin.nexus-staging>-->
         <version.plugin.versions>2.16.1</version.plugin.versions>
     </properties>
 
@@ -93,19 +77,6 @@
                     <artifactId>maven-gpg-plugin</artifactId>
                     <version>${version.plugin.gpg}</version>
                 </plugin>
-                <!--                <plugin>-->
-                <!--                    <groupId>org.sonatype.plugins</groupId>-->
-                <!--                    <artifactId>nexus-staging-maven-plugin</artifactId>-->
-                <!--                    <version>${version.plugin.nexus-staging}</version>-->
-                <!--                    <configuration>-->
-                <!--                        <serverId>ossrh</serverId>-->
-                <!--                        <nexusUrl>https://oss.sonatype.org/</nexusUrl>-->
-                <!--                        <autoReleaseAfterClose>false</autoReleaseAfterClose>-->
-                <!--                        <skipStagingRepositoryClose>true</skipStagingRepositoryClose>-->
-                <!--                        &lt;!&ndash;suppress MavenModelInspection &ndash;&gt;-->
-                <!--                        <skipNexusStagingDeployMojo>${maven.deploy.skip}</skipNexusStagingDeployMojo>-->
-                <!--                    </configuration>-->
-                <!--                </plugin>-->
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
@@ -120,11 +91,6 @@
             <id>release</id>
             <build>
                 <plugins>
-                    <!--                    <plugin>-->
-                    <!--                        <groupId>org.sonatype.plugins</groupId>-->
-                    <!--                        <artifactId>nexus-staging-maven-plugin</artifactId>-->
-                    <!--                        <extensions>true</extensions>-->
-                    <!--                    </plugin>-->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -141,26 +107,5 @@
                 </plugins>
             </build>
         </profile>
-        <!--        <profile>-->
-        <!--            <id>staging</id>-->
-        <!--            <repositories>-->
-        <!--                <repository>-->
-        <!--                    <id>ossrh-staging</id>-->
-        <!--                    <url>https://oss.sonatype.org/content/repositories/staging/</url>-->
-        <!--                    <snapshots>-->
-        <!--                        <enabled>false</enabled>-->
-        <!--                    </snapshots>-->
-        <!--                </repository>-->
-        <!--            </repositories>-->
-        <!--            <pluginRepositories>-->
-        <!--                <pluginRepository>-->
-        <!--                    <id>ossrh-staging</id>-->
-        <!--                    <url>https://oss.sonatype.org/content/repositories/staging/</url>-->
-        <!--                    <snapshots>-->
-        <!--                        <enabled>false</enabled>-->
-        <!--                    </snapshots>-->
-        <!--                </pluginRepository>-->
-        <!--            </pluginRepositories>-->
-        <!--        </profile>-->
     </profiles>
 </project>

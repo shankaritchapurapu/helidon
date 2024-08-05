@@ -1,3 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+-->
+
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -17,7 +22,6 @@
     <properties>
         <helidon.version>4.1.0-SNAPSHOT</helidon.version>
         <!-- Versions for libraries used in build -->
-        <!-- <oci-java-sdk-version>${version.lib.oci}</oci-java-sdk-version>-->
         <oci-java-sdk-version>3.39.0</oci-java-sdk-version>
 
         <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
@@ -65,15 +69,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- see for reference https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/oci-internal-dependency-management/browse/oci-internal-bom/pom.xml -->
-<!--            <dependency>-->
-<!--                <groupId>com.oracle.pic.sfw</groupId>-->
-<!--                <artifactId>oci-internal-bom</artifactId>-->
-<!--                <version>${oci-internal-bom-version}</version>-->
-<!--                <type>pom</type>-->
-<!--                <scope>import</scope>-->
-<!--            </dependency>-->
-
             <!-- overrides from parent io.helidon bom, etc. -->
             <dependency>
                 <groupId>com.oracle.oci.log</groupId>
@@ -235,11 +230,7 @@
                         <groupId>com.google.code.findbugs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
-                    <!-- TODO: file a tix on peg team to not rely on this library -->
-<!--                    <exclusion>-->
-<!--                        <groupId>com.google.http-client</groupId>-->
-<!--                        <artifactId>google-http-client</artifactId>-->
-<!--                    </exclusion>-->
+                    <!-- TODO: file a tix on peg team to not rely on com.google.http-client:google-http-client library -->
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>
                         <artifactId>javax.ws.rs-api</artifactId>
@@ -348,11 +339,7 @@
                         <groupId>com.google.code.findbugs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
-                    <!-- TODO: file a tix on identity team to not rely on this library -->
-<!--                    <exclusion>-->
-<!--                        <groupId>com.google.http-client</groupId>-->
-<!--                        <artifactId>*</artifactId>-->
-<!--                    </exclusion>-->
+                    <!-- TODO: file a tix on identity team to not rely on com.google.http-client library -->
                     <exclusion>
                         <groupId>com.oracle.pic.commons.client</groupId>
                         <artifactId>java-rest-client</artifactId>
@@ -464,11 +451,7 @@
                         <groupId>com.google.code.findbugs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
-                    <!-- TODO: file a tix on sdk team to not rely on this library -->
-                    <!--                    <exclusion>-->
-                    <!--                        <groupId>com.google.http-client</groupId>-->
-                    <!--                        <artifactId>google-http-client</artifactId>-->
-                    <!--                    </exclusion>-->
+                    <!-- TODO: file a tix on sdk team to not rely on com.google.http-client:google-http-client library -->
                     <exclusion>
                         <groupId>org.apache.httpcomponents</groupId>
                         <artifactId>*</artifactId>
@@ -501,11 +484,7 @@
                         <groupId>com.google.code.findbugs</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
-                    <!-- TODO: file a tix on sdk team to not rely on this library -->
-<!--                    <exclusion>-->
-<!--                        <groupId>com.google.http-client</groupId>-->
-<!--                        <artifactId>google-http-client</artifactId>-->
-<!--                    </exclusion>-->
+                    <!-- TODO: file a tix on sdk team to not rely on com.google.http-client:google-http-client library -->
                     <exclusion>
                         <groupId>com.oracle.oci.sdk</groupId>
                         <artifactId>oci-java-sdk-addons-apache</artifactId>

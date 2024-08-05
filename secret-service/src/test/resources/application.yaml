@@ -1,3 +1,7 @@
+#
+# Copyright (c) 2024 Oracle and/or its affiliates.
+#
+
 # Override PKI material normally retrieved by SSv2 config source
 "%test.oci.ssv2/secret/helidon/test-mtls-client/latest": |
   {

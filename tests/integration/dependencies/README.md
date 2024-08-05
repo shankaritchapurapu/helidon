@@ -1,16 +1,21 @@
 # Dependencies Tests
 
 ## Overview
+
 Ensures the integrity of the dependencies from dependency management.
 
 ## Usage
+
 From the top level of the project:
+
 ```agsl
 cat dependencies/pom.xml | etc/scripts/depm2dep.sh
 ```
+
 Then update [pom.xml](pom.xml) with the output.
 
 Also, be sure to update this if a new versioned property is being added to dependency management:
+
 ```xml
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>

@@ -1,17 +1,5 @@
 /*
  * Copyright (c) 2024 Oracle and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 package com.oracle.pic.vault.util;
@@ -25,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
@@ -53,12 +40,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ProxyHttpClientBuilder extends javax.ws.rs.client.ClientBuilder {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProxyHttpClientBuilder.class);
     public static final ObjectMapper DEFAULT_MAPPER;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProxyHttpClientBuilder.class);
     private static final JacksonJsonProvider JACKSON_JSON_PROVIDER;
-    private DynamicSslContextProvider provider;
-    OracleHttpClientConfig oracleHttpClientConfig;
+
+    static {
+        DEFAULT_MAPPER = (new ObjectMapper()).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        JACKSON_JSON_PROVIDER = new JacksonJaxbJsonProvider(DEFAULT_MAPPER, JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
+    }
+
     private final JerseyClientBuilder delegate;
+    private OracleHttpClientConfig oracleHttpClientConfig;
+    private DynamicSslContextProvider provider;
 
     public ProxyHttpClientBuilder(DynamicSslContextProvider provider, OracleHttpClientConfig oracleHttpClientConfig) {
         this.delegate = new JerseyClientBuilder();
@@ -104,11 +98,12 @@ public class ProxyHttpClientBuilder extends javax.ws.rs.client.ClientBuilder {
         builder.hostnameVerifier(config.getHostnameVerifier());
         Client client = builder.withConfig(new JavaxConfiguration(clientConfig)).build();
 
-        if (config.getDisableRemovingContentLengthHeaderWhenItsValueIsZero() != null && config.getDisableRemovingContentLengthHeaderWhenItsValueIsZero()) {
+        if (config.getDisableRemovingContentLengthHeaderWhenItsValueIsZero() != null
+                && config.getDisableRemovingContentLengthHeaderWhenItsValueIsZero()) {
             ClientRequestFilter filter = new ClientRequestFilter() {
                 public void filter(ClientRequestContext requestContext) {
                     if (requestContext.getHeaders().containsKey("Content-Length")) {
-                        List values = (List)requestContext.getHeaders().get("Content-Length");
+                        List values = (List) requestContext.getHeaders().get("Content-Length");
                         if (!values.isEmpty()) {
                             Object contentLengthValue = values.get(0);
                             if (!contentLengthValue.equals("0")) {
@@ -146,11 +141,6 @@ public class ProxyHttpClientBuilder extends javax.ws.rs.client.ClientBuilder {
         JerseyClient jc = delegate.build();
         jc.getConfiguration().connectorProvider(new OracleConnectorProvider(this.provider));
         return new JavaxClient(jc);
-    }
-
-    static {
-        DEFAULT_MAPPER = (new ObjectMapper()).configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        JACKSON_JSON_PROVIDER = new JacksonJaxbJsonProvider(DEFAULT_MAPPER, JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS);
     }
 
     //------------------------------------------------------------

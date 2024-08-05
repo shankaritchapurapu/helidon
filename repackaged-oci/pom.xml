@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<!--
+    Copyright (c) 2024 Oracle and/or its affiliates.
+-->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>com.oracle.helidon.oci</groupId>
         <artifactId>helidon-oci-project</artifactId>
@@ -10,7 +14,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>helidon-repackaged-oci</artifactId>
-    <name>Helidon Repackaged OCI Modules</name>
+    <name>Helidon OCI Repackaged Native Modules</name>
     <packaging>pom</packaging>
 
     <modules>
@@ -91,7 +95,8 @@
                                 <outputDir>${project.build.directory}/generated-sources/${codegen.base.package.name}</outputDir>
                                 <specGenerationType>${codegen.specGenerationType}</specGenerationType>
                                 <isTestGenerationEnabled>${codegen.is.test.generation.enabled}</isTestGenerationEnabled>
-                                <isExpect100ContinueSupported>${codegen.is.expect.100.continue.supported}</isExpect100ContinueSupported>
+                                <isExpect100ContinueSupported>${codegen.is.expect.100.continue.supported}
+                                </isExpect100ContinueSupported>
                             </configuration>
                         </execution>
                     </executions>
@@ -108,7 +113,9 @@
                             </goals>
                             <configuration>
                                 <sources>
-                                    <source>${project.build.directory}/generated-sources/${codegen.base.package.name}/oracle-java-sdk-sources</source>
+                                    <source>
+                                        ${project.build.directory}/generated-sources/${codegen.base.package.name}/oracle-java-sdk-sources
+                                    </source>
                                 </sources>
                             </configuration>
                         </execution>
@@ -128,7 +135,9 @@
                                 <addOutputDirectory>false</addOutputDirectory>
                                 <!-- Only delombok for docs -->
                                 <outputDirectory>target/generated-sources-for-docs/delombok</outputDirectory>
-                                <sourceDirectory>${project.build.directory}/generated-sources/${codegen.base.package.name}/oracle-java-sdk-sources</sourceDirectory>
+                                <sourceDirectory>
+                                    ${project.build.directory}/generated-sources/${codegen.base.package.name}/oracle-java-sdk-sources
+                                </sourceDirectory>
                                 <encoding>UTF-8</encoding>
                                 <formatPreferences>
                                     <javaLangAsFQN>skip</javaLangAsFQN>

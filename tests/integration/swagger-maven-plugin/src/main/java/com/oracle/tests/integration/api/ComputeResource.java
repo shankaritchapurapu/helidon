@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+ */
+
 package com.oracle.tests.integration.api;
 
 import java.io.ByteArrayInputStream;
@@ -5,10 +9,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.Path;
-
-import com.oracle.tests.integration.model.AttachIScsiVolumeRequest;
 import com.oracle.tests.integration.model.AttachVolumeRequest;
 import com.oracle.tests.integration.model.AvailabilityDomain;
 import com.oracle.tests.integration.model.IScsiVolumeAttachment;
@@ -17,8 +17,7 @@ import com.oracle.tests.integration.model.LaunchInstanceRequest;
 import com.oracle.tests.integration.model.LifecycleStates;
 import com.oracle.tests.integration.model.Region;
 import com.oracle.tests.integration.model.VolumeAttachment;
-
-import com.oracle.tests.integration.api.AbstractComputeBaseResource;
+import jakarta.enterprise.context.ApplicationScoped;
 
 @ApplicationScoped
 public class ComputeResource extends AbstractComputeBaseResource {

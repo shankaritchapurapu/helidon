@@ -1,10 +1,12 @@
 # Error Code
 
 ## Overview
+
 This module provides support for error codes described in
 in [OCI Error Codes](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEX&title=Error+Codes).
 
 ## Configuration
+
 Just include a dependency to this module in your pom file as shown below. All relevant
 providers will be automatically loaded into your application.
 
@@ -20,7 +22,7 @@ providers will be automatically loaded into your application.
 
 ### Jakarta REST Server (Helidon MP)
 
-To report an error, simply create and throw a `RenderableException`. 
+To report an error, simply create and throw a `RenderableException`.
 This module registers an exception mapper that automatically
 converts this exception to a `Response`. For example,
 
@@ -58,7 +60,7 @@ response.
 
 When using the Microprofile RestClient API, it is possible to map an
 error response back to an exception that can be caught client side. This
-feature requires an explicit registration of the `ErrorCodeResponseMapper` 
+feature requires an explicit registration of the `ErrorCodeResponseMapper`
 RestClient provider as part of the interface definition as shown next:
 
 ```java
@@ -89,7 +91,7 @@ as follows:
 Note that the provider will attempt to map any response whose HTTP error code
 is greater or equal to 400; thus, if a response is returned with such an
 error code but whose entity is not an `ErrorDetail`, an exception will
-be thrown while attempting to read the entity--this is the primary reason 
+be thrown while attempting to read the entity--this is the primary reason
 why the API requires explicit registration of `ErrorCodeResponseMapper`.
 
 ### Build & Run

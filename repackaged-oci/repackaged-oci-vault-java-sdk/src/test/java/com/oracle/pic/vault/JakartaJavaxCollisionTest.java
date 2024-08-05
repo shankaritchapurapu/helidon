@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Oracle and/or its affiliates.
+ */
+
 package com.oracle.pic.vault;
 
 import java.nio.charset.StandardCharsets;
@@ -26,21 +30,20 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @Path("/")
 public class JakartaJavaxCollisionTest {
 
-
     private static final String SECRET_PAYLOAD = """
-                        {
-                          "key": "-----BEGIN PRIVATE KEY-----\\nKEY-----END PRIVATE KEY-----\\n",
-                          "cert": "-----BEGIN CERTIFICATE-----\\nCERT-----END CERTIFICATE-----\\n",
-                          "intermediates": [
-                            "-----BEGIN CERTIFICATE-----\\nINTERMEDIATE1-----END CERTIFICATE-----\\n",
-                            "-----BEGIN CERTIFICATE-----\\nnINTERMEDIATE2-----END CERTIFICATE-----\\n"
-                          ]
-                        }
-                        """;
+            {
+              "key": "-----BEGIN PRIVATE KEY-----\\nKEY-----END PRIVATE KEY-----\\n",
+              "cert": "-----BEGIN CERTIFICATE-----\\nCERT-----END CERTIFICATE-----\\n",
+              "intermediates": [
+                "-----BEGIN CERTIFICATE-----\\nINTERMEDIATE1-----END CERTIFICATE-----\\n",
+                "-----BEGIN CERTIFICATE-----\\nnINTERMEDIATE2-----END CERTIFICATE-----\\n"
+              ]
+            }
+            """;
 
     @GET
     @Path("/fake/ssv2")
-    @jakarta.ws.rs.Produces({ "application/json" })
+    @jakarta.ws.rs.Produces({"application/json"})
     public GetSecretResponse fakeSecretService() {
         return GetSecretResponse.builder()
                 .data(Map.of("secret", Base64.getEncoder().encodeToString(SECRET_PAYLOAD.getBytes(StandardCharsets.UTF_8))))
@@ -49,7 +52,7 @@ public class JakartaJavaxCollisionTest {
 
     @GET
     @Path("/javax/err")
-    @jakarta.ws.rs.Produces({ "application/json" })
+    @jakarta.ws.rs.Produces({"application/json"})
     public GetSecretResponse javaxErr() {
         throw new ProcessingException("BOOM");
     }

@@ -1,17 +1,5 @@
 /*
  * Copyright (c) 2024 Oracle and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 package com.oracle.helidon.oci.splat;
@@ -26,17 +14,15 @@ import java.util.stream.Stream;
 
 import javax.security.auth.x500.X500Principal;
 
-import jakarta.ws.rs.ForbiddenException;
-import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.core.MultivaluedHashMap;
-import jakarta.ws.rs.core.UriInfo;
-
 import io.helidon.config.Config;
 import io.helidon.config.mp.MpConfig;
 import io.helidon.config.mp.MpConfigSources;
 
 import com.oracle.pic.platform.splat.sdk.config.SplatMtlsFilterConfig;
-
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.UriInfo;
 import org.eclipse.microprofile.config.spi.ConfigProviderResolver;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -70,7 +56,7 @@ class SplatMtlsFilterTest {
 
     @ParameterizedTest
     @MethodSource("certificateCNs")
-    void testCertificateValidation(String certificateCN, boolean valid) throws Exception{
+    void testCertificateValidation(String certificateCN, boolean valid) throws Exception {
         DummySplatMtlsFilter splatMtlsFilter = getSplatMtlsFilter(
                 Map.of(SPLAT_SKIP_AUTHZ_VALIDATION_CHECK, "true"),
                 certificateCN);

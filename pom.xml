@@ -29,13 +29,20 @@
 
         <surefire.argLine>-Xmx1024m -Dfile.encoding=UTF-8</surefire.argLine>
         <failsafe.argLine>-Xmx1024m -Dfile.encoding=UTF-8</failsafe.argLine>
-        <surefire.coverage.argline />
-        <failsafe.coverage.argline />
+        <surefire.coverage.argline/>
+        <failsafe.coverage.argline/>
 
+        <spotbugs.skip>false</spotbugs.skip>
+        <spotbugs.threshold>Medium</spotbugs.threshold>
+
+        <checkstyle.skip>false</checkstyle.skip>
+
+        <version.lib.checkstyle>10.12.5</version.lib.checkstyle>
         <version.lib.hamcrest>1.3</version.lib.hamcrest>
         <version.lib.junit>5.10.1</version.lib.junit>
         <version.lib.mockito>2.23.4</version.lib.mockito>
 
+        <version.plugin.checkstyle>3.3.1</version.plugin.checkstyle>
         <version.plugin.compiler>3.8.1</version.plugin.compiler>
         <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
         <version.plugin.failsafe>3.0.0-M5</version.plugin.failsafe>
@@ -43,6 +50,8 @@
         <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
         <version.plugin.surefire>3.0.0-M5</version.plugin.surefire>
         <version.plugin.shade>3.5.1</version.plugin.shade>
+        <version.plugin.spotbugs>4.7.3.5</version.plugin.spotbugs>
+        <version.plugin.findsecbugs>1.12.0</version.plugin.findsecbugs>
         <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
         <version.plugin.maven-directory-plugin>1.0</version.plugin.maven-directory-plugin>
         <version.plugin.maven-enforcer-plugin>3.4.1</version.plugin.maven-enforcer-plugin>
@@ -201,12 +210,16 @@
                                             <exclude>lombok</exclude>
                                         </excludes>
                                     </bannedDependencies>
-                                    <noMixedOciJavaSdkVersionsRule implementation="com.oracle.bmc.enforcer.rule.NoMixedOciJavaSdkVersionsRule">
+                                    <noMixedOciJavaSdkVersionsRule
+                                            implementation="com.oracle.bmc.enforcer.rule.NoMixedOciJavaSdkVersionsRule">
                                         <allowedDependencies>
                                             <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common:*</allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:*</allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common-httpclient:*</allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-objectstorage-generated:*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:*
+                                            </allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common-httpclient:*
+                                            </allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-objectstorage-generated:*
+                                            </allowedDependency>
                                         </allowedDependencies>
                                     </noMixedOciJavaSdkVersionsRule>
                                     <!-- https://maven.apache.org/enforcer/enforcer-rules/dependencyConvergence.html -->
@@ -270,6 +283,82 @@
                     <artifactId>maven-shade-plugin</artifactId>
                     <version>${version.plugin.shade}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>${version.plugin.checkstyle}</version>
+                    <configuration>
+                        <skip>${checkstyle.skip}</skip>
+                        <sourceDirectories>
+                            <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+                        </sourceDirectories>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>${version.lib.checkstyle}</version>
+                            <exclusions>
+                                <exclusion>
+                                    <groupId>com.sun</groupId>
+                                    <artifactId>tools</artifactId>
+                                </exclusion>
+                            </exclusions>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>com.github.spotbugs</groupId>
+                    <artifactId>spotbugs-maven-plugin</artifactId>
+                    <version>${version.plugin.spotbugs}</version>
+                    <configuration>
+                        <omitVisitors>FindReturnRef</omitVisitors>
+                        <skip>${spotbugs.skip}</skip>
+                        <threshold>${spotbugs.threshold}</threshold>
+                        <!--suppress UnresolvedMavenProperty -->
+                        <excludeFilterFile>${spotbugs.exclude}</excludeFilterFile>
+                        <xmlOutput>true</xmlOutput>
+                        <plugins>
+                            <plugin>
+                                <groupId>com.h3xstream.findsecbugs</groupId>
+                                <artifactId>findsecbugs-plugin</artifactId>
+                                <version>${version.plugin.findsecbugs}</version>
+                            </plugin>
+                        </plugins>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>io.helidon.build-tools</groupId>
+                    <artifactId>helidon-enforcer-plugin</artifactId>
+                    <version>${version.plugin.helidon-build-tools}</version>
+                    <configuration>
+                        <rules>
+                            <rule>copyright</rule>
+                            <rule>typos</rule>
+                        </rules>
+                        <copyrightConfig>
+                            <failOnError>true</failOnError>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <templateFile>${top.parent.basedir}/etc/copyright.txt</templateFile>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <excludeFile>${top.parent.basedir}/etc/copyright-exclude.txt</excludeFile>
+                        </copyrightConfig>
+                        <typosConfig>
+                            <failOnError>true</failOnError>
+                            <typos>
+                                <typo>heldion</typo>
+                                <typo>helidion</typo>
+                                <typo>buidler</typo>
+                                <typo>vuilder</typo>
+                                <typo>bidler</typo>
+                                <typo>microrpofile</typo>
+                                <typo>depenedency</typo>
+                                <typo>configuraiton</typo>
+                                <typo>Respnose</typo>
+                            </typos>
+                        </typosConfig>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -291,7 +380,73 @@
             </plugin>
         </plugins>
     </build>
-
+    <profiles>
+        <profile>
+            <id>spotbugs</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>checkstyle</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>run-checkstyle</id>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <phase>validate</phase>
+                                <configuration>
+                                    <!--suppress UnresolvedMavenProperty -->
+                                    <configLocation>${top.parent.basedir}/etc/checkstyle.xml</configLocation>
+                                    <!--suppress UnresolvedMavenProperty -->
+                                    <suppressionsLocation>${top.parent.basedir}/etc/checkstyle-suppressions.xml
+                                    </suppressionsLocation>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>copyright</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.helidon.build-tools</groupId>
+                        <artifactId>helidon-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>helidon-enforcer</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
     <repositories>
         <repository>
             <id>libs-release</id>

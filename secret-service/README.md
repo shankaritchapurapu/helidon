@@ -1,13 +1,16 @@
 # Secret Service integration
 
 Features:
+
 * Secret Service Config Source - SSv2 secrets retrieval over MicroProfile Config
 * Secret Service TLS Manager - Server and Client mTls rotation
 
 ## Secret Service Config Source
+
 SSv2 config source maps MicroProfile configuration properties to SSv2 secret paths.
 
 Properties with default prefix `oci.ssv2` are being resolved as following:
+
 * `oci.ssv2/secret/helidon/test-secret/latest` is being resolved from SSv2 as `/secret/helidon/test-secret/latest`
 
 ```java
@@ -17,6 +20,7 @@ Supplier<String> testSecret;
 ```
 
 Optional config source configuration in `mp-meta-config.yaml`:
+
 ```yaml
 sources:
   - type: 'oci-secret-service'
@@ -37,16 +41,21 @@ sources:
       instance-metadata-uri: "http://169.254.169.254/opc/v2/"
       retries: 8
 ```
-## Secret Service TLS Manager
-TLS manager `oci-ssv2` is capable of mTLS rotation with keys and certificates produced by PKI service and stored in SSv2 in JSON format.
 
-PKI material can be loaded by one of the available options exclusively: 
-* From SSv2 by providing SSv2 path over `pki.secret` property. 
-* By loading the file with mTls material in JSON format from file system - `pki.resource.path` or classpath - `pki.resource-path`. 
+## Secret Service TLS Manager
+
+TLS manager `oci-ssv2` is capable of mTLS rotation with keys and certificates produced by PKI service and stored in SSv2 in JSON
+format.
+
+PKI material can be loaded by one of the available options exclusively:
+
+* From SSv2 by providing SSv2 path over `pki.secret` property.
+* By loading the file with mTls material in JSON format from file system - `pki.resource.path` or classpath - `pki.resource-path`.
 
 Trust CA bundle can be loaded from file system - `trust.resource.path` or classpath - `trust.resource-path`.
 
 ### SSv2 TLS Manager Configuration
+
 | Key                          | Example Value                             | Default value                     | Description                                        |
 |------------------------------|-------------------------------------------|-----------------------------------|----------------------------------------------------|
 | `reload.cron`                | `0/30 * * * * ? *`                        | `*/30 * * * * ? *` - every 30 min | Cron expression for reload interval configuration. |
@@ -59,9 +68,10 @@ Trust CA bundle can be loaded from file system - `trust.resource.path` or classp
 | `trust.path`                 | `/etc/oci-pki/ca-bundle.pem`              | `/etc/oci-pki/ca-bundle.pem`      | File path to load rust CA bundle.                  |
 | `trust.resource-path`        | `/etc/oci-pki/ca-bundle.pem`              |                                   | Class path to load rust CA bundle.                 |
 
-
 ### Server mTLS rotation
+
 Helidon server side mTls can be configured to use `oci-ssv2` Tls manager with following example:
+
 ```yaml
 server:
   port: 8080
@@ -80,6 +90,7 @@ server:
 ```
 
 ### Client mTLS rotation
+
 Following clients can use `oci-ssv2` Tls manager in Helidon:
 
 * [MicroProfile REST Client](https://helidon.io/docs/v4/mp/restclient)
@@ -88,6 +99,7 @@ Following clients can use `oci-ssv2` Tls manager in Helidon:
 * Any client able to use `javax.net.ssl.SSLContext` produced by `oci-ssv2` Tls manager
 
 Consider following example:
+
 ```yaml
 # Client configuration
 acme-client:
@@ -112,6 +124,7 @@ another-client:
 ```
 
 #### JAX-RS clients
+
   ```java
   Config acmeTlsConfig = GlobalConfig.config().get("acme-client.tls");
   ClientBuilder.newBuilder()
@@ -121,21 +134,25 @@ another-client:
   ```
 
 #### Helidon WebClient
+
   ```java
   WebClient.builder()
            .baseUri(uri)
            .config(GlobalConfig.config().get("acme-client"))
            .build();
   ```
+
 #### MicroProfile Rest Client
+
   ```java
   RestClientBuilder.newBuilder()
            .baseUri(uri)
            .sslContext(Tls.create(GlobalConfig.config().get("acme-client.tls")).sslContext())
            .build(GreetRestClient.class);
   ```
-  
+
 #### Other HTTP clients
+
 Any Java HTTP Client can use `javax.net.ssl.SSLContext` created by `oci-ssv2` Tls manager.
 
 ```java

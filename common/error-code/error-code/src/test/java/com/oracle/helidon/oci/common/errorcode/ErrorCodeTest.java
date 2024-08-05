@@ -5,9 +5,6 @@ package com.oracle.helidon.oci.common.errorcode;
 
 import java.util.Map;
 
-import com.oracle.helidon.oci.common.errorcode.ErrorCodes;
-import com.oracle.helidon.oci.common.errorcode.ErrorDetail;
-import com.oracle.helidon.oci.common.errorcode.RenderableException;
 import org.junit.jupiter.api.Test;
 
 import static com.oracle.helidon.oci.common.errorcode.ErrorCodes.CannotParseRequest;

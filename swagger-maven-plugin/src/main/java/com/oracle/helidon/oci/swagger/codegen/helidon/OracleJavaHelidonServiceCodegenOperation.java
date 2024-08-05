@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+ */
+
 package com.oracle.helidon.oci.swagger.codegen.helidon;
 
 import java.util.ArrayList;
@@ -20,23 +24,11 @@ import org.apache.commons.lang3.StringUtils;
 import static java.lang.String.format;
 
 /**
- * Represents an operation and its metadata required to generate a Java JaxRS Client that relies on
- * PIC Commons' RestClient.
+ * Represents an operation and its metadata required to generate a Java JaxRS Client.
  */
 @Slf4j
 public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenOperation {
     private static final String VENDOR_EXTENSION_CAPTURE_PATTERN = "x-capture-pattern";
-    /**
-     * Paginated APIs declare at least one of these headers to indicate the resulting list of items
-     * is paginated.
-     */
-    //    private static final Set<String> PAGINATION_RESPONSE_HEADER_NAMES =
-    //            Sets.newHashSet("opc-limit", "opc-next-page", "opc-previous-page", "opc-total-count");
-
-    /**
-     *  APIs declared to have etag in the response header, need to return TaggedResponse
-     */
-    //    private static final Set<String> TAGGED_RESPONSE_HEADER_NAMES = Sets.newHashSet("etag");
 
     /**
      * Most of the time, the result type of the abstract resource operation is the same as the
@@ -48,9 +40,12 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
      *
      * In case of HTTP HEAD operation, no entity is returned. Just the headers are returned
      */
-    public String abstractResourceReturnType;
+    private String abstractResourceReturnType;
 
-    public List<String> contextsToInclude = new ArrayList<>();
+    /**
+     * List of contexts to include for codegen.
+     */
+    private List<String> contextsToInclude = new ArrayList<>();
 
     private CodegenOperation codegenOperation;
 
@@ -58,7 +53,10 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
      * Copy the field values from the provided operation to a new Oracle-specific operation and
      * generate additional fields for use in templates.
      *
+     * @param oracleJavaHelidonServiceCodegen
      * @param original The operation to copy.
+     * @param baseOperation
+     * @param spec
      */
     public OracleJavaHelidonServiceCodegenOperation(
             @NonNull OracleJavaHelidonServiceCodegen oracleJavaHelidonServiceCodegen,
@@ -84,9 +82,18 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
         log.info("Finished operation " + operationId);
     }
 
+    /**
+     * Indicate if this operation has parameters or contexts.
+     *
+     * @return boolean
+     */
     // mustache is too complicated to make this calculate in the template, just expose it as a method
     public boolean hasParamsAndContexts() {
         return allParams != null && !allParams.isEmpty() && !contextsToInclude.isEmpty();
+    }
+
+    private static boolean isByte(String type) {
+        return "Byte[]".equals(type) || "byte[]".equals(type);
     }
 
     private void fixFullyQualifiedModelClassNames(String modelPackage) {
@@ -186,12 +193,6 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
     }
 
     private void resolveContexts(OracleJavaHelidonServiceCodegen oracleJavaHelidonServiceCodegen) {
-        if (oracleJavaHelidonServiceCodegen.getOptionValue(OracleJavaHelidonServiceCodegen.ConfigOption.OPTION_CONTEXTS_IDENTITY)) {
-//            contextsToInclude.add(
-//                    "@com.oracle.pic.identity.authorization.sdk.context.PrincipalContext com.oracle.pic.identity.authentication.Principal principal");
-//            contextsToInclude.add(
-//                    "@com.oracle.pic.identity.authorization.sdk.context.AuthorizationRequestContext com.oracle.pic.identity.authorization.sdk.AuthorizationRequest authorizationRequest");
-        }
         if (oracleJavaHelidonServiceCodegen.getOptionValue(
                 OracleJavaHelidonServiceCodegen.ConfigOption.OPTION_CONTEXTS_JAXRS_HTTPHEADERS)) {
             contextsToInclude.add(
@@ -238,7 +239,8 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
         if (oracleJavaHelidonServiceCodegen.getOptionValue(
                 OracleJavaHelidonServiceCodegen.ConfigOption.OPTION_CONTEXTS_AUDIT_PAYLOAD_APPENDER)) {
             contextsToInclude.add(
-                    "@com.oracle.pic.sherlock.collector.jersey.AuditContext com.oracle.pic.sherlock.collector.AuditPayloadAppender auditPayloadAppender");
+                    "@com.oracle.pic.sherlock.collector.jersey.AuditContext com.oracle.pic.sherlock.collector"
+                            + ".AuditPayloadAppender auditPayloadAppender");
         }
         if (oracleJavaHelidonServiceCodegen.getOptionValue(
                 OracleJavaHelidonServiceCodegen.ConfigOption.OPTION_CONTEXTS_CONTAINER_REQUEST)) {
@@ -284,67 +286,6 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
 
         // Most of the time, the abstract and client return types are the same
         abstractResourceReturnType = returnType;
-
-        // TODO: Add Pagination and Tagging Support
-        //        if (oracleJavaHelidonServiceCodegen.getOptionValue(
-        //                ConfigOption.OPTION_USE_TAGGED_MODELS_WITH_ETAGS)) {
-        //            if (responseHeaders
-        //                            .stream()
-        //                            .anyMatch(
-        //                                    (param) ->
-        //                                            PAGINATION_RESPONSE_HEADER_NAMES.contains(
-        //                                                    param.baseName))
-        //                    && responseHeaders
-        //                            .stream()
-        //                            .anyMatch(
-        //                                    (param) ->
-        //                                            TAGGED_RESPONSE_HEADER_NAMES.contains(
-        //                                                    param.baseName))) {
-        //                throw new RuntimeException(
-        //                        "Conflicting response header found : both of "
-        //                                + PAGINATION_RESPONSE_HEADER_NAMES
-        //                                + " and "
-        //                                + TAGGED_RESPONSE_HEADER_NAMES);
-        //            }
-        //
-        //            if (responseHeaders
-        //                    .stream()
-        //                    .anyMatch((param) -> TAGGED_RESPONSE_HEADER_NAMES.contains(param.baseName))) {
-        //                if ("array".equals(returnContainer)) {
-        //                    throw new RuntimeException("Can't have Collection(array) of TaggedResponse");
-        //                }
-        //                // in case there is no return type, returnType and returnBaseType will both be null
-        //                if (returnBaseType == null) {
-        //                    returnBaseType = "Void";
-        //                }
-        //                returnType =
-        //                        "com.oracle.pic.commons.service.model.TaggedResponse<"
-        //                                + returnBaseType
-        //                                + ">";
-        //                abstractResourceReturnType =
-        //                        "com.oracle.pic.commons.service.model.TaggedResponse<"
-        //                                + returnBaseType
-        //                                + ">";
-        //            }
-        //        }
-        //
-        //        if (responseHeaders
-        //                .stream()
-        //                .anyMatch((param) -> PAGINATION_RESPONSE_HEADER_NAMES.contains(param.baseName))) {
-        //            if ("array".equals(returnContainer)) {
-        //                abstractResourceReturnType =
-        //                        "com.oracle.pic.commons.service.model.PaginatedResponse<"
-        //                                + returnBaseType
-        //                                + ">";
-        //            } else if (returnBaseType.endsWith("Collection")
-        //                    || returnBaseType.endsWith("Aggregation")) {
-        //                // this only works with server stubs
-        //                abstractResourceReturnType =
-        //                        "com.oracle.pic.commons.service.model.PaginatedCollectionResponse<"
-        //                                + returnBaseType
-        //                                + ">";
-        //            }
-        //        }
 
         /*
          * For our generated model data-types, we'd like to fully qualify references to those
@@ -461,9 +402,5 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
         }
 
         return false;
-    }
-
-    private static boolean isByte(String type) {
-        return "Byte[]".equals(type) || "byte[]".equals(type);
     }
 }

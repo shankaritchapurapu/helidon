@@ -1,17 +1,5 @@
 /*
  * Copyright (c) 2024 Oracle and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 package com.oracle.helidon.maven.transpiler;
@@ -28,7 +16,6 @@ import java.util.Map;
 import javassist.ClassPool;
 import javassist.bytecode.ClassFile;
 import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -37,6 +24,10 @@ import org.apache.maven.project.MavenProject;
 
 import static org.apache.maven.plugins.annotations.ResolutionScope.COMPILE;
 
+/**
+ * Mojo to support True repackaging. Class is moved to different package, it's bytecode manipulated so its package declaration
+ * and all references for all the repackaged classes inside aligns with new packages.
+ */
 @Mojo(name = "transpile-classes", defaultPhase = LifecyclePhase.INITIALIZE, requiresDependencyResolution = COMPILE)
 public class TranspilerMojo extends AbstractMojo {
 
@@ -44,19 +35,23 @@ public class TranspilerMojo extends AbstractMojo {
     private static final List<ClassMapping> CLASS_MAPPINGS = new ArrayList<>();
 
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
-    MavenProject project;
+    private MavenProject project;
 
     @Parameter(property = "mapping.map")
     private String[] mapping;
 
+    /**
+     *
+     * @throws MojoFailureException error during transpile mojo execution
+     */
     @Override
-    public void execute() throws MojoExecutionException, MojoFailureException {
+    public void execute() throws MojoFailureException {
         try {
             // ./target/classes
-            String outDir = project.getBuild().getOutputDirectory();
+            String outDir = project().getBuild().getOutputDirectory();
 
             var cp = ClassPool.getDefault();
-            for (var o : project.getCompileClasspathElements()) {
+            for (var o : project().getCompileClasspathElements()) {
                 cp.appendClassPath(o);
             }
 
@@ -79,7 +74,7 @@ public class TranspilerMojo extends AbstractMojo {
                 try (FileOutputStream out = new FileOutputStream(outputFile)) {
                     cf.write(new DataOutputStream(out));
                 }
-                project.getCompileClasspathElements().add(outputFile.getAbsolutePath());
+                project().getCompileClasspathElements().add(outputFile.getAbsolutePath());
             }
         } catch (Exception e) {
             throw new MojoFailureException(e);
@@ -99,6 +94,14 @@ public class TranspilerMojo extends AbstractMojo {
             Arrays.stream(mapping).map(ClassMapping::parse).forEach(CLASS_MAPPINGS::add);
         }
         return CLASS_MAPPINGS;
+    }
+
+    private MavenProject project() {
+        return project;
+    }
+
+    private void project(MavenProject project) {
+        this.project = project;
     }
 
 }

@@ -3,8 +3,6 @@
  */
 
 /**
- * Support for Error Codes.
- *
- * @see com.oracle.helidon.oci.common.errorcode.RenderableException
+ * Support for Error Codes in SE.
  */
 package com.oracle.helidon.oci.common.errorcode;

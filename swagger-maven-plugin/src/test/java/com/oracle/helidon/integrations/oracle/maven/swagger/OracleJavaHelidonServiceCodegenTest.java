@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+ */
+
 package com.oracle.helidon.integrations.oracle.maven.swagger;
 
 import java.io.File;
@@ -22,8 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class OracleJavaHelidonServiceCodegenTest {
 
@@ -159,8 +163,8 @@ public class OracleJavaHelidonServiceCodegenTest {
                         linesFromFile,
                         "@jakarta.ws.rs.core.Context com.oracle.pic.authproxy.AuthProxyIdentity authProxyIdentity"), is(false));
 
-//        File dir = abstractResourceFile.toPath().resolve("../../../../..").normalize().toFile();
-//        assertNoJavaxInAnyFile(dir);
+        //        File dir = abstractResourceFile.toPath().resolve("../../../../..").normalize().toFile();
+        //        assertNoJavaxInAnyFile(dir);
     }
 
     private static void assertNoJavaxInAnyFile(File dir) throws IOException {

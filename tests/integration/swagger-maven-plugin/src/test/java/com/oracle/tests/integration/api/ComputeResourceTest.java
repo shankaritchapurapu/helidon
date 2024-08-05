@@ -1,6 +1,8 @@
-package com.oracle.tests.integration.api;
+/*
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+ */
 
-import java.util.List;
+package com.oracle.tests.integration.api;
 
 import io.helidon.microprofile.testing.junit5.HelidonTest;
 
@@ -10,17 +12,16 @@ import com.oracle.tests.integration.model.IScsiVolumeAttachment;
 import com.oracle.tests.integration.model.Instance;
 import com.oracle.tests.integration.model.Region;
 import com.oracle.tests.integration.model.VolumeAttachment;
-
-
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
-
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 
 @HelidonTest
 class ComputeResourceTest {

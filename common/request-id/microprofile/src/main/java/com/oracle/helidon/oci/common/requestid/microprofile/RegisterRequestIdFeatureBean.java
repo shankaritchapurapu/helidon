@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+ */
+
 package com.oracle.helidon.oci.common.requestid.microprofile;
 
 import io.helidon.microprofile.server.ServerCdiExtension;
