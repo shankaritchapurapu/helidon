@@ -19,9 +19,7 @@ libraries that OCI teams produce (that are not part of the public OCI SDK), then
 
 ## Usage
 
-Most users should be generating their service using
-the [Helidon Service Generator](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-service-generator).
-This repo provides the supporting libraries for services generated from that generator.
+Please refer to the [Helidon-OCI Native Services Integration Guide](docs/README.md) for more details about the various features offered by this project.
 
 ## Build & Run
 
@@ -78,11 +76,8 @@ an ssh tunnel to the remote Instance Metadata Service for testing the code local
    ssh -v -L 8000:169.254.169.254:80 host-api-ad1 -t watch -n 90 date
    ```
 
-The [OCI T2 metrics test](integration-tests/oci-t2-metrics-test) will show a complete example of this approach
+The [OCI T2 metrics test](integration-tests/oci-t2-metrics-test) will show a complete example of this approach.
 
-## Integration with Lumberjack for Application Logging
-
-For more details on how to integrate with Lumberjack logging service, please check out [logging.md](logging.md).
 
 ## Links
 
