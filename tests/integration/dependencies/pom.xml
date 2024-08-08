@@ -44,15 +44,11 @@
                         <configuration>
                             <!-- TODO: the properties that are commented out cause the versions plugin to crash - research this -->
                             <includeProperties>
-                                helidon.version, oci-java-sdk-version, oracle-internal-authproxy-filter-version,
-                                <!--                                oracle-internal-commons-core-version,-->
-                                <!--                                oracle-internal-commons-core-resources-version,-->
+                                helidon.version, oci-java-sdk-version,
                                 oracle-internal-commons-metrics-lib-version, oracle-internal-commons-metrics-module-version,
                                 oracle-internal-commons-metrics-reporter-version, oracle-internal-commons-metrics-version,
                                 oracle-internal-commons-request-id-version,
-                                <!--                                oracle-internal-core-regions-version,-->
-                                oracle-internal-exception-mapping-version, oracle-internal-identity-common-version,
-                                oracle-internal-identity-version, oracle-internal-logging-version,
+                                oracle-internal-exception-mapping-version, oracle-internal-logging-version,
                                 oracle-internal-splat-sdk-version, oracle-internal-vault-java-sdk-version,
                                 oracle-internal-vault-user-api-spec-version, oracle-internal-vault-user-java-client-version,
                                 oracle-internal-secret-service-cp-java-client-version,
@@ -149,12 +145,6 @@
             <artifactId>oci-java-sdk-addons-internal</artifactId>
         </dependency>
 
-        <!-- see repackaged-oci-authproxy-filter -->
-        <!-- https://bitbucket.oci.oraclecorp.com/projects/SECINF/repos/authproxy-filter -->
-        <dependency>
-            <groupId>com.oracle.pic.authproxy</groupId>
-            <artifactId>authproxy-filter</artifactId>
-        </dependency>
         <!-- TODO: we should (eventually) discontinue usage of this -->
         <!-- see https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/core -->
         <dependency>
@@ -186,40 +176,6 @@
         <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>request-id</artifactId>
-        </dependency>
-
-        <!-- Identity
-                Confluence: https://confluence.oci.oraclecorp.com/x/GV0cB
-                Phonebook link: https://devops.oci.oraclecorp.com/phonebook/identity-cloud-service
-                https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/authorization/sdk/
-        -->
-        <!-- see repackaged-oci-authorization-sdk -->
-        <!-- https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/common/ -->
-        <dependency>
-            <groupId>com.oracle.pic.identity</groupId>
-            <artifactId>common</artifactId>
-        </dependency>
-
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/authentication-client -->
-        <dependency>
-            <groupId>com.oracle.pic.identity.authentication</groupId>
-            <artifactId>authentication-client</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.oracle.pic.identity.authorization</groupId>
-            <artifactId>sdk</artifactId>
-        </dependency>
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse -->
-        <dependency>
-            <groupId>com.oracle.pic.identity.authorization</groupId>
-            <artifactId>jersey-2-29-annotations</artifactId>
-        </dependency>
-
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/metrics-implementation -->
-        <dependency>
-            <groupId>com.oracle.pic.identity.authorization</groupId>
-            <artifactId>metrics-implementation</artifactId>
         </dependency>
 
         <!-- see https://bitbucket.oci.oraclecorp.com/projects/PLATFORM/repos/mpapi/browse/splat-sdk -->

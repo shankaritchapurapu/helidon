@@ -51,11 +51,6 @@ public class OracleJavaHelidonServiceCodegenTest {
         assertThat(
                 find(
                         linesFromFile,
-                        "@com.oracle.pic.identity.authorization.sdk.context.PrincipalContext com.oracle.pic.identity"
-                                + ".authentication.Principal principal"), is(false));
-        assertThat(
-                find(
-                        linesFromFile,
                         "@jakarta.ws.rs.core.Context jakarta.ws.rs.core.HttpHeaders httpHeadersContext"), is(false));
         assertThat(
                 find(
@@ -81,7 +76,7 @@ public class OracleJavaHelidonServiceCodegenTest {
         List<String> linesFromFile = FileUtils.readLines(abstractResourceFile, "UTF-8");
 
         assertThat(find(linesFromFile, "public abstract byte[] getBinaryString"), is(true));
-        assertThat(find(linesFromFile, "@jakarta.validation.constraints.NotNull"), is(true));
+        assertThat(find(linesFromFile, "@jakarta.validation.constraints.NotNull"), is(false));
         assertThat(find(linesFromFile, "@jakarta.validation.constraints.Pattern"), is(false));
         assertThat(
                 find(
@@ -120,11 +115,6 @@ public class OracleJavaHelidonServiceCodegenTest {
         assertThat(
                 find(
                         linesFromFile,
-                        "@com.oracle.pic.identity.authorization.sdk.context.PrincipalContext com.oracle.pic.identity"
-                                + ".authentication.Principal principal"), is(false));
-        assertThat(
-                find(
-                        linesFromFile,
                         "@jakarta.ws.rs.core.Context jakarta.ws.rs.core.HttpHeaders httpHeadersContext"), is(false));
         assertThat(
                 find(
@@ -149,11 +139,6 @@ public class OracleJavaHelidonServiceCodegenTest {
         // Check for common values in disabled state.
         assertThat(find(linesFromFile, "@jakarta.validation.constraints.NotNull"), is(true));
         assertThat(find(linesFromFile, "@jakarta.validation.constraints.Pattern"), is(true));
-        assertThat(
-                find(
-                        linesFromFile,
-                        "@com.oracle.pic.identity.authorization.sdk.context.PrincipalContext com.oracle.pic.identity"
-                                + ".authentication.Principal principal"), is(false));
         assertThat(
                 find(
                         linesFromFile,

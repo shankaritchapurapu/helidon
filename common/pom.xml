@@ -27,10 +27,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>io.helidon.build-tools</groupId>
-                <artifactId>helidon-services-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
             </plugin>

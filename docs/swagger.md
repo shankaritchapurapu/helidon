@@ -86,7 +86,6 @@ Service options can be set by specifying them as additional properties in the co
 | config key              | Default Value | Description                                                                                                                                      |
 |-------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
 | enableValidation        | true          | Enables or disables all the validation annotations.                                                                                              |
-| contextsIdentity        | false         | Adds the OCI Identity args (auth context and principal) to every api.                                                                            |
 | contexts*               | false         | These are various other flags to inject other different types of contexts, see OracleJavaHelidonServiceCodegen.ConfigOption enum for more info.. |
 | useJaxRsServiceResponse | false         | Whether to wrap all return types of all operations in `jakarta.ws.rs.core.Response` objects.                                                     |
                                           |
@@ -115,7 +114,6 @@ Below is an example of helidon-oci-swagger-maven-plugin in action:
                                 <!-- This is shared between SDK model and our service gen -->
                                 <enableValidation>true</enableValidation>
                                 <!-- Same as default set in code but still setting here as reference -->
-                                <contextsIdentity>false</contextsIdentity>
                                 <contextsJaxRsHttpHeaders>false</contextsJaxRsHttpHeaders>
                                 <contextsJaxRsUriInfo>false</contextsJaxRsUriInfo>
                                 <contextsJaxRsRequest>false</contextsJaxRsRequest>

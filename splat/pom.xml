@@ -76,8 +76,15 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>io.helidon.build-tools</groupId>
-                <artifactId>helidon-services-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>com.oracle.helidon.oci.splat</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

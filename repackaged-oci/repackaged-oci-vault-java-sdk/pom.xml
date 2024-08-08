@@ -93,20 +93,6 @@
             <artifactId>core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.pic.identity.authorization</groupId>
-            <artifactId>sdk</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-net</groupId>
-                    <artifactId>commons-net</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>ch.qos.logback</groupId>
-                    <artifactId>logback-classic</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
         </dependency>

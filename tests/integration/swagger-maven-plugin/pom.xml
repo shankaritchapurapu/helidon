@@ -135,7 +135,6 @@
                                 <!-- This is shared between SDK model and our service gen -->
                                 <enableValidation>true</enableValidation>
                                 <!-- Same as default set in code but still setting here as reference -->
-                                <contextsIdentity>false</contextsIdentity>
                                 <contextsJaxRsHttpHeaders>false</contextsJaxRsHttpHeaders>
                                 <contextsJaxRsUriInfo>false</contextsJaxRsUriInfo>
                                 <contextsJaxRsRequest>false</contextsJaxRsRequest>

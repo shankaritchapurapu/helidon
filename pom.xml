@@ -43,12 +43,11 @@
         <version.lib.mockito>2.23.4</version.lib.mockito>
 
         <version.plugin.checkstyle>3.3.1</version.plugin.checkstyle>
-        <version.plugin.compiler>3.8.1</version.plugin.compiler>
+        <version.plugin.compiler>3.11.0</version.plugin.compiler>
         <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
-        <version.plugin.failsafe>3.0.0-M5</version.plugin.failsafe>
-        <version.plugin.helidon-build-tools>4.0.5</version.plugin.helidon-build-tools>
-        <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
-        <version.plugin.surefire>3.0.0-M5</version.plugin.surefire>
+        <version.plugin.failsafe>3.1.2</version.plugin.failsafe>
+        <version.plugin.helidon-build-tools>4.0.9</version.plugin.helidon-build-tools>
+        <version.plugin.surefire>3.1.0</version.plugin.surefire>
         <version.plugin.shade>3.5.1</version.plugin.shade>
         <version.plugin.spotbugs>4.7.3.5</version.plugin.spotbugs>
         <version.plugin.findsecbugs>1.12.0</version.plugin.findsecbugs>
@@ -56,7 +55,7 @@
         <version.plugin.maven-directory-plugin>1.0</version.plugin.maven-directory-plugin>
         <version.plugin.maven-enforcer-plugin>3.4.1</version.plugin.maven-enforcer-plugin>
         <version.plugin.maven-exec-plugin>3.1.0</version.plugin.maven-exec-plugin>
-        <version.plugin.maven-javadoc-plugin>2.10.4</version.plugin.maven-javadoc-plugin>
+        <version.plugin.maven-jar-plugin>3.3.0</version.plugin.maven-jar-plugin>
         <version.plugin.maven-versions-plugin>2.16.1</version.plugin.maven-versions-plugin>
     </properties>
 
@@ -144,23 +143,6 @@
                     <version>${version.plugin.maven-versions-plugin}</version>
                 </plugin>
                 <plugin>
-                    <groupId>io.helidon.build-tools</groupId>
-                    <artifactId>helidon-services-plugin</artifactId>
-                    <version>${version.plugin.helidon-build-tools}</version>
-                    <configuration>
-                        <mode>fail</mode>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>generate-meta-inf-services</id>
-                            <phase>compile</phase>
-                            <goals>
-                                <goal>services</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
                     <version>${version.plugin.maven-enforcer-plugin}</version>
@@ -202,8 +184,6 @@
                                     <bannedDependencies>
                                         <searchTransitive>true</searchTransitive>
                                         <excludes>
-                                            <!--                                            <exclude>bc-fips</exclude>-->
-                                            <!--                                            <exclude>bcpkix-fips</exclude>-->
                                             <exclude>io.dropwizard</exclude>
                                             <exclude>com.oracle.pic.commons:service-core</exclude>
                                             <exclude>junit</exclude>
@@ -231,9 +211,6 @@
                                         </scopes>
                                         <findAllDuplicates>true</findAllDuplicates>
                                         <ignoreWhenIdentical>true</ignoreWhenIdentical>
-                                        <!--                                        <ignoreClasses>-->
-                                        <!--                                            <ignoreClass>com.oracle.pic.identity.authentication.**</ignoreClass>-->
-                                        <!--                                        </ignoreClasses>-->
                                     </banDuplicateClasses>
                                 </rules>
                             </configuration>
@@ -282,6 +259,21 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
                     <version>${version.plugin.shade}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${version.plugin.maven-jar-plugin}</version>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            </manifest>
+                            <manifestEntries>
+                                <Implementation-URL>https://helidon.io</Implementation-URL>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
