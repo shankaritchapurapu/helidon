@@ -17,6 +17,7 @@ import io.helidon.integrations.oci.metrics.OciMetricsSupportFactory;
 import io.helidon.microprofile.server.RoutingBuilders;
 import io.helidon.service.registry.GlobalServiceRegistry;
 import io.helidon.service.registry.ServiceRegistry;
+import io.helidon.service.registry.ServiceRegistryException;
 
 import com.oracle.bmc.monitoring.Monitoring;
 import com.oracle.pic.telemetry.commons.metrics.Metrics;
@@ -72,13 +73,18 @@ class InternalOciMetricsBean extends OciMetricsSupportFactory {
             LOGGER.log(Level.FINE, "Setting monitoring endpoint to '" + adjustedEndpoint + "'");
         }
 
-        ServiceRegistry registry = GlobalServiceRegistry.registry();
-        instanceInfo = registry.get(ImdsInstanceInfo.class);
-
         this.monitoring = monitoring;
 
         OciMetricsSupport.Builder result = super.ociMetricsSupportBuilder(rootConfig, ociMetricsConfig, monitoring);
         if (result.enabled()) {
+            ServiceRegistry registry = GlobalServiceRegistry.registry();
+            try {
+                instanceInfo = registry.get(ImdsInstanceInfo.class);
+            } catch (ServiceRegistryException t) {
+                LOGGER.log(Level.WARNING, "Metrics will be disabled due to a failure in retrieving IMDS instance information with error: " + t);
+                result.enabled(false);
+                return result;
+            }
 
             Errors.Collector collector = Errors.collector();
 
