@@ -34,9 +34,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  *     retryConfig:
  *       maxRetries: 3
  *       minRetryDelayInMs: 100
- *     authProvider:
- *       timeout: 500
- *       retries: 8
  *
  * }</pre>
  */
