@@ -21,7 +21,7 @@ The Secret Service V2 (SSv2) integration provides the following features:
 
 ## Maven Coordinates
 
-To enable SplatMtlsFiler add the following dependency to your project’s pom.xml:
+To enable Secret Service V2 (SSv2) add the following dependency to your project’s pom.xml:
 
 ```xml
 <dependency>
