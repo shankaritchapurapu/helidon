@@ -61,7 +61,7 @@ class SecretServiceClient {
         var provider = registry.get(BasicAuthenticationDetailsProvider.class);
         var region = registry.get(Region.class);
 
-        resolveEndpoint(region.getRegionCode());
+        resolveEndpoint(region.getRegionId());
         if (LOGGER.isLoggable(DEBUG)) {
             LOGGER.log(DEBUG, "Initializing vault client with configuration: " + secretServiceConfig);
         }
