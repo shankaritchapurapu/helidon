@@ -60,7 +60,7 @@
         <version.lib.guice>5.1.0</version.lib.guice>
         <version.lib.joda-time>2.10.14</version.lib.joda-time>
         <version.lib.javaassist>3.29.2-GA</version.lib.javaassist>
-        <version.lib.nimbus-jose-jwt>9.10.1</version.lib.nimbus-jose-jwt>
+        <version.lib.nimbus-jose-jwt>9.37.2</version.lib.nimbus-jose-jwt>
         <version.lib.sleepycat-je>18.3.12</version.lib.sleepycat-je>
     </properties>
 
