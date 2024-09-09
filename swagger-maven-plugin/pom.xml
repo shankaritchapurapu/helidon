@@ -19,6 +19,10 @@
     <name>Helidon OCI Swagger Maven Plugin</name>
     <packaging>maven-plugin</packaging>
 
+    <properties>
+        <dependency-check.skip>true</dependency-check.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.oracle.bmc.sdk</groupId>

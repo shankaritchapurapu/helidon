@@ -35,6 +35,8 @@
         <spotbugs.skip>false</spotbugs.skip>
         <spotbugs.threshold>Medium</spotbugs.threshold>
 
+        <!-- owasp dependency check -->
+        <dependency-check.skip>false</dependency-check.skip>
         <checkstyle.skip>false</checkstyle.skip>
 
         <version.lib.checkstyle>10.12.5</version.lib.checkstyle>
@@ -47,6 +49,7 @@
         <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
         <version.plugin.failsafe>3.1.2</version.plugin.failsafe>
         <version.plugin.helidon-build-tools>4.0.9</version.plugin.helidon-build-tools>
+        <version.plugin.dependency-check>10.0.4</version.plugin.dependency-check>
         <version.plugin.surefire>3.1.0</version.plugin.surefire>
         <version.plugin.shade>3.5.1</version.plugin.shade>
         <version.plugin.spotbugs>4.7.3.5</version.plugin.spotbugs>
@@ -300,6 +303,26 @@
                     </dependencies>
                 </plugin>
                 <plugin>
+                    <groupId>org.owasp</groupId>
+                    <artifactId>dependency-check-maven</artifactId>
+                    <version>${version.plugin.dependency-check}</version>
+                    <configuration>
+                        <skip>${dependency-check.skip}</skip>
+                        <skipTestScope>true</skipTestScope>
+                        <failBuildOnCVSS>0</failBuildOnCVSS>
+                        <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                        <!--suppress MavenModelInspection -->
+                        <nvdApiKey>${nvd-api-key}</nvdApiKey>
+                        <formats>
+                            <format>HTML</format>
+                        </formats>
+                        <suppressionFiles>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <suppressionFile>${top.parent.basedir}/etc/dependency-check-suppression.xml</suppressionFile>
+                        </suppressionFiles>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>com.github.spotbugs</groupId>
                     <artifactId>spotbugs-maven-plugin</artifactId>
                     <version>${version.plugin.spotbugs}</version>
@@ -373,6 +396,24 @@
         </plugins>
     </build>
     <profiles>
+        <profile>
+            <id>dependency-check</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>spotbugs</id>
             <build>
