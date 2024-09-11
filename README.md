@@ -59,7 +59,7 @@ base url. In combination with an ssh tunnel that can forward data from the chose
 _Instance Metadata Service_ base url on the remote host, the application can now be run locally without the need to deploy it to
 the remote instance. As a prerequisite for making this approach successful, all the necessary actions to onboard and provision
 the OCI native service needs to be completed. Resource management is done using Shepherd, so the
-[reference-infra repository](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/reference-infra/browse) can be modified to
+[reference-infra repository](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-infra/browse) can be modified to
 add the needed resources. Below is example code to programmatically set the metadataBaseUrl and an example command to establish
 an ssh tunnel to the remote Instance Metadata Service for testing the code locally.
 
@@ -76,7 +76,7 @@ an ssh tunnel to the remote Instance Metadata Service for testing the code local
    ssh -v -L 8000:169.254.169.254:80 host-api-ad1 -t watch -n 90 date
    ```
 
-The [OCI T2 metrics test](integration-tests/oci-t2-metrics-test) will show a complete example of this approach.
+The [OCI T2 metrics test](tests/integration/t2-metrics) will show a complete example of this approach.
 
 
 ## Links
