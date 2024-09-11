@@ -22,7 +22,7 @@ This module provides support for handling of the `opc-request-id` header as requ
 
 ## Maven Coordinates
 
-To enable SplatMtlsFiler add the following dependency to your project’s pom.xml:
+To enable request-id support add the following dependency to your project’s pom.xml:
 
 Helidon SE:
 ```

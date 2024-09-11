@@ -13,7 +13,7 @@
 
 ## Overview
 
-The Helidon OCI Swagger maven plugin (helidon-oci-swagger-maven-plugin) is a tool that can be used to generate Helidon MP service and model code based on Swagger 2.0 Specifications. This feature is important for projects tha require the
+The Helidon OCI Swagger maven plugin (`helidon-oci-swagger-maven-plugin`) is a tool that can be used to generate Helidon MP service and model code based on Swagger 2.0 Specifications. This feature is important for projects tha require the
 API-driven approach such as the development of a Control Plane service.
 
 The model classes are based entirely on the OCI Public SDK code generator, and will look like what our OCI public Java SDK users would see.
@@ -52,22 +52,22 @@ Below is a high level diagram of how Swagger code generation works:
                               +-----------+             +-------------------+
 
 
-The Swagger (OpenAPI) generation can be configured by using the `helidon-oci-swagger-maven-plugin` with `oracle-java-helidon-service` set as the language. The generated service stubs currently result in an abstract classes you can extend from. It is recommend you extend from `AbstractBaseResource`. This is the latest version that allows you the most ability to customize the injected contexts.
+The Swagger (OpenAPI) generation can be configured by using the `helidon-oci-swagger-maven-plugin` with `oracle-java-helidon-service` set as the language. The generated service stubs currently result in an abstract classes you can extend from. It is recommended you extend from `AbstractBaseResource`. 
 
 ---
 
 ## Configuration
 
-The helidon-oci-swagger-maven-plugin has the following configuration options:
+The `helidon-oci-swagger-maven-plugin` has the following configuration options:
 
-| config key           | Default Value                                                                                                                                        | Description                                                                                                              |
-|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| language             | oracle-java-helidon-service                                                                                                                          | Generator to use.                                                                                                        |
-| specPath             | src/main/resources/swagger.yaml                                                                                                                      | The path to the swagger specification file.                                                                              |
-| outputDir            | ${project.build.directory}/generated-sources                                                                                                         | The directory to which the sources will be written.                                                                      |
-| basePackage          | The base package for all generated sources. The api files will be written to the ${basePackage}.api and models to the ${basePackage}.model packages. | The Instance Metadata Service uri. This can be used to override the default value, such as testing using SSH tunnelling. |
-| additionalProperties | none                                                                                                                                                 | Helidon generator-specific properties. See below for available values.                                                   |
-| importMappings       | none                                                                                                                                                 | The swagger import mappings parameter. It is highly unlikely that you need to modify this parameter.                     |
+| config key           | Default Value                                | Description                                                                                                              |
+|----------------------|----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| language             | oracle-java-helidon-service                  | Generator to use.                                                                                                        |
+| specPath             | src/main/resources/swagger.yaml              | The path to the swagger specification file.                                                                              |
+| outputDir            | ${project.build.directory}/generated-sources | The directory to which the sources will be written.                                                                      |
+| basePackage          | Required                                     | The base package for all generated sources. The api files will be written to the `${basePackage}.api` and models to the `${basePackage}.model` packages. |
+| additionalProperties | none                                         | Helidon generator-specific properties. See below for available values.                                                   |
+| importMappings       | none                                         | The swagger import mappings parameter. It is highly unlikely that you need to modify this parameter.                     |
 
 ### Model Configuration options:
 

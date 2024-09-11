@@ -18,7 +18,7 @@
 
 The Metrics module provides a way to publish metrics to T2 using the following features:
 1. Automatically publishes [Helidon MP metrics](https://helidon.io/docs/v4/mp/metrics/metrics) to T2 
-2. Allow to create programatically use [metrics-lib](https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/metrics-lib/browse) APIs to publish metrics to T2 via the metrics-reporter.
+2. Allow to programmatically use [metrics-lib](https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/metrics-lib/browse) APIs to generate and publish metrics to T2 via the metrics-reporter.
 
 
 ---
@@ -26,6 +26,7 @@ The Metrics module provides a way to publish metrics to T2 using the following f
 ## Maven Coordinates
 
 To enable the metrics module, add the following dependency to your project’s pom.xml:
+
 ```xml
 <dependency>
     <groupId>com.oracle.helidon.oci</groupId>
@@ -46,8 +47,8 @@ To enable the metrics module, add the following dependency to your project’s p
 
 ### T2 metrics-lib APIs
 
-1. The `TelemetryReporter` is automatically instantiated and intialized to the metrics-lib API when the metrics module is added as a dependency.
-2. Developers can use the various metrics-lib APIs in their code to start instrumenting their services. Example: 
+1. The `TelemetryReporter` is automatically instantiated and initialized using the metrics-lib API when the metrics module is added as a dependency.
+2. Developers can use various metrics-lib APIs in their code to start instrumenting their services. Example: 
    ```
    Metrics.emit("CreateRecord.success", 5d);
    try (Scope scope = Metrics.scope("WorkRequestGcRun")) {
@@ -117,7 +118,7 @@ Configure Helidon MP metrics publishing using the Helidon microprofile configura
    oci.metrics.batchSize=3
    oci.metrics.batchDelay=5
    ```
-3. Use [Metrics Explorer](https://devops.oci.oraclecorp.com/telemetry/mql/explore) or [Grafana](https://grafana.oci.oraclecorp.com/) to filter the results related to the number of invocations of `getJobRequest()` by specifing the `project` name (`helidon_oci` in the example above), the `fleet` name (`dataplane` in the same example)  and the annotated counter metric name (`getJobRequest` from the code example) .
+3. Use [Metrics Explorer](https://devops.oci.oraclecorp.com/telemetry/mql/explore) or [Grafana](https://grafana.oci.oraclecorp.com/) to filter the results related to the number of invocations of `getJobRequest()` by specifying the `project` name (`helidon_oci` in the example above), the `fleet` name (`dataplane` in the same example)  and the annotated counter metric name (`getJobRequest` from the code example) .
 
 
 ---

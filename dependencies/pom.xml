@@ -22,7 +22,7 @@
     <properties>
         <helidon.version>4.1.1</helidon.version>
         <!-- Versions for libraries used in build -->
-        <oci-java-sdk-version>3.47.0</oci-java-sdk-version>
+        <oci-java-sdk-version>3.46.1</oci-java-sdk-version>
 
         <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
 

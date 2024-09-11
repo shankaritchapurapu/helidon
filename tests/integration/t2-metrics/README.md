@@ -13,10 +13,10 @@ approach, the test application does not need to be deployed to the remote host t
 ### Prerequisites
 
 - OSSH setup with Bastion. Check the section `Using Bastion` in
-  the [reference-infra repository readme](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/reference-infra/browse/shepherd/README.md)
+  the [reference-infra repository readme](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-infra/browse/shepherd/README.md)
   for more details on how to set this up.
 - T2 policy and Dianoga Overlay Whitelisting. These will be created using the Shepherd Flock in
-  the [reference-infra repository](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/reference-infra/browse/shepherd).
+  the [reference-infra repository](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-infra/browse/shepherd).
 
 ### Steps
 

@@ -22,6 +22,7 @@ The Splat module provides support for OCI SplatMtlsFilter integration as a requi
 ## Maven Coordinates
 
 To enable SplatMtlsFiler add the following dependency to your project’s pom.xml:
+
 ```xml
 <dependency>
     <groupId>com.oracle.helidon.oci</groupId>
@@ -50,7 +51,9 @@ Configure SplatMtlsFilter using the Helidon microprofile configuration framework
 | oci.splat.mtls-filter-config.reject-x-region-calls       | false                          | Flag indicating whether SplatMtlsFilter will reject cross region client certificates.                                    | [3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=PLAT&title=2.+Splat+Onboarding#id-2.SplatOnboarding-3.IntroduceaSplat-onlyportprotectedbymTLS) |
 | oci.instance-metadata-uri                                | http://169.254.169.254/opc/v2/ | The Instance Metadata Service uri. This can be used to override the default value, such as testing using SSH tunnelling. |                                                                                                                                                                                                                        |
 | oci.region                                               | none                           | The region name. If not specified, the value will be automatically retrieved from the Instance Metadata Service.         |                                                                                                                                                                                                                        |
+
 Additionally, mTLS must be set up on the Helidon application. Below is an example configuration:
+
 ```properties
 # Client CA Trust bundle
 server.tls.client-auth=REQUIRE

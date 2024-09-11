@@ -22,11 +22,23 @@ in [OCI Error Codes](https://confluence.oci.oraclecorp.com/pages/viewpage.action
 
 To enable the error-code module, add the following dependency to your project’s pom.xml:
 
+Helidon SE:
 ```
 <dependency>
-    <groupId>com.oracle.helidon.oci</groupId>
-    <artifactId>helidon-oci-error-code</artifactId>
-</depenency>
+    <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
+    <artifactId>helidon-oci-common-error-code-webserver</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+or
+
+Helidon MP:
+```
+<dependency>
+    <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
+    <artifactId>helidon-oci-common-error-code-microprofile</artifactId>
+    <scope>runtime</scope>
+</dependency>
 ```
 
 ---
@@ -35,8 +47,8 @@ To enable the error-code module, add the following dependency to your project’
 ### Jakarta REST Server (Helidon MP)
 
 To report an error, simply create and throw a `RenderableException`.
-This module registers an exception mapper that automatically
-converts this exception to a `Response`. For example,
+Module included in your pom file based on the Helidon flavor as shown [above](#maven-coordinates), registers an exception 
+mapper that automatically converts this exception to a `Response`. For example,
 
 ```java
     if (notAuthenticated()) {
