@@ -18,6 +18,7 @@
     <name>Helidon OCI Common Javax shim layer for modules like JAX-RS</name>
 
     <properties>
+        <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>
     </properties>
 
     <dependencies>

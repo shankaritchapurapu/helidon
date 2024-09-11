@@ -20,6 +20,7 @@
     <name>Helidon OCI Repackaged OCI vault-java-sdk</name>
 
     <properties>
+        <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>
         <!-- Overrides -->
         <version.lib.annotation-api>2.1.1</version.lib.annotation-api>
 

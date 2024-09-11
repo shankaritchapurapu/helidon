@@ -21,6 +21,8 @@
 
     <properties>
         <dependency-check.skip>true</dependency-check.skip>
+        <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>
+        <dependency-check.skip>true</dependency-check.skip>
     </properties>
 
     <dependencies>

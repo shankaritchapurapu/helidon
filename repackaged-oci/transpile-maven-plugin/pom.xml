@@ -19,6 +19,10 @@
 
     <name>Helidon OCI Transpile plugin</name>
 
+    <properties>
+        <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.javassist</groupId>

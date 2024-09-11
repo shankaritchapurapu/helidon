@@ -47,7 +47,7 @@ $ mvn validate  -Pcopyright
 
 ```bash
 # cd to the component you want to check
-$ mvn verify  -Pspotbugs
+$ mvn validate  -Pspotbugs
 ```
 
 ## How to locally test your OCI SDK Integration

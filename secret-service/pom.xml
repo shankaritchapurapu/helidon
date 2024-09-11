@@ -18,6 +18,10 @@
 
     <name>Helidon OCI Secret Service</name>
 
+    <properties>
+        <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>
+    </properties>
+
     <dependencies>
         <!-- https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEVCENTRAL&title=Java+SDK+to+Manage+Secrets+in+the+Control+Plane -->
         <dependency>

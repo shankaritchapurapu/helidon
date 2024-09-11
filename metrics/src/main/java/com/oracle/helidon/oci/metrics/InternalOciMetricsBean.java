@@ -81,7 +81,8 @@ class InternalOciMetricsBean extends OciMetricsSupportFactory {
             try {
                 instanceInfo = registry.get(ImdsInstanceInfo.class);
             } catch (ServiceRegistryException t) {
-                LOGGER.log(Level.WARNING, "Metrics will be disabled due to a failure in retrieving IMDS instance information with error: " + t);
+                LOGGER.log(Level.WARNING, "Metrics will be disabled due to a failure in retrieving "
+                        + "IMDS instance information with error: " + t);
                 result.enabled(false);
                 return result;
             }
