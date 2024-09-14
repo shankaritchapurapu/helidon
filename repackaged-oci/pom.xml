@@ -18,6 +18,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>javax-shim</module>
         <module>transpile-maven-plugin</module>
         <module>repackaged-oci-sdk-oci-internals-commons</module>
         <module>repackaged-oci-vault-java-sdk</module>

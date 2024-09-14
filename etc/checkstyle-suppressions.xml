@@ -22,17 +22,17 @@ record here.
     - File exclusions (exceptions)
     - FileLength cannot be excluded using a @SuppressWarnings
     -->
-    <suppress files="common/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Jakarta*"
+    <suppress files="repackaged-oci/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Jakarta*"
             checks="MissingJavadocTypeCheck"/>
-    <suppress files="common/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Javax*"
+    <suppress files="repackaged-oci/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Javax*"
             checks="MissingJavadocTypeCheck"/>
-    <suppress files="common/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Jakarta*"
+    <suppress files="repackaged-oci/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Jakarta*"
             checks="RedundantModifierCheck"/>
-    <suppress files="common/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Javax*"
+    <suppress files="repackaged-oci/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Javax*"
             checks="RedundantModifierCheck"/>
-    <suppress files="common/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Jakarta*"
+    <suppress files="repackaged-oci/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Jakarta*"
             checks="MissingJavadocMethodCheck"/>
-    <suppress files="common/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Javax*"
+    <suppress files="repackaged-oci/javax-shim/src/main/java/com/oracle/helidon/oci/common/javax/jaxrs/shim/Javax*"
             checks="MissingJavadocMethodCheck"/>
     <suppress files="repackaged-oci/repackaged-oci-vault-java-sdk/src/main/java/com/oracle/pic/vault/util/ProxyHttpClientBuilder\.java"
             checks="MissingJavadocTypeCheck"/>

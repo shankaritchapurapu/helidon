@@ -41,8 +41,8 @@
             <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.helidon.oci.common</groupId>
-            <artifactId>helidon-oci-common-javax-shim</artifactId>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-repackaged-javax-shim</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>javax.ws.rs</groupId>

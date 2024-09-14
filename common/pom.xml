@@ -20,7 +20,6 @@
 
     <modules>
         <module>error-code</module>
-        <module>javax-shim</module>
         <module>request-id</module>
     </modules>
 

@@ -15,7 +15,7 @@ libraries that OCI teams produce (that are not part of the public OCI SDK), then
 
 - JDK 21 or higher
 - Maven 3.6.1 or higher
-- Helidon 4.1.0 or higher
+- Helidon 4.1.1 or higher
 
 ## Usage
 
@@ -57,10 +57,14 @@ deploy and run this integration in an OCI instance as it needs the _Instance Met
 provider that is used to create an _Instance Principal Authentication_ can be set to point to a new _Instance Metadata Service_
 base url. In combination with an ssh tunnel that can forward data from the chosen local endpoint to the actual
 _Instance Metadata Service_ base url on the remote host, the application can now be run locally without the need to deploy it to
-the remote instance. As a prerequisite for making this approach successful, all the necessary actions to onboard and provision
+the remote instance. 
+
+As a prerequisite for making this approach successful, all the necessary actions to onboard and provision
 the OCI native service needs to be completed. Resource management is done using Shepherd, so the
 [reference-infra repository](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-infra/browse) can be modified to
-add the needed resources. Below is example code to programmatically set the metadataBaseUrl and an example command to establish
+add the needed resources. 
+
+Below is example code to programmatically set the metadataBaseUrl and an example command to establish
 an ssh tunnel to the remote Instance Metadata Service for testing the code locally.
 
 1. Set Instance Metadata Service base URL (and some additional configuration) in `oci-config.yaml` either on classpath, or in the

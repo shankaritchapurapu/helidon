@@ -29,10 +29,6 @@
             <artifactId>metrics-module</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.helidon.oci.common</groupId>
-            <artifactId>helidon-oci-common-javax-shim</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.oracle.pic.telemetry.commons</groupId>
             <artifactId>metrics-lib</artifactId>
         </dependency>
