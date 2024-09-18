@@ -4,27 +4,17 @@
 
 This module contains tests related to integration with internal OCI Telemetry otherwise known as T2.
 
-## Testing with SSH Tunneling
+## Prerequisites
 
-Most OCI native integration including T2 metrics require access to the Instance Metadata Service. By Creating an SSH tunnel to
-forward connection from a local host to the remote host, then Instance Metadata Service can now be accessed locally. With this
-approach, the test application does not need to be deployed to the remote host thereby promoting fast iteration to code changes.
+Please see [How to locally test your OCI SDK Integration](../../../README.md) to set up ssh tunneling for the Instance Metadata Service.
 
-### Prerequisites
-
-- OSSH setup with Bastion. Check the section `Using Bastion` in
-  the [reference-infra repository readme](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-infra/browse/shepherd/README.md)
-  for more details on how to set this up.
-- T2 policy and Dianoga Overlay Whitelisting. These will be created using the Shepherd Flock in
-  the [reference-infra repository](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-infra/browse/shepherd).
-
-### Steps
+## Steps
 
 1. Run the SSH tunnel command to open up a connection to the remote host and forward any connection on local port 8000 to the
    Instance MetaData Service endpoint (169.254.169.254:80) of the remote host. Note that this example uses `ztb-api-ad1` host
    alias that should have been set up in the OSSH config.
    ```shell
-   $ ssh -v -L 8000:169.254.169.254:80 ztb-api-ad1 -t watch -n 90 date
+   $ ssh -v -L 8000:169.254.169.254:80 oci-reference-service-ad1 -t watch -n 90 date
    ```
 2. Run the unit test using `STTest`profile, where `ST` stands for `SSH Tunneling`.
    ```shell

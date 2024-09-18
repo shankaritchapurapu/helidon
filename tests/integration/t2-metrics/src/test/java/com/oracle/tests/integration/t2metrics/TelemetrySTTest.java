@@ -30,7 +30,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class TelemetrySTTest {
-    private static final String PROJECT = "xxxx";
+    private static final String PROJECT = "oci-helidon-reference-demoplane-api-demo";
     private static final String FLEET_T2 = "t2-api";
     private static final String FLEET_MONITORING = "monitoring-sdk";
     private static final String METRIC_NAME = "t2metric";
@@ -101,7 +101,7 @@ class TelemetrySTTest {
                                                 "name2", "value2",
                                                 "name3", "value3");
 
-        LOGGER.info("Assembing metricDetails");
+        LOGGER.info("Assembling metricDetails");
         MetricDataDetails metricDataDetails =
                 MetricDataDetails.builder()
                         // T2 metric compartment for OC1
