@@ -19,7 +19,6 @@ import com.oracle.bmc.sdk.swagger.codegen.OracleJavaSdkCodegen;
 import com.oracle.bmc.sdk.swagger.codegen.SpecGenerationType;
 import com.oracle.helidon.oci.swagger.codegen.helidon.OracleJavaHelidonServiceCodegen;
 import io.swagger.codegen.utils.OptionUtils;
-import lombok.Setter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.maven.plugin.AbstractMojo;
@@ -49,39 +48,33 @@ public class OracleSwaggerMojo extends AbstractMojo {
      * The Swagger specification path. This may be relative or an absolute path.
      */
     @Parameter(defaultValue = "src/main/resources/swagger.yaml")
-    @Setter
     private String specPath;
 
     /**
      * Location to put the output.
      */
     @Parameter(defaultValue = "${project.build.directory}/generated-sources")
-    @Setter
     private String outputDir;
 
     /**
      * The package name to prefix all generated classes with, ex, "com.oracle.oci.myservice".
      */
     @Parameter(required = true)
-    @Setter
     private String basePackage;
 
     /**
      * A map of classes and the import that should be used for that class.
      */
     @Parameter(name = "importMappings")
-    @Setter
     private List<String> importMappings;
 
     @Parameter(defaultValue = OracleJavaHelidonServiceCodegen.LANGUAGE)
-    @Setter
     private String language;
 
     /**
      * Additional properties to pass forward to the SDK code generator.
      */
     @Parameter
-    @Setter
     private Map<String, Object> additionalProperties;
 
     @Override
@@ -211,7 +204,7 @@ public class OracleSwaggerMojo extends AbstractMojo {
                 String.valueOf(
                         OracleJavaHelidonServiceCodegen.ConfigOption.OPTION_ENABLE_VALIDATION.isDefaultValue()));
 
-        // assuming most teams will not override the lombok default name, so configure SDK to use the default logger name
+        // assuming most teams will not override the default name, so configure SDK to use the default logger name
         modelAdditionalProperties.putIfAbsent(
                 OracleJavaSdkCodegen.OPTION_LOGGER_NAME, DEFAULT_LOGGER_NAME);
 
@@ -271,5 +264,59 @@ public class OracleSwaggerMojo extends AbstractMojo {
         } catch (AssertionError e) {
             throw new MojoFailureException("Failed to parse Swagger spec from: " + specPath, e);
         }
+    }
+
+    /**
+     * Sets Swagger specification path. This may be relative or an absolute path.
+     *
+     * @param specPath String
+     */
+    public void setSpecPath(String specPath) {
+        this.specPath = specPath;
+    }
+
+    /**
+     * Sets location to put the output.
+     *
+     * @param outputDir String
+     */
+    public void setOutputDir(String outputDir) {
+        this.outputDir = outputDir;
+    }
+
+    /**
+     * Sets package name to prefix all generated classes with, ex, "com.oracle.oci.myservice".
+     *
+     * @param basePackage String
+     */
+    public void setBasePackage(String basePackage) {
+        this.basePackage = basePackage;
+    }
+
+    /**
+     * A map of classes and the import that should be used for that class.
+     *
+     * @param importMappings List<String>
+     */
+    public void setImportMappings(List<String> importMappings) {
+        this.importMappings = importMappings;
+    }
+
+    /**
+     * Specify what type of code generator to use, defaults to oracle-java-helidon-service.
+     *
+     * @param language String
+     */
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    /**
+     * Additional properties to pass forward to the SDK code generator.
+     *
+     * @param additionalProperties Map<String, Object>
+     */
+    public void setAdditionalProperties(Map<String, Object> additionalProperties) {
+        this.additionalProperties = additionalProperties;
     }
 }

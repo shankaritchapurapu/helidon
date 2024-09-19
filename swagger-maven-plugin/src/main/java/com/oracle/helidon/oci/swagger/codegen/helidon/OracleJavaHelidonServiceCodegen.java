@@ -23,8 +23,6 @@ import io.swagger.models.Model;
 import io.swagger.models.Operation;
 import io.swagger.models.Swagger;
 import io.swagger.models.parameters.Parameter;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Generates a Helidon MP service.
@@ -258,7 +256,6 @@ public class OracleJavaHelidonServiceCodegen extends OracleJavaSdkCodegen
     /**
      * Options supported by service for codegen customization.
      */
-    @RequiredArgsConstructor
     public enum ConfigOption {
         /**
          * Option to support validation, enabled by default.
@@ -306,7 +303,30 @@ public class OracleJavaHelidonServiceCodegen extends OracleJavaSdkCodegen
          */
         OPTION_USE_JAXRS_SERVICE_RESPONSE("useJaxRsServiceResponse", false);
 
-        @Getter private final String additionalPropertyKey;
-        @Getter private final boolean defaultValue;
+        private final String additionalPropertyKey;
+        private final boolean defaultValue;
+
+        ConfigOption(final String additionalPropertyKey, final boolean defaultValue) {
+            this.additionalPropertyKey = additionalPropertyKey;
+            this.defaultValue = defaultValue;
+        }
+
+        /**
+         * Returns the key for additionalProperties set as option.
+         *
+         * @return String
+         */
+        public String getAdditionalPropertyKey() {
+            return this.additionalPropertyKey;
+        }
+
+        /**
+         * Returns true if the value is default.
+         *
+         * @return boolean
+         */
+        public boolean isDefaultValue() {
+            return this.defaultValue;
+        }
     }
 }

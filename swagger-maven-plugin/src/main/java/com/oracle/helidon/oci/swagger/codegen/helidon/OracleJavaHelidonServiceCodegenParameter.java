@@ -8,7 +8,6 @@ import com.oracle.bmc.sdk.swagger.codegen.OracleCodegenConfig;
 import com.oracle.bmc.sdk.swagger.codegen.model.java.OracleJavaCodegenParameter;
 import io.swagger.codegen.CodegenParameter;
 import io.swagger.models.Swagger;
-import lombok.NonNull;
 
 /**
  * Parameters that can be set for customizing Helidon based code generation from API specification.
@@ -22,9 +21,14 @@ public class OracleJavaHelidonServiceCodegenParameter extends OracleJavaCodegenP
      */
     public OracleJavaHelidonServiceCodegenParameter(
             CodegenParameter original,
-            @NonNull OracleCodegenConfig codegen,
-            @NonNull Swagger spec) {
+            OracleCodegenConfig codegen,
+            Swagger spec) {
         super(original, codegen, spec);
+        if (codegen == null) {
+            throw new NullPointerException("codegen can't be null");
+        } else if (spec == null) {
+            throw new NullPointerException("spec can't be null");
+        }
     }
 
     /**

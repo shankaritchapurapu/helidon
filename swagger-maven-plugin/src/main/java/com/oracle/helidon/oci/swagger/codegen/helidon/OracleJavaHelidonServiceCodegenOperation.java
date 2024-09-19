@@ -4,6 +4,7 @@
 
 package com.oracle.helidon.oci.swagger.codegen.helidon;
 
+import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -16,8 +17,6 @@ import io.swagger.codegen.CodegenParameter;
 import io.swagger.models.Operation;
 import io.swagger.models.Swagger;
 import io.swagger.models.parameters.Parameter;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,8 +25,9 @@ import static java.lang.String.format;
 /**
  * Represents an operation and its metadata required to generate a Java JaxRS Client.
  */
-@Slf4j
 public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenOperation {
+    private static final System.Logger LOGGER = System.getLogger(OracleJavaCodegenOperation.class.getName());
+
     private static final String VENDOR_EXTENSION_CAPTURE_PATTERN = "x-capture-pattern";
 
     /**
@@ -59,27 +59,35 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
      * @param spec
      */
     public OracleJavaHelidonServiceCodegenOperation(
-            @NonNull OracleJavaHelidonServiceCodegen oracleJavaHelidonServiceCodegen,
-            @NonNull CodegenOperation original,
+            OracleJavaHelidonServiceCodegen oracleJavaHelidonServiceCodegen,
+            CodegenOperation original,
             Operation baseOperation,
-            @NonNull Swagger spec) {
+            Swagger spec) {
         super(oracleJavaHelidonServiceCodegen, original, baseOperation, spec);
-        this.codegenOperation = original;
-        log.info("Starting operation " + operationId);
+        if (oracleJavaHelidonServiceCodegen == null) {
+            throw new NullPointerException("oracleJavaHelidonServiceCodegen can't be null");
+        } else if (original == null) {
+            throw new NullPointerException("original can't be null");
+        } else if (spec == null) {
+            throw new NullPointerException("spec can't be null");
+        } else {
+            this.codegenOperation = original;
+            LOGGER.log(Level.INFO, "Starting operation " + operationId);
 
-        // Update params to be fully qualified
-        fixFullyQualifiedModelClassNames(oracleJavaHelidonServiceCodegen.modelPackage());
+            // Update params to be fully qualified
+            fixFullyQualifiedModelClassNames(oracleJavaHelidonServiceCodegen.modelPackage());
 
-        // Update return type and set return type for the abstract method
-        resolveReturnType(
-                oracleJavaHelidonServiceCodegen.modelPackage(), oracleJavaHelidonServiceCodegen);
+            // Update return type and set return type for the abstract method
+            resolveReturnType(
+                    oracleJavaHelidonServiceCodegen.modelPackage(), oracleJavaHelidonServiceCodegen);
 
-        // add configured contexts
-        resolveContexts(oracleJavaHelidonServiceCodegen);
+            // add configured contexts
+            resolveContexts(oracleJavaHelidonServiceCodegen);
 
-        resolvePathCapturePattern(original, baseOperation);
+            resolvePathCapturePattern(original, baseOperation);
 
-        log.info("Finished operation " + operationId);
+            LOGGER.log(Level.INFO, "Finished operation " + operationId);
+        }
     }
 
     /**
@@ -144,7 +152,7 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
         if (bodyParam == null || BooleanUtils.isNotTrue(bodyParam.isBodyParam)) {
             return;
         }
-        log.info("Body Param " + bodyParam.dataType);
+        LOGGER.log(Level.INFO, "Body Param " + bodyParam.dataType);
         boolean isBodyParam = BooleanUtils.isTrue(bodyParam.isBodyParam);
         boolean isNonPrimitiveType = BooleanUtils.isNotTrue(bodyParam.isPrimitiveType);
 
