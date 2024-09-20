@@ -38,7 +38,7 @@
         <oracle-internal-logging-version>3.5.8</oracle-internal-logging-version>
         <oracle-internal-sdk-common-version>1.2</oracle-internal-sdk-common-version>
         <oracle-internal-secret-service-cp-java-client-version>1.1.6</oracle-internal-secret-service-cp-java-client-version>
-        <oracle-internal-splat-sdk-version>0.1.39874</oracle-internal-splat-sdk-version>
+        <oracle-internal-splat-sdk-version>0.2.3</oracle-internal-splat-sdk-version>
         <oracle-internal-vault-java-sdk-version>2.0.4</oracle-internal-vault-java-sdk-version>
         <oracle-internal-vault-user-api-spec-version>1.0.78</oracle-internal-vault-user-api-spec-version>
         <oracle-internal-vault-user-java-client-version>1.0.8</oracle-internal-vault-user-java-client-version>
@@ -312,6 +312,18 @@
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>
                         <artifactId>javax.ws.rs-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.commons</groupId>
+                        <artifactId>service-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>javax.servlet-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
