@@ -5,8 +5,11 @@
 package com.oracle.helidon.oci.secret;
 
 import io.helidon.common.config.Config;
+import io.helidon.common.configurable.ResourceConfig;
 import io.helidon.common.tls.TlsManager;
 import io.helidon.common.tls.spi.TlsManagerProvider;
+
+import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
  * The service provider for DefaultSecretServiceTlsManager.
@@ -28,7 +31,18 @@ public class DefaultSecretServiceTlsManagerProvider implements TlsManagerProvide
 
     @Override
     public TlsManager create(Config config, String name) {
-        SecretServiceTlsManagerConfig cfg = SecretServiceTlsManagerConfig.create(config);
+        // FIXME: Revert when https://github.com/helidon-io/helidon/issues/9265 is fixed
+        String enabled = ConfigProvider.getConfig().getConfigValue("server.tls.enabled").getValue();
+        SecretServiceTlsManagerConfig cfg;
+        if (enabled != null && enabled.equals("false")) {
+            cfg = SecretServiceTlsManagerConfig.builder()
+                    .reload(ReloadConfig.create())
+                    .pki(PkiConfig.create())
+                    .trust(ResourceConfig.builder().content("").build())
+                    .buildPrototype();
+        } else {
+            cfg = SecretServiceTlsManagerConfig.create(config);
+        }
         return TlsManagerProvider.getOrCreate(cfg, (c) -> new DefaultSecretServiceTlsManager(cfg, name, config));
     }
 
