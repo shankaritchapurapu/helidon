@@ -9,6 +9,18 @@
         xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
 
     <Match>
+        <Class name="com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaContainerRequestFilter"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <Class name="com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaClientFilter"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
+        <Class name="com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaRequestInterceptor"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <Match>
         <Class name="com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaCacheControl"/>
         <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS"/>
     </Match>

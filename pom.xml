@@ -51,14 +51,16 @@
         <version.plugin.helidon-build-tools>4.0.9</version.plugin.helidon-build-tools>
         <version.plugin.dependency-check>10.0.4</version.plugin.dependency-check>
         <version.plugin.surefire>3.1.0</version.plugin.surefire>
+        <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
         <version.plugin.shade>3.5.1</version.plugin.shade>
-        <version.plugin.spotbugs>4.7.3.5</version.plugin.spotbugs>
+        <version.plugin.spotbugs>4.8.6.5</version.plugin.spotbugs>
         <version.plugin.findsecbugs>1.12.0</version.plugin.findsecbugs>
         <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
         <version.plugin.maven-directory-plugin>1.0</version.plugin.maven-directory-plugin>
         <version.plugin.maven-enforcer-plugin>3.4.1</version.plugin.maven-enforcer-plugin>
         <version.plugin.maven-exec-plugin>3.1.0</version.plugin.maven-exec-plugin>
         <version.plugin.maven-jar-plugin>3.3.0</version.plugin.maven-jar-plugin>
+        <version.plugin.maven-javadoc-plugin>2.10.4</version.plugin.maven-javadoc-plugin>
         <version.plugin.maven-versions-plugin>2.16.1</version.plugin.maven-versions-plugin>
     </properties>
 
@@ -68,6 +70,7 @@
         <module>dependencies</module>
         <module>common</module>
         <module>repackaged-oci</module>
+        <module>identity</module>
         <module>metrics</module>
         <module>secret-service</module>
         <module>splat</module>
@@ -89,6 +92,13 @@
             <dependency>
                 <groupId>io.helidon.microprofile.testing</groupId>
                 <artifactId>helidon-microprofile-testing-junit5</artifactId>
+                <scope>test</scope>
+                <version>${helidon.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.helidon.microprofile.testing</groupId>
+                <artifactId>helidon-microprofile-testing-mocking</artifactId>
+                <scope>test</scope>
                 <version>${helidon.version}</version>
             </dependency>
 
@@ -182,27 +192,26 @@
                                             <excludedGav>jakarta.servlet:jakarta.servlet-api:.*</excludedGav>
                                             <excludedGav>jakarta.el:jakarta.el-api:.*</excludedGav>
                                             <excludedGav>javax.ws.rs:javax.ws.rs-api:.*</excludedGav>
+                                            <excludedGav>javax.xml.bind:jaxb-api:.*</excludedGav>
+                                            <excludedGav>javax.activation:javax.activation-api:.*</excludedGav>
+                                            <excludedGav>javax.validation:validation-api:.*</excludedGav>
+                                            <excludedGav>javax.annotation:javax.annotation-api:.*</excludedGav>
                                         </excludedGavRegExs>
                                     </helidonDependenciesRule>
                                     <bannedDependencies>
                                         <searchTransitive>true</searchTransitive>
                                         <excludes>
                                             <exclude>io.dropwizard</exclude>
-                                            <exclude>com.oracle.pic.commons:service-core</exclude>
                                             <exclude>junit</exclude>
                                             <exclude>lombok</exclude>
                                         </excludes>
                                     </bannedDependencies>
-                                    <noMixedOciJavaSdkVersionsRule
-                                            implementation="com.oracle.bmc.enforcer.rule.NoMixedOciJavaSdkVersionsRule">
+                                    <noMixedOciJavaSdkVersionsRule implementation="com.oracle.bmc.enforcer.rule.NoMixedOciJavaSdkVersionsRule">
                                         <allowedDependencies>
                                             <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common:*</allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:*
-                                            </allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common-httpclient:*
-                                            </allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-objectstorage-generated:*
-                                            </allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common-httpclient:*</allowedDependency>
+                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-objectstorage-generated:*</allowedDependency>
                                         </allowedDependencies>
                                     </noMixedOciJavaSdkVersionsRule>
                                     <!-- https://maven.apache.org/enforcer/enforcer-rules/dependencyConvergence.html -->

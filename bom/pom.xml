@@ -43,6 +43,11 @@
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-javax-jersey-shim</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.oracle.helidon.oci.common.requestid</groupId>
                 <artifactId>helidon-oci-common-request-id</artifactId>
                 <version>${helidon.oci.version}</version>
@@ -74,6 +79,11 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-identity</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
@@ -81,7 +91,7 @@
             <!-- Helidon OCI repackaged artifacts -->
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-repackaged-javax-shim</artifactId>
+                <artifactId>helidon-oci-javax-shim</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
@@ -91,7 +101,17 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-sdk-oci-internals-commons</artifactId>
+                <artifactId>helidon-repackaged-oci-splat-sdk</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-oci-authentication-client</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
 

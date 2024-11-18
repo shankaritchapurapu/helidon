@@ -54,7 +54,7 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
      * generate additional fields for use in templates.
      *
      * @param oracleJavaHelidonServiceCodegen
-     * @param original The operation to copy.
+     * @param original                        The operation to copy.
      * @param baseOperation
      * @param spec
      */
@@ -64,30 +64,23 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
             Operation baseOperation,
             Swagger spec) {
         super(oracleJavaHelidonServiceCodegen, original, baseOperation, spec);
-        if (oracleJavaHelidonServiceCodegen == null) {
-            throw new NullPointerException("oracleJavaHelidonServiceCodegen can't be null");
-        } else if (original == null) {
-            throw new NullPointerException("original can't be null");
-        } else if (spec == null) {
-            throw new NullPointerException("spec can't be null");
-        } else {
-            this.codegenOperation = original;
-            LOGGER.log(Level.INFO, "Starting operation " + operationId);
 
-            // Update params to be fully qualified
-            fixFullyQualifiedModelClassNames(oracleJavaHelidonServiceCodegen.modelPackage());
+        this.codegenOperation = original;
+        LOGGER.log(Level.INFO, "Starting operation " + operationId);
 
-            // Update return type and set return type for the abstract method
-            resolveReturnType(
-                    oracleJavaHelidonServiceCodegen.modelPackage(), oracleJavaHelidonServiceCodegen);
+        // Update params to be fully qualified
+        fixFullyQualifiedModelClassNames(oracleJavaHelidonServiceCodegen.modelPackage());
 
-            // add configured contexts
-            resolveContexts(oracleJavaHelidonServiceCodegen);
+        // Update return type and set return type for the abstract method
+        resolveReturnType(
+                oracleJavaHelidonServiceCodegen.modelPackage(), oracleJavaHelidonServiceCodegen);
 
-            resolvePathCapturePattern(original, baseOperation);
+        // add configured contexts
+        resolveContexts(oracleJavaHelidonServiceCodegen);
 
-            LOGGER.log(Level.INFO, "Finished operation " + operationId);
-        }
+        resolvePathCapturePattern(original, baseOperation);
+
+        LOGGER.log(Level.INFO, "Finished operation " + operationId);
     }
 
     /**
@@ -201,6 +194,17 @@ public class OracleJavaHelidonServiceCodegenOperation extends OracleJavaCodegenO
     }
 
     private void resolveContexts(OracleJavaHelidonServiceCodegen oracleJavaHelidonServiceCodegen) {
+        if (oracleJavaHelidonServiceCodegen.getOptionValue(
+                OracleJavaHelidonServiceCodegen.ConfigOption.OPTION_CONTEXTS_IDENTITY)) {
+            contextsToInclude.add(
+                    "@"
+                            + "com.oracle.pic.identity.authorization.sdk.context.PrincipalContext "
+                            + "com.oracle.pic.identity.authentication.Principal principal");
+            contextsToInclude.add(
+                    "@"
+                            + "com.oracle.pic.identity.authorization.sdk.context.AuthorizationRequestContext "
+                            + "com.oracle.pic.identity.authorization.sdk.AuthorizationRequest authorizationRequest");
+        }
         if (oracleJavaHelidonServiceCodegen.getOptionValue(
                 OracleJavaHelidonServiceCodegen.ConfigOption.OPTION_CONTEXTS_JAXRS_HTTPHEADERS)) {
             contextsToInclude.add(

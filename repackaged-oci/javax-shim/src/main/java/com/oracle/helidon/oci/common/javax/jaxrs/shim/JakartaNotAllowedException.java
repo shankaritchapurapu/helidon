@@ -1,0 +1,15 @@
+/*
+ * Copyright (c) 2024 Oracle and/or its affiliates.
+ */
+
+package com.oracle.helidon.oci.common.javax.jaxrs.shim;
+
+import java.util.Arrays;
+
+public class JakartaNotAllowedException extends jakarta.ws.rs.NotAllowedException {
+    public JakartaNotAllowedException(javax.ws.rs.NotAllowedException delegate) {
+        super(delegate.getMessage(), new JakartaResponse(delegate.getResponse()), JaxRsShim.toJakarta(delegate.getCause()));
+        super.setStackTrace(delegate.getStackTrace());
+        Arrays.stream(delegate.getSuppressed()).forEach(super::addSuppressed);
+    }
+}

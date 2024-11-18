@@ -9,10 +9,10 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
-class FutureUtils {
+final class FutureUtils {
 
     private FutureUtils() {
-        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+        //noop
     }
 
     static Future<javax.ws.rs.core.Response> toJavaxResponse(Future<jakarta.ws.rs.core.Response> jakartaResponse) {

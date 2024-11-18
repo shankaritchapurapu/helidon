@@ -20,5 +20,9 @@
         <Class name="com.oracle.helidon.oci.secret.SecretServiceMpConfigSource"/>
         <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
     </Match>
+    <Match>
+        <Class name="com.oracle.helidon.oci.secret.SecretServiceClient"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
 
 </FindBugsFilter>

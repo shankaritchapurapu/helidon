@@ -15,10 +15,10 @@ import com.oracle.pic.commons.util.Region;
  * @see
  * <a href="https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEVCENTRAL&title=Overlay+Telemetry+%2528T2%2529+Basics#OverlayTelemetry(T2)Basics-T2CompartmentIDbyRealm">T2 metrics compartments</a>
  */
-class MetricsCompartmentHelper {
+final class MetricsCompartmentHelper {
 
     private MetricsCompartmentHelper() {
-        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+        //noop
     }
 
     private static final Map<String, String> REALM_TO_METRICS_COMPARTMENT = Map.of(

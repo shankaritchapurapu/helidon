@@ -26,10 +26,6 @@
     </Match>
     <Match>
         <Class name="com.oracle.helidon.oci.swagger.codegen.helidon.OracleJavaHelidonServiceCodegenOperation"/>
-        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS"/>
-    </Match>
-    <Match>
-        <Class name="com.oracle.helidon.oci.swagger.codegen.helidon.OracleJavaHelidonServiceCodegenOperation"/>
-        <Bug pattern="URF_UNREAD_FIELD"/>
+        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS, URF_UNREAD_FIELD, CT_CONSTRUCTOR_THROW"/>
     </Match>
 </FindBugsFilter>

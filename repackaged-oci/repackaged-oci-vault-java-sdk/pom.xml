@@ -42,7 +42,7 @@
         </dependency>
         <dependency>
             <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-repackaged-javax-shim</artifactId>
+            <artifactId>helidon-oci-javax-shim</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>javax.ws.rs</groupId>
@@ -66,11 +66,28 @@
             <groupId>com.oracle.pic.vault</groupId>
             <artifactId>vault-java-sdk</artifactId>
             <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.oracle.pic.vault</groupId>
+                    <artifactId>vault-user-java-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.oracle.pic.vault</groupId>
-            <artifactId>vault-user-java-client</artifactId>
+            <artifactId>vault-user-java-client-v3</artifactId>
+            <version>1.0.8</version>
             <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>bcpkix-fips</groupId>
+                    <artifactId>bcpkix-fips</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>bc-fips</groupId>
+                    <artifactId>bc-fips</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -168,10 +185,6 @@
                 <artifactId>maven-dependency-plugin</artifactId>
             </plugin>
             <plugin>
-                <groupId>com.oracle.bmc.sdk</groupId>
-                <artifactId>bmc-sdk-swagger-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
             </plugin>
@@ -201,7 +214,7 @@
                             <artifactSet>
                                 <includes>
                                     <include>com.oracle.pic.vault:vault-java-sdk</include>
-                                    <include>com.oracle.pic.vault:vault-user-java-client</include>
+                                    <include>com.oracle.pic.vault:vault-user-java-client-v3</include>
                                 </includes>
                             </artifactSet>
                         </configuration>

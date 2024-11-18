@@ -17,7 +17,7 @@ import io.helidon.integrations.oci.ImdsInstanceInfo;
 import io.helidon.service.registry.GlobalServiceRegistry;
 import io.helidon.webserver.http.ServerRequest;
 
-import com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaServerFilter;
+import com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaContainerRequestFilter;
 import com.oracle.pic.commons.util.Region;
 import com.oracle.pic.platform.splat.sdk.config.SplatMtlsFilterConfig;
 import jakarta.annotation.PostConstruct;
@@ -43,7 +43,7 @@ public class SplatMtlsFilter implements ContainerRequestFilter {
     static final String OCI_REGION_CONFIG_KEY = "oci.region";
     private static final String X509_CERTIFICATE_ATTRIBUTE = "javax.servlet.request.X509Certificate";
     private static final Logger LOGGER = Logger.getLogger(SplatMtlsFilter.class.getName());
-    private JakartaServerFilter shimmedSplatMtlsFilter;
+    private JakartaContainerRequestFilter shimmedSplatMtlsFilter;
     @Context
     private ServerRequest req;
 
@@ -108,7 +108,7 @@ public class SplatMtlsFilter implements ContainerRequestFilter {
 
     protected void createSplatMtlsFilter(String region, SplatMtlsFilterConfig splatMtlsFilterConfig) {
         try {
-            shimmedSplatMtlsFilter = new JakartaServerFilter(
+            shimmedSplatMtlsFilter = new JakartaContainerRequestFilter(
                     new com.oracle.pic.platform.splat.sdk.mtls.SplatMtlsFilter(Region.fromPublicRegionName(region),
                                                                                splatMtlsFilterConfig));
         } catch (Throwable e) {

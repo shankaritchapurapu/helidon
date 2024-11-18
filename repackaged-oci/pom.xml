@@ -3,13 +3,14 @@
     Copyright (c) 2024 Oracle and/or its affiliates.
 -->
 
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns="http://maven.apache.org/POM/4.0.0"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>com.oracle.helidon.oci</groupId>
         <artifactId>helidon-oci-project</artifactId>
         <version>1.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -19,8 +20,11 @@
 
     <modules>
         <module>javax-shim</module>
-        <module>transpile-maven-plugin</module>
-        <module>repackaged-oci-sdk-oci-internals-commons</module>
+        <module>javax-jersey-shim</module>
+        <module>repackage-plugin</module>
+        <module>repackaged-oci-splat-sdk</module>
+        <module>repackaged-oci-authentication-client</module>
+        <module>repackaged-oci-authorization-sdk</module>
         <module>repackaged-oci-vault-java-sdk</module>
     </modules>
 
@@ -54,55 +58,6 @@
                     </executions>
                 </plugin>
                 <plugin>
-                    <groupId>com.oracle.bmc.sdk</groupId>
-                    <artifactId>bmc-sdk-swagger-maven-plugin</artifactId>
-                    <version>${bmc-sdk-swagger-maven-plugin.version}</version>
-                    <executions>
-                        <execution>
-                            <id>java-sdk-spec</id>
-                            <phase>generate-sources</phase>
-                            <goals>
-                                <goal>generate</goal>
-                            </goals>
-                            <configuration>
-                                <language>oracle-java-sdk</language>
-                                <specPath>${codegen.spec.swagger}</specPath>
-                                <basePackage>${codegen.base.package.name}</basePackage>
-                                <additionalProperties>
-                                    <!--
-                                    Note that this setting can only be used for endpoints following the
-                                    '<service>.<region>.oraclecloud.com' pattern. To use other endpoint formats,
-                                    specify the endpoint template in your spec.
-
-                                    See https://confluence.oci.oraclecorp.com/display/DEX/Service+Endpoint+Update
-                                    -->
-                                    <serviceGroupEndpoint>${codegen.endpoint}</serviceGroupEndpoint>
-                                    <serviceGroupName>${codegen.serviceGroupName}</serviceGroupName>
-                                    <generateWaiters>${codegen.generate.waiters}</generateWaiters>
-                                    <generatePaginators>${codegen.generate.paginators}</generatePaginators>
-                                    <useExplicitlySetFilter>${codegen.use.explicitly.set.filter}</useExplicitlySetFilter>
-                                    <!-- Making SecretService client "non-regional".
-                                         That sounds strange, because SecretService is definitely present
-                                         in different regions. What this does, however, is remove the
-                                         "setRegion" method, which doesn't work anyway, since (1) there
-                                         are two different endpoints, depending on whether the request
-                                         originates in the Customer Enclave or the Service Enclave; and
-                                         (2) the endpoints do not use the domain names that the public
-                                         OCI Java SDK assumes, like oraclecloud.com for OC1.
-
-                                         See https://confluence.oci.oraclecorp.com/display/DEVCENTRAL/Java+SDK+to+Manage+Secrets+in+the+Control+Plane' -->
-                                    <isRegionalClient.SecretService>false</isRegionalClient.SecretService>
-                                </additionalProperties>
-                                <outputDir>${project.build.directory}/generated-sources/${codegen.base.package.name}</outputDir>
-                                <specGenerationType>${codegen.specGenerationType}</specGenerationType>
-                                <isTestGenerationEnabled>${codegen.is.test.generation.enabled}</isTestGenerationEnabled>
-                                <isExpect100ContinueSupported>${codegen.is.expect.100.continue.supported}
-                                </isExpect100ContinueSupported>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
                     <executions>
@@ -114,9 +69,7 @@
                             </goals>
                             <configuration>
                                 <sources>
-                                    <source>
-                                        ${project.build.directory}/generated-sources/${codegen.base.package.name}/oracle-java-sdk-sources
-                                    </source>
+                                    <source>${project.build.directory}/generated-sources/${codegen.base.package.name}/oracle-java-sdk-sources</source>
                                 </sources>
                             </configuration>
                         </execution>
@@ -136,9 +89,7 @@
                                 <addOutputDirectory>false</addOutputDirectory>
                                 <!-- Only delombok for docs -->
                                 <outputDirectory>target/generated-sources-for-docs/delombok</outputDirectory>
-                                <sourceDirectory>
-                                    ${project.build.directory}/generated-sources/${codegen.base.package.name}/oracle-java-sdk-sources
-                                </sourceDirectory>
+                                <sourceDirectory>${project.build.directory}/generated-sources/${codegen.base.package.name}/oracle-java-sdk-sources</sourceDirectory>
                                 <encoding>UTF-8</encoding>
                                 <formatPreferences>
                                     <javaLangAsFQN>skip</javaLangAsFQN>

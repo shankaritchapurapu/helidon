@@ -24,11 +24,6 @@ public class OracleJavaHelidonServiceCodegenParameter extends OracleJavaCodegenP
             OracleCodegenConfig codegen,
             Swagger spec) {
         super(original, codegen, spec);
-        if (codegen == null) {
-            throw new NullPointerException("codegen can't be null");
-        } else if (spec == null) {
-            throw new NullPointerException("spec can't be null");
-        }
     }
 
     /**

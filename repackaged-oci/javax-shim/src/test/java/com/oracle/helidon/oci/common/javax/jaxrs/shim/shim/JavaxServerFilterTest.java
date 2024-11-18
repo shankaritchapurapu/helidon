@@ -9,7 +9,7 @@ import java.io.IOException;
 import io.helidon.microprofile.testing.junit5.AddBean;
 import io.helidon.microprofile.testing.junit5.HelidonTest;
 
-import com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaServerFilter;
+import com.oracle.helidon.oci.common.javax.jaxrs.shim.JakartaContainerRequestFilter;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
@@ -35,7 +35,7 @@ public class JavaxServerFilterTest {
     // called by Jersey's auto-discoverable
     // register server filter here
     static void configure(jakarta.ws.rs.core.FeatureContext ctx) {
-        ctx.register(new JakartaServerFilter(JavaxServerFilterTest.JavaxTestFilter.class));
+        ctx.register(new JakartaContainerRequestFilter(JavaxServerFilterTest.JavaxTestFilter.class));
     }
 
     @GET

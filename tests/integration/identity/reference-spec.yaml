@@ -1,0 +1,163 @@
+#
+# Copyright (c) 2024 Oracle and/or its affiliates.
+#
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: ACME Car API
+  description: API for the ACME Car division
+  contact:
+    name: Bob Smith
+    email: bob@acme.com
+  license:
+    name: Oracle Corporation
+host: localhost:19000
+basePath: /v1
+schemes:
+  - http
+consumes:
+  - application/json; charset=utf-8
+produces:
+  - application/json
+
+x-obmcs-endpoint-template: 'https://robots-control-plane-api.{region}.oci.{secondLevelDomain}'
+
+x-anchors:
+  x-headers:
+    opc-work-request-id: &ref-opc-work-request-id
+      description: |
+        Unique Oracle-assigned identifier for the asynchronous request. You can use this to query status of the asynchronous operation.
+      type: string
+    opc-request-id: &ref-opc-request-id
+      description: |
+        Unique Oracle-assigned identifier for the request. If you need to contact
+        Oracle about a particular request, please provide the request ID.
+      type: string
+    retry-after: &ref-retry-after
+        type: number
+        format: float
+        description: A decimal number representing the number of seconds the client should wait before polling this endpoint again.
+
+paths:
+  /cars:
+    get:
+      tags: ['car']
+      description: Get car by id
+      operationId: getCarById
+      produces: multipart/form-data
+      consumes: application/json
+      parameters:
+        - name: carId
+          in: header
+          type: integer
+
+      responses:
+        200:
+          description: The Car
+          schema:
+            $ref: '#/definitions/Car'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    put:
+      tags: [ 'car' ]
+      description: Add car
+      operationId: addCar
+      parameters:
+        - name: Car
+          description: Car creation request
+          in: body
+          schema:
+            $ref: '#/definitions/Car'
+      responses:
+        200:
+          description: The Car
+          schema:
+            $ref: '#/definitions/Car'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+
+definitions:
+  Car:
+    required:
+      - id
+    properties:
+      id:
+        type: integer
+
+  Error:
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+
+parameters:
+  OpcRequestIdHeader:
+    name: opc-request-id
+    in: header
+    description: Unique Oracle-assigned identifier for the request.
+    type: string
+
+responses:
+  Error:
+    description: An unexpected error has occurred
+    schema:
+      $ref: '#/definitions/Error'
+  400:
+    description: Bad Request
+    headers:
+      opc-request-id: *ref-opc-request-id
+    schema:
+      $ref: '#/definitions/Error'
+  401:
+    description: Unauthorized
+    headers:
+      opc-request-id: *ref-opc-request-id
+    schema:
+      $ref: '#/definitions/Error'
+  404:
+    description: Not Found
+    headers:
+      opc-request-id: *ref-opc-request-id
+    schema:
+      $ref: '#/definitions/Error'
+  409:
+    description: Conflict
+    headers:
+      opc-request-id: *ref-opc-request-id
+    schema:
+      $ref: '#/definitions/Error'
+  412:
+    description: Precondition failed
+    headers:
+      opc-request-id: *ref-opc-request-id
+    schema:
+      $ref: '#/definitions/Error'
+  429:
+    description: Too Many Requests
+    headers:
+      opc-request-id: *ref-opc-request-id
+    schema:
+      $ref: '#/definitions/Error'
+  500:
+    description: Internal Server Error
+    headers:
+      opc-request-id: *ref-opc-request-id
+    schema:
+      $ref: '#/definitions/Error'
+  default:
+    description: Unknown Error
+    headers:
+      opc-request-id: *ref-opc-request-id
+    schema:
+      $ref: '#/definitions/Error'
+#

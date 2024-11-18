@@ -13,9 +13,9 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>helidon-oci-repackaged-javax-shim</artifactId>
+    <artifactId>helidon-oci-javax-shim</artifactId>
     <version>1.1.0-SNAPSHOT</version>
-    <name>Helidon OCI Javax shim layer for modules like JAX-RS</name>
+    <name>Helidon OCI Javax shim layer for JAX-RS</name>
 
     <properties>
         <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>

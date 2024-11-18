@@ -45,5 +45,6 @@ persistence_3_0.xsd
 service.loader
 /README
 target/
+src/main/resources/META-INF/services
 secret-service/src/test/resources/mtls/ca.key
 swagger-maven-plugin/src/main/resources/oracle-java-helidon-service/
