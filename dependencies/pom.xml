@@ -546,6 +546,10 @@
                 <version>${oracle-internal-tagging-version}</version>
                 <exclusions>
                     <exclusion>
+                        <groupId>com.oracle.pic.commons</groupId>
+                        <artifactId>service-core</artifactId>
+                    </exclusion>
+                    <exclusion>
                         <groupId>org.projectlombok</groupId>
                         <artifactId>lombok</artifactId>
                     </exclusion>
