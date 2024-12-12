@@ -70,12 +70,11 @@ public class SplatMtlsFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) {
         if (shimmedSplatMtlsFilter == null) {
             // splatMtlsFilter is disabled, so don't do anything
-            LOGGER.info("Skip SplatMtlsFilter");
             return;
         }
         // Only require auth on https requests (this allows developers to easily switch https off)
         if (!"https".equalsIgnoreCase(requestContext.getUriInfo().getBaseUri().getScheme())) {
-            LOGGER.info("Skip validating client cert on non-https");
+            LOGGER.finest("Skip validating client cert on non-https");
             return;
         }
         if (LOGGER.isLoggable(Level.FINEST)) {
@@ -128,7 +127,7 @@ public class SplatMtlsFilter implements ContainerRequestFilter {
     protected String getRegion(Config config) {
         String regionOverride = config.get(OCI_REGION_CONFIG_KEY).asString().orElse(null);
         if (regionOverride != null && !regionOverride.isEmpty()) {
-            LOGGER.info("Region config override: " + regionOverride);
+            LOGGER.finest("Region config override: " + regionOverride);
             return regionOverride;
         }
         return getRegionFromIMDS();
