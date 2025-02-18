@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+    Copyright (c) 2023, 2025 Oracle and/or its affiliates.
 -->
 
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
@@ -20,7 +20,7 @@
     <description>Maven dependency management for Helidon OCI native applications</description>
 
     <properties>
-        <helidon.version>4.1.1</helidon.version>
+        <helidon.version>4.1.7-SNAPSHOT</helidon.version>
         <!-- Versions for libraries used in build -->
         <oci-java-sdk-version>3.46.1</oci-java-sdk-version>
 
@@ -53,7 +53,7 @@
         <version.lib.jaxrs-api>3.1.0</version.lib.jaxrs-api>
         <!-- TODO: Why is enforcer blocking 4.0.0? -->
         <version.lib.xml.bind-api>3.0.1</version.lib.xml.bind-api>
-        <version.lib.org-glassfish>3.1.7</version.lib.org-glassfish>
+        <version.lib.org-glassfish>3.1.9</version.lib.org-glassfish>
         <version.lib.hk2>3.0.4</version.lib.hk2>
 
         <version.lib.commons-io>2.13.0</version.lib.commons-io>

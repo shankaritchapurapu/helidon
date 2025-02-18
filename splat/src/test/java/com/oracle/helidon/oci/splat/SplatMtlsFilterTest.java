@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024, 2025 Oracle and/or its affiliates.
  */
 
 package com.oracle.helidon.oci.splat;
@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import javax.security.auth.x500.X500Principal;
 
 import io.helidon.config.Config;
+import io.helidon.config.ConfigSources;
 import io.helidon.config.mp.MpConfig;
 import io.helidon.config.mp.MpConfigSources;
 
@@ -52,6 +53,7 @@ class SplatMtlsFilterTest {
             SplatMtlsFilter.SPLAT_MTLS_FILTER_CONFIG_KEY + "." + SplatMtlsFilter.REJECT_X_REGION_CALLS;
     private static final String US_ASHBURN_1_REGION = "us-ashburn-1";
     private static final String US_PHOENIX_1_REGION = "us-phoenix-1";
+    private static final String US_SANJOSE_1_REGION = "us-sanjose-1";
     Map<String, Object> containerRequestProperty = new HashMap<>();
 
     @ParameterizedTest
@@ -118,12 +120,20 @@ class SplatMtlsFilterTest {
     }
 
     @Test
-    void testRegionFromImds() {
+    void testRegionFromServiceRegistry() {
         DummySplatMtlsFilter splatMtlsFilter = getSplatMtlsFilter(
                 Map.of(),
                 VALID_SPLAT_CERTIFICATE_CN,
                 false);
-        assertThat(splatMtlsFilter.regionFromImds(), is(US_PHOENIX_1_REGION));
+        assertThat(splatMtlsFilter.regionFromServiceRegistry(), is(US_PHOENIX_1_REGION));
+    }
+
+    @Test
+    void testRegionFromConfig() {
+        // This can also be set in oci-config.yaml or as an environment variable
+        System.setProperty("helidon.oci.region", US_SANJOSE_1_REGION);
+        var splatMtlsFilter = new SplatMtlsFilter();
+        assertThat(splatMtlsFilter.getRegion(Config.just(ConfigSources.create(Map.of()))), is(US_SANJOSE_1_REGION));
     }
 
     DummySplatMtlsFilter getSplatMtlsFilter(Map<String, String> configMap, String certCommonName) {
@@ -133,7 +143,7 @@ class SplatMtlsFilterTest {
     DummySplatMtlsFilter getSplatMtlsFilter(Map<String, String> configMap, String certCommonName, boolean withRegionConfig) {
         Map<String, String> updatedConfigMap = new HashMap<>(configMap);
         if (withRegionConfig && !configMap.containsKey(SplatMtlsFilter.OCI_REGION_CONFIG_KEY)) {
-            // Add this if it doesn't exist to avoid retrieving region information from IMDS
+            // Add this if it doesn't exist to avoid retrieving region information from Service Registry
             updatedConfigMap.put(SplatMtlsFilter.OCI_REGION_CONFIG_KEY, US_ASHBURN_1_REGION);
         }
 
@@ -217,7 +227,7 @@ class SplatMtlsFilterTest {
         private String certCN;
         private boolean isFilterNotSkipped;
         private boolean isCreateSplatMtlsFilterInvoked = false;
-        private String regionFromIMDS = null;
+        private String regionFromServiceRegistry = null;
         private Map<String, String> configMap;
         private String region;
         private SplatMtlsFilterConfig splatMtlsFilterConfig;
@@ -244,8 +254,8 @@ class SplatMtlsFilterTest {
         }
 
         @Override
-        protected String getRegionFromIMDS() {
-            this.regionFromIMDS = US_PHOENIX_1_REGION;
+        protected String getRegionFromServiceRegistry() {
+            this.regionFromServiceRegistry = US_PHOENIX_1_REGION;
             return US_PHOENIX_1_REGION;
         }
 
@@ -273,8 +283,8 @@ class SplatMtlsFilterTest {
             return isFilterNotSkipped;
         }
 
-        String regionFromImds() {
-            return this.regionFromIMDS;
+        String regionFromServiceRegistry() {
+            return this.regionFromServiceRegistry;
         }
 
         private org.eclipse.microprofile.config.Config getConfig(Map configMap) {

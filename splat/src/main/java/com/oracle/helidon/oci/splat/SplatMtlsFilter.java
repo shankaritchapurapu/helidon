@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024, 2025 Oracle and/or its affiliates.
  */
 
 package com.oracle.helidon.oci.splat;
@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 
 import io.helidon.config.Config;
 import io.helidon.config.mp.MpConfig;
-import io.helidon.integrations.oci.ImdsInstanceInfo;
 import io.helidon.service.registry.GlobalServiceRegistry;
 import io.helidon.webserver.http.ServerRequest;
 
@@ -130,11 +129,11 @@ public class SplatMtlsFilter implements ContainerRequestFilter {
             LOGGER.finest("Region config override: " + regionOverride);
             return regionOverride;
         }
-        return getRegionFromIMDS();
+        return getRegionFromServiceRegistry();
     }
 
-    protected String getRegionFromIMDS() {
-        return GlobalServiceRegistry.registry().get(ImdsInstanceInfo.class).canonicalRegionName();
+    protected String getRegionFromServiceRegistry() {
+        return GlobalServiceRegistry.registry().get(com.oracle.bmc.Region.class).getRegionId();
     }
 
     private static SplatMtlsFilterConfig setSplatMtlsFilterConfig(Config helidonSplatMtlsFilterConfig) {

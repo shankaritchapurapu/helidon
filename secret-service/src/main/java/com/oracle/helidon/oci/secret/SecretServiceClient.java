@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024, 2025 Oracle and/or its affiliates.
  */
 
 package com.oracle.helidon.oci.secret;
@@ -70,7 +70,9 @@ class SecretServiceClient {
 
     void resolveEndpoint(String region) {
         var endpoint = secretServiceConfig.getEndpoint();
-        secretServiceConfig.setEndpoint(endpoint.replaceAll(REGION_MASK, region));
+        // If region is us-phoenix-1, replace it with r2
+        var endpointRegion = region.toLowerCase().equals("us-phoenix-1") ? "r2" : region;
+        secretServiceConfig.setEndpoint(endpoint.replaceAll(REGION_MASK, endpointRegion));
     }
 
     Optional<byte[]> getSecret(String path) {

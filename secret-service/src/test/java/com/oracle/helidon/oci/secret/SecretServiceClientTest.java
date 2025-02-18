@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024, 2025 Oracle and/or its affiliates.
  */
 
 package com.oracle.helidon.oci.secret;
@@ -26,5 +26,15 @@ class SecretServiceClientTest {
         secretServiceClient.initClient();
         assertThat(secretServiceClient.getSecretServiceConfig().getEndpoint(),
                    is("https://secret-service-ce." + RegionTestProvider.REGION.getRegionId() + ".oracleiaas.com/v1"));
+    }
+
+    @Test
+    void phoenixToR2RegionConversion() {
+        SecretServiceClient secretServiceClient = SecretServiceClient
+                .create(Config.builder()
+                                .build());
+        secretServiceClient.resolveEndpoint("us-phoenix-1");
+        assertThat(secretServiceClient.getSecretServiceConfig().getEndpoint(),
+                   is("https://secret-service-ce.r2.oracleiaas.com/v1"));
     }
 }
