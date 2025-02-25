@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024, 2025 Oracle and/or its affiliates.
  */
 
 package com.oracle.helidon.maven.transpiler;
@@ -25,6 +25,8 @@ public class Change {
     private List<Substitution> substitutions = List.of();
     private String modifier;
     private boolean override;
+    private boolean remove;
+    private String type;
 
     public void setModifier(String modifier) {
         this.modifier = modifier;
@@ -86,6 +88,14 @@ public class Change {
         this.override = override;
     }
 
+    public boolean isRemove() {
+        return remove;
+    }
+
+    public void setRemove(boolean remove) {
+        this.remove = remove;
+    }
+
     public Optional<String> getNewReturnType() {
         return Optional.ofNullable(newReturnType);
     }
@@ -105,6 +115,14 @@ public class Change {
                 + ", modifier='" + modifier + '\''
                 + ", override=" + override
                 + '}';
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     boolean isModifierChange() {

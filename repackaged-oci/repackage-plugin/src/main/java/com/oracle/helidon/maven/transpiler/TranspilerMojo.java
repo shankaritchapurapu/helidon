@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024, 2025 Oracle and/or its affiliates.
  */
 
 package com.oracle.helidon.maven.transpiler;
@@ -21,6 +21,7 @@ import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
+import javassist.CtField;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AnnotationsAttribute;
@@ -92,7 +93,11 @@ class TranspilerMojo extends AbstractMojo {
                 // Changes
                 for (Change change : m.getModifierChanges()) {
                     if (change.getName().isPresent()) {
-                        modifyMethod(ctClass, change, cp);
+                        if (change.isRemove()) {
+                            removeMember(ctClass, change, cp);
+                        } else {
+                            modifyMethod(ctClass, change, cp);
+                        }
                     } else {
                         modifyConstructor(ctClass, change, cp);
                     }
@@ -113,6 +118,18 @@ class TranspilerMojo extends AbstractMojo {
             throw new MojoFailureException(e);
         }
 
+    }
+
+    void removeMember(CtClass ctClass, Change change, ClassPool cp)
+            throws NotFoundException, CannotCompileException {
+        getLog().debug("Removing " + change);
+        if ("field".equals(change.getType())) {
+            CtField f = ctClass.getDeclaredField(change.getName().get());
+            ctClass.removeField(f);
+        } else {
+            CtMethod m = ctClass.getDeclaredMethod(change.getName().get());
+            ctClass.removeMethod(m);
+        }
     }
 
     void modifyMethod(CtClass ctClass, Change change, ClassPool cp)
