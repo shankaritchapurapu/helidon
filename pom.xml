@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+    Copyright (c) 2023, 2025 Oracle and/or its affiliates.
 -->
 
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -75,7 +75,6 @@
         <module>secret-service</module>
         <module>splat</module>
         <module>swagger-maven-plugin</module>
-        <module>applications</module>
         <module>tests</module>
     </modules>
 
@@ -405,6 +404,21 @@
         </plugins>
     </build>
     <profiles>
+        <profile>
+            <!-- By default we include the applications module in the reactor. But
+                 if the skipApplications property is true, then we skip it. We use this
+                 to shape the reactor so we can do a two step deployment. We
+                 do this via the property trigger so that it will be active for all profiles by default -->
+            <id>applications</id>
+            <activation>
+              <property>
+                <name>!skipApplications</name>
+              </property>
+            </activation>
+            <modules>
+                <module>applications</module>
+            </modules>
+        </profile>
         <profile>
             <id>dependency-check</id>
             <build>
