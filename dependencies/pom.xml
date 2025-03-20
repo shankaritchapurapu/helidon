@@ -27,7 +27,7 @@
         <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
 
         <oracle-internal-authproxy-filter-version>1.1.38</oracle-internal-authproxy-filter-version>
-        <oracle-internal-commons-core-version>4.0.76</oracle-internal-commons-core-version>
+        <oracle-internal-commons-core-version>4.0.85</oracle-internal-commons-core-version>
         <oracle-internal-commons-core-regions-version>2.1.73</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-core-resources-version>1.2.337</oracle-internal-commons-core-resources-version>
         <oracle-internal-commons-metrics-lib-version>0.3.53</oracle-internal-commons-metrics-lib-version>

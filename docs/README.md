@@ -15,3 +15,4 @@ The oci-helidon project contains a compilation of different modules that extend 
 2. Libraries that help facilitate handling of various OCI native proprietary capabilities such as:
    * [error-code](./error-code.md)
    * [request-id](./request-id.md)
+   * [Jipher for FIPS compliance ](./jipher.md)
