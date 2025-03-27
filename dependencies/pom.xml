@@ -22,7 +22,7 @@
     <properties>
         <helidon.version>4.1.7</helidon.version>
         <!-- Versions for libraries used in build -->
-        <oci-java-sdk-version>3.46.1</oci-java-sdk-version>
+        <oci-java-sdk-version>3.61.0</oci-java-sdk-version>
 
         <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
 
@@ -68,6 +68,7 @@
         <version.lib.javaassist>3.29.2-GA</version.lib.javaassist>
         <version.lib.nimbus-jose-jwt>9.37.2</version.lib.nimbus-jose-jwt>
         <version.lib.sleepycat-je>18.3.12</version.lib.sleepycat-je>
+        <version.lib.bouncycastle>1.78.1</version.lib.bouncycastle>
     </properties>
 
     <dependencyManagement>
@@ -906,6 +907,11 @@
                 <groupId>com.sleepycat</groupId>
                 <artifactId>je</artifactId>
                 <version>${version.lib.sleepycat-je}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk15to18</artifactId>
+                <version>${version.lib.bouncycastle}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

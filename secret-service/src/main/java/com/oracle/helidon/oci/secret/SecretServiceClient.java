@@ -5,6 +5,7 @@
 package com.oracle.helidon.oci.secret;
 
 import java.io.ByteArrayInputStream;
+import java.util.Base64;
 import java.util.Optional;
 
 import io.helidon.common.LazyValue;
@@ -20,7 +21,6 @@ import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.pic.vault.SecretServiceConfig;
 import com.oracle.pic.vault.VaultClient;
-import org.bouncycastle.util.encoders.Base64;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -85,7 +85,11 @@ class SecretServiceClient {
                 .getData()
                 .get("secret");
 
-        return Optional.of(Base64.decode(base64));
+        return Optional.of(getBase64DecodedValue(base64));
+    }
+
+    static byte[] getBase64DecodedValue(String base64) {
+        return Base64.getDecoder().decode(base64);
     }
 
     SecretServiceConfig getSecretServiceConfig() {

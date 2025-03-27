@@ -37,4 +37,14 @@ class SecretServiceClientTest {
         assertThat(secretServiceClient.getSecretServiceConfig().getEndpoint(),
                    is("https://secret-service-ce.r2.oracleiaas.com/v1"));
     }
+
+    @Test
+    public void testBase64Decoding() {
+        String encodedString = "SGVsbG8gV29ybGQh";
+        byte[] expectedDecodedBytes = "Hello World!".getBytes();
+
+        byte[] actualDecodedBytes = SecretServiceClient.getBase64DecodedValue(encodedString);
+
+        assertThat(expectedDecodedBytes, is(actualDecodedBytes));
+    }
 }
