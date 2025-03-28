@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Copyright (c) 2024 Oracle and/or its affiliates.
+    Copyright (c) 2024, 2025 Oracle and/or its affiliates.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -9,11 +9,11 @@
     <parent>
         <groupId>com.oracle.helidon.oci</groupId>
         <artifactId>helidon-repackaged-oci</artifactId>
-        <version>1.1.0-SNAPSHOT</version>
+        <version>1.2.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>helidon-repackaged-oci-splat-sdk</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.2.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Helidon OCI Repackaged OCI splat-sdk</name>
@@ -51,7 +51,7 @@
             <plugin>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-repackage-plugin</artifactId>
-                <version>1.1.0-SNAPSHOT</version>
+                <version>1.2.0-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <goals>
