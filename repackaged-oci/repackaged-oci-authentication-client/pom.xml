@@ -143,7 +143,6 @@
         <dependency> <!-- Used for Network test dependencies -->
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-common</artifactId>
-            <version>3.0.8</version>
             <exclusions>
                 <exclusion>
                     <groupId>jakarta.annotation</groupId>
@@ -163,10 +162,41 @@
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-common-httpclient-jersey3</artifactId>
+            <version>${oci-java-sdk-version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-repackage-plugin</artifactId>
@@ -183,6 +213,18 @@
                         <artifact>
                             <groupId>com.oracle.pic.identity.authentication</groupId>
                             <artifactId>authentication-client</artifactId>
+                            <exclusions>
+                                <!-- Drop original swagger generated content -->
+                                <exclusion>com/oracle/pic/identity/authentication/SessionTokenClient.class</exclusion>
+                                <exclusion>com/oracle/pic/identity/authentication/SessionToken*\.class</exclusion>
+                                <exclusion>com/oracle/pic/identity/authentication/AuthNSdkAPI*\.class</exclusion>
+                                <exclusion>com/oracle/pic/identity/authentication/OauthExchangeToken*\.class</exclusion>
+                                <exclusion>com/oracle/pic/identity/authentication/OnBehalfOfToken*\.class</exclusion>
+                                <exclusion>com/oracle/pic/identity/authentication/ResourceFederationAPI*\.class</exclusion>
+                                <exclusion>com/oracle/pic/identity/authentication/requests/[^/]*\.class</exclusion>
+                                <exclusion>com/oracle/pic/identity/authentication/responses/[^/]*\.class</exclusion>
+<!--                                <exclusion>com/oracle/pic/identity/authentication/[^/]*\.class</exclusion>-->
+                            </exclusions>
                         </artifact>
                     </artifacts>
                     <classes>
@@ -212,47 +254,6 @@
                                             </replacement>
                                         </substitution>
                                     </substitutions>
-                                </change>
-                            </changes>
-                        </class>
-                        <class>
-                            <name>SwaggerClientUtil</name>
-                            <pkg>com.oracle.pic.identity.authentication.swagger.utils</pkg>
-                            <changes>
-                                <change>
-                                    <name>getInstanceOfCircuitBreaker</name>
-                                    <newReturnType>com.oracle.bmc.circuitbreaker.OciCircuitBreaker</newReturnType>
-                                </change>
-                            </changes>
-                        </class>
-                        <class>
-                            <name>SwaggerClientConfigurator</name>
-                            <pkg>com.oracle.pic.identity.authentication</pkg>
-                            <newParentClassName>com.oracle.bmc.http.client.jersey3.apacheconfigurator.ApacheConfigurator</newParentClassName>
-                            <changes>
-                                <change>
-                                    <name>customizeBuilder</name>
-                                    <newName>customizeClient</newName>
-                                    <newParams>
-                                        <param>com.oracle.bmc.http.client.HttpClientBuilder</param>
-                                    </newParams>
-                                    <newBody>{
-                                        super.customizeClient($1);
-                                        dynamicSslContextProvider.initialize(dynamicSslContextProviderConfig);
-                                        try {
-                                            $1.property(com.oracle.bmc.http.client.StandardClientProperties.SSL_CONTEXT,
-                                                             dynamicSslContextProvider.getSslContext());
-
-                                            if(proxyURL.isPresent()) {
-                                                $1.property(com.oracle.bmc.http.client.ClientProperty.create("jersey.config.client.proxy.uri"),
-                                                                 proxyURL.get());
-                                            }
-
-                                        } catch (java.lang.Exception ex) {
-                                        throw new java.lang.RuntimeException("Failed generating client configurator", ex);
-                                        }
-                                        }
-                                    </newBody>
                                 </change>
                             </changes>
                         </class>
@@ -287,7 +288,7 @@
                                 <AuthenticationRequest>com.oracle.pic.identity.authentication.credential.AuthenticationRequest</AuthenticationRequest>>
                             </externalModels>
                             <additionalProperties>
-                                <!-- <loggerName>LOG</loggerName> -->
+                                 <loggerName>LOG</loggerName>
                             </additionalProperties>
                         </configuration>
                     </execution>
