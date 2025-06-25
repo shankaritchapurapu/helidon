@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024, 2025 Oracle and/or its affiliates.
  */
 
 package com.oracle.helidon.oci.identity;
@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.helidon.microprofile.testing.junit5.AddBean;
-import io.helidon.microprofile.testing.junit5.AddConfig;
+import io.helidon.microprofile.testing.junit5.AddConfigBlock;
 import io.helidon.microprofile.testing.junit5.HelidonTest;
 
 import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
@@ -27,8 +27,16 @@ import static org.hamcrest.Matchers.notNullValue;
 
 @HelidonTest
 @AddBean(AuthContextFilterTest.TestResource.class)
-@AddConfig(key = "oci.identity.filters.auth-context.paths.path.0", value = "/cars/*")
-@AddConfig(key = "oci.identity.filters.auth-context.paths.path.1", value = "/users/*")
+@AddConfigBlock(type = "yaml", value =
+        // language=yaml
+        """
+        oci.identity:
+          filters:
+            auth-context:
+              paths:
+              - path: /cars/*
+              - path: /users/*
+        """)
 class AuthContextFilterTest extends AbstractAuthorizationTest {
 
     @Override
