@@ -43,7 +43,7 @@
         <oracle-internal-sdk-common-version>1.2</oracle-internal-sdk-common-version>
         <oracle-internal-secret-service-cp-java-client-version>1.1.6</oracle-internal-secret-service-cp-java-client-version>
         <oracle-internal-splat-sdk-version>0.2.3</oracle-internal-splat-sdk-version>
-        <oracle-internal-tagging-version>2.0.61</oracle-internal-tagging-version>
+        <oracle-internal-tagging-version>4.3.5</oracle-internal-tagging-version>
         <oracle-internal-vault-java-sdk-version>2.0.4</oracle-internal-vault-java-sdk-version>
         <oracle-internal-vault-user-java-client-v3-version>1.0.8</oracle-internal-vault-user-java-client-v3-version>
         <oracle-internal-vault-user-api-spec-version>1.0.78</oracle-internal-vault-user-api-spec-version>
