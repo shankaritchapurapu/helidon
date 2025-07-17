@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024, 2025 Oracle and/or its affiliates.
  */
 
 package com.oracle.pic.vault;
@@ -85,7 +85,7 @@ public class JakartaJavaxCollisionTest {
                 .asyncThreadPoolSize(defaultConfig.getAsyncThreadPoolSize()).endpoint(secretServiceConfig.getEndpoint())
                 .retryConfig(retryConfig).tlsConfig(secretServiceConfig.getTlsConfig()).build();
 
-        SecretRestClient restClient = new SecretRestClient(oracleHttpClientConfig, new MockAuthenticationDetailsProvider());
+        SecretRestClient restClient = new SecretRestClient(oracleHttpClientConfig, new MockAuthenticationDetailsProvider(), false);
         String url = target.getUriBuilder().path("/fake/ssv2").build().toASCIIString();
         target.path("/fake/ssv2").request().get().getEntity();
         WithHeaders<GetSecretResponse> secretWithHeaders = restClient.getSecretWithHeaders(url);

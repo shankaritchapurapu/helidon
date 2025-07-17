@@ -31,20 +31,21 @@
         <oracle-internal-commons-core-regions-version>2.1.73</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-core-resources-version>1.2.337</oracle-internal-commons-core-resources-version>
         <oracle-internal-commons-metrics-lib-version>0.3.53</oracle-internal-commons-metrics-lib-version>
-        <oracle-internal-commons-metrics-module-version>2.0.6</oracle-internal-commons-metrics-module-version>
+        <oracle-internal-commons-metrics-module-version>2.0.23</oracle-internal-commons-metrics-module-version>
         <oracle-internal-commons-metrics-reporter-version>0.0.51</oracle-internal-commons-metrics-reporter-version>
         <oracle-internal-commons-metrics-version>4.1.11</oracle-internal-commons-metrics-version>
-        <oracle-internal-commons-request-id-version>1.1.47</oracle-internal-commons-request-id-version>
-        <oracle-internal-exception-mapping-version>3.0.66</oracle-internal-exception-mapping-version>
+        <oracle-internal-commons-request-id-version>1.1.55</oracle-internal-commons-request-id-version>
+        <oracle-internal-exception-mapping-version>3.0.70</oracle-internal-exception-mapping-version>
         <oracle-internal-identity-common-version>2.1.0.469</oracle-internal-identity-common-version>
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
 
-        <oracle-internal-logging-version>3.5.8</oracle-internal-logging-version>
+        <oracle-internal-logging-version>3.7.3</oracle-internal-logging-version>
         <oracle-internal-sdk-common-version>1.2</oracle-internal-sdk-common-version>
-        <oracle-internal-secret-service-cp-java-client-version>1.1.6</oracle-internal-secret-service-cp-java-client-version>
-        <oracle-internal-splat-sdk-version>0.2.3</oracle-internal-splat-sdk-version>
+        <oracle-internal-secret-service-cp-java-client-version>1.1.8</oracle-internal-secret-service-cp-java-client-version>
+        <oracle-internal-splat-sdk-version>0.2.15</oracle-internal-splat-sdk-version>
+        <oracle-internal-splat-store-spec>0.2.8</oracle-internal-splat-store-spec>
         <oracle-internal-tagging-version>4.3.5</oracle-internal-tagging-version>
-        <oracle-internal-vault-java-sdk-version>2.0.4</oracle-internal-vault-java-sdk-version>
+        <oracle-internal-vault-java-sdk-version>2.3.3</oracle-internal-vault-java-sdk-version>
         <oracle-internal-vault-user-java-client-v3-version>1.0.8</oracle-internal-vault-user-java-client-v3-version>
         <oracle-internal-vault-user-api-spec-version>1.0.78</oracle-internal-vault-user-api-spec-version>
         <oracle-internal-vault-user-java-client-version>1.0.8</oracle-internal-vault-user-java-client-version>
@@ -56,17 +57,18 @@
         <version.lib.org-glassfish>3.1.9</version.lib.org-glassfish>
         <version.lib.hk2>3.0.4</version.lib.hk2>
 
-        <version.lib.commons-io>2.13.0</version.lib.commons-io>
-        <version.lib.commons-lang3>3.10</version.lib.commons-lang3>
+        <version.lib.commons-io>2.17.0</version.lib.commons-io>
+        <version.lib.commons-lang3>3.18.0</version.lib.commons-lang3>
         <version.lib.commons-codec>1.15</version.lib.commons-codec>
         <version.lib.commons-net>3.9.0</version.lib.commons-net>
+        <version.lib.commons-compress>1.27.1</version.lib.commons-compress>
         <version.lib.google-httpclient>1.43.3</version.lib.google-httpclient>
         <version.lib.httpclient>4.5.14</version.lib.httpclient>
         <version.lib.httpcore>4.4.16</version.lib.httpcore>
         <version.lib.guice>5.1.0</version.lib.guice>
         <version.lib.joda-time>2.10.14</version.lib.joda-time>
         <version.lib.javaassist>3.29.2-GA</version.lib.javaassist>
-        <version.lib.nimbus-jose-jwt>9.37.2</version.lib.nimbus-jose-jwt>
+        <version.lib.nimbus-jose-jwt>10.2</version.lib.nimbus-jose-jwt>
         <version.lib.sleepycat-je>18.3.12</version.lib.sleepycat-je>
         <version.lib.bouncycastle>1.78.1</version.lib.bouncycastle>
     </properties>
@@ -542,7 +544,7 @@
             <dependency>
                 <groupId>com.oracle.pic.platform.splat</groupId>
                 <artifactId>splat-store-spec</artifactId>
-                <version>${oracle-internal-splat-sdk-version}</version>
+                <version>${oracle-internal-splat-store-spec}</version>
             </dependency>
 
             <dependency>
@@ -617,6 +619,22 @@
                     <exclusion>
                         <groupId>javax.ws.rs</groupId>
                         <artifactId>javax.ws.rs-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>bc-fips</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.servlet</groupId>
+                        <artifactId>javax.servlet-api</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -873,6 +891,11 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${version.lib.commons-lang3}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${version.lib.commons-compress}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>

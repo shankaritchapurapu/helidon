@@ -566,6 +566,10 @@
                     <groupId>org.glassfish.jersey.containers</groupId>
                     <artifactId>jersey-container-servlet-core</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.oracle.pic.commons</groupId>
+                    <artifactId>service-core</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -964,6 +968,10 @@
                     <groupId>com.oracle.pic.commons</groupId>
                     <artifactId>exception-mapping</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -1175,6 +1183,10 @@
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <version>4.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
         </dependency>
     </dependencies>
 

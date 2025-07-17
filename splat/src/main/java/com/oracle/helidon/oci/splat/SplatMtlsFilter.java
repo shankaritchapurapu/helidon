@@ -137,31 +137,33 @@ public class SplatMtlsFilter implements ContainerRequestFilter {
     }
 
     private static SplatMtlsFilterConfig setSplatMtlsFilterConfig(Config helidonSplatMtlsFilterConfig) {
-        SplatMtlsFilterConfig splatMtlsFilterConfig = setSplatMtlsFilterParameter(helidonSplatMtlsFilterConfig,
-                                                                                  SKIP_AUTHZ_VALIDATION_CHECK,
-                                                                                  null);
-        splatMtlsFilterConfig = setSplatMtlsFilterParameter(helidonSplatMtlsFilterConfig,
-                                                            REJECT_X_REGION_CALLS,
-                                                            splatMtlsFilterConfig);
-        return splatMtlsFilterConfig;
+        SplatMtlsFilterConfig.SplatMtlsFilterConfigBuilder splatMtlsFilterConfigBuilder =
+                setSplatMtlsFilterParameter(helidonSplatMtlsFilterConfig,
+                                            SKIP_AUTHZ_VALIDATION_CHECK,
+                                            null);
+        splatMtlsFilterConfigBuilder = setSplatMtlsFilterParameter(helidonSplatMtlsFilterConfig,
+                                                                   REJECT_X_REGION_CALLS,
+                                                                   splatMtlsFilterConfigBuilder);
+        return splatMtlsFilterConfigBuilder.build();
     }
 
-    private static SplatMtlsFilterConfig setSplatMtlsFilterParameter(Config helidonSplatMtlsFilterConfig,
-                                                                     String configKey,
-                                                                     SplatMtlsFilterConfig splatMtlsFilterConfig) {
+    private static SplatMtlsFilterConfig.SplatMtlsFilterConfigBuilder setSplatMtlsFilterParameter(
+            Config helidonSplatMtlsFilterConfig,
+            String configKey,
+            SplatMtlsFilterConfig.SplatMtlsFilterConfigBuilder splatMtlsFilterConfigBuilder) {
+        if (splatMtlsFilterConfigBuilder == null) {
+            splatMtlsFilterConfigBuilder = SplatMtlsFilterConfig.builder();
+        }
         if (helidonSplatMtlsFilterConfig.get(configKey).exists()) {
             boolean value = helidonSplatMtlsFilterConfig.get(configKey).asBoolean().get();
-            if (splatMtlsFilterConfig == null) {
-                splatMtlsFilterConfig = new SplatMtlsFilterConfig();
-            }
             if (Objects.equals(configKey, SKIP_AUTHZ_VALIDATION_CHECK)) {
-                splatMtlsFilterConfig.setSkipAuthzValidationCheck(value);
+                splatMtlsFilterConfigBuilder.skipAuthzValidationCheck(value);
             } else {
-                splatMtlsFilterConfig.setRejectXRegionCalls(value);
+                splatMtlsFilterConfigBuilder.rejectXRegionCalls(value);
             }
             LOGGER.info("splatMtlsFilterConfig." + configKey + "=" + value);
         }
-        return splatMtlsFilterConfig;
+        return splatMtlsFilterConfigBuilder;
     }
 
     private static void terminate(Throwable e) {

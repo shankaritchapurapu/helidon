@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2023, 2025 Oracle and/or its affiliates.
  */
 
 package com.oracle.helidon.oci.common.requestid.microprofile;
@@ -15,7 +15,7 @@ import jakarta.ws.rs.core.MultivaluedMap;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -32,7 +32,7 @@ class RequestIdClientFilterTest {
             ClientRequestContext requestContext = newRequestContext(map);
             RequestIdClientFilter filter = new RequestIdClientFilter();
             filter.filter(requestContext);
-            assertThat(map.getFirst(OciRequestId.OCI_REQUEST_ID), is(RequestIdUtils.getDownStreamRequestId(requestId)));
+            assertThat(RequestIdUtils.getDownStreamRequestId(requestId), startsWith(map.getFirst(OciRequestId.OCI_REQUEST_ID).toString()));
         });
     }
 

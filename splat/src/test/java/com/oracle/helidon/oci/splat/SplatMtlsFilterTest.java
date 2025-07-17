@@ -33,7 +33,6 @@ import org.mockito.Mockito;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -111,12 +110,8 @@ class SplatMtlsFilterTest {
                 configMap,
                 VALID_SPLAT_CERTIFICATE_CN);
         SplatMtlsFilterConfig splatMtlsFilterConfig = splatMtlsFilter.getSplatMtlsFilterConfig();
-        if (splatMtlsFilterConfig != null) {
-            assertThat(splatMtlsFilterConfig.isSkipAuthzValidationCheck(), is(expectedResult.get(0)));
-            assertThat(splatMtlsFilterConfig.isRejectXRegionCalls(), is(expectedResult.get(1)));
-        } else {
-            assertThat(expectedResult, is(nullValue()));
-        }
+        assertThat(splatMtlsFilterConfig.isSkipAuthzValidationCheck(), is(expectedResult.get(0)));
+        assertThat(splatMtlsFilterConfig.isRejectXRegionCalls(), is(expectedResult.get(1)));
     }
 
     @Test
@@ -183,7 +178,7 @@ class SplatMtlsFilterTest {
 
     private static Stream<Arguments> splatMtlsFilterConfigParam() {
         return Stream.of(
-                arguments(Map.of(), null),
+                arguments(Map.of(), Arrays.asList(false, false)),
                 arguments(Map.of(SPLAT_SKIP_AUTHZ_VALIDATION_CHECK, "true",
                                  SPLAT_REJECT_X_REGION_CALLS, "true"),
                           Arrays.asList(true, true)),
