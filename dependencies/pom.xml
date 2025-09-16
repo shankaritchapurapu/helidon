@@ -20,9 +20,9 @@
     <description>Maven dependency management for Helidon OCI native applications</description>
 
     <properties>
-        <helidon.version>4.2.4</helidon.version>
+        <helidon.version>4.2.7</helidon.version>
         <!-- Versions for libraries used in build -->
-        <oci-java-sdk-version>3.68.0</oci-java-sdk-version>
+        <oci-java-sdk-version>3.72.0</oci-java-sdk-version>
 
         <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
 
@@ -45,7 +45,7 @@
         <oracle-internal-splat-sdk-version>0.2.15</oracle-internal-splat-sdk-version>
         <oracle-internal-splat-store-spec>0.2.8</oracle-internal-splat-store-spec>
         <oracle-internal-tagging-version>4.3.5</oracle-internal-tagging-version>
-        <oracle-internal-vault-java-sdk-version>2.3.3</oracle-internal-vault-java-sdk-version>
+        <oracle-internal-vault-java-sdk-version>2.3.4</oracle-internal-vault-java-sdk-version>
         <oracle-internal-vault-user-java-client-v3-version>1.0.8</oracle-internal-vault-user-java-client-v3-version>
         <oracle-internal-vault-user-api-spec-version>1.0.78</oracle-internal-vault-user-api-spec-version>
         <oracle-internal-vault-user-java-client-version>1.0.8</oracle-internal-vault-user-java-client-version>

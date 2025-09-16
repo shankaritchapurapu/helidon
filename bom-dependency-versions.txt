@@ -8,11 +8,11 @@ The following version properties are referencing the newest available version:
   ${oracle-internal-exception-mapping-version} ................. 3.0.70
   ${oracle-internal-logging-version} ............................ 3.7.3
   ${oracle-internal-secret-service-cp-java-client-version} ...... 1.1.8
-  ${oracle-internal-vault-java-sdk-version} ..................... 2.3.3
+  ${oracle-internal-vault-java-sdk-version} ..................... 2.3.4
   ${oracle-internal-vault-user-api-spec-version} ............... 1.0.78
   ${oracle-internal-vault-user-java-client-version} ............. 1.0.8
 The following version property updates are available:
-  ${helidon.version} ................................ 4.2.4 -> 4.3.0-M1
-  ${oci-java-sdk-version} ............................ 3.68.0 -> 3.70.1
+  ${helidon.version} ................................ 4.2.7 -> 4.3.0-M3
+  ${oci-java-sdk-version} ............................ 3.68.0 -> 3.73.0
   ${oracle-internal-splat-sdk-version} ............... 0.2.15 -> .40331
 
