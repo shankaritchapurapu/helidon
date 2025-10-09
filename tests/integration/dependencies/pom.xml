@@ -42,16 +42,31 @@
                             <goal>display-property-updates</goal>
                         </goals>
                         <configuration>
-                            <!-- TODO: the properties that are commented out cause the versions plugin to crash - research this -->
                             <includeProperties>
-                                helidon.version, oci-java-sdk-version,
-                                oracle-internal-commons-metrics-lib-version, oracle-internal-commons-metrics-module-version,
-                                oracle-internal-commons-metrics-reporter-version, oracle-internal-commons-metrics-version,
+                                helidon.version,
+                                oci-java-sdk-version,
+                                oracle-internal-authproxy-filter-version,
+                                oracle-internal-commons-core-regions-version,
+                                oracle-internal-commons-core-resources-version,
+                                oracle-internal-commons-core-version,
+                                oracle-internal-commons-metrics-lib-version,
+                                oracle-internal-commons-metrics-module-version,
+                                oracle-internal-commons-metrics-reporter-version,
+                                oracle-internal-commons-metrics-version,
                                 oracle-internal-commons-request-id-version,
-                                oracle-internal-exception-mapping-version, oracle-internal-logging-version,
-                                oracle-internal-splat-sdk-version, oracle-internal-vault-java-sdk-version,
-                                oracle-internal-vault-user-api-spec-version, oracle-internal-vault-user-java-client-version,
+                                oracle-internal-exception-mapping-version,
+                                oracle-internal-identity-common-version,
+                                oracle-internal-identity-version,
+                                oracle-internal-logging-version,
+                                oracle-internal-sdk-common-version,
                                 oracle-internal-secret-service-cp-java-client-version,
+                                oracle-internal-splat-sdk-version,
+                                oracle-internal-splat-store-spec,
+                                oracle-internal-tagging-version,
+                                oracle-internal-vault-java-sdk-version,
+                                oracle-internal-vault-user-api-spec-version,
+                                oracle-internal-vault-user-java-client-v3-version,
+                                oracle-internal-vault-user-java-client-version,
                             </includeProperties>
                             <!--suppress UnresolvedMavenProperty -->
                             <rulesUri>file://${top.parent.basedir}/build_config/maven-version-rules.xml</rulesUri>
@@ -144,6 +159,16 @@
             <groupId>com.oracle.oci.sdk</groupId>
             <artifactId>oci-java-sdk-addons-internal</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-addons-apache-configurator-jersey3</artifactId>
+        </dependency>
+
+        <!-- https://bitbucket.oci.oraclecorp.com/projects/SECINF/repos/authproxy-filter -->
+        <dependency>
+            <groupId>com.oracle.pic.authproxy</groupId>
+            <artifactId>authproxy-filter</artifactId>
+        </dependency>
 
         <!-- TODO: we should (eventually) discontinue usage of this -->
         <!-- see https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/core -->
@@ -178,10 +203,53 @@
             <artifactId>request-id</artifactId>
         </dependency>
 
+        <!-- Identity
+                Confluence: https://confluence.oci.oraclecorp.com/x/GV0cB
+                Phonebook link: https://devops.oci.oraclecorp.com/phonebook/identity-cloud-service
+                https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/authorization/sdk/
+        -->
+        <!-- see repackaged-oci-authorization-sdk -->
+        <!-- https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/identity/common/ -->
+        <dependency>
+            <groupId>com.oracle.pic.identity</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/authentication-client -->
+        <dependency>
+            <groupId>com.oracle.pic.identity.authentication</groupId>
+            <artifactId>authentication-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.oracle.pic.identity.authorization</groupId>
+            <artifactId>sdk</artifactId>
+        </dependency>
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse -->
+        <dependency>
+            <groupId>com.oracle.pic.identity.authorization</groupId>
+            <artifactId>jersey-2-29-annotations</artifactId>
+        </dependency>
+
+        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/metrics-implementation -->
+        <dependency>
+            <groupId>com.oracle.pic.identity.authorization</groupId>
+            <artifactId>metrics-implementation</artifactId>
+        </dependency>
+
         <!-- see https://bitbucket.oci.oraclecorp.com/projects/PLATFORM/repos/mpapi/browse/splat-sdk -->
         <dependency>
             <groupId>com.oracle.pic.platform.splat.sdk</groupId>
             <artifactId>splat-sdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.platform.splat</groupId>
+            <artifactId>splat-store-spec</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.oracle.pic.tagging</groupId>
+            <artifactId>client</artifactId>
         </dependency>
 
         <!-- see https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEVCENTRAL&title=Overlay+Telemetry+%28T2%29+Basics -->
@@ -296,6 +364,10 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
         </dependency>
@@ -319,5 +391,15 @@
             <groupId>org.glassfish.hk2</groupId>
             <artifactId>hk2-utils</artifactId>
         </dependency>
+        <dependency>
+            <!-- dependency of pic identity, with non-existent version -->
+            <groupId>com.sleepycat</groupId>
+            <artifactId>je</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15to18</artifactId>
+        </dependency>
     </dependencies>
+
 </project>

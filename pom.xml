@@ -61,7 +61,7 @@
         <version.plugin.maven-exec-plugin>3.1.0</version.plugin.maven-exec-plugin>
         <version.plugin.maven-jar-plugin>3.3.0</version.plugin.maven-jar-plugin>
         <version.plugin.maven-javadoc-plugin>2.10.4</version.plugin.maven-javadoc-plugin>
-        <version.plugin.maven-versions-plugin>2.16.1</version.plugin.maven-versions-plugin>
+        <version.plugin.maven-versions-plugin>2.19.1</version.plugin.maven-versions-plugin>
     </properties>
 
     <modules>
