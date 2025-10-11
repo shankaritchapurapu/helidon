@@ -42,13 +42,15 @@
                             <goal>display-property-updates</goal>
                         </goals>
                         <configuration>
+                            <!-- Properties that are causing problems
+                                oracle-internal-commons-core-version,
+                                oracle-internal-commons-core-resources-version,
+                                oracle-internal-commons-core-regions-version,
+                            -->
                             <includeProperties>
                                 helidon.version,
                                 oci-java-sdk-version,
                                 oracle-internal-authproxy-filter-version,
-                                oracle-internal-commons-core-regions-version,
-                                oracle-internal-commons-core-resources-version,
-                                oracle-internal-commons-core-version,
                                 oracle-internal-commons-metrics-lib-version,
                                 oracle-internal-commons-metrics-module-version,
                                 oracle-internal-commons-metrics-reporter-version,
@@ -164,14 +166,14 @@
             <artifactId>oci-java-sdk-addons-apache-configurator-jersey3</artifactId>
         </dependency>
 
-        <!-- https://bitbucket.oci.oraclecorp.com/projects/SECINF/repos/authproxy-filter -->
+        <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/SECINF/repositories/authproxy-filter -->
         <dependency>
             <groupId>com.oracle.pic.authproxy</groupId>
             <artifactId>authproxy-filter</artifactId>
         </dependency>
 
         <!-- TODO: we should (eventually) discontinue usage of this -->
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/core -->
+        <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/PEG/repositories/core -->
         <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>core</artifactId>
@@ -181,7 +183,7 @@
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>core-regions</artifactId>
         </dependency>
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/COMMONS/repos/core-resources -->
+        <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/COMMONS/repositories/core-resources -->
         <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>core-resources</artifactId>
@@ -190,14 +192,14 @@
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>exception-mapping</artifactId>
         </dependency>
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/COMMONS/repos/metrics -->
+        <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/COMMONS/repositories/metrics -->
         <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>metrics</artifactId>
         </dependency>
 
         <!-- TODO: we should (eventually) discontinue usage of this -->
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/PEG/repos/request-id -->
+        <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/PEG/repositories/request-id -->
         <dependency>
             <groupId>com.oracle.pic.commons</groupId>
             <artifactId>request-id</artifactId>
@@ -215,7 +217,7 @@
             <artifactId>common</artifactId>
         </dependency>
 
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/authentication-client -->
+        <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/IDENT/repositories/authorization-sdk/files?folderPath=authentication-client -->
         <dependency>
             <groupId>com.oracle.pic.identity.authentication</groupId>
             <artifactId>authentication-client</artifactId>
@@ -225,13 +227,13 @@
             <groupId>com.oracle.pic.identity.authorization</groupId>
             <artifactId>sdk</artifactId>
         </dependency>
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse -->
+        <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/IDENT/repositories/authorization-sdk -->
         <dependency>
             <groupId>com.oracle.pic.identity.authorization</groupId>
             <artifactId>jersey-2-29-annotations</artifactId>
         </dependency>
 
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/metrics-implementation -->
+        <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/IDENT/repositories/authorization-sdk/files?folderPath=metrics-implementation -->
         <dependency>
             <groupId>com.oracle.pic.identity.authorization</groupId>
             <artifactId>metrics-implementation</artifactId>
@@ -253,7 +255,7 @@
         </dependency>
 
         <!-- see https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEVCENTRAL&title=Overlay+Telemetry+%28T2%29+Basics -->
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/telemetry-commons/browse -->
+        <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/TEL/repositories/telemetry-commons/ -->
         <dependency>
             <groupId>com.oracle.pic.telemetry.commons</groupId>
             <artifactId>metrics-lib</artifactId>
@@ -263,7 +265,7 @@
             <artifactId>metrics-reporter</artifactId>
         </dependency>
 
-        <!-- see https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/metrics-overlay/browse -->
+        <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/TEL/repositories/metrics-overlay -->
         <dependency>
             <groupId>com.oracle.pic.telemetry.overlay.metrics</groupId>
             <artifactId>metrics-module</artifactId>

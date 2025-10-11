@@ -25,10 +25,10 @@
     <inceptionYear>2023</inceptionYear>
 
     <scm>
-        <developerConnection>scm:git:git@bitbucket.oci.oraclecorp.com:7999/hldn/oci-helidon.git</developerConnection>
-        <connection>scm:git:git@bitbucket.oci.oraclecorp.com:7999/hldn/oci-helidon.git</connection>
+        <developerConnection>https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon</developerConnection>
+        <connection>https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon</connection>
+        <url>https://devops.oci.oraclecorp.com/devops-scm?phonebook=helidon</url>
         <tag>HEAD</tag>
-        <url>https://bitbucket.oci.oraclecorp.com/projects/HLDN</url>
     </scm>
 
     <repositories>
