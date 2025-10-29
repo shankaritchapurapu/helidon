@@ -36,6 +36,7 @@
         <oracle-internal-commons-metrics-version>4.1.11</oracle-internal-commons-metrics-version>
         <oracle-internal-commons-request-id-version>1.1.55</oracle-internal-commons-request-id-version>
         <oracle-internal-exception-mapping-version>3.0.70</oracle-internal-exception-mapping-version>
+        <oracle-internal-kiev-library-version>2.0.35</oracle-internal-kiev-library-version>
         <oracle-internal-identity-common-version>2.1.0.469</oracle-internal-identity-common-version>
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
         <oracle-internal-logging-version>3.7.3</oracle-internal-logging-version>
@@ -329,6 +330,77 @@
                 <groupId>com.oracle.pic.commons</groupId>
                 <artifactId>request-id</artifactId>
                 <version>${oracle-internal-commons-request-id-version}</version>
+            </dependency>
+
+            <!-- see repackaged-oci-kiev-library -->
+            <!-- Kiev
+                https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/kiev/kiev-library/
+             -->
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>in-memory-core</artifactId>
+                <version>${oracle-internal-kiev-library-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>in-memory-library</artifactId>
+                <version>${oracle-internal-kiev-library-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>kiev-library</artifactId>
+                <version>${oracle-internal-kiev-library-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>kiev-db-common</artifactId>
+                <version>${oracle-internal-kiev-library-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>kiev-core</artifactId>
+                <version>${oracle-internal-kiev-library-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>shared-models</artifactId>
+                <version>${oracle-internal-kiev-library-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- Identity

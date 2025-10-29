@@ -26,5 +26,6 @@
         <module>swagger-maven-plugin</module>
         <module>t2-metrics</module>
         <module>error-code-jsonb</module>
+        <module>kiev</module>
     </modules>
 </project>

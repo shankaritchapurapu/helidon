@@ -1,7 +1,6 @@
 
 The following version properties are referencing the newest available version:
   ${oracle-internal-commons-metrics-lib-version} ............... 0.3.53
-  ${oracle-internal-commons-metrics-module-version} ............ 2.0.23
   ${oracle-internal-commons-metrics-reporter-version} .......... 0.0.51
   ${oracle-internal-commons-metrics-version} ................... 4.1.11
   ${oracle-internal-commons-request-id-version} ................ 1.1.55
@@ -13,11 +12,9 @@ The following version properties are referencing the newest available version:
   ${oracle-internal-vault-user-java-client-version} ............. 1.0.8
 The following version property updates are available:
   ${helidon.version} ................................... 4.2.7 -> 4.3.1
-  ${oci-java-sdk-version} ............................ 3.72.0 -> 3.74.2
+  ${oci-java-sdk-version} ............................ 3.72.0 -> 3.74.3
   ${oracle-internal-authproxy-filter-version} ........ 1.1.38 -> 1.1.39
-  ${oracle-internal-commons-core-regions-version} ... 2.1.73 -> 2.1.105
-  ${oracle-internal-commons-core-resources-version}  1.2.337 -> 1.2.645
-  ${oracle-internal-commons-core-version} ............ 4.0.85 -> 4.0.88
+  ${oracle-internal-commons-metrics-module-version} .. 2.0.23 -> 2.0.25
   ${oracle-internal-identity-common-version}  2.1.0.469 -> 2.2.0-release-adding-provider-to-limits-client.10
   ${oracle-internal-identity-version} ...... 3.1.336 -> 3.0305-hotfix.2
   ${oracle-internal-sdk-common-version} .................. 1.2 -> 1.3.6
