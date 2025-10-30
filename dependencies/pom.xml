@@ -37,6 +37,7 @@
         <oracle-internal-commons-request-id-version>1.1.55</oracle-internal-commons-request-id-version>
         <oracle-internal-exception-mapping-version>3.0.70</oracle-internal-exception-mapping-version>
         <oracle-internal-kiev-library-version>2.0.35</oracle-internal-kiev-library-version>
+        <oracle-internal-kiev-spec-version>2.0.34</oracle-internal-kiev-spec-version>
         <oracle-internal-identity-common-version>2.1.0.469</oracle-internal-identity-common-version>
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
         <oracle-internal-logging-version>3.7.3</oracle-internal-logging-version>
@@ -384,6 +385,28 @@
                 <groupId>com.oracle.pic.kiev</groupId>
                 <artifactId>kiev-core</artifactId>
                 <version>${oracle-internal-kiev-library-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>frontend-spec</artifactId>
+                <version>${oracle-internal-kiev-spec-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>client-registry-spec</artifactId>
+                <version>${oracle-internal-kiev-spec-version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>*</groupId>

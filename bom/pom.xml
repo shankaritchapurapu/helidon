@@ -114,6 +114,11 @@
                 <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-kiev-shared-models</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
 
             <!-- OCI javax dependencies that will be shimmed -->
             <dependency>

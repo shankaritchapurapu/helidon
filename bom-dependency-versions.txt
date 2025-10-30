@@ -12,7 +12,7 @@ The following version properties are referencing the newest available version:
   ${oracle-internal-vault-user-java-client-version} ............. 1.0.8
 The following version property updates are available:
   ${helidon.version} ................................... 4.2.7 -> 4.3.1
-  ${oci-java-sdk-version} ............................ 3.72.0 -> 3.74.3
+  ${oci-java-sdk-version} ............................ 3.72.0 -> 3.75.0
   ${oracle-internal-authproxy-filter-version} ........ 1.1.38 -> 1.1.39
   ${oracle-internal-commons-metrics-module-version} .. 2.0.23 -> 2.0.25
   ${oracle-internal-identity-common-version}  2.1.0.469 -> 2.2.0-release-adding-provider-to-limits-client.10
