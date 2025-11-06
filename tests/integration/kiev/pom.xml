@@ -25,28 +25,43 @@
     <dependencies>
         <dependency>
             <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-kiev-client-registry</artifactId>
+            <version>1.2.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-kiev-core</artifactId>
+            <version>1.2.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-kiev-db-common</artifactId>
+            <version>1.2.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-kiev-in-memory-core</artifactId>
+            <version>1.2.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-kiev-in-memory-library</artifactId>
+            <version>1.2.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-kiev-library</artifactId>
+            <version>1.2.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
             <artifactId>helidon-repackaged-oci-kiev-shared-models</artifactId>
             <version>1.2.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>in-memory-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>in-memory-library</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>kiev-library</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>kiev-db-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>kiev-core</artifactId>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-kiev-service-client</artifactId>
+            <version>1.2.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

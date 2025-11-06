@@ -339,6 +339,39 @@
              -->
             <dependency>
                 <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>client-registry</artifactId>
+                <version>${oracle-internal-kiev-library-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>kiev-core</artifactId>
+                <version>${oracle-internal-kiev-library-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>kiev-db-common</artifactId>
+                <version>${oracle-internal-kiev-library-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
                 <artifactId>in-memory-core</artifactId>
                 <version>${oracle-internal-kiev-library-version}</version>
                 <exclusions>
@@ -372,7 +405,7 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.pic.kiev</groupId>
-                <artifactId>kiev-db-common</artifactId>
+                <artifactId>shared-models</artifactId>
                 <version>${oracle-internal-kiev-library-version}</version>
                 <exclusions>
                     <exclusion>
@@ -383,19 +416,8 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.pic.kiev</groupId>
-                <artifactId>kiev-core</artifactId>
+                <artifactId>service-client</artifactId>
                 <version>${oracle-internal-kiev-library-version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.pic.kiev</groupId>
-                <artifactId>frontend-spec</artifactId>
-                <version>${oracle-internal-kiev-spec-version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>*</groupId>
@@ -416,8 +438,8 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.pic.kiev</groupId>
-                <artifactId>shared-models</artifactId>
-                <version>${oracle-internal-kiev-library-version}</version>
+                <artifactId>frontend-spec</artifactId>
+                <version>${oracle-internal-kiev-spec-version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>*</groupId>
