@@ -87,6 +87,16 @@
                 <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci.common.envconfig</groupId>
+                <artifactId>helidon-oci-common-env-config-microprofile</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci.common.envconfig</groupId>
+                <artifactId>helidon-oci-common-env-config</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
 
             <!-- Helidon OCI repackaged artifacts -->
             <dependency>

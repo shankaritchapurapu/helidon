@@ -21,6 +21,7 @@
     <modules>
         <module>error-code</module>
         <module>request-id</module>
+        <module>env-config</module>
     </modules>
 
     <build>

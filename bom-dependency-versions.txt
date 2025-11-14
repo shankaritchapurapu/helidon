@@ -11,8 +11,8 @@ The following version properties are referencing the newest available version:
   ${oracle-internal-vault-user-java-client-v3-version} .......... 1.0.8
   ${oracle-internal-vault-user-java-client-version} ............. 1.0.8
 The following version property updates are available:
-  ${helidon.version} ................................... 4.2.7 -> 4.3.1
-  ${oci-java-sdk-version} .... 3.72.0 -> 3.76.1-SNAPSHOT-codesign66-exp
+  ${helidon.version} ................................... 4.2.7 -> 4.3.2
+  ${oci-java-sdk-version} ........... 3.72.0 -> 3.76.1-testing-codesign
   ${oracle-internal-authproxy-filter-version} ........ 1.1.38 -> 1.1.39
   ${oracle-internal-commons-metrics-module-version} .. 2.0.23 -> 2.0.25
   ${oracle-internal-identity-common-version}  2.1.0.469 -> 2.2.0-release-adding-provider-to-limits-client.10
@@ -20,6 +20,6 @@ The following version property updates are available:
   ${oracle-internal-sdk-common-version} .................. 1.2 -> 1.3.6
   ${oracle-internal-splat-sdk-version} ............... 0.2.15 -> .40331
   ${oracle-internal-splat-store-spec} .................. 0.2.8 -> 0.3.2
-  ${oracle-internal-tagging-version} ................... 4.3.5 -> 4.3.8
+  ${oracle-internal-tagging-version} ................... 4.3.5 -> 4.3.9
   ${oracle-internal-vault-java-sdk-version} ............ 2.3.4 -> 2.3.6
 

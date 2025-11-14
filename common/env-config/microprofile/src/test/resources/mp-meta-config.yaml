@@ -1,0 +1,10 @@
+#
+# Copyright (c) 2025 Oracle and/or its affiliates.
+#
+
+sources:
+  - type: "oci-env"
+    location-override:
+      region: us-ashburn-1
+      availability-domain: iad-ad-2
+      fault-domain: 3

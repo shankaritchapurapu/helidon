@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2025 Oracle and/or its affiliates.
+-->
+
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.oracle.helidon.oci.common</groupId>
+        <artifactId>helidon-oci-common-project</artifactId>
+        <version>1.2.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.oracle.helidon.oci.common.envconfig</groupId>
+    <artifactId>helidon-oci-common-env-config-project</artifactId>
+    <version>1.2.1-SNAPSHOT</version>
+
+    <name>Helidon OCI Common Env Config Project</name>
+
+    <packaging>pom</packaging>
+    <modules>
+        <module>env-config</module>
+        <module>microprofile</module>
+    </modules>
+</project>
