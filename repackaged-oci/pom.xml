@@ -34,6 +34,8 @@
         <module>repackaged-oci-kiev-library</module>
         <module>repackaged-oci-kiev-shared-models</module>
         <module>repackaged-oci-kiev-service-client</module>
+        <module>repackaged-oci-workflow-javaclient</module>
+        <module>repackaged-oci-workflow-service-java-client</module>
     </modules>
 
 

@@ -29,7 +29,7 @@
         <oracle-internal-authproxy-filter-version>1.1.38</oracle-internal-authproxy-filter-version>
         <oracle-internal-commons-core-regions-version>2.1.73</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-core-resources-version>1.2.337</oracle-internal-commons-core-resources-version>
-        <oracle-internal-commons-core-version>4.0.85</oracle-internal-commons-core-version>
+        <oracle-internal-commons-core-version>5.0.90</oracle-internal-commons-core-version>
         <oracle-internal-commons-metrics-lib-version>0.3.53</oracle-internal-commons-metrics-lib-version>
         <oracle-internal-commons-metrics-module-version>2.0.23</oracle-internal-commons-metrics-module-version>
         <oracle-internal-commons-metrics-reporter-version>0.0.51</oracle-internal-commons-metrics-reporter-version>
@@ -41,7 +41,7 @@
         <oracle-internal-identity-common-version>2.1.0.469</oracle-internal-identity-common-version>
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
         <oracle-internal-logging-version>3.7.3</oracle-internal-logging-version>
-        <oracle-internal-sdk-common-version>1.2</oracle-internal-sdk-common-version>
+        <oracle-internal-sdk-common-version>1.3.5</oracle-internal-sdk-common-version>
         <oracle-internal-secret-service-cp-java-client-version>1.1.8</oracle-internal-secret-service-cp-java-client-version>
         <oracle-internal-splat-sdk-version>0.2.15</oracle-internal-splat-sdk-version>
         <oracle-internal-splat-store-spec>0.2.8</oracle-internal-splat-store-spec>
@@ -50,6 +50,7 @@
         <oracle-internal-vault-user-api-spec-version>1.0.78</oracle-internal-vault-user-api-spec-version>
         <oracle-internal-vault-user-java-client-v3-version>1.0.8</oracle-internal-vault-user-java-client-v3-version>
         <oracle-internal-vault-user-java-client-version>1.0.8</oracle-internal-vault-user-java-client-version>
+        <oracle-internal-workflow-version>14.0.0</oracle-internal-workflow-version>
 
         <version.lib.cdi-api>4.0.1</version.lib.cdi-api>
         <version.lib.jaxrs-api>3.1.0</version.lib.jaxrs-api>
@@ -883,6 +884,69 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>com.oracle.pic.workflow</groupId>
+                <artifactId>workflow-javaclient</artifactId>
+                <version>${oracle-internal-workflow-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.oracle.pic.workflow.client</groupId>
+                        <artifactId>workflow-service-java-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                        <artifactId>jackson-jaxrs-json-provider</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.workflow.client</groupId>
+                        <artifactId>workflow-service-java-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.google.code.findbugs</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.google.inject</groupId>
+                        <artifactId>guice</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.workflow.client</groupId>
+                <artifactId>workflow-service-java-client</artifactId>
+                <version>${oracle-internal-workflow-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.workflow</groupId>
+                <artifactId>wfaas-sdk</artifactId>
+                <version>${oracle-internal-workflow-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.oracle.pic.workflow.client</groupId>
+                        <artifactId>workflow-service-java-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.assertj</groupId>
+                        <artifactId>assertj-core</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.workflow</groupId>
+                <artifactId>wfaas-api</artifactId>
+                <version>${oracle-internal-workflow-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.oracle.pic.workflow.client</groupId>
+                        <artifactId>workflow-service-java-client</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.workflow</groupId>
+                <artifactId>workflow-service-spec</artifactId>
+                <version>${oracle-internal-workflow-version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.oracle.oci.internals.sdk</groupId>
                 <artifactId>java-sdk-oci-internals-commons</artifactId>
                 <version>${oracle-internal-sdk-common-version}</version>
@@ -1059,6 +1123,16 @@
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcpkix-jdk15to18</artifactId>
                 <version>${version.lib.bouncycastle}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${version.lib.lombok}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${version.lib.logback}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -97,6 +97,11 @@
                 <artifactId>helidon-oci-common-env-config</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-workflow-java-client</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
 
             <!-- Helidon OCI repackaged artifacts -->
             <dependency>
@@ -162,6 +167,16 @@
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-repackaged-kiev-service-client</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-oci-workflow-javaclient</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-repackaged-oci-workflow-service-java-client</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
 

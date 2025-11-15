@@ -74,6 +74,7 @@
         <module>metrics</module>
         <module>secret-service</module>
         <module>splat</module>
+        <module>workflow-java-client</module>
         <module>swagger-maven-plugin</module>
         <module>tests</module>
     </modules>
