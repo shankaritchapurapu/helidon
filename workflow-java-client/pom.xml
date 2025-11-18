@@ -40,10 +40,6 @@
             <artifactId>helidon-repackaged-oci-workflow-javaclient</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-repackaged-oci-workflow-service-java-client</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.oracle.pic.workflow</groupId>
             <artifactId>wfaas-sdk</artifactId>
         </dependency>

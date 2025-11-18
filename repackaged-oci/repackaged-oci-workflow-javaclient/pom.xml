@@ -28,6 +28,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-repackaged-oci-workflow-service-java-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>jakarta.enterprise</groupId>
             <artifactId>jakarta.enterprise.cdi-api</artifactId>
         </dependency>
@@ -71,6 +75,8 @@
                             <artifactId>workflow-javaclient</artifactId>
                             <exclusions>
                                 <exclusion>com/oracle/pic/workflow/module/WorkflowClientModule.class</exclusion>
+                                <!-- This is sample directory only, so no need to be included as it has no functional value -->
+                                <exclusion>com/oracle/pic/workflow/sample/[^/]*\.class</exclusion>
                             </exclusions>
                         </artifact>
                     </artifacts>
