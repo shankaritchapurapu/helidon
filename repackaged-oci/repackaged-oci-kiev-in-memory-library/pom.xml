@@ -26,8 +26,27 @@
         <!-- https://oci.private.devops.scmservice.us-phoenix-1.oci.oracleiaas.com/namespaces/axuxirvibvvo/projects/KIEV/repositories/kiev-client -->
         <dependency>
             <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>in-memory-library</artifactId>
+            <artifactId>in-memory-core</artifactId>
+            <version>${oracle-internal-kiev-library-version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.kiev</groupId>
+            <artifactId>in-memory-library</artifactId>
+            <version>${oracle-internal-kiev-library-version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
@@ -46,6 +65,10 @@
                 </executions>
                 <configuration>
                     <artifacts>
+                        <artifact>
+                            <groupId>com.oracle.pic.kiev</groupId>
+                            <artifactId>in-memory-core</artifactId>
+                        </artifact>
                         <artifact>
                             <groupId>com.oracle.pic.kiev</groupId>
                             <artifactId>in-memory-library</artifactId>

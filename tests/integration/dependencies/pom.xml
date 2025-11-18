@@ -46,8 +46,6 @@
                                 oracle-internal-commons-core-version,
                                 oracle-internal-commons-core-resources-version,
                                 oracle-internal-commons-core-regions-version,
-                                oracle-internal-kiev-library-version,
-                                oracle-internal-kiev-spec-version,
                             -->
                             <includeProperties>
                                 helidon.version,
@@ -207,34 +205,6 @@
             <artifactId>request-id</artifactId>
         </dependency>
 
-        <!-- see repackaged-oci-kiev-library -->
-        <!-- Kiev
-            https://artifactory.oci.oraclecorp.com/libs-release/com/oracle/pic/kiev/kiev-library/
-         -->
-        <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>in-memory-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>in-memory-library</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>kiev-library</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>kiev-db-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>kiev-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.kiev</groupId>
-            <artifactId>shared-models</artifactId>
-        </dependency>
         <!-- Identity
                 Confluence: https://confluence.oci.oraclecorp.com/x/GV0cB
                 Phonebook link: https://devops.oci.oraclecorp.com/phonebook/identity-cloud-service

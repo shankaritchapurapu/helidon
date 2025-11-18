@@ -4,10 +4,15 @@
 
 package com.oracle.tests.integration.kiev;
 
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import com.oracle.pic.kiev.DataStoreConfig;
@@ -31,21 +36,43 @@ import io.helidon.config.Config;
  * A simple JAX-RS resource to show Kiev integration.
  */
 @Path("/kiev")
-@RequestScoped
+@ApplicationScoped
 public class KievResource {
     private static final Logger LOGGER = Logger.getLogger(KievResource.class.getName());
+
+    MappedDataStore mappedDataStore;
 
     @Inject
     Config config;
 
     @KievEntity
-    static class Foo {
+    public static class Foo {
         @HashKey
         @Column(type = ColumnType.LONG)
-        Long id;
+        public Long id;
 
         @Column(type = ColumnType.STRING, length = 99)
-        String fooValue;
+        public String fooValue;
+    }
+
+    /**
+     * Set a value into Helidon Test Bucket.
+     *
+     * @return {@link Response}
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setIntoHelidonTestBucket(Foo fooValue) throws CommitConflictException {
+        mappedDataStore = setupKievDataStore();
+        // Based on the entity defined above, you'll get the mapped bucket for that entity.
+        MappedHashBucket<Long, Foo> fooBucket =
+                mappedDataStore.getOrCreateBucket("helidon_bucket", "helidon test bucket", Long.class, Foo.class);
+        // Insert
+        try (Transaction txn = mappedDataStore.beginTransaction("Insert helidon test transaction")) {
+            fooBucket.insert(txn, fooValue);
+            txn.commit();
+        }
+        return Response.status(Response.Status.OK).build();
     }
 
     /**
@@ -54,40 +81,31 @@ public class KievResource {
      * @return {@link Response}
      */
     @GET
-    public Response getFromHelidonTestBucket() throws CommitConflictException {
-        MappedDataStore mappedDataStore = setupKievDataStore();
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getFromHelidonTestBucket(@QueryParam("bucketId") long itemId) throws CommitConflictException {
+        mappedDataStore = setupKievDataStore();
         // Based on the entity defined above, you'll get the mapped bucket for that entity.
         MappedHashBucket<Long, Foo> fooBucket =
                 mappedDataStore.getOrCreateBucket("helidon_bucket", "helidon test bucket", Long.class, Foo.class);
-
-        // Populate with the values you wish to populate with.
-        Foo fooValue = new Foo();
-        fooValue.fooValue = "This is a helidon test";
-        fooValue.id = 1l;
-
-        // Insert
-        try (Transaction txn = mappedDataStore.beginTransaction("Insert helidon test transaction")) {
-            fooBucket.insert(txn, fooValue);
-            txn.commit();
-        }
-
         Optional<Foo> bucketContent;
 
         // Retrieve
         try (Transaction txn = mappedDataStore.beginTransaction("Get helidon test transaction")) {
-            bucketContent = fooBucket.get(txn, fooValue.id);
+            bucketContent = fooBucket.get(txn, itemId);
             txn.commit();
         }
 
         closeKievDataStore(mappedDataStore);
-        return Response.status(Response.Status.NO_CONTENT).build();
+        return Response.status(Response.Status.OK).entity(bucketContent).build();
     }
 
     /*
      * This is how you can get an instance of a MappedDataStore.
      */
     MappedDataStore setupKievDataStore() {
-
+        if(this.mappedDataStore != null) {
+            return mappedDataStore;
+        }
         /*
          * First, create a DataStoreConfig for Kiev to use to connect to Oracle or in-memory.
          *
