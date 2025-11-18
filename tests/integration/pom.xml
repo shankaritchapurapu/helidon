@@ -27,5 +27,6 @@
         <module>t2-metrics</module>
         <module>error-code-jsonb</module>
         <module>kiev</module>
+        <module>workflow</module>
     </modules>
 </project>
