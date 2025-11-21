@@ -20,11 +20,11 @@
     <description>Maven dependency management for Helidon OCI native applications</description>
 
     <properties>
-        <helidon.version>4.2.7</helidon.version>
+        <helidon.version>4.3.2</helidon.version>
         <!-- Versions for libraries used in build -->
-        <oci-java-sdk-version>3.72.0</oci-java-sdk-version>
+        <oci-java-sdk-version>3.75.0</oci-java-sdk-version>
 
-        <bmc-sdk-swagger-maven-plugin.version>2.22-3.23.2</bmc-sdk-swagger-maven-plugin.version>
+        <bmc-sdk-swagger-maven-plugin.version>2.142-3.75.0</bmc-sdk-swagger-maven-plugin.version>
 
         <oracle-internal-authproxy-filter-version>1.1.38</oracle-internal-authproxy-filter-version>
         <oracle-internal-commons-core-regions-version>2.1.73</oracle-internal-commons-core-regions-version>

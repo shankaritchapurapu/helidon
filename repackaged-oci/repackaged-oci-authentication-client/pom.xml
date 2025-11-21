@@ -263,7 +263,7 @@
             <plugin>
                 <groupId>com.oracle.bmc.sdk</groupId>
                 <artifactId>bmc-sdk-swagger-maven-plugin</artifactId>
-                <version>2.70</version>
+                <version>2.142-3.75.0</version>
                 <executions>
                     <execution>
                         <goals>
