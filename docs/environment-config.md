@@ -25,8 +25,8 @@ Helidon SE:
 ```xml
 <dependency>
     <groupId>com.oracle.helidon.oci.common.envconfig</groupId>
-    <artifactId>helidon-oci-common-env-config-webserver</artifactId>
-     <scope>runtime</scope>
+    <artifactId>helidon-oci-common-env-config</artifactId>
+    <scope>runtime</scope>
 </dependency>
 ```
 or 
@@ -36,7 +36,7 @@ Helidon MP:
 <dependency>
     <groupId>com.oracle.helidon.oci.common.envconfig</groupId>
     <artifactId>helidon-oci-common-env-config-microprofile</artifactId>
-     <scope>runtime</scope>
+    <scope>runtime</scope>
 </dependency>
 ```
 
