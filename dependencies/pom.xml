@@ -56,7 +56,7 @@
         <version.lib.jaxrs-api>3.1.0</version.lib.jaxrs-api>
         <!-- TODO: Why is enforcer blocking 4.0.0? -->
         <version.lib.xml.bind-api>3.0.1</version.lib.xml.bind-api>
-        <version.lib.org-glassfish>3.1.9</version.lib.org-glassfish>
+        <version.lib.org-glassfish>3.1.10</version.lib.org-glassfish>
         <version.lib.hk2>3.0.4</version.lib.hk2>
 
         <version.lib.commons-io>2.17.0</version.lib.commons-io>
@@ -64,7 +64,7 @@
         <version.lib.commons-codec>1.15</version.lib.commons-codec>
         <version.lib.commons-net>3.9.0</version.lib.commons-net>
         <version.lib.commons-compress>1.27.1</version.lib.commons-compress>
-        <version.lib.google-httpclient>1.43.3</version.lib.google-httpclient>
+        <version.lib.google-httpclient>1.47.1</version.lib.google-httpclient>
         <version.lib.httpclient>4.5.14</version.lib.httpclient>
         <version.lib.httpcore>4.4.16</version.lib.httpcore>
         <version.lib.guice>5.1.0</version.lib.guice>
