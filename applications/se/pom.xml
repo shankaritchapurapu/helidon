@@ -23,6 +23,7 @@
 
     <properties>
         <helidon.oci.version>1.2.1-SNAPSHOT</helidon.oci.version>
+        <version.lib.guava>33.3.1-jre</version.lib.guava>
     </properties>
 
     <dependencyManagement>
