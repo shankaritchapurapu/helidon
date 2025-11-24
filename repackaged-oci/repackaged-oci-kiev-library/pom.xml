@@ -102,6 +102,18 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>com.oracle.pic.kiev</groupId>
+            <artifactId>sql-library</artifactId>
+            <version>2.1.5</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.oci.sdk</groupId>
             <artifactId>oci-java-sdk-common</artifactId>
             <exclusions>
@@ -226,6 +238,23 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.rholder</groupId>
+            <artifactId>guava-retrying</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.integrations.db</groupId>
+            <artifactId>ojdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ucp17</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
@@ -330,6 +359,10 @@
                         <artifact>
                             <groupId>com.oracle.pic.kiev</groupId>
                             <artifactId>kiev-db-common</artifactId>
+                        </artifact>
+                        <artifact>
+                            <groupId>com.oracle.pic.kiev</groupId>
+                            <artifactId>sql-library</artifactId>
                         </artifact>
                         <artifact>
                             <groupId>com.oracle.pic.kiev</groupId>
