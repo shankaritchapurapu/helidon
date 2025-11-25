@@ -5,6 +5,7 @@
 package com.oracle.helidon.oci.secret;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -167,7 +168,7 @@ class DefaultSecretServiceTlsManager extends ConfiguredTlsManager implements Sec
 
                 // Load trust CAs
                 try {
-                    trustCaList.addAll(PemReader.readCertificates(cfg.trust().stream()));
+                    trustCaList.addAll(PemReader.readCertificates(getTrustStream()));
                 } catch (Exception e) {
                     LOGGER.log(WARNING, "Failed to load trust CAs: " + cfg.trust(), e);
                 }
@@ -205,6 +206,11 @@ class DefaultSecretServiceTlsManager extends ConfiguredTlsManager implements Sec
                  | IOException e) {
             throw new IllegalStateException("Error while loading context from SSv2", e);
         }
+    }
+
+    InputStream getTrustStream() {
+        cfg.trust().cacheBytes();
+        return cfg.trust().stream();
     }
 
     private void shutdown() {
