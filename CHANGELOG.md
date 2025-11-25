@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0]
+This release adds support for Workflow-as-a-service (WFaaS) Java Client, Kiev Library Client and Environmental Config along with bug fixes, dependency updates esp. Helidon 4.3.2 and OCI SDK 3.75.0. A minimum of Java 21 is required to use this release.
+
+### CHANGES
+
+- [Support for Workflow-as-a-service (WFaaS) Java Client](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon/pullRequestsTabs/118/differences)
+- [Support for Environmental Config](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon/pullRequestsTabs/116?_ctx=us-phoenix-1%2Cdevops_scm_central)
+- [Support for Kiev Library Client](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon/pullRequestsTabs/121?_ctx=us-phoenix-1%2Cdevops_scm_central)
+- [Fix Issue with SPLAT cert rotation](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon/pullRequestsTabs/130?_ctx=us-phoenix-1%2Cdevops_scm_central)
+- [Uptake Helidon 4.3.2 that includes OCI SDK version upgrade](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon/pullRequestsTabs/124?_ctx=us-phoenix-1%2Cdevops_scm_central)
+- [Upgrade various dependencies](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon/pullRequestsTabs/128?_ctx=us-phoenix-1%2Cdevops_scm_central)
+
+
 ## [1.2.0]
 This release contains bug fixes, dependency updates and Helidon 4.2.4 uptake. A minimum of Java 21 is required to use this release.
 
@@ -21,8 +34,6 @@ This release contains bug fixes, dependency updates and Helidon 4.2.4 uptake. A 
 ## [1.1.0]
 
 This release contains minor bug fixes, Helidon 4.1.7 uptake and added support for OCI native Identity.  A minimum of Java 21 is required to use this release.
-
-Please see [the documentation](docs/README.md) for more information.
 
 ### CHANGES
 
@@ -42,6 +53,7 @@ This is the initial release of Helidon OCI.  A minimum of Java 21 is required to
 
 Please see [the documentation](docs/README.md) for more information.
 
+[1.3.0]: https://devops.oci.oraclecorp.com/devops-coderepository/repositories/ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyabdhc33vnzsjrwdgj6mfsomdjlkhsx5h27akhnuiasvka/compare?_ctx=us-phoenix-1%2Cdevops_scm_central&baseVersion=refs%2Ftags%2F1.2.0&targetVersion=refs%2Ftags%2F1.3.0
 [1.2.0]: https://devops.oci.oraclecorp.com/devops-coderepository/repositories/ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyabdhc33vnzsjrwdgj6mfsomdjlkhsx5h27akhnuiasvka/compare?_ctx=us-phoenix-1%2Cdevops_scm_central&baseVersion=refs%2Ftags%2F1.1.0&targetVersion=refs%2Ftags%2F1.2.0
 [1.1.0]: https://devops.oci.oraclecorp.com/devops-coderepository/repositories/ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyabdhc33vnzsjrwdgj6mfsomdjlkhsx5h27akhnuiasvka/compare?_ctx=us-phoenix-1%2Cdevops_scm_central&baseVersion=refs%2Ftags%2F1.0.0&targetVersion=refs%2Ftags%2F1.1.0
 [1.0.0]: https://devops.oci.oraclecorp.com/devops-coderepository/repositories/ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyabdhc33vnzsjrwdgj6mfsomdjlkhsx5h27akhnuiasvka/compare?_ctx=us-phoenix-1%2Cdevops_scm_central&baseVersion=refs%2Ftags%2F0.2.0&targetVersion=refs%2Ftags%2F1.0.0

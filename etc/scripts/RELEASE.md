@@ -28,7 +28,7 @@ export VERSION="1.0.0"
     git push origin release-${VERSION}
     ```
 5. Verify release
-   1. Check bitbucket repo to make sure release tag was created (should match $VERSION)
+   1. Check the repo to make sure release tag was created (should match $VERSION)
    2. Check https://artifactory.oci.oraclecorp.com/helidon-oci-release-maven-local/com/oracle/helidon/oci/ and verify artifacts are there
    3. Try building example application using released bits.
 
