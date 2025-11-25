@@ -2,31 +2,33 @@
  * Copyright (c) 2025 Oracle and/or its affiliates.
  */
 
-package com.oracle.helidon.oci.common.envconfig;
+package com.oracle.helidon.oci.common.envconfig.microprofile;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import io.helidon.common.LazyValue;
 import io.helidon.config.Config;
 import io.helidon.config.MapConfigSource;
-import io.helidon.config.spi.ConfigSource;
+import io.helidon.config.mp.MpConfigSources;
 
 import com.oracle.pic.commons.configuration.EnvironmentConfig;
 import com.oracle.pic.commons.configuration.location.LocationOverride;
 import com.oracle.pic.commons.util.AvailabilityDomain;
 import com.oracle.pic.commons.util.Region;
+import jakarta.annotation.Priority;
+import org.eclipse.microprofile.config.spi.ConfigSource;
 
 /**
  * Config Source for common Oci environment properties retrieved from
  * {@link com.oracle.pic.commons.configuration.EnvironmentConfig} getter methods. For example, the iaas domain name value will be
  * stored in the "oci.env.iaasDomainName" config property, and the value is retrieved using EnvironmentConfig.getIaasDomainName().
  */
-public class OciEnvConfigSource implements Supplier<ConfigSource> {
+@Priority(5000)
+public class OciEnvMpConfigSource implements ConfigSource {
     static final String ENV_REALM = "realm";
     static final String ENV_REGION = "region";
     static final String ENV_REGION_NAME = "region-name";
@@ -53,16 +55,29 @@ public class OciEnvConfigSource implements Supplier<ConfigSource> {
     static final String DEFAULT_PREFIX = "oci.env";
 
     private static final String DOT = ".";
-    private static final Logger LOGGER = Logger.getLogger(OciEnvConfigSource.class.getName());
-
-    private final LazyValue<ConfigSource> configSourceLazyValue;
+    private static final int DEFAULT_ORDINAL = 83;
+    private static final Logger LOGGER = Logger.getLogger(OciEnvMpConfigSource.class.getName());
+    private final int ordinal;
+    private ConfigSource configSource;
 
     /**
-     * Creates a new {@link OciEnvConfigSource} using values provided in meta-config.
-     *
-     * @param metaConfig the meta-configuration; must not be {@code null}
+     * Default constructor for the ConfigSource when loaded via {@link java.util.ServiceLoader}.
      */
-    public OciEnvConfigSource(Config metaConfig) {
+    public OciEnvMpConfigSource() {
+        this.ordinal = DEFAULT_ORDINAL;
+        configSource = create(Config.empty());
+    }
+
+    /**
+     * Constructor for the ConfigSource when used with Meta-Config. This will override the ConfigSource created by the default
+     * constructor.
+     */
+    OciEnvMpConfigSource(Config metaConfig, int ordinal) {
+        configSource = create(metaConfig);
+        this.ordinal = ordinal;
+    }
+
+    private ConfigSource create(Config metaConfig) {
         if (LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.log(Level.FINEST, "OCI env config source meta-config: " + metaConfig);
         }
@@ -105,15 +120,27 @@ public class OciEnvConfigSource implements Supplier<ConfigSource> {
         if (LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.log(Level.FINEST, "OCI env config source properties: " + envMap);
         }
-        configSourceLazyValue = LazyValue.create(MapConfigSource.create(envMap));
+        return MpConfigSources.create(MapConfigSource.create(envMap));
     }
 
-    /**
-     * Returns the created {@link io.helidon.config.spi.ConfigSource} for this class.
-     */
     @Override
-    public ConfigSource get() {
-        return configSourceLazyValue.get();
+    public Set<String> getPropertyNames() {
+        return Set.of();
+    }
+
+    @Override
+    public int getOrdinal() {
+        return ordinal;
+    }
+
+    @Override
+    public String getValue(String propertyName) {
+        return configSource.getValue(propertyName);
+    }
+
+    @Override
+    public String getName() {
+        return "oci-env";
     }
 
     private static LocationOverride getLocationOverride(Config config) {
@@ -143,7 +170,7 @@ public class OciEnvConfigSource implements Supplier<ConfigSource> {
     }
 
     // Returns AvailabilityDomain from a string name, eg. sol-mars-1-ad-1
-    private static  AvailabilityDomain getAvailabilityDomain(String name) {
+    private static AvailabilityDomain getAvailabilityDomain(String name) {
         AvailabilityDomain availabilityDomain;
         try {
             availabilityDomain = AvailabilityDomain.fromName(name);

@@ -22,7 +22,6 @@
 
     <packaging>pom</packaging>
     <modules>
-        <module>env-config</module>
         <module>microprofile</module>
     </modules>
 </project>

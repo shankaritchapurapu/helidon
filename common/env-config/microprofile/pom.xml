@@ -21,12 +21,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.oracle.helidon.oci.common.envconfig</groupId>
-            <artifactId>helidon-oci-common-env-config</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.helidon.config</groupId>
             <artifactId>helidon-config-mp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>core</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.config</groupId>
