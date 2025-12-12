@@ -72,17 +72,16 @@ an ssh tunnel to the remote Instance Metadata Service for testing the code local
 1. Set Instance Metadata Service base URL (and some additional configuration) in `oci-config.yaml` either on classpath, or in the
    current directory:
     ```yaml
-      authentication-method: "instance-principal" # hardcode to instance-principal authentication
-      imds-timeout: "PT3S" # 3 seconds timeout, may be slower when tunneling
-      imds-base-uri: "http://localhost:8000/opc/v2/" # tunneled
-      imds-detect-retries: 1 # only try once, no need to try again if not available (unless you have bad connection)
+      helidon.oci:
+        authentication-method: "instance-principal" # hardcode to instance-principal authentication
+        imds-timeout: "PT3S" # 3 seconds timeout, may be slower when tunneling
+        imds-base-uri: "http://localhost:8000/opc/v2/" # tunneled
+        imds-detect-retries: 1 # only try once, no need to try again if not available (unless you have bad connection)
     ```
 2. Run an ssh tunnel to use the chosen local host and port to forward data to the Instance Metadata Service in the remote host:
    ```shell
    ssh -v -L 8000:169.254.169.254:80 oci-reference-service-ad1 -t watch -n 90 date
    ```
-
-The [OCI T2 metrics test](tests/integration/t2-metrics) will show a complete example of this approach.
 
 
 ## Links

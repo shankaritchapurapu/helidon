@@ -8,29 +8,4 @@
         xmlns="https://github.com/spotbugs/filter/3.0.0"
         xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
 
-    <Match>
-        <Class name="com.oracle.helidon.oci.identity.AuthContextRequestFilter"/>
-        <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
-    </Match>
-    <Match>
-        <Class name="com.oracle.helidon.oci.identity.BackendServiceAuthContextRequestFilter"/>
-        <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
-    </Match>
-    <Match>
-        <Class name="com.oracle.helidon.oci.identity.OauthContextRequestFilter"/>
-        <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
-    </Match>
-    <Match>
-        <Class name="com.oracle.helidon.oci.identity.SplatAwareAuthContextRequestFilter"/>
-        <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
-    </Match>
-    <Match>
-        <Class name="com.oracle.helidon.oci.identity.SplatAwareBackendServiceAuthContextRequestFilter"/>
-        <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
-    </Match>
-    <Match>
-        <Class name="com.oracle.helidon.oci.identity.SplatAuthorizationVerificationFilter"/>
-        <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS"/>
-    </Match>
-
 </FindBugsFilter>

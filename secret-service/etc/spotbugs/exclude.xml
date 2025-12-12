@@ -8,21 +8,4 @@
         xmlns="https://github.com/spotbugs/filter/3.0.0"
         xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
 
-    <Match>
-        <Class name="com.oracle.helidon.oci.secret.DefaultSecretServiceTlsManager"/>
-        <Bug pattern="DM_DEFAULT_ENCODING"/>
-    </Match>
-    <Match>
-        <Class name="com.oracle.helidon.oci.secret.PkiCertificate$PkiPrivateKey"/>
-        <Bug pattern="DM_DEFAULT_ENCODING"/>
-    </Match>
-    <Match>
-        <Class name="com.oracle.helidon.oci.secret.SecretServiceMpConfigSource"/>
-        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
-    </Match>
-    <Match>
-        <Class name="com.oracle.helidon.oci.secret.SecretServiceClient"/>
-        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
-    </Match>
-
 </FindBugsFilter>

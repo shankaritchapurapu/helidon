@@ -20,6 +20,5 @@
 
     <modules>
         <module>se</module>
-        <module>mp</module>
     </modules>
 </project>

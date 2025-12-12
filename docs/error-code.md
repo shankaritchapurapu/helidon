@@ -20,23 +20,12 @@ in [OCI Error Codes](https://confluence.oci.oraclecorp.com/pages/viewpage.action
 
 ## Maven Coordinates
 
-To enable the error-code module, add the following dependency to your project’s pom.xml:
+To enable the error-code module, add the following dependency to your Helidon SE project’s pom.xml:
 
-Helidon SE:
 ```
 <dependency>
-    <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
-    <artifactId>helidon-oci-common-error-code-webserver</artifactId>
-    <scope>runtime</scope>
-</dependency>
-```
-or
-
-Helidon MP:
-```
-<dependency>
-    <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
-    <artifactId>helidon-oci-common-error-code-microprofile</artifactId>
+    <groupId>com.oracle.helidon.oci.errorcode</groupId>
+    <artifactId>helidon-oci-error-code-webserver</artifactId>
     <scope>runtime</scope>
 </dependency>
 ```
@@ -44,15 +33,15 @@ Helidon MP:
 ---
 
 ## Usage
-### Jakarta REST Server (Helidon MP)
+### Helidon WebServer
 
 To report an error, simply create and throw a `RenderableException`.
 Module included in your pom file based on the Helidon flavor as shown [above](#maven-coordinates), registers an exception 
-mapper that automatically converts this exception to a `Response`. For example,
+mapper that automatically converts this exception to a `ServerResponse`. For example,
 
 ```java
     if (notAuthenticated()) {
-        throw new RenderableException(null,
+        throw new RenderableException(
             ErrorCode.NotAuthenticated,
             "User 'helidon' is not authenticated",
             "Authentication failure for 'helidon'",
@@ -61,59 +50,21 @@ mapper that automatically converts this exception to a `Response`. For example,
     }
 ```
 
-will result in a `Response` with a JSON payload sent back to the client
+will result in a `ServerResponse` with a JSON payload sent back to the client
 following the schema described in the document linked above.
 
-### Jakarta REST Client API
+### Helidon WebClient
 
-Error responses can be processed by a Jakarta REST client as follows:
+Error responses can be processed by a Helidon WebClient as follows:
 
 ```java
-    WebTarget webTarget = ...;
-    Response response = webTarget.path("error").request().get();
-    if (response.getStatus() == Status.UNAUTHORIZED.getStatusCode()) {
-        ErrorDetail errorDetail = response.readEntity(ErrorDetail.class);
-        processErrorDetail(errorDetail);
+    Http1Client client = ...;
+    ClientResponseTyped<ErrorDetail> response = client.get("/error1")
+        .request(ErrorDetail.class);
+    if (response.status() == ErrorCodes.InvalidParameter.status()) {
+        ErrorDetail errorDetail = response.entity();
     }
 ```
 
 The class `ErrorDetail` is used to read the entity payload in the error
 response.
-
-### Microprofile RestClient API
-
-When using the Microprofile RestClient API, it is possible to map an
-error response back to an exception that can be caught client side. This
-feature requires an explicit registration of the `ErrorCodeResponseMapper`
-RestClient provider as part of the interface definition as shown next:
-
-```java
-    @Path("/")
-    @RegisterProvider(ErrorCodeResponseMapper.class)   // maps to RenderableException
-    public interface TestResoureClient {
-
-        @GET
-        @Path("error")
-        Response error() throws RenderableException;
-    }
-```
-
-With the registration of this provider, a client request can be executed
-as follows:
-
-```java
-    TestResoureClient client = RestClientBuilder.newBuilder()
-                                                .baseUri(webTarget.getUri())
-                                                .build(TestResoureClient.class);
-    try (Response response = client.error2()) {
-        processResponse(response);
-    } catch (RenderableException e) {
-        handleException(e);
-    }
-```
-
-Note that the provider will attempt to map any response whose HTTP error code
-is greater or equal to 400; thus, if a response is returned with such an
-error code but whose entity is not an `ErrorDetail`, an exception will
-be thrown while attempting to read the entity--this is the primary reason
-why the API requires explicit registration of `ErrorCodeResponseMapper`.

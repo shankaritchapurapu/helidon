@@ -5,38 +5,6 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
 <!-- For information see https://jeremylong.github.io/DependencyCheck/general/suppression.html -->
 
-   <!-- These CVEs are against early versions of the JDK -->
-   <suppress>
-      <notes><![CDATA[
-   file name: java-sdk-oci-internals-commons-1.2.jar
-   ]]></notes>
-      <packageUrl regex="true">^pkg:maven/com\.oracle\.oci\.internals\.sdk/java-sdk-oci-internals-commons@.*$</packageUrl>
-      <cpe>cpe:/a:sun:sdk</cpe>
-   </suppress>
-
-   <suppress>
-      <notes><![CDATA[
-   file name: splat-sdk-0.1.39874.jar
-   ]]></notes>
-      <packageUrl regex="true">^pkg:maven/com\.oracle\.pic\.platform\.splat\.sdk/splat-sdk@.*$</packageUrl>
-      <cpe>cpe:/a:sun:sdk</cpe>
-   </suppress>
-
-   <!--
-    This CVE is being disputed by the Jackson project and the community seems in agreement that this
-    CVE should be rejected. We are suppressing this for now to reduce noise in our scan and will
-    continue to monitor progress.
-    https://nvd.nist.gov/vuln/detail/CVE-2023-35116
-    https://github.com/FasterXML/jackson-databind/issues/3972
-   -->
-   <suppress>
-      <notes><![CDATA[
-   file name: jackson-databind-2.15.2.jar
-   ]]></notes>
-      <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
-      <cve>CVE-2023-35116</cve>
-   </suppress>
-
    <!--
     These are FPs.
     See https://github.com/jeremylong/DependencyCheck/issues/5973

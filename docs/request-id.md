@@ -22,7 +22,7 @@ This module provides support for handling of the `opc-request-id` header as requ
 
 ## Maven Coordinates
 
-To enable request-id support add the following dependency to your project’s pom.xml:
+To enable request-id support add the following dependency to your Helidon SE project’s pom.xml:
 
 Helidon SE:
 ```
@@ -32,22 +32,12 @@ Helidon SE:
     <scope>runtime</scope>
 </dependency>
 ```
-or 
-
-Helidon MP:
-```
-<dependency>
-    <groupId>com.oracle.helidon.oci.common.requestid</groupId>
-    <artifactId>helidon-oci-common-request-id-microprofile</artifactId>
-    <scope>runtime</scope>
-</dependency>
-```
 
 ---
 
 ## Usage
 
-Just include a dependency to this module in your pom file based on the Helidon flavor as shown [above](#maven-coordinates). All relevant providers will be automatically loaded into your application.
+Just include a dependency to this module in your pom file and all relevant providers will be automatically loaded into your application.
 
 ---
 

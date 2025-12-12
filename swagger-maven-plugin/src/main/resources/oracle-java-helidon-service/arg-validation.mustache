@@ -1,8 +1,0 @@
-{{#isValidationEnabled}}{{^isByteArray}}
-    @{{annotationPackage}}.validation.Valid{{/isByteArray}}{{#required}}
-    @{{annotationPackage}}.validation.constraints.NotNull{{/required}}{{#minimumAsLong}}{{! This does not support exclusive min and max}}
-    @{{annotationPackage}}.validation.constraints.Min({{minimumAsLong}}L){{/minimumAsLong}}{{#maximumAsLong}}
-    @{{annotationPackage}}.validation.constraints.Max({{maximumAsLong}}L){{/maximumAsLong}}{{#pattern}}{{^isByteArray}}{{^isTreatAsEnum}}{{^isEnum}}
-    @{{annotationPackage}}.validation.constraints.Pattern(regexp="{{pattern}}"{{#patternDescription}}, message="{{patternDescription}}"{{/patternDescription}}){{/isEnum}}{{/isTreatAsEnum}}{{/isByteArray}}{{/pattern}}{{^isTreatAsEnum}}{{^isEnum}}{{#maxLength}}  {{! This looks weird but we don't have CodegenProperty.hasMaxLength or hasMinLength}}
-    @{{annotationPackage}}.validation.constraints.Size({{#minLength}}min={{minLength}}, {{/minLength}}max={{maxLength}}){{/maxLength}}{{#minLength}}{{^maxLength}}
-    @{{annotationPackage}}.validation.constraints.Size(min={{minLength}}){{/maxLength}}{{/minLength}}{{/isEnum}}{{/isTreatAsEnum}}{{/isValidationEnabled}}

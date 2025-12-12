@@ -47,5 +47,3 @@ service.loader
 target/
 src/main/resources/META-INF/services
 secret-service/src/test/resources/mtls/ca.key
-swagger-maven-plugin/src/main/resources/oracle-java-helidon-service/
-tests/integration/workflow/microprofile/src/main/java/com/oracle/tests/integration/workflow/sample

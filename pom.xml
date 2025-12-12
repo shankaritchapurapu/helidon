@@ -39,6 +39,9 @@
         <dependency-check.skip>false</dependency-check.skip>
         <checkstyle.skip>false</checkstyle.skip>
 
+        <helidon.version>4.3.2</helidon.version>
+        <version.lib.oci>3.75.0</version.lib.oci>
+        <version.lib.guava>33.3.1-jre</version.lib.guava>
         <version.lib.checkstyle>10.12.5</version.lib.checkstyle>
         <version.lib.hamcrest>1.3</version.lib.hamcrest>
         <version.lib.junit>5.10.1</version.lib.junit>
@@ -51,8 +54,6 @@
         <version.plugin.helidon-build-tools>4.0.16</version.plugin.helidon-build-tools>
         <version.plugin.dependency-check>12.1.6</version.plugin.dependency-check>
         <version.plugin.surefire>3.1.0</version.plugin.surefire>
-        <version.plugin.lombok-maven-plugin>1.18.20.0</version.plugin.lombok-maven-plugin>
-        <version.plugin.shade>3.5.1</version.plugin.shade>
         <version.plugin.spotbugs>4.8.6.5</version.plugin.spotbugs>
         <version.plugin.findsecbugs>1.12.0</version.plugin.findsecbugs>
         <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
@@ -62,28 +63,24 @@
         <version.plugin.maven-jar-plugin>3.3.0</version.plugin.maven-jar-plugin>
         <version.plugin.maven-javadoc-plugin>2.10.4</version.plugin.maven-javadoc-plugin>
         <version.plugin.maven-versions-plugin>2.19.1</version.plugin.maven-versions-plugin>
-
-        <version.lib.guava>33.3.1-jre</version.lib.guava>
     </properties>
 
     <modules>
         <module>parent</module>
         <module>bom</module>
         <module>dependencies</module>
-        <module>common</module>
-        <module>repackaged-oci</module>
+        <module>env-config</module>
+        <module>error-code</module>
+        <module>request-id</module>
         <module>identity</module>
         <module>metrics</module>
         <module>secret-service</module>
         <module>splat</module>
-        <module>workflow-java-client</module>
-        <module>swagger-maven-plugin</module>
         <module>tests</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
-
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
@@ -99,14 +96,8 @@
             </dependency>
 
             <dependency>
-                <groupId>io.helidon.microprofile.testing</groupId>
-                <artifactId>helidon-microprofile-testing-junit5</artifactId>
-                <scope>test</scope>
-                <version>${helidon.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.helidon.microprofile.testing</groupId>
-                <artifactId>helidon-microprofile-testing-mocking</artifactId>
+                <groupId>io.helidon.webserver.testing.junit5</groupId>
+                <artifactId>helidon-webserver-testing-junit5</artifactId>
                 <scope>test</scope>
                 <version>${helidon.version}</version>
             </dependency>
@@ -178,7 +169,7 @@
                         <dependency>
                             <groupId>com.oracle.oci.sdk</groupId>
                             <artifactId>oci-java-sdk-enforcer-rules</artifactId>
-                            <version>${oci-java-sdk-version}</version>
+                            <version>${version.lib.oci}</version>
                             <optional>false</optional>
                         </dependency>
                         <dependency>
@@ -275,11 +266,6 @@
                         <argLine>${failsafe.argLine} ${failsafe.coverage.argline}</argLine>
                         <redirectTestOutputToFile>true</redirectTestOutputToFile>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <version>${version.plugin.shade}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -515,18 +501,4 @@
             </build>
         </profile>
     </profiles>
-    <repositories>
-        <repository>
-            <id>libs-release</id>
-            <name>Libs release in Artifactory</name>
-            <url>https://artifactory.oci.oraclecorp.com/libs-release</url>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>libs-release</id>
-            <name>Libs release in Artifactory</name>
-            <url>https://artifactory.oci.oraclecorp.com/libs-release</url>
-        </pluginRepository>
-    </pluginRepositories>
 </project>

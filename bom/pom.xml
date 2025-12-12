@@ -20,146 +20,55 @@
 
     <properties>
         <helidon.oci.version>2.0.0-SNAPSHOT</helidon.oci.version>
-        <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
-        <javax.xml.bind.version>2.4.0</javax.xml.bind.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <!-- Helidon OCI artifacts -->
             <dependency>
-                <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
-                <artifactId>helidon-oci-common-error-code</artifactId>
+                <groupId>com.oracle.helidon.oci.envconfig</groupId>
+                <artifactId>helidon-oci-envconfig</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
-                <artifactId>helidon-oci-common-error-code-microprofile</artifactId>
+                <groupId>com.oracle.helidon.oci.errorcode</groupId>
+                <artifactId>helidon-oci-errorcode</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci.common.errorcode</groupId>
-                <artifactId>helidon-oci-common-error-code-webserver</artifactId>
+                <groupId>com.oracle.helidon.oci.errorcode</groupId>
+                <artifactId>helidon-oci-errorcode-webserver</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-javax-jersey-shim</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci.common.requestid</groupId>
-                <artifactId>helidon-oci-common-request-id</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci.common.requestid</groupId>
-                <artifactId>helidon-oci-common-request-id-webserver</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci.common.requestid</groupId>
-                <artifactId>helidon-oci-common-request-id-microprofile</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-metrics</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-secret-service</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-splat</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
+                <groupId>com.oracle.helidon.oci.identity</groupId>
                 <artifactId>helidon-oci-identity</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-swagger-maven-plugin</artifactId>
+                <groupId>com.oracle.helidon.oci.metrics</groupId>
+                <artifactId>helidon-oci-metrics</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci.common.envconfig</groupId>
-                <artifactId>helidon-oci-common-env-config-microprofile</artifactId>
+                <groupId>com.oracle.helidon.oci.requestid</groupId>
+                <artifactId>helidon-oci-request-id</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci.common.envconfig</groupId>
-                <artifactId>helidon-oci-common-env-config</artifactId>
+                <groupId>com.oracle.helidon.oci.requestid</groupId>
+                <artifactId>helidon-oci-request-id-webserver</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-workflow-java-client</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-
-            <!-- Helidon OCI repackaged artifacts -->
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-javax-shim</artifactId>
+                <groupId>com.oracle.helidon.oci.secret-service</groupId>
+                <artifactId>helidon-oci-secret-service</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-vault-java-sdk</artifactId>
+                <groupId>com.oracle.helidon.oci.splat</groupId>
+                <artifactId>helidon-oci-splat</artifactId>
                 <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-splat-sdk</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-authentication-client</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-authorization-sdk</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-kiev-in-memory-library</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-kiev-library</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-workflow-javaclient</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-repackaged-oci-workflow-service-java-client</artifactId>
-                <version>${helidon.oci.version}</version>
-            </dependency>
-
-            <!-- OCI javax dependencies that will be shimmed -->
-            <dependency>
-                <groupId>javax.ws.rs</groupId>
-                <artifactId>javax.ws.rs-api</artifactId>
-                <version>${javax.ws.rs.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.xml.bind</groupId>
-                <artifactId>jaxb-api</artifactId>
-                <version>${javax.xml.bind.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

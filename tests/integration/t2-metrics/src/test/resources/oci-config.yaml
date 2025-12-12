@@ -1,8 +1,0 @@
-#
-# Copyright (c) 2023, 2025 Oracle and/or its affiliates.
-#
-
-authentication-method: "instance-principal"
-imds-timeout: "PT3S" # 3 seconds timeout, may be slower when tunneling
-imds-base-uri: "http://localhost:8000/opc/v2/" # tunneled
-imds-detect-retries: 1

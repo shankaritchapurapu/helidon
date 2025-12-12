@@ -21,12 +21,5 @@
 
     <modules>
         <module>dependencies</module>
-        <module>identity</module>
-        <module>request-id</module>
-        <module>swagger-maven-plugin</module>
-        <module>t2-metrics</module>
-        <module>error-code-jsonb</module>
-        <module>kiev</module>
-        <module>workflow</module>
     </modules>
 </project>
