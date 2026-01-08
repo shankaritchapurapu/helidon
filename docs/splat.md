@@ -15,13 +15,13 @@
 
 ## Overview
 
-The Splat module provides support for OCI SplatMtlsFilter integration as a requirement for setting up mTLS between Splat and the Helidon application. SplatMtlsFilter is a JaxRs ContainerRequestFilter written by the Splat team and is used to validate whether authorization has been performed at Splat.
+The Splat module provides support for OCI SplatMtlsFilter integration, which is required for setting up mTLS between Splat and a Helidon application. The SplatMtlsFilter is used to validate whether authorization has been performed by Splat.
 
 ---
 
 ## Maven Coordinates
 
-To enable SplatMtlsFiler add the following dependency to your project’s pom.xml:
+To enable SplatMtlsFilter, add the following dependency to your project’s pom.xml:
 
 ```xml
 <dependency>
@@ -35,34 +35,32 @@ To enable SplatMtlsFiler add the following dependency to your project’s pom.xm
 
 ## Usage
 
-Once the module is added as a dependency in the application's pom.xml, the SplatMtlsFilter will be automatically triggered for every https request. Non-https request on the other hand will be skipped, i.e. the filter will not validate them.
+The SplatMtlsFilter will be registered on the WebServer using [SplatMtlsFeature](../splat/src/main/java/com/oracle/helidon/oci/splat/SplatMtlsFeature.java), which is a [Helidon Server Feature](https://helidon.io/docs/v4/se/webserver/webserver#_server_features). When the [Service Registry](https://helidon.io/docs/v4/se/injection/injection#generate-binding) is started on an application as shown below:
+```java
+ServiceRegistryManager.start(ApplicationBinding.create());
+```
+the SplatMtlsFeature will be configured into the WebServer automatically. Otherwise, you need to configure it explicitly in code by registering it with the WebServer:
+```java
+WebServer.builder()
+         .addFeature(Services.get(SplatMtlsFeature.class))
+         .build();
+```
 
 ---
 
 ## Configuration
 
-Configure SplatMtlsFilter using the Helidon microprofile configuration framework by which the ConfigSource defaults to
-`microprofile-config.properties`. Alternatively, you can also use other ConfigSources such as `application.yaml`.
+Configure SplatMtlsFilter behavior using the application.yaml file.
 
-| config key                                               | Default Value                  | Description                                                                                                              | See                                                                                                                                                                                                                    |
-|----------------------------------------------------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| oci.splat.mtls-filter-config.enabled                     | true                           | Flag indicating whether to enable the SplatMtlsFilter.                                                                   |                                                                                                                                                                                                                        |
-| oci.splat.mtls-filter-config.skip-authz-validation-check | false                          | Flag indicating whether to bypass AuthZ validation from SplatMtlsFilter.                                                 | [3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=PLAT&title=2.+Splat+Onboarding#id-2.SplatOnboarding-3.IntroduceaSplat-onlyportprotectedbymTLS) |
-| oci.splat.mtls-filter-config.reject-x-region-calls       | false                          | Flag indicating whether SplatMtlsFilter will reject cross region client certificates.                                    | [3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=PLAT&title=2.+Splat+Onboarding#id-2.SplatOnboarding-3.IntroduceaSplat-onlyportprotectedbymTLS) |
-| oci.instance-metadata-uri                                | http://169.254.169.254/opc/v2/ | The Instance Metadata Service uri. This can be used to override the default value, such as testing using SSH tunnelling. |                                                                                                                                                                                                                        |
-| oci.region                                               | none                           | The region name. If not specified, the value will be automatically retrieved from the Instance Metadata Service.         |                                                                                                                                                                                                                        |
 
-Additionally, mTLS must be set up on the Helidon application. Below is an example configuration:
+| Config Key                            | Default Value                  | Description                                                                                                              | Notes                                                                                                                                                                                                                  |
+|---------------------------------------|--------------------------------|--------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| oci.splat.enabled                     | true                           | Whether to enable the SplatMtlsFilter.                                                                                   |                                                                                                                                                                                                                        |
+| oci.splat.skip-authz-validation-check | false                          | Whether to bypass AuthZ validation from SplatMtlsFilter.                                                                 | [3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=PLAT&title=2.+Splat+Onboarding#id-2.SplatOnboarding-3.IntroduceaSplat-onlyportprotectedbymTLS) |
+| oci.splat.reject-x-region-calls       | false                          | Whether SplatMtlsFilter will reject cross-region client certificates.                                                    | [3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=PLAT&title=2.+Splat+Onboarding#id-2.SplatOnboarding-3.IntroduceaSplat-onlyportprotectedbymTLS) |
+| oci.splat.region                      | none                           | The region name. If not specified, the value will be automatically retrieved from the Oci environment.                   |                                                                                                                                                                                                                        |
 
-```properties
-# Client CA Trust bundle
-server.tls.client-auth=REQUIRE
-server.tls.trust.pem.certificates.resource.resource-path=ca-bundle.pem
-
-# Private key and server certificate chain
-server.tls.private-key.pem.key.resource.resource-path=cert86/key.pem
-server.tls.private-key.pem.cert-chain.resource.resource-path=cert86/chain.pem
-```
+It is important to note that mTLS must be set up on the Helidon WebServer.
 
 ---
 

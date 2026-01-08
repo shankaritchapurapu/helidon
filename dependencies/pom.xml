@@ -19,17 +19,58 @@
     <description>Maven dependency management for Helidon OCI native applications</description>
 
     <properties>
+        <oracle-internal-commons-core-version>5.0.90</oracle-internal-commons-core-version>
+        <oracle-internal-commons-core-regions-version>2.1.73</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-request-id-version>1.1.55</oracle-internal-commons-request-id-version>
+        <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
+
+        <version.lib.joda-time>2.10.14</version.lib.joda-time>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <!-- TODO: we should (eventually) discontinue usage of this -->
+            <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/PEG/repositories/core -->
+            <dependency>
+                <groupId>com.oracle.pic.commons</groupId>
+                <artifactId>core</artifactId>
+                <version>${oracle-internal-commons-core-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>jakarta.xml.bind</groupId>
+                        <artifactId>jakarta.xml.bind-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- see https://bitbucket.oci.oraclecorp.com/projects/SHEP/repos/core-regions -->
+            <dependency>
+                <groupId>com.oracle.pic.commons</groupId>
+                <artifactId>core-regions</artifactId>
+                <version>${oracle-internal-commons-core-regions-version}</version>
+            </dependency>
             <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/PEG/repositories/request-id -->
             <dependency>
                 <groupId>com.oracle.pic.commons</groupId>
                 <artifactId>request-id</artifactId>
                 <version>${oracle-internal-commons-request-id-version}</version>
+            </dependency>
+            <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/IDENT/repositories/authorization-sdk/files?folderPath=authentication-client -->
+            <dependency>
+                <groupId>com.oracle.pic.identity.authentication</groupId>
+                <artifactId>authentication-client</artifactId>
+                <version>${oracle-internal-identity-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>${version.lib.joda-time}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
