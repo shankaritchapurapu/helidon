@@ -13,21 +13,33 @@
 
 ## Overview
 
-Service application can use [Chainsaw](https://confluence.oci.oraclecorp.com/display/LUM/3.+Chainsaw2+Onboarding) as a log collection agent to stream all internal generated logs (operational, audit, and control plane/data plane application logs) from their host or resource to the [Lumberjack](https://confluence.oci.oraclecorp.com/display/LUM/Lumberjack+V2+User%27s+Guide)
-logging platform. With Lumberjack, you don't need to change your application code to integrate with that service. However, you need to [onboard](https://confluence.oci.oraclecorp.com/pages/viewpage.action?pageId=102670755), add chainsaw as a sidecar to your application and preferably output structured logs (for example using JSON format) as this provide some [benefits](https://confluence.oci.oraclecorp.com/display/LUM/Old+Structured+Logging#OldStructuredLogging-Whatarethebenefitsofstructuredlogs?).
+[Lumberjack](https://confluence.oraclecorp.com/confluence/display/OCILUM/Lumberjack+V2+User%27s+Guide) is an availability domain (AD) local service that provides OCI service teams with the ability to stream all their internal generated logs (operational, audit, and data plane access) from their host or resource to a centralized internal logging platform. To ingest internal operational logs for your team and to perform investigations and analysis in real time, integrate with Lumberjack.
+
+With Lumberjack, you don't need to change your application code. OCI service teams can instead use [Chainsaw](https://confluence.oraclecorp.com/confluence/display/OCILUM/Chainsaw+Jump+Page) as the log collection agent to send all their log data to the ingestion pipeline. Logs in Lumberjack are surfaced via the [DevOps](https://devops.oci.oraclecorp.com/logs) portal for OCI teams.
 
 ---
 
 ## Usage
 
-It is important to first onboard with Lumberjack using the [ V2 Onboarding steps](https://confluence.oci.oraclecorp.com/display/LUM/V2+Onboarding+steps). Below are examples of some of the items covered in the steps.
-* [Shepherd code example](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-infra/browse/shepherd/infrastructure/modules/identity/policy.tf#50-59)  that creates  a policy to provide access to Lumberjack.
-* Registration to Lumberjack can be done via Shepherd with this [code example](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-infra/browse/shepherd/infrastructure/modules/lumberjack).
-* Chainsaw can be [installed](https://confluence.oci.oraclecorp.com/display/LUM/3.+Chainsaw2+Onboarding#id-3.Chainsaw2Onboarding-installchainsaw2Howtoinstallchainsaw2) and [run](https://confluence.oci.oraclecorp.com/display/LUM/3.+Chainsaw2+Onboarding#id-3.Chainsaw2Onboarding-Runchainsaw2.1) on the application with examples in this [Dockerfile](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-service/browse/Dockerfile) source and [run.sh](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-service/browse/run.sh) script, respectively.
-* Sending logs with structured format has some [important benefits](https://confluence.oci.oraclecorp.com/display/LUM/Old+Structured+Logging#OldStructuredLogging-Whatarethebenefitsofstructuredlogs?). This [Helidon logging.properties](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-service/browse/reference-service/src/main/resources/logging.properties) example was set up to create a JSON formatted structured logs that help achieve this requirement.
+It is important to first onboard with Lumberjack using the [onboarding steps](https://confluence.oraclecorp.com/confluence/display/OCILUM/LumberjackV2+Onboarding+steps). Below steps showcases, how it was done for a reference Helidon based service.
+
+* [This code example](https://devops.oci.oraclecorp.com/devops-coderepository/repositories/ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyansu366vrho533ijvr54hm744wmhn5fciggojf5vbmblq/files/1217d49a3f6ec3517481ee17bab3dd19c0b2fde5?filePath=shepherd%2Finfrastructure%2Fmodules%2Fidentity%2Fpolicy.tf&refName=refs%2Fheads%2Fmain&fileName=policy.tf&_ctx=us-phoenix-1%2Cdevops_scm_central&commitId=b6fe7896e599735f703b1d311a31980dd5c4da38&highlightLines=L-41%2CL-50)  creates  a policy to provide access to Lumberjack based on Instance Principal.
+* Registration to Lumberjack can be done via Shepherd with this [code example](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon-reference-infra/files?folderPath=shepherd%2Finfrastructure%2Fmodules%2Flumberjack&refName=refs%2Fheads%2Fmain&_ctx=us-phoenix-1%2Cdevops_scm_central). Lumberjack is an AD local service, so each AD requires registration. 
+* Chainsaw can be [installed](https://confluence.oraclecorp.com/confluence/display/OCILUM/3.+Chainsaw2+Onboarding#id-3.Chainsaw2Onboarding-installchainsaw2Howtoinstallchainsaw2) and [run](https://confluence.oraclecorp.com/confluence/display/OCILUM/3.+Chainsaw2+Onboarding#id-3.Chainsaw2Onboarding-Runchainsaw2.1) along with the application as shown in this [Dockerfile](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon-reference-service/files/1524ea9bb1d67c566140f8294ca606f201708811?filePath=Dockerfile&refName=refs%2Fheads%2Fmain&fileName=Dockerfile&_ctx=us-phoenix-1%2Cdevops_scm_central&commitId=00d34dc718d34078d69af6b9dda943de4ab70eb7) source and [run.sh](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon-reference-service/files/f2d2be0187b125b7941e0e52be4cac3293602b98?filePath=run.sh&refName=refs%2Fheads%2Fmain&fileName=run.sh&_ctx=us-phoenix-1%2Cdevops_scm_central&commitId=f0c69d6c49184bc2cdfebec33ff3de64d97226db) script, respectively.
+* Sending logs with structured format has some [important benefits](https://confluence.oraclecorp.com/confluence/pages/viewpage.action?pageId=12772679645#id-4.StructuredLogging(recommended)-Whatarethebenefitsofstructuredlogs?). This [Helidon logging.properties](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon-reference-service/files/9b24208add29be7ac57e96654ccd775ef427e6cf?filePath=reference-service%2Fsrc%2Fmain%2Fresources%2Flogging.properties&refName=refs%2Fheads%2Fmain&fileName=logging.properties&_ctx=us-phoenix-1%2Cdevops_scm_central&commitId=ad612c52378279b8670732159e9c223b0d2ec6cf) example was set up to create a JSON formatted structured logs that help achieve this requirement. While the example here is using `io.helidon.logging.jul.HelidonFormatter`, we also provide `io.helidon.logging.jul.HelidonJsonFormatter` that can be used (both with `HelidonConsoleHandler` and with the JUL `ConsoleHandler`) e.g.
+ ```
+ handlers=io.helidon.logging.jul.HelidonConsoleHandler
+ # Use JSON formatter with default format
+ io.helidon.logging.jul.HelidonConsoleHandler.formatter=io.helidon.logging.jul.HelidonJsonFormatter
+ ```
+ You can configure `io.helidon.logging.jul.HelidonJsonFormatter.fields` to construct the JSON object (below is the default if no format or fields specified):
+ ```
+ ts:%1$tQ,date:%1$tY.%1$tm.%1$td,time:%1$tH:%1$tM:%1$tS.%1tL,level:%4$s,message:%5$s,exception:%6$s,thread:!thread!,logger:%3$s
+ ```
 * In OCI, an **opc-request-id** is used to trace individual HTTP requests from the client to the server and back again. Adding the **opc-request-id** in every request  helps filter related logs in Lumberjack that include it and the [oci-request-id module](./request-id.md) is available to help with this.
 
-Once the application successfully streams its logs to **Lumberjack** via **Chainsaw**, they can be viewed and browsed using DevOps:
+Once the application successfully streams its logs to **Lumberjack** via **Chainsaw**, they can be viewed and browsed using DevOps portal:
+
 1. Access Lumberjack from https://devops.oci.oraclecorp.com/logs.
 2. Fill the values for the following fields:
     * Region
@@ -47,5 +59,7 @@ Once the application successfully streams its logs to **Lumberjack** via **Chain
 
 ## References
 
-* [Lumberjack V2 User's Guide](https://confluence.oci.oraclecorp.com/display/LUM/Lumberjack+V2+User%27s+Guide)
-* [Lumberjack V2 and OCI Logging Integration](https://internal-docs.oraclecorp.com/en-us/iaas/internalcontent/svcintegration/lumberjack/landing-lumberjack.htm?Highlight=lumberjack)
+* [OCI Internal Developer Documentation - Lumberjack and OCI Logging Integration](https://internal-docs.oraclecorp.com/en-us/iaas/internalcontent/svcintegration/lumberjack/landing-lumberjack.htm?Highlight=lumberjack)
+* [Lumberjack User's Guide](https://confluence.oci.oraclecorp.com/display/LUM/Lumberjack+V2+User%27s+Guide)
+* [Lumberjack Onboarding Steps](https://confluence.oraclecorp.com/confluence/display/OCILUM/LumberjackV2+Onboarding+steps)
+* [Shepherd Lumberjack Provider](https://internal-docs.oraclecorp.com/en-us/iaas/internalcontent/tools/shepherd/providers/lumberjack-provider.htm)
