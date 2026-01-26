@@ -43,7 +43,8 @@
                         </goals>
                         <configuration>
                             <includeProperties>
-                                oracle-internal-commons-request-id-version
+                                oracle-internal-commons-request-id-version,
+                                sherlock-version
                             </includeProperties>
                             <!--suppress UnresolvedMavenProperty -->
                             <rulesUri>file://${top.parent.basedir}/build_config/maven-version-rules.xml</rulesUri>

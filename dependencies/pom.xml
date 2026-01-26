@@ -24,7 +24,8 @@
         <oracle-internal-commons-request-id-version>1.1.55</oracle-internal-commons-request-id-version>
         <oracle-internal-limits-version>1.7</oracle-internal-limits-version>
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
-        <oracle-oci-sdk-version>2.77.0</oracle-oci-sdk-version>
+        <oracle-oci-sdk-version>2.88.0</oracle-oci-sdk-version>
+        <sherlock-version>3.0.13</sherlock-version>
         <version-lib-joda-time>2.10.14</version-lib-joda-time>
         <jersey-lib-version>2.47</jersey-lib-version>
         <javax-ws-rs-version>2.1.1</javax-ws-rs-version>
@@ -241,6 +242,56 @@
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-addons-apache</artifactId>
                 <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-audit</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-objectstorage</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-objectstorage-generated</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-objectstorage-extensions</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-monitoring</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-identitydataplane</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-core</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-database</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-workrequests</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.sherlock</groupId>
+                <artifactId>sherlock-collector-core</artifactId>
+                <version>${sherlock-version}</version>
             </dependency>
 
             <!-- Others -->
