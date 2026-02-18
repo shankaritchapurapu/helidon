@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Copyright (c) 2023, 2025 Oracle and/or its affiliates.
+    Copyright (c) 2023, 2026 Oracle and/or its affiliates.
 -->
 
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -76,6 +76,7 @@
         <module>metrics</module>
         <module>secret-service</module>
         <module>splat</module>
+        <module>limits</module>
         <module>tests</module>
     </modules>
 
