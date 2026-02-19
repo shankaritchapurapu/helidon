@@ -20,17 +20,17 @@
 
     <properties>
         <oracle-internal-commons-core-version>5.0.90</oracle-internal-commons-core-version>
-        <oracle-internal-commons-core-regions-version>2.1.73</oracle-internal-commons-core-regions-version>
+        <oracle-internal-commons-core-regions-version>1.2.19</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-request-id-version>1.1.55</oracle-internal-commons-request-id-version>
-        <oracle-internal-limits-version>4.7.2</oracle-internal-limits-version>
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
-
-        <version.lib.joda-time>2.10.14</version.lib.joda-time>
+        <oracle-oci-sdk-version>2.77.0</oracle-oci-sdk-version>
+        <version-lib-joda-time>2.10.14</version-lib-joda-time>
+        <jersey-lib-version>2.47</jersey-lib-version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- TODO: we should (eventually) discontinue usage of this -->
+            <!-- Oracle PIC -->
             <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/PEG/repositories/core -->
             <dependency>
                 <groupId>com.oracle.pic.commons</groupId>
@@ -55,12 +55,6 @@
                 <artifactId>request-id</artifactId>
                 <version>${oracle-internal-commons-request-id-version}</version>
             </dependency>
-            <!-- https://bitbucket.oci.oraclecorp.com/projects/LIM/repos/limits-dp-client/browse -->
-            <dependency>
-                <groupId>com.oracle.oci.limits</groupId>
-                <artifactId>limits-dp-java-client</artifactId>
-                <version>${oracle-internal-limits-version}</version>
-            </dependency>
             <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/IDENT/repositories/authorization-sdk/files?folderPath=authentication-client -->
             <dependency>
                 <groupId>com.oracle.pic.identity.authentication</groupId>
@@ -68,16 +62,179 @@
                 <version>${oracle-internal-identity-version}</version>
                 <exclusions>
                     <exclusion>
-                        <groupId>*</groupId>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpcore</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.google.http-client</groupId>
+                        <artifactId>google-http-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.core</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.media</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.connectors</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.oci.sdk</groupId>
                         <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
+            <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/IDENT/repositories/authorization-sdk/files?folderPath=sdk -->
+            <dependency>
+                <groupId>com.oracle.pic.identity.authorization</groupId>
+                <artifactId>sdk</artifactId>
+                <version>${oracle-internal-identity-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.core</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.media</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.connectors</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.containers</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.ext</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.oci.sdk</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/IDENT/repositories/authorization-sdk/files?folderPath=metrics-implementation -->
+            <dependency>
+                <groupId>com.oracle.pic.identity.authorization</groupId>
+                <artifactId>metrics-implementation</artifactId>
+                <version>${oracle-internal-identity-version}</version>
+            </dependency>
 
+            <!-- Jersey -->
+            <dependency>
+                <groupId>org.glassfish.jersey</groupId>
+                <artifactId>jersey-bom</artifactId>
+                <version>${jersey-lib-version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.core</groupId>
+                <artifactId>jersey-client</artifactId>
+                <version>${jersey-lib-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.core</groupId>
+                <artifactId>jersey-common</artifactId>
+                <version>${jersey-lib-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.connectors</groupId>
+                <artifactId>jersey-apache-connector</artifactId>
+                <version>${jersey-lib-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext</groupId>
+                <artifactId>jersey-entity-filtering</artifactId>
+                <version>${jersey-lib-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.media</groupId>
+                <artifactId>jersey-media-multipart</artifactId>
+                <version>${jersey-lib-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.media</groupId>
+                <artifactId>jersey-media-json-jackson</artifactId>
+                <version>${jersey-lib-version}</version>
+            </dependency>
+
+            <!-- Oracle SDK -->
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-bom</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-addons-internal</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-common</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.core</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.media</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.connectors</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.bouncycastle</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-circuitbreaker</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.core</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.media</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.glassfish.jersey.inject</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-addons-apache</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+
+            <!-- Others -->
             <dependency>
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
-                <version>${version.lib.joda-time}</version>
+                <version>${version-lib-joda-time}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
