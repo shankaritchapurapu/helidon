@@ -4,8 +4,10 @@
 
 package com.oracle.helidon.oci.limits;
 
+import com.oracle.bmc.ConfigFileReader.ConfigFile;
 import com.oracle.oci.limits.LimitsDPClient;
 import io.helidon.service.registry.Services;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,4 +29,12 @@ class LimitsDpClientFactoryTest {
         assertEquals(30000L, config.readTimeout().toMillis(), "Read timeout should match");
         assertEquals(20, config.maxAsyncThreads(), "Max async threads should match");
     }
+
+    @Test
+    void configFile() {
+        ConfigFile configFile = Services.get(ConfigFile.class);
+        assertNotNull(configFile, "ConfigFile instance should not be null");
+        assertEquals("test", configFile.get("user"));
+    }
+
 }

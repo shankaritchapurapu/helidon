@@ -1,0 +1,10 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+[MY_PROFILE]
+user=test
+fingerprint=deffp
+tenancy=deftenant
+region=eu-frankfurt-1
+key_file=src/test/resources/key.pem

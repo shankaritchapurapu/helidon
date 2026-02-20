@@ -76,7 +76,8 @@
         <module>metrics</module>
         <module>secret-service</module>
         <module>splat</module>
-        <!-- module>limits</module -->
+        <module>limits</module>
+        <module>oci-sdk</module>
         <module>tests</module>
     </modules>
 

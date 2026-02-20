@@ -8,9 +8,10 @@ import java.util.function.Supplier;
 
 import io.helidon.service.registry.Service;
 
-import com.oracle.bmc.auth.AbstractAuthenticationDetailsProvider;
+import com.oracle.bmc.ClientConfiguration;
+import com.oracle.bmc.ClientConfiguration.ClientConfigurationBuilder;
+import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.oci.limits.LimitsDPClient;
-import com.oracle.oci.limits.config.LimitsDPClientConfiguration;
 
 /**
  * Factory that creates a configured {@link LimitsDPClient} instance.
@@ -26,8 +27,7 @@ class LimitsDpClientFactory implements Supplier<LimitsDPClient> {
     /**
      * OCI authentication details provider.
      */
-    private final AbstractAuthenticationDetailsProvider
-            authenticationDetailsProvider;
+    private final BasicAuthenticationDetailsProvider authProvider;
 
     /**
      * Create a new factory.
@@ -38,9 +38,9 @@ class LimitsDpClientFactory implements Supplier<LimitsDPClient> {
     @Service.Inject
     LimitsDpClientFactory(
             LimitsConfig clientConfig,
-            AbstractAuthenticationDetailsProvider authProvider) {
+            BasicAuthenticationDetailsProvider authProvider) {
         this.limitsConfig = clientConfig;
-        this.authenticationDetailsProvider = authProvider;
+        this.authProvider = authProvider;
     }
 
     /**
@@ -50,19 +50,12 @@ class LimitsDpClientFactory implements Supplier<LimitsDPClient> {
      */
     @Override
     public LimitsDPClient get() {
-        LimitsDPClient.LimitsClientBuilder builder = LimitsDPClient.builder();
-        LimitsDPClientConfiguration clientConfiguration =
-                LimitsDPClientConfiguration.builder()
-                        .maxAsyncThreads(limitsConfig.maxAsyncThreads())
-                        .connectionTimeoutMillis(
-                                (int) limitsConfig.connectionTimeout()
-                                        .toMillis())
-                        .readTimeoutMillis(
-                                (int) limitsConfig.readTimeout().toMillis())
-                        .build();
-
-        builder.authenticationDetailsProvider(authenticationDetailsProvider)
-                .clientConfiguration(clientConfiguration);
-        return builder.build();
+        ClientConfigurationBuilder builder = ClientConfiguration.builder();
+        ClientConfiguration config = builder.maxAsyncThreads(limitsConfig.maxAsyncThreads())
+            .connectionTimeoutMillis((int) limitsConfig.connectionTimeout().toMillis())
+            .readTimeoutMillis((int) limitsConfig.readTimeout().toMillis())
+            .build();
+        LimitsDPClient client = new LimitsDPClient(authProvider, config);
+        return client;
     }
 }

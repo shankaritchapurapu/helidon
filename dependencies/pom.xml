@@ -22,10 +22,11 @@
         <oracle-internal-commons-core-version>5.0.90</oracle-internal-commons-core-version>
         <oracle-internal-commons-core-regions-version>1.2.19</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-request-id-version>1.1.55</oracle-internal-commons-request-id-version>
+        <oracle-internal-limits-version>1.7</oracle-internal-limits-version>
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
         <oracle-oci-sdk-version>2.77.0</oracle-oci-sdk-version>
         <version-lib-joda-time>2.10.14</version-lib-joda-time>
-        <jersey-lib-version>2.47</jersey-lib-version>
+        <jersey-lib-version>2.26</jersey-lib-version>
     </properties>
 
     <dependencyManagement>
@@ -54,6 +55,12 @@
                 <groupId>com.oracle.pic.commons</groupId>
                 <artifactId>request-id</artifactId>
                 <version>${oracle-internal-commons-request-id-version}</version>
+            </dependency>
+            <!-- https://bitbucket.oci.oraclecorp.com/projects/LIM/repos/limits-dp-client/browse -->
+            <dependency>
+                <groupId>com.oracle.oci.limits</groupId>
+                <artifactId>limits-dp-java-client</artifactId>
+                <version>${oracle-internal-limits-version}</version>
             </dependency>
             <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/IDENT/repositories/authorization-sdk/files?folderPath=authentication-client -->
             <dependency>

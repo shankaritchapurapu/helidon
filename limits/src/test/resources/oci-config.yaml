@@ -1,0 +1,8 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+helidon.oci:
+  authentication.config-file:
+    path: src/test/resources/test-oci-config
+    profile: MY_PROFILE
