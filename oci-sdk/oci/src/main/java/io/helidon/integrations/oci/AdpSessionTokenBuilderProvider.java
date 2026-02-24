@@ -14,15 +14,15 @@ import com.oracle.bmc.ConfigFileReader.ConfigFile;
 @Service.Provider
 class AdpSessionTokenBuilderProvider implements Supplier<SessionTokenAuthenticationDetailsProviderBuilder> {
 
-    private final Supplier<Optional<ConfigFile>> configFileSupplier;
+    private final ConfigFileProvider configFileProvider;
 
-    AdpSessionTokenBuilderProvider(Supplier<Optional<ConfigFile>> configFileSupplier) {
-        this.configFileSupplier = configFileSupplier;
+    AdpSessionTokenBuilderProvider(ConfigFileProvider configFileProvider) {
+        this.configFileProvider = configFileProvider;
     }
 
     @Override
     public SessionTokenAuthenticationDetailsProviderBuilder get() {
-        return new SessionTokenAuthenticationDetailsProviderBuilder(configFileSupplier.get().orElseThrow());
+        return new SessionTokenAuthenticationDetailsProviderBuilder(configFileProvider.get().orElseThrow());
     }
 
     Optional<String> value(ConfigFile file, String key) {

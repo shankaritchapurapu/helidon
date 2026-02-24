@@ -22,13 +22,17 @@
         <oracle-internal-commons-core-version>5.0.90</oracle-internal-commons-core-version>
         <oracle-internal-commons-core-regions-version>1.2.19</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-request-id-version>1.1.55</oracle-internal-commons-request-id-version>
-        <oracle-internal-limits-version>1.7</oracle-internal-limits-version>
+        <oracle-internal-limits-version>1.9</oracle-internal-limits-version>
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
         <oracle-oci-sdk-version>2.88.0</oracle-oci-sdk-version>
         <sherlock-version>3.0.13</sherlock-version>
         <version-lib-joda-time>2.10.14</version-lib-joda-time>
         <jersey-lib-version>2.47</jersey-lib-version>
+        <bc-fips-lib-version>1.0.2.4</bc-fips-lib-version>
+        <nimbus-jose-jwt-lib-version>9.10.1</nimbus-jose-jwt-lib-version>
+        <bcpkix-fips-lib-version>1.0.6</bcpkix-fips-lib-version>
         <javax-ws-rs-version>2.1.1</javax-ws-rs-version>
+        <j2objc-lib-version>3.0.0</j2objc-lib-version>
     </properties>
 
     <dependencyManagement>
@@ -63,6 +67,24 @@
                 <groupId>com.oracle.oci.limits</groupId>
                 <artifactId>limits-dp-java-client</artifactId>
                 <version>${oracle-internal-limits-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.google.code.findbugs</groupId>
+                        <artifactId>annotations</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>jcl-over-slf4j</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.inject</groupId>
+                        <artifactId>javax.inject</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/IDENT/repositories/authorization-sdk/files?folderPath=authentication-client -->
             <dependency>
@@ -299,6 +321,32 @@
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
                 <version>${version-lib-joda-time}</version>
+            </dependency>
+            <dependency>
+                <groupId>bc-fips</groupId>
+                <artifactId>bc-fips</artifactId>
+                <version>${bc-fips-lib-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${nimbus-jose-jwt-lib-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.github.stephenc.jcip</groupId>
+                        <artifactId>jcip-annotations</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>bcpkix-fips</groupId>
+                <artifactId>bcpkix-fips</artifactId>
+                <version>${bcpkix-fips-lib-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.j2objc</groupId>
+                <artifactId>j2objc-annotations</artifactId>
+                <version>${j2objc-lib-version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
