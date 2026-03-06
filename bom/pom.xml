@@ -80,6 +80,11 @@
                 <artifactId>helidon-oci-sdk-authentication-instance</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci.jaxrs</groupId>
+                <artifactId>helidon-oci-jaxrs</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

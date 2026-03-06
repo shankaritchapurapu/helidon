@@ -1,0 +1,26 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+server:
+  port: 8080
+  host: 0.0.0.0
+
+declarative:
+  ignore-incubating: true
+
+oci:
+  identity:
+    authentication:
+      global-business-unit: my-business-unit
+      team-name: my-team
+      application-name: my-application
+      region: us-ashburn-1
+      instance-principal-uri: http://localhost:8000
+      root-cert-path: /etc/oci-pki/ca-bundle.pem
+      #certificates:
+      #  - certificate: serverCert.pem
+      #    private-key: serverKey.pem
+      hard-coded-key-supplier: ${helidon.oci.hardCodedKeySupplier}
+    authorization:
+      enabled: false

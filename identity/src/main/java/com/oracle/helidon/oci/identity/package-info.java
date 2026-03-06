@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2024, 2025 Oracle and/or its affiliates.
+ * Copyright (c) 2026 Oracle and/or its affiliates.
  */
 
 /**
- * Support for oci-identity.
+ * Integration with OCI Identity.
  */
 package com.oracle.helidon.oci.identity;

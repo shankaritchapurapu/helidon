@@ -1,6 +1,6 @@
 #!awk -f
 #
-# Copyright (c) 2023, 2025 Oracle and/or its affiliates.
+# Copyright (c) 2023, 2026 Oracle and/or its affiliates.
 #
 
 #

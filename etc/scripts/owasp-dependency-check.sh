@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright (c) 2020, 2025 Oracle and/or its affiliates.
+# Copyright (c) 2020, 2026 Oracle and/or its affiliates.
 #
 
 set -o pipefail || true  # trace ERR through pipes

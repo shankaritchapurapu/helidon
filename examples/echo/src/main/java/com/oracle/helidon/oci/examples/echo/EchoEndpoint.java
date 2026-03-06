@@ -1,0 +1,47 @@
+/*
+ * Copyright (c) 2026 Oracle and/or its affiliates.
+ */
+package com.oracle.helidon.oci.examples.echo;
+
+import io.helidon.common.media.type.MediaTypes;
+import io.helidon.http.Http;
+import io.helidon.service.registry.Service;
+import io.helidon.webserver.http.RestServer;
+
+import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
+
+import static java.lang.System.Logger.Level;
+
+@SuppressWarnings("deprecation")
+@RestServer.Endpoint
+@Http.Path("/echo")
+@Service.Singleton
+class EchoEndpoint {
+    private static final System.Logger LOGGER = System.getLogger(EchoEndpoint.class.getName());
+
+    @Http.GET
+    @Http.Produces(MediaTypes.TEXT_PLAIN_VALUE)
+    String ping() {
+        return "pong";
+    }
+
+    @Http.POST
+    @Http.Consumes(MediaTypes.TEXT_PLAIN_VALUE)
+    @Http.Produces(MediaTypes.TEXT_PLAIN_VALUE)
+    @Http.Path("once")
+    @AuthorizationPermission("ECHO_ONCE")
+    String once(@Http.Entity String message) {
+        LOGGER.log(Level.DEBUG, "Resource method 'once' called");
+        return message;
+    }
+
+    @Http.POST
+    @Http.Consumes(MediaTypes.TEXT_PLAIN_VALUE)
+    @Http.Produces(MediaTypes.TEXT_PLAIN_VALUE)
+    @Http.Path("twice")
+    @AuthorizationPermission("ECHO_TWICE")
+    String twice(@Http.Entity String message) {
+        LOGGER.log(Level.DEBUG, "Resource method 'twice' called");
+        return message + message;
+    }
+}

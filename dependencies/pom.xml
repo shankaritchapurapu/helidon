@@ -26,7 +26,8 @@
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
         <oracle-oci-sdk-version>2.77.0</oracle-oci-sdk-version>
         <version-lib-joda-time>2.10.14</version-lib-joda-time>
-        <jersey-lib-version>2.26</jersey-lib-version>
+        <jersey-lib-version>2.47</jersey-lib-version>
+        <javax-ws-rs-version>2.1.1</javax-ws-rs-version>
     </properties>
 
     <dependencyManagement>
@@ -138,6 +139,11 @@
             </dependency>
 
             <!-- Jersey -->
+            <dependency>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>javax.ws.rs-api</artifactId>
+                <version>${javax-ws-rs-version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey</groupId>
                 <artifactId>jersey-bom</artifactId>

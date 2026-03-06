@@ -1,5 +1,5 @@
 <!--
-    Copyright (c) 2023, 2025 Oracle and/or its affiliates.
+    Copyright (c) 2023, 2026 Oracle and/or its affiliates.
 -->
 <ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         comparisonMethod="maven" xmlns="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0"

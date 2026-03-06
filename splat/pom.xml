@@ -38,6 +38,17 @@
        <dependency>
            <groupId>com.oracle.pic.commons</groupId>
            <artifactId>core</artifactId>
+           <exclusions>
+               <!-- Convergence issues with Helidon 4.4.0-SNAPSHOT -->
+               <exclusion>
+                   <groupId>com.google.errorprone</groupId>
+                   <artifactId>error_prone_annotations</artifactId>
+               </exclusion>
+               <exclusion>
+                   <groupId>com.google.j2objc</groupId>
+                   <artifactId>j2objc-annotations</artifactId>
+               </exclusion>
+           </exclusions>
        </dependency>
         <dependency>
             <groupId>com.oracle.oci.sdk</groupId>
