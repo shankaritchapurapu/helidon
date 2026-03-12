@@ -25,7 +25,7 @@ class LoadCertificatesTest {
                                               .privateKey("serverKey.pem")
                                               .build()))
                 .build();
-        List<X509CertificateAndRsaPrivateKey> certificates = AuthenticatorClientFactory.loadCertificates(config);
+        List<X509CertificateAndRsaPrivateKey> certificates = ServiceAuthenticationClientFactory.loadCertificates(config);
         assertThat(certificates.size(), is(1));
         X509CertificateAndRsaPrivateKey certificate = certificates.getFirst();
         assertThat(certificate.getX509Certificate().getSubjectX500Principal().getName(), is("CN=localhost"));

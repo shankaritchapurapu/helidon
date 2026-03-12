@@ -18,9 +18,9 @@ oci:
       region: us-ashburn-1
       instance-principal-uri: http://localhost:8000
       root-cert-path: /etc/oci-pki/ca-bundle.pem
-      #certificates:
-      #  - certificate: serverCert.pem
-      #    private-key: serverKey.pem
       hard-coded-key-supplier: ${helidon.oci.hardCodedKeySupplier}
     authorization:
-      enabled: false
+      region: us-ashburn-1
+      service-name: my-service
+      physical-ad: AD-1
+      root-cert-path: /etc/oci-pki/ca-bundle.pem

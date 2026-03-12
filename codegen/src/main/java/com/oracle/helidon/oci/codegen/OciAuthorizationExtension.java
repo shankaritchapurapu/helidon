@@ -97,7 +97,7 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
                 .addImport("com.oracle.helidon.oci.jaxrs.HelidonContainerRequestContext")
                 .addImport("com.oracle.helidon.oci.jaxrs.HelidonContextInjector")
                 .addImport("com.oracle.helidon.oci.jaxrs.HelidonResourceInfo")
-                .addImport("com.oracle.helidon.oci.identity.IAuthorizationClientFactory");
+                .addImport("com.oracle.helidon.oci.identity.AuthorizationClientFactory");
 
         builder.addField(field -> field.name("LOGGER")
                 .isStatic(true)

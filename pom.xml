@@ -70,6 +70,7 @@
         <module>bom</module>
         <module>dependencies</module>
         <module>codegen</module>
+        <module>oci-sdk</module>
         <module>env-config</module>
         <module>error-code</module>
         <module>request-id</module>
@@ -79,7 +80,6 @@
         <module>splat</module>
         <module>audit</module>
         <module>limits</module>
-        <module>oci-sdk</module>
         <module>tests</module>
         <module>jaxrs</module>
         <module>examples</module>

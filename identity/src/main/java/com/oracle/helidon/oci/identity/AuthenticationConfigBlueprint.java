@@ -11,114 +11,234 @@ import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 
 /**
- * Blueprint configuration for Authentication.
+ * Blueprint configuration for the Authentication component.
+ * <p>
+ * This blueprint defines the set of configuration options required to
+ * communicate with the authentication service, including service location,
+ * tenancy scoping information, certificate handling, and observability
+ * integration. Concrete configuration types generated from this blueprint
+ * are responsible for supplying values for these options, typically from a
+ * configuration source such as {@code application.yaml}.
+ * </p>
+ *
+ * @see AuthCertificateConfigBlueprint
  */
 @Prototype.Blueprint
 @Prototype.Configured
 interface AuthenticationConfigBlueprint {
 
     /**
-     * Whether the authentication is enabled.
+     * Returns the URI of the authentication service.
+     * <p>
+     * If this option is not configured, a default URI is derived from the
+     * configured {@link #region()}.
+     * </p>
      *
-     * @return {@code true} if enabled; {@code false} otherwise
-     */
-    @Option.Configured
-    @Option.DefaultBoolean(true)
-    boolean enabled();
-
-    /**
-     * The authentication service URI. If not specified, it will be based on
-     * the {@link #region()}.
-     *
-     * @return authentication URI
+     * @return an {@link Optional} containing the configured authentication
+     *         service {@link URI}, or an empty {@code Optional} if the URI
+     *         should be inferred from the region
      */
     @Option.Configured
     Optional<URI> serviceUri();
 
     /**
-     * Global business unit.
+     * Returns the global business unit (GBU) identifier used for authentication
+     * and scoping of requests.
+     * <p>
+     * This value typically represents the Oracle global business unit under
+     * which the calling application or service is operating and may be used
+     * for routing, authorization, auditing, or metrics tagging.
+     * </p>
      *
-     * @return the BU
+     * @return the global business unit identifier; never {@code null}
      */
     @Option.Configured
     String globalBusinessUnit();
 
     /**
-     * The team name.
+     * Returns the name of the team on whose behalf authentication requests are made.
+     * <p>
+     * This value is typically used for identification, routing, auditing, and
+     * observability (for example, tagging logs or metrics) and should uniquely
+     * identify the engineering or service team that owns the calling
+     * application.
+     * </p>
      *
-     * @return team name
+     * @return the team name; never {@code null} or empty
      */
     @Option.Configured
     String teamName();
 
     /**
-     * The application name.
+     * Returns the name of the application on whose behalf authentication requests
+     * are performed.
+     * <p>
+     * This value is typically used for identification, routing, auditing, and
+     * observability (for example, tagging logs or metrics) and should uniquely
+     * identify the calling application or service within the owning team or
+     * global business unit.
+     * </p>
      *
-     * @return application name
+     * @return the application name; never {@code null} or empty
      */
     @Option.Configured
     String applicationName();
 
     /**
-     * The region in which to authenticate.
+     * Returns the Oracle Cloud Infrastructure (OCI) region in which
+     * authentication requests should be performed.
+     * <p>
+     * The region is typically specified using its canonical short name
+     * (for example, {@code "us-phoenix-1"}, {@code "eu-frankfurt-1"})
+     * and is used to derive default service endpoints such as the
+     * authentication {@link #serviceUri()} when that option is not
+     * explicitly configured.
+     * </p>
      *
-     * @return the region
+     * @return the configured authentication region; never {@code null} or empty
      */
     @Option.Configured
     String region();
 
     /**
-     * Use instance principal certificates to access Auth service. If set to
-     * {@code true} then {@link #instancePrincipalUri()} can be used to override
-     * the default URI.
+     * Indicates whether instance principal certificates should be used to
+     * authenticate with the authentication service.
+     * <p>
+     * When this option is enabled ({@code true}), the client obtains
+     * certificates from the Oracle Cloud Infrastructure instance metadata
+     * service (IMDS) and uses them as instance principal credentials. In this
+     * mode, the {@link #instancePrincipalUri()} option may be used to override
+     * the default IMDS endpoint (for example, in test environments).
+     * </p>
+     * <p>
+     * When this option is disabled ({@code false}), instance principal
+     * authentication is not used and the configuration must instead supply
+     * explicit certificates via {@link #certificates()} and, optionally,
+     * {@link #rootCertPath()}.
+     * </p>
      *
-     * @return whether to use instance principal or not
+     * @return {@code true} if instance principal certificates should be used
+     *         for authentication (the default), or {@code false} if explicit
+     *         certificates are expected instead
      */
     @Option.Configured
     @Option.DefaultBoolean(true)
     boolean useInstancePrincipal();
 
     /**
-     * URI from where to retrieve IMDS certificates. Override default URI for
-     * IMDS. For testing purpose, an SSH tunnel can be created to retrieve
-     * these certificates.
+     * Returns the URI of the Oracle Cloud Infrastructure instance metadata
+     * service (IMDS) endpoint used to obtain instance principal certificates.
+     * <p>
+     * When {@link #useInstancePrincipal()} is {@code true}, this URI, if
+     * present, overrides the default IMDS endpoint that would otherwise be
+     * used by the client to fetch instance principal certificates. This is
+     * primarily intended for non-production or test scenarios, such as when an
+     * SSH tunnel or local proxy is used to access IMDS.
+     * </p>
+     * <p>
+     * When the {@code Optional} is empty, the client uses the standard IMDS
+     * endpoint configured for the running environment.
+     * </p>
      *
-     * @return URI for IMDS certificates.
+     * @return an {@link Optional} containing the IMDS endpoint {@link URI} to
+     *         use for retrieving instance principal certificates, or an empty
+     *         {@code Optional} to indicate that the default IMDS endpoint
+     *         should be used
      */
     @Option.Configured
     Optional<URI> instancePrincipalUri();
 
     /**
-     * List of certificates to use, intermediate and leaf ones. Ignored if
-     * {@link #useInstancePrincipal()} is set to {@code true}.
+     * Returns the list of explicit certificates to use for authentication when
+     * instance principal authentication is disabled.
+     * <p>
+     * The list may contain one or more certificates, including intermediate and
+     * leaf certificates, that together form the certificate chain used by the
+     * client when establishing a secure connection to the authentication
+     * service. The order of certificates in the list should reflect the
+     * intended certificate chain (for example, leaf first, followed by any
+     * intermediates).
+     * </p>
+     * <p>
+     * This configuration is ignored when {@link #useInstancePrincipal()} is
+     * {@code true}, in which case certificates are obtained from the Oracle
+     * Cloud Infrastructure instance metadata service instead of being supplied
+     * explicitly.
+     * </p>
      *
-     * @return the certificate
+     * @return a {@link List} of {@link AuthCertificateConfig} instances
+     *         representing the certificates to use for authentication; never
+     *         {@code null}, but may be empty if no explicit certificates are
+     *         configured
      */
     @Option.Configured
     List<AuthCertificateConfig> certificates();
 
     /**
-     * Path to root certificate.
+     * Returns the filesystem path to a trusted root certificate to be used when
+     * establishing TLS connections to the authentication service.
+     * <p>
+     * This option is typically used when instance principal authentication is
+     * disabled (see {@link #useInstancePrincipal()}) and the client must rely on
+     * explicitly configured certificates and trust material. The path usually
+     * points to a PEM-encoded certificate file that represents the root of the
+     * certificate chain used to validate the authentication service's TLS
+     * certificate.
+     * </p>
+     * <p>
+     * When the {@code Optional} is empty, the client relies on the platform or
+     * JVM default trust store for root certificate validation.
+     * </p>
      *
-     * @return root certificate
+     * @return an {@link Optional} containing the filesystem path to the root
+     *         certificate to use for TLS verification, or an empty
+     *         {@code Optional} if the default trust configuration should be
+     *         used instead
      */
     @Option.Configured
     Optional<String> rootCertPath();
 
     /**
-     * Name of a metrics library to use. For example, "telemetry" or
-     * "commons". Enables metrics when provided.
+     * Returns the name of the metrics library to be used for emitting
+     * authentication-related metrics.
+     * <p>
+     * When present, this value enables metrics integration and typically
+     * identifies the underlying metrics or observability framework in use
+     * (for example, {@code "telemetry"} or {@code "commons"}). The exact
+     * semantics of the value are determined by the consuming component,
+     * which may use it to select an appropriate metrics adapter or
+     * implementation.
+     * </p>
+     * <p>
+     * When the {@code Optional} is empty, no metrics library is configured
+     * and metrics emission may be disabled or fall back to a default,
+     * implementation-specific behavior.
+     * </p>
      *
-     * @return name of a metrics library
+     * @return an {@link Optional} containing the configured metrics library
+     *         name, or an empty {@code Optional} if metrics should not be
+     *         explicitly enabled
      */
     @Option.Configured
     Optional<String> metricsLib();
 
     /**
-     * Use a hard-coded key supplier instead of requesting keys
-     * from the Identity service. This can be used for testing.
+     * Indicates whether a hard-coded key supplier should be used instead of
+     * obtaining keys dynamically from the Identity service.
+     * <p>
+     * When this option is enabled ({@code true}), authentication keys are
+     * provided by a locally configured, hard-coded supplier. This mode is
+     * typically intended for development and testing scenarios where calls to
+     * the real Identity service are undesirable or unavailable.
+     * </p>
+     * <p>
+     * When this option is disabled ({@code false}, the default), keys are
+     * retrieved from the Identity service according to the normal
+     * authentication flow.
+     * </p>
      *
-     * @return whether to use a hard-coded key supplier or not
+     * @return {@code true} if a hard-coded key supplier should be used instead
+     *         of contacting the Identity service; {@code false} otherwise
      */
     @Option.Configured
     @Option.DefaultBoolean(false)

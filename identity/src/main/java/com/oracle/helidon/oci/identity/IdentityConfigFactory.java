@@ -9,15 +9,33 @@ import io.helidon.config.Config;
 import io.helidon.service.registry.Service;
 
 /**
- * A factory to create an instance of {@link com.oracle.helidon.oci.identity.IdentityConfig}.
+ * Factory for creating {@link IdentityConfig} instances from application configuration.
+ * <p>
+ * This factory reads the {@code oci.identity} subtree from the provided
+ * {@link Config} instance and uses it to construct a fully initialized
+ * {@link IdentityConfig}. It is registered as a {@link Service.Singleton},
+ * so the same configuration source is reused for all created instances.
+ * </p>
+ *
+ * <p>
+ * Typical usage is to inject this factory wherever an {@link IdentityConfig}
+ * is needed and obtain the configuration via {@link #get()}.
+ * </p>
  */
 @Service.Singleton
-record IdentityConfigFactory(Config config) implements Supplier<IdentityConfig> {
+class IdentityConfigFactory implements Supplier<IdentityConfig> {
+
+    private final Config config;
+
+    IdentityConfigFactory(Config config) {
+        this.config = config;
+    }
 
     /**
-     * Get a new instance of {@link com.oracle.helidon.oci.identity.IdentityConfig}.
+     * Creates a new {@link IdentityConfig} from the {@code oci.identity} configuration
+     * section.
      *
-     * @return a new instance of {@link com.oracle.helidon.oci.identity.IdentityConfig}
+     * @return a newly created {@link IdentityConfig}
      */
     @Override
     public IdentityConfig get() {
