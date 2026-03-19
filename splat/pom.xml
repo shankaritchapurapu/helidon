@@ -32,6 +32,10 @@
             <artifactId>helidon-config</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.config</groupId>
+            <artifactId>helidon-config-metadata</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.service</groupId>
             <artifactId>helidon-service-registry</artifactId>
         </dependency>
@@ -39,7 +43,7 @@
            <groupId>com.oracle.pic.commons</groupId>
            <artifactId>core</artifactId>
            <exclusions>
-               <!-- Convergence issues with Helidon 4.4.0-SNAPSHOT -->
+               <!-- Convergence issues with Helidon 4.4.0 -->
                <exclusion>
                    <groupId>com.google.errorprone</groupId>
                    <artifactId>error_prone_annotations</artifactId>

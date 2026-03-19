@@ -39,7 +39,7 @@
         <dependency-check.skip>false</dependency-check.skip>
         <checkstyle.skip>false</checkstyle.skip>
 
-        <helidon.version>4.4.0-M2</helidon.version>
+        <helidon.version>4.4.0</helidon.version>
         <version.lib.oci>3.75.0</version.lib.oci>
         <version.lib.guava>33.3.1-jre</version.lib.guava>
         <version.lib.checkstyle>10.12.5</version.lib.checkstyle>
