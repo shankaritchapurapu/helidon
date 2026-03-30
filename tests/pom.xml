@@ -33,6 +33,15 @@
     </properties>
 
     <modules>
-        <module>integration</module>
+        <module>functional</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>integration-tests</id>
+            <modules>
+                <module>integration</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

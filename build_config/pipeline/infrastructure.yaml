@@ -1,0 +1,40 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+---
+displayName: "oci-helidon-pipeline"
+description: "OCI Helidon pipeline for main branch and pull-requests"
+initialBuildRevisionNumber: 0
+pipelineType: "INTERNAL"
+pipelineParameterCollection:
+  items: []
+stages:
+  - stageType: "OCI_BUILD"
+    displayName: "Build"
+    description: "Build OCI Helidon using build service"
+    stagePredecessorCollection:
+      items: []
+    buildSourceCollection:
+      items:
+        - repositoryId: "ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyabdhc33vnzsjrwdgj6mfsomdjlkhsx5h27akhnuiasvka"
+          branch: "main"
+    onFailure: []
+  - stageType: "TEST"
+    displayName: "Integration tests"
+    description: "Run OCI Helidon integration tests"
+    stageExecutionTimeoutInSeconds: 36000
+    stagePredecessorCollection:
+      items:
+        - displayName: "Build"
+    freeformMetadataTags:
+      metadataTags: []
+    testSpecFile: "build_config/pipeline/test-spec.yaml"
+    actionToBePerformedOnCompletion: "PRESERVE"
+    resource:
+      resourceType: "COMPUTE_INSTANCE_POOL"
+      instancePoolId: "ocid1.instancepool.oc1.phx.aaaaaaaauumcylyvmmwmg7nje6bn2rnjavjmxefqjy5ysruziabuygi4lt7a"
+    testCodeRepository:
+      testSourceType: "OCI_CODE_REPOSITORY"
+      repositoryId: "ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyabdhc33vnzsjrwdgj6mfsomdjlkhsx5h27akhnuiasvka"
+      branch: "main"
+    onFailure: []

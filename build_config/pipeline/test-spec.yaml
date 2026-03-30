@@ -1,0 +1,34 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+version: 0.1
+component: test
+failImmediatelyOnError: false
+timeoutInSeconds: 25000
+
+steps:
+  - type: shell
+    name: preTestCleanup
+    command: |
+      echo "Starting test stage execution"
+      docker ps -aq | xargs docker stop | xargs docker rm || true
+      docker images -a | grep ${DOCKER_IMAGE_NAME} | awk '{print $3}' | xargs docker rmi || true
+    timeoutInSeconds: 25000
+
+  - type: shell
+    name: executeIntegrationTest
+    command: |
+      echo "Execute Integration Tests"
+      docker run \
+      --network host \
+      --name ${DOCKER_IMAGE_NAME} \
+      odo-docker-signed-local.pipelines.artifactory.us-phoenix-1.oci.oracleiaas.com/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}
+    timeoutInSeconds: 25000
+
+  - type: shell
+    name: postTestCleanup
+    command: |
+      docker ps -aq | xargs docker stop | xargs docker rm
+      docker images -a | grep ${DOCKER_IMAGE_NAME} | awk '{print $3}' | xargs docker rmi || true
+      echo "Finished test stage execution"
+    timeoutInSeconds: 25000

@@ -64,7 +64,7 @@ _Instance Metadata Service_ on remote host, then Instance Metadata Service can n
 approach, the test application does not need to be deployed to the remote host thereby promoting fast iteration to code changes.
 
 As a prerequisite for making this approach successful, it is required to have a remote host with actual
-_Instance Metadata Service_. Easiest way to get this is to use one of the instance created by our [reference-infra repository](https://bitbucket.oci.oraclecorp.com/projects/HLDN/repos/oci-helidon-reference-infra/browse/shepherd/README.md).
+_Instance Metadata Service_. Easiest way to get this is to use one of the instance created by our [oci-helidon-reference-infra repository](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon-reference-infra/files?folderPath=shepherd&refName=refs%2Fheads%2Fmain&_ctx=us-phoenix-1%2Cdevops_scm_central).
 
 Below is example code to programmatically set the metadataBaseUrl and an example command to establish
 an ssh tunnel to the remote Instance Metadata Service for testing the code locally.
@@ -83,6 +83,9 @@ an ssh tunnel to the remote Instance Metadata Service for testing the code local
    ssh -v -L 8000:169.254.169.254:80 oci-reference-service-ad1 -t watch -n 90 date
    ```
 
+## Pipeline documentation
+
+Check the pipeline docs [here](docs-internal/README.md)
 
 ## Links
 
