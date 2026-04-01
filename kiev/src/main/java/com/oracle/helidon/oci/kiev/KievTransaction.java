@@ -1,0 +1,36 @@
+/*
+ * Copyright (c) 2026 Oracle and/or its affiliates.
+ */
+
+package com.oracle.helidon.oci.kiev;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import io.helidon.service.registry.Interception;
+
+/**
+ * Marks a method to execute within a Kiev transaction.
+ * If the method declares a {@code com.oracle.pic.kiev.Transaction} parameter, generated interception code
+ * supplies the active transaction instance to that parameter.
+ */
+@Interception.Intercepted
+@Retention(RetentionPolicy.SOURCE)
+@Target(ElementType.METHOD)
+public @interface KievTransaction {
+    /**
+     * Transaction name used for diagnostics.
+     *
+     * @return transaction name, or empty string to use a generated default
+     */
+    String value() default "";
+
+    /**
+     * Whether the transaction should be read only.
+     *
+     * @return {@code true} for read only transactions
+     */
+    boolean readOnly() default false;
+}

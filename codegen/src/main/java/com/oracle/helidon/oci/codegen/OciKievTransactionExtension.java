@@ -1,0 +1,167 @@
+/*
+ * Copyright (c) 2026 Oracle and/or its affiliates.
+ */
+package com.oracle.helidon.oci.codegen;
+
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import io.helidon.codegen.CodegenException;
+import io.helidon.codegen.CodegenUtil;
+import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.classmodel.Constructor;
+import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.Annotation;
+import io.helidon.common.types.Annotations;
+import io.helidon.common.types.ElementKind;
+import io.helidon.common.types.ElementSignature;
+import io.helidon.common.types.TypeInfo;
+import io.helidon.common.types.TypeName;
+import io.helidon.common.types.TypeNames;
+import io.helidon.common.types.TypedElementInfo;
+import io.helidon.service.codegen.RegistryCodegenContext;
+import io.helidon.service.codegen.RegistryRoundContext;
+import io.helidon.service.codegen.ServiceCodegenTypes;
+import io.helidon.service.codegen.spi.RegistryCodegenExtension;
+
+final class OciKievTransactionExtension implements RegistryCodegenExtension {
+    private static final TypeName GENERATOR = TypeName.create(OciKievTransactionExtension.class);
+
+    OciKievTransactionExtension(RegistryCodegenContext ignored) {
+    }
+
+    @Override
+    public void process(RegistryRoundContext roundContext) {
+        Map<TypeName, TypeInfo> knownTypes = roundContext.types()
+                .stream()
+                .collect(Collectors.toMap(TypeInfo::typeName, Function.identity(), (existing, ignored) -> existing));
+
+        int counter = 0;
+        for (TypedElementInfo element : roundContext.annotatedElements(OciTypes.KIEV_TRANSACTION)) {
+            TypeInfo enclosingType = enclosingType(knownTypes, element);
+            generate(roundContext, enclosingType, element, counter++);
+        }
+    }
+
+    private TypeInfo enclosingType(Map<TypeName, TypeInfo> knownTypes, TypedElementInfo element) {
+        if (element.kind() != ElementKind.METHOD) {
+            throw new CodegenException("@KievTransaction is only supported on methods", element.originatingElementValue());
+        }
+        TypeName enclosingTypeName = element.enclosingType()
+                .orElseThrow(() -> new CodegenException("@KievTransaction method is missing an enclosing type",
+                                                        element.originatingElementValue()));
+        TypeInfo enclosingType = knownTypes.get(enclosingTypeName);
+        if (enclosingType == null) {
+            throw new CodegenException("Missing type information for " + enclosingTypeName.fqName(),
+                                       element.originatingElementValue());
+        }
+        return enclosingType;
+    }
+
+    private void generate(RegistryRoundContext roundContext, TypeInfo enclosingType, TypedElementInfo element, int counter) {
+        TypeName serviceType = enclosingType.typeName();
+        TypeName generatedType = TypeName.builder()
+                .packageName(serviceType.packageName())
+                .className(serviceType.classNameWithEnclosingNames().replace('.', '_')
+                                   + "_" + element.elementName()
+                                   + (counter == 0 ? "" : "_" + counter)
+                                   + "__KievTransaction")
+                .build();
+
+        String methodName = serviceType.fqName() + "." + element.signature().text();
+        Annotation annotation = element.annotation(OciTypes.KIEV_TRANSACTION);
+        String transactionName = annotation.stringValue()
+                .filter(it -> !it.isBlank())
+                .orElse(methodName);
+        boolean readOnly = annotation.booleanValue("readOnly").orElse(false);
+        int transactionParameterIndex = transactionParameterIndex(element);
+
+        ClassModel.Builder classModel = ClassModel.builder()
+                .type(generatedType)
+                .copyright(CodegenUtil.copyright(GENERATOR, serviceType, generatedType))
+                .addAnnotation(CodegenUtil.generatedAnnotation(GENERATOR, serviceType, generatedType, "1", ""))
+                .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_SINGLETON))
+                .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_NAMED, methodName))
+                .accessModifier(AccessModifier.PACKAGE_PRIVATE)
+                .superType(OciTypes.KIEV_TRANSACTION_METHOD);
+
+        classModel.addField(field -> field
+                .accessModifier(AccessModifier.PRIVATE)
+                .isFinal(true)
+                .type(OciTypes.KIEV_TRANSACTION_SUPPORT)
+                .name("transactionSupport"));
+
+        classModel.addConstructor(Constructor.builder()
+                                         .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_INJECT))
+                                         .accessModifier(AccessModifier.PACKAGE_PRIVATE)
+                                         .addParameter(param -> param
+                                                 .type(OciTypes.KIEV_TRANSACTION_SUPPORT)
+                                                 .name("transactionSupport"))
+                                         .addContentLine("this.transactionSupport = transactionSupport;"));
+
+        classModel.addMethod(method -> method
+                .addAnnotation(Annotations.OVERRIDE)
+                .accessModifier(AccessModifier.PROTECTED)
+                .returnType(OciTypes.KIEV_TRANSACTION_SUPPORT)
+                .name("support")
+                .addContentLine("return transactionSupport;"));
+
+        classModel.addMethod(method -> method
+                .addAnnotation(Annotations.OVERRIDE)
+                .accessModifier(AccessModifier.PROTECTED)
+                .returnType(TypeNames.STRING)
+                .name("transactionName")
+                .addContent("return ")
+                .addContentLiteral(transactionName)
+                .addContentLine(";"));
+
+        classModel.addMethod(method -> method
+                .addAnnotation(Annotations.OVERRIDE)
+                .accessModifier(AccessModifier.PROTECTED)
+                .returnType(TypeNames.PRIMITIVE_BOOLEAN)
+                .name("readOnly")
+                .addContentLine("return " + readOnly + ";"));
+
+        classModel.addMethod(method -> method
+                .addAnnotation(Annotations.OVERRIDE)
+                .accessModifier(AccessModifier.PROTECTED)
+                .returnType(TypeNames.PRIMITIVE_INT)
+                .name("transactionParameterIndex")
+                .addContentLine("return " + transactionParameterIndex + ";"));
+
+        addToString(classModel, serviceType, element.signature());
+
+        roundContext.addGeneratedType(generatedType, classModel, serviceType, element.originatingElementValue());
+    }
+
+    private int transactionParameterIndex(TypedElementInfo element) {
+        int result = -1;
+        int index = 0;
+        for (TypedElementInfo parameter : element.parameterArguments()) {
+            if (OciTypes.KIEV_CLIENT_TRANSACTION.equals(parameter.typeName())) {
+                if (result != -1) {
+                    throw new CodegenException("@KievTransaction supports at most one Transaction parameter on "
+                                                       + element.signature().text(),
+                                               element.originatingElementValue());
+                }
+                result = index;
+            }
+            index++;
+        }
+        return result;
+    }
+
+    private void addToString(ClassModel.Builder classModel, TypeName serviceType, ElementSignature signature) {
+        classModel.addMethod(toString -> toString
+                .accessModifier(AccessModifier.PUBLIC)
+                .returnType(TypeNames.STRING)
+                .name("toString")
+                .addAnnotation(Annotations.OVERRIDE)
+                .addContent("return \"Kiev transaction interceptor for ")
+                .addContent(serviceType.fqName())
+                .addContent(".")
+                .addContent(signature.text())
+                .addContentLine("\";"));
+    }
+}

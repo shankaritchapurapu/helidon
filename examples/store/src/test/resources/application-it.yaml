@@ -1,0 +1,23 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+server:
+  port: 0
+  host: 127.0.0.1
+
+declarative:
+  ignore-incubating: true
+
+oci:
+  kiev:
+    backend: "DIRECT_DB"
+    store-name: pdbdev
+    app-name: KievTest
+    transaction-max-reads: 100
+    transaction-max-writes: 100
+    direct-db:
+      jdbc-url: jdbc:oracle:thin:@//localhost:1521/pdbdev
+      user-name: helidon
+      password: changeit
+      schema-name: helidon

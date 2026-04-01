@@ -1,0 +1,188 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+openapi: 3.0.3
+info:
+  title: Helidon Store Example API
+  version: "1.0.0"
+  description: >
+    OpenAPI description for the Helidon OCI Kiev store example. The example
+    exposes plain-text endpoints for storing, retrieving, and listing items.
+servers:
+  - url: /
+paths:
+  /store/items:
+    get:
+      summary: List stored items
+      operationId: listStoreItems
+      parameters:
+        - name: pageSize
+          in: query
+          description: Number of items to return in one page.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: pageToken
+          in: query
+          description: Token returned by a previous page to continue iteration.
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Current page of items as plain text
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |-
+                alpha=one
+                beta=two
+                next-page-token=YmV0YQ
+        "400":
+          description: Invalid pagination request
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                invalidPageSize:
+                  value: pageSize must be an integer
+                invalidPageToken:
+                  value: Invalid page token
+    post:
+      summary: Store an item from a key=value body
+      operationId: postStoreItem
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+            example: alpha=one
+      responses:
+        "200":
+          description: Stored item echoed back as plain text
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: alpha=one
+        "400":
+          description: Request body is invalid
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Request body must use key=value format
+        "409":
+          description: Item already exists
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Unable to store item
+  /store/items/{key}:
+    put:
+      summary: Update an existing item
+      operationId: putStoreItem
+      parameters:
+        - name: key
+          in: path
+          description: Item key to store.
+          required: true
+          schema:
+            type: string
+          example: alpha
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+            example: one
+      responses:
+        "200":
+          description: Updated item echoed back as plain text
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: alpha=one
+        "400":
+          description: Request body is invalid
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Request must contain a value
+        "404":
+          description: Item was not found
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "No value found for key: alpha"
+        "409":
+          description: Item could not be updated
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Unable to update item
+    get:
+      summary: Retrieve one item by key
+      operationId: getStoreItem
+      parameters:
+        - name: key
+          in: path
+          description: Item key to retrieve.
+          required: true
+          schema:
+            type: string
+          example: alpha
+      responses:
+        "200":
+          description: Stored value as plain text
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: one
+        "404":
+          description: Item was not found
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "No value found for key: alpha"
+    delete:
+      summary: Delete one item by key
+      operationId: deleteStoreItem
+      parameters:
+        - name: key
+          in: path
+          description: Item key to delete.
+          required: true
+          schema:
+            type: string
+          example: alpha
+      responses:
+        "200":
+          description: Deleted key echoed back as plain text
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: alpha
+        "404":
+          description: Item was not found
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "No value found for key: alpha"

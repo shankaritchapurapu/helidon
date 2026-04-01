@@ -15,6 +15,14 @@ final class OciTypes {
 
     static final TypeName AUTHORIZATION_PERMISSION =
             TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission");
+    static final TypeName KIEV_TRANSACTION =
+            TypeName.create("com.oracle.helidon.oci.kiev.KievTransaction");
+    static final TypeName KIEV_TRANSACTION_METHOD =
+            TypeName.create("com.oracle.helidon.oci.kiev.KievTransactionSupport.TransactionMethod");
+    static final TypeName KIEV_TRANSACTION_SUPPORT =
+            TypeName.create("com.oracle.helidon.oci.kiev.KievTransactionSupport");
+    static final TypeName KIEV_CLIENT_TRANSACTION =
+            TypeName.create("com.oracle.pic.kiev.Transaction");
 
     private OciTypes() {
     }

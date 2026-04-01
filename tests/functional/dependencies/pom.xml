@@ -46,6 +46,7 @@
                                 oracle-internal-commons-request-id-version,
                                 oracle-internal-limits-version,
                                 sherlock-version
+                                <!-- oracle-internal-kiev-version -->
                             </includeProperties>
                             <!--suppress UnresolvedMavenProperty -->
                             <rulesUri>file://${top.parent.basedir}/build_config/maven-version-rules.xml</rulesUri>

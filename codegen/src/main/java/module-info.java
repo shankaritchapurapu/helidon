@@ -2,6 +2,7 @@
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
 
+import com.oracle.helidon.oci.codegen.OciKievTransactionExtensionProvider;
 import com.oracle.helidon.oci.codegen.OciAuthorizationExtensionProvider;
 
 /**
@@ -19,5 +20,5 @@ module io.helidon.examples.oci.poc.codegen {
     exports com.oracle.helidon.oci.codegen;
 
     provides io.helidon.service.codegen.spi.RegistryCodegenExtensionProvider
-            with OciAuthorizationExtensionProvider;
+            with OciAuthorizationExtensionProvider, OciKievTransactionExtensionProvider;
 }

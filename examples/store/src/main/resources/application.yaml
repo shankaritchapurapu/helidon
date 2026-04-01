@@ -1,0 +1,45 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+server:
+  port: 8080
+  host: 0.0.0.0
+
+declarative:
+  ignore-incubating: true
+
+oci:
+  kiev:
+    backend: "IN_MEMORY"
+    store-name: helidon-store-example
+    app-name: helidon-store-example
+    transaction-max-reads: 100
+    transaction-max-writes: 100
+
+# To switch to Kiev as a service, change the backend and supply service config:
+# oci:
+#   kiev:
+#     backend: "SERVICE"
+#     store-name: your-store
+#     app-name: your-app
+#     service:
+#       compartment-id: ocid1.compartment.oc1...
+#       frontend-endpoint: https://your-kiev-endpoint
+#       locality: "REGIONAL"
+#       auth:
+#         type: "INSTANCE"
+#         root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+#
+# For local KIAB KaaS, use:
+# oci:
+#   kiev:
+#     backend: "SERVICE"
+#     store-name: kaaspdb
+#     app-name: KievTest
+#     service:
+#       compartment-id: ocid1.compartment.dev..aaaaaaaawbxxkux3w7df6qki32ejszm75vsxsnztljeerhzrw3vsa7d3rjmq
+#       frontend-endpoint: http://localhost:16666
+#       locality: "REGIONAL"
+#       auth:
+#         type: "KIAB_LOCAL"
