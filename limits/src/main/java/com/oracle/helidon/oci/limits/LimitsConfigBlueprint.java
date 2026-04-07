@@ -5,12 +5,13 @@
 package com.oracle.helidon.oci.limits;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 
 /**
- * Helidon Blueprint configuration interface for LimitsConfig.
+ * OCI limits configuration.
  */
 @Prototype.Blueprint
 @Prototype.Configured
@@ -47,4 +48,12 @@ interface LimitsConfigBlueprint {
     @Option.Configured
     @Option.DefaultInt(DEFAULT_MAX_ASYNC_THREADS)
     int maxAsyncThreads();
+
+    /**
+     * Client target endpoint.
+     *
+     * @return endpoint
+     */
+    @Option.Configured
+    Optional<String> endpoint();
 }

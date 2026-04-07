@@ -7,3 +7,4 @@ oci:
     connection-timeout: PT5S
     read-timeout: PT30S
     max-async-threads: 20
+    endpoint: "http://localhost:${test.server.port}"

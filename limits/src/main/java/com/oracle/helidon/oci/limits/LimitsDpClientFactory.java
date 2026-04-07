@@ -9,7 +9,6 @@ import java.util.function.Supplier;
 import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.ClientConfiguration;
-import com.oracle.bmc.ClientConfiguration.ClientConfigurationBuilder;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.oci.limits.LimitsDPClient;
 
@@ -50,12 +49,13 @@ class LimitsDpClientFactory implements Supplier<LimitsDPClient> {
      */
     @Override
     public LimitsDPClient get() {
-        ClientConfigurationBuilder builder = ClientConfiguration.builder();
-        ClientConfiguration config = builder.maxAsyncThreads(limitsConfig.maxAsyncThreads())
-            .connectionTimeoutMillis((int) limitsConfig.connectionTimeout().toMillis())
-            .readTimeoutMillis((int) limitsConfig.readTimeout().toMillis())
-            .build();
-        LimitsDPClient client = new LimitsDPClient(authProvider, config);
-        return client;
+        ClientConfiguration config = ClientConfiguration.builder()
+                .maxAsyncThreads(limitsConfig.maxAsyncThreads())
+                .connectionTimeoutMillis((int) limitsConfig.connectionTimeout().toMillis())
+                .readTimeoutMillis((int) limitsConfig.readTimeout().toMillis())
+                .build();
+        var builder = LimitsDPClient.builder().configuration(config);
+        limitsConfig.endpoint().ifPresent(builder::endpoint);
+        return builder.build(authProvider);
     }
 }
