@@ -1,0 +1,39 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+server:
+  port: 8080
+  host: 0.0.0.0
+
+declarative:
+  ignore-incubating: true
+
+oci:
+  workflow:
+    domain-id: localhost
+    endpoint-details:
+      server-endpoint: http://localhost:39000
+      connect-timeout: PT5S
+      worker-read-timeout: PT30S
+      poller-read-timeout: PT90S
+    worker-identifier: helidon-workflow-example
+    retry-policy:
+      max-retry-count: 7
+      delay-between-retry: PT0.25S
+      jitter-factor: 0.5
+
+# Update these values for a real WFaaS environment:
+# oci:
+#   workflow:
+#     domain-id: compute-control-plane
+#     endpoint-details:
+#       server-endpoint: https://wfaas-overlay.${oci.env.ad-number}.${oci.env.iaas-domain-name}
+#       connect-timeout: PT5S
+#       worker-read-timeout: PT30S
+#       poller-read-timeout: PT90S
+#     worker-identifier: my-service-workflow-client
+#     retry-policy:
+#       max-retry-count: 7
+#       delay-between-retry: PT0.25S
+#       jitter-factor: 0.5

@@ -12,6 +12,7 @@ The oci-helidon project contains a compilation of different modules that extend 
    * [Lumberjack](./lumberjack.md)
    * [Identity](./identity.md)
    * [Kiev](./kiev.md)
+   * [Workflow](./workflow.md)
 2. Libraries that help facilitate handling of various OCI native proprietary capabilities such as:
    * [error-code](./error-code.md)
    * [request-id](./request-id.md)

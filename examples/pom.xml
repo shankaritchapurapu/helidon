@@ -21,5 +21,6 @@
         <module>echo</module>
         <module>limits</module>
         <module>store</module>
+        <module>workflow</module>
     </modules>
 </project>

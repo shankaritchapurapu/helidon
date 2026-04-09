@@ -1,0 +1,26 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+server:
+  port: 0
+  host: 127.0.0.1
+
+declarative:
+  ignore-incubating: true
+
+oci:
+  workflow:
+    domain-id: localhost
+    endpoint-details:
+      server-endpoint: http://localhost:39000
+      connect-timeout: PT5S
+      worker-read-timeout: PT30S
+      poller-read-timeout: PT90S
+    worker-identifier: helidon-workflow-example-it
+    retry-policy:
+      max-retry-count: 7
+      delay-between-retry: PT0.25S
+      jitter-factor: 0.5
+
+# Update this profile before enabling integration tests against a real WFaaS environment.

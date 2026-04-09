@@ -62,11 +62,12 @@ When this module is added into a project, the following OCI environment specific
 
 Below are examples of how the environment config properties can be used:
 
-1. Eliminate per-region configuration files by deriving the value of a config property. This can be done by adding one or more of the environment-config properties as substring components of the value. For example, the following Helidon configuration property (`oci.workflow.server-endpoint`):
+1. Eliminate per-region configuration files by deriving the value of a config property. This can be done by adding one or more of the environment-config properties as substring components of the value. For example, the following Helidon configuration property (`oci.workflow.endpoint-details.server-endpoint`):
     ```
     oci:
       workflow:
-         server-endpoint: https://wfaas-overlay.${oci.env.ad-number}.${oci.env.iaas-domain-name}
+         endpoint-details:
+            server-endpoint: https://wfaas-overlay.${oci.env.ad-number}.${oci.env.iaas-domain-name}
     ```
    when deployed in the `us-ashburn-1` region, it will have a final value of `https://wfaas-overlay.ad1.us-ashburn-1.oracleiaas.com` with `${oci.env.ad-number}` substituted with a value of `ad1` and `${oci.env.iaas-domain-name}` with `us-ashburn-1.oracleiaas.com`.
 2. In Helidon MP using CDI, the environment config properties can also be directly retrieved. For example, `realm` and `region` values can be injected via `@ConfigProperty` annotation.

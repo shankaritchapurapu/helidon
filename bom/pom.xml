@@ -81,6 +81,11 @@
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.oracle.helidon.oci.workflow</groupId>
+                <artifactId>helidon-oci-workflow</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-sdk-oci</artifactId>
                 <version>${helidon.oci.version}</version>
