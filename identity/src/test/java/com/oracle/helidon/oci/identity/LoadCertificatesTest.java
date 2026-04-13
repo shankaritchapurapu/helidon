@@ -14,7 +14,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 class LoadCertificatesTest {
 
     @Test
-    void loadCertificates() {
+    void testLoadCertificates() {
         AuthenticationConfig config = AuthenticationConfig.builder()
                 .globalBusinessUnit("bu")
                 .applicationName("app")

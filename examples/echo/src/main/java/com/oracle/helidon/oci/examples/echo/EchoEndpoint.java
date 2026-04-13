@@ -3,13 +3,18 @@
  */
 package com.oracle.helidon.oci.examples.echo;
 
+import java.util.function.Supplier;
+
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.http.Http;
 import io.helidon.service.registry.Service;
 import io.helidon.webserver.http.RestServer;
 
+import com.oracle.helidon.oci.identity.IdentityContext;
+import com.oracle.pic.identity.authentication.Principal;
 import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
 
+import static com.oracle.pic.identity.authorization.sdk.AuthContextRequestFilter.PIC_PRINCIPAL;
 import static java.lang.System.Logger.Level;
 
 @SuppressWarnings("deprecation")
@@ -18,6 +23,17 @@ import static java.lang.System.Logger.Level;
 @Service.Singleton
 class EchoEndpoint {
     private static final System.Logger LOGGER = System.getLogger(EchoEndpoint.class.getName());
+
+    /**
+     * A supplier is required since {@link com.oracle.helidon.oci.identity.IdentityContext}
+     * is in per-request scope and this is a singleton.
+     */
+    private final Supplier<IdentityContext> identityContextSupplier;
+
+    @Service.Inject
+    public EchoEndpoint(Supplier<IdentityContext> identityContextSupplier) {
+        this.identityContextSupplier = identityContextSupplier;
+    }
 
     @Http.GET
     @Http.Produces(MediaTypes.TEXT_PLAIN_VALUE)
@@ -31,7 +47,7 @@ class EchoEndpoint {
     @Http.Path("once")
     @AuthorizationPermission("ECHO_ONCE")
     String once(@Http.Entity String message) {
-        LOGGER.log(Level.DEBUG, "Resource method 'once' called");
+        LOGGER.log(Level.DEBUG, "Resource method 'once' called for " + principal().getSubjectId());
         return message;
     }
 
@@ -41,7 +57,18 @@ class EchoEndpoint {
     @Http.Path("twice")
     @AuthorizationPermission("ECHO_TWICE")
     String twice(@Http.Entity String message) {
-        LOGGER.log(Level.DEBUG, "Resource method 'twice' called");
+        LOGGER.log(Level.DEBUG, "Resource method 'twice' called for " + principal().getSubjectId());
         return message + message;
+    }
+
+    /**
+     * Access information about the principal that was authenticated/authorized
+     * to access a resource.
+     *
+     * @return the principal
+     */
+    private Principal principal() {
+        IdentityContext identityContext = identityContextSupplier.get();
+        return (Principal) identityContext.get(PIC_PRINCIPAL);
     }
 }

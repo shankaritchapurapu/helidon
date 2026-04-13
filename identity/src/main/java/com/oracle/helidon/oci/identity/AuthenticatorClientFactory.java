@@ -51,12 +51,25 @@ public class AuthenticatorClientFactory implements Supplier<AuthenticatorClient>
 
         // otherwise connect to auth endpoint
         Optional<String> metricsLib = config.metricsLib();
-        URI serviceUri = config.serviceUri().orElse(URI.create(String.format(SERVICE_URI, config.region())));
+        URI serviceUri = resolveServiceUri();
         return new AuthenticatorClient.Builder()
                 .keyServiceUrl(serviceUri)
                 .authMetrics(metricsLib.isEmpty() ? new NoopAuthMetricsImpl()
                                      : AuthMetricsFactory.getInstance(metricsLib.get()))
                 .serviceAuthenticationClient(serviceAuthClient)
                 .build();
+    }
+
+    private URI resolveServiceUri() {
+        boolean hasServiceUri = config.serviceUri().isPresent();
+        boolean hasRegion = config.region().isPresent();
+
+        if (hasServiceUri == hasRegion) {
+            throw new IllegalStateException(
+                    "Exactly one of authentication.serviceUri or authentication.region must be configured");
+        }
+
+        return config.serviceUri()
+                .orElseGet(() -> URI.create(String.format(SERVICE_URI, config.region().orElseThrow())));
     }
 }

@@ -4,6 +4,7 @@
 package com.oracle.helidon.oci.identity;
 
 import java.security.Security;
+import java.util.List;
 
 import io.helidon.config.Config;
 
@@ -17,14 +18,26 @@ class BaseAuthenticationClientTest {
     }
 
     AuthenticationConfig authenticationConfig(boolean hardCodedKeys) {
-        return AuthenticationConfig.builder()
+        AuthenticationConfig.Builder builder = AuthenticationConfig.builder()
                 .globalBusinessUnit("gbu")
                 .teamName("team")
                 .applicationName("app")
                 .region("us-phoenix-1")
-                .hardCodedKeySupplier(hardCodedKeys)
-                .useInstancePrincipal(false)
-                .build();
+                .hardCodedKeySupplier(hardCodedKeys);
+
+        if (hardCodedKeys) {
+            builder.useInstancePrincipal(false);
+        } else {
+            // Use local test certificates for the non-hardcoded branch so unit tests
+            // do not depend on instance principal metadata access.
+            builder.useInstancePrincipal(false)
+                    .certificates(List.of(AuthCertificateConfig.builder()
+                                                  .certificate("serverCert.pem")
+                                                  .privateKey("serverKey.pem")
+                                                  .build()));
+        }
+
+        return builder.build();
     }
 
     AuthorizationConfig authorizationConfig() {
@@ -40,6 +53,11 @@ class BaseAuthenticationClientTest {
     }
 
     IdentityConfigFactory identityConfigFactory(boolean hardCodedKeys) {
+        return identityConfigFactory(authenticationConfig(hardCodedKeys), authorizationConfig());
+    }
+
+    IdentityConfigFactory identityConfigFactory(AuthenticationConfig authenticationConfig,
+                                                AuthorizationConfig authorizationConfig) {
         Config config = Config.empty();
         return new IdentityConfigFactory(config) {
             @Override
@@ -47,12 +65,12 @@ class BaseAuthenticationClientTest {
                 return new IdentityConfig() {
                     @Override
                     public AuthenticationConfig authentication() {
-                        return authenticationConfig(hardCodedKeys);
+                        return authenticationConfig;
                     }
 
                     @Override
                     public AuthorizationConfig authorization() {
-                        return authorizationConfig();
+                        return authorizationConfig;
                     }
                 };
             }

@@ -9,12 +9,14 @@ import io.helidon.service.registry.Services;
 
 import com.oracle.pic.identity.authentication.AuthenticatorClient;
 import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class AuthenticatorClientFactoryTest extends BaseAuthenticationClientTest {
 
@@ -22,10 +24,11 @@ class AuthenticatorClientFactoryTest extends BaseAuthenticationClientTest {
 
     @BeforeEach
     void setUp() {
-        if (INITIALIZED.compareAndSet(false, true)) {
-            ServiceAuthenticationClient serviceAuthClient = serviceAuthenticationClient();
+        if (!INITIALIZED.get()) {
+            ServiceAuthenticationClient serviceAuthClient = serviceAuthenticationClient(true);
             assertThat(serviceAuthClient, notNullValue());
             Services.set(ServiceAuthenticationClient.class, serviceAuthClient);
+            INITIALIZED.set(true);
         }
     }
 
@@ -35,5 +38,37 @@ class AuthenticatorClientFactoryTest extends BaseAuthenticationClientTest {
         AuthenticatorClientFactory factory = new AuthenticatorClientFactory(identityConfigFactory(hardCodedKeys));
         AuthenticatorClient client = factory.get();
         assertThat(client, notNullValue());
+    }
+
+    @Test
+    void testClientWithUri() {
+        AuthenticationConfig authenticationConfig = AuthenticationConfig.builder()
+                .globalBusinessUnit("gbu")
+                .teamName("team")
+                .applicationName("app")
+                .serviceUri(java.net.URI.create("https://auth.us-phoenix-1.oraclecloud.com"))
+                .useInstancePrincipal(false)
+                .build();
+
+        AuthenticatorClientFactory factory = new AuthenticatorClientFactory(
+                identityConfigFactory(authenticationConfig, authorizationConfig()));
+        AuthenticatorClient client = factory.get();
+        assertThat(client, notNullValue());
+    }
+
+    @Test
+    void testRejectsRegionAndUri() {
+        AuthenticationConfig authenticationConfig = AuthenticationConfig.builder()
+                .globalBusinessUnit("gbu")
+                .teamName("team")
+                .applicationName("app")
+                .region("us-phoenix-1")
+                .serviceUri(java.net.URI.create("https://auth.us-phoenix-1.oraclecloud.com"))
+                .useInstancePrincipal(false)
+                .build();
+
+        AuthenticatorClientFactory factory = new AuthenticatorClientFactory(
+                identityConfigFactory(authenticationConfig, authorizationConfig()));
+        assertThrows(IllegalStateException.class, factory::get);
     }
 }

@@ -30,8 +30,9 @@ interface AuthenticationConfigBlueprint {
     /**
      * Returns the URI of the authentication service.
      * <p>
-     * If this option is not configured, a default URI is derived from the
-     * configured {@link #region()}.
+     * This acts as an explicit endpoint override for the underlying Auth SDK.
+     * When this option is configured, {@link #region()} must not also be
+     * configured because the Auth SDK accepts exactly one endpoint source.
      * </p>
      *
      * @return an {@link Optional} containing the configured authentication
@@ -88,17 +89,18 @@ interface AuthenticationConfigBlueprint {
      * Returns the Oracle Cloud Infrastructure (OCI) region in which
      * authentication requests should be performed.
      * <p>
-     * The region is typically specified using its canonical short name
-     * (for example, {@code "us-phoenix-1"}, {@code "eu-frankfurt-1"})
-     * and is used to derive default service endpoints such as the
-     * authentication {@link #serviceUri()} when that option is not
+     * The region is typically specified using its canonical public name
+     * (for example, {@code "us-phoenix-1"}, {@code "eu-frankfurt-1"}) and is
+     * used to derive the Auth SDK endpoint when {@link #serviceUri()} is not
      * explicitly configured.
      * </p>
      *
-     * @return the configured authentication region; never {@code null} or empty
+     * @return an {@link Optional} containing the configured authentication
+     *         region, or an empty {@code Optional} if an explicit
+     *         {@link #serviceUri()} is used instead
      */
     @Option.Configured
-    String region();
+    Optional<String> region();
 
     /**
      * Indicates whether instance principal certificates should be used to

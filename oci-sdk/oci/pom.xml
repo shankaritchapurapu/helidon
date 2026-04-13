@@ -176,8 +176,7 @@
                                         io/helidon/integrations/oci/*__ServiceDescriptor.java,
                                         io/helidon/integrations/oci/AdpSessionTokenBuilderProvider*,
                                         io/helidon/integrations/oci/AuthenticationMethodSessionToken*,
-                                        io/helidon/integrations/oci/RegionProviderSdk*,
-                                        module-info.java
+                                        io/helidon/integrations/oci/RegionProviderSdk*
                                     </excludes>
                                 </artifactItem>
                             </artifactItems>

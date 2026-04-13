@@ -39,7 +39,7 @@
         <dependency-check.skip>false</dependency-check.skip>
         <checkstyle.skip>false</checkstyle.skip>
 
-        <helidon.version>4.4.0</helidon.version>
+        <helidon.version>4.4.1</helidon.version>
         <version.lib.oci>3.75.0</version.lib.oci>
         <version.lib.guava>33.3.1-jre</version.lib.guava>
         <version.lib.checkstyle>10.12.5</version.lib.checkstyle>
@@ -154,12 +154,6 @@
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
                 <version>${version.lib.junit}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.platform</groupId>
-                <artifactId>junit-platform-launcher</artifactId>
-                <version>${version.lib.junit-platform}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

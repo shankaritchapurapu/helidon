@@ -83,6 +83,7 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
                 .sortStaticFields(false);
 
         builder.addImport(TypeNames.SET)
+                .addImport(TypeNames.MAP)
                 .addImport(TypeNames.TYPE_NAME)
                 .addImport(TypeNames.TYPED_ELEMENT_INFO)
                 .addImport(TypeNames.OPTIONAL)
@@ -97,7 +98,8 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
                 .addImport("com.oracle.helidon.oci.jaxrs.HelidonContainerRequestContext")
                 .addImport("com.oracle.helidon.oci.jaxrs.HelidonContextInjector")
                 .addImport("com.oracle.helidon.oci.jaxrs.HelidonResourceInfo")
-                .addImport("com.oracle.helidon.oci.identity.AuthorizationClientFactory");
+                .addImport("com.oracle.helidon.oci.identity.AuthorizationClientFactory")
+                .addImport("com.oracle.helidon.oci.identity.IdentityContext");
 
         builder.addField(field -> field.name("LOGGER")
                 .isStatic(true)
@@ -178,6 +180,10 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
                 response.status(context.getAbortStatus()).send(msg != null ? msg : "");
                 return;
             }
+
+            // register authentication context
+            Map<String, Object> properties = context.properties();
+            request.context().register(new IdentityContext(properties));
         }
 
         chain.proceed(request, response);"""));

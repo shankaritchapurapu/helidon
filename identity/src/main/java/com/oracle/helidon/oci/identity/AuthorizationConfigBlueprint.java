@@ -34,12 +34,16 @@ interface AuthorizationConfigBlueprint {
     boolean enabled();
 
     /**
-     * The authentication service URI. When no value is configured
-     * (that is, the returned {@link Optional} is empty), the effective service
-     * URI is derived from the configured {@link #region()} or from the
-     * {@link #serviceEnclave()} setting, depending on the deployment environment.
+     * The authorization service URI.
+     * <p>
+     * When configured, this value is passed directly to the underlying Auth SDK
+     * as an explicit authorization endpoint. Additional fields such as
+     * {@link #region()} and {@link #physicalAd()} can still be required by the
+     * Auth SDK depending on whether the explicit endpoint targets an overlay or
+     * a service-enclave deployment.
+     * </p>
      *
-     * @return authentication URI
+     * @return authorization URI
      */
     @Option.Configured
     Optional<URI> serviceUri();
@@ -82,6 +86,22 @@ interface AuthorizationConfigBlueprint {
      */
     @Option.Configured
     Optional<String> physicalAd();
+
+    /**
+     * Returns the optional availability domain associated with this
+     * authorization configuration.
+     * <p>
+     * This value is only used when {@link #serviceEnclave()} is {@code true}
+     * and no explicit {@link #serviceUri()} is configured. In that case, the
+     * underlying Auth SDK uses the availability domain to derive the
+     * service-enclave authorization endpoint.
+     * </p>
+     *
+     * @return an {@link Optional} containing the configured availability
+     *         domain name, or an empty {@link Optional} if none is set
+     */
+    @Option.Configured
+    Optional<String> availabilityDomain();
 
     /**
      * Indicates whether this service is running in an enclave environment.

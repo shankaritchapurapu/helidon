@@ -9,10 +9,12 @@ import java.util.function.Supplier;
 import io.helidon.service.registry.Service;
 import io.helidon.service.registry.Services;
 
+import com.oracle.pic.commons.util.AvailabilityDomain;
 import com.oracle.pic.commons.util.Region;
 import com.oracle.pic.identity.auth.AuthMetricsFactory;
 import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
 import com.oracle.pic.identity.authentication.metrics.NoopAuthMetricsImpl;
+import com.oracle.pic.identity.authorization.common.Constants;
 import com.oracle.pic.identity.authorization.sdk.AuthorizationClient;
 import com.oracle.pic.identity.authorization.sdk.IAuthorizationClient;
 
@@ -59,16 +61,94 @@ public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizat
         // set optional values
         config.rootCertPath().ifPresent(client::rootCertPath);
         config.physicalAd().ifPresent(client::physicalAD);
-
-        // set region or service enclave
-        if (config.region().isPresent()) {
-            client.region(Region.fromPublicRegionName(config.region().get()));
-        } else if (config.serviceEnclave()) {
-            client.serviceEnclave();
-        } else {
-            throw new IllegalStateException("Region must be set if not running in service enclave");
-        }
+        configureEndpoint(client);
 
         return Optional.of(client.build());
+    }
+
+    private void configureEndpoint(AuthorizationClient.Builder client) {
+        if (config.serviceUri().isPresent()) {
+            configureExplicitEndpoint(client);
+            return;
+        }
+
+        if (config.serviceEnclave()) {
+            if (config.region().isPresent()) {
+                throw new IllegalStateException(
+                        "authorization.region must not be set when authorization.serviceEnclave is true");
+            }
+            if (config.availabilityDomain().isEmpty()) {
+                throw new IllegalStateException(
+                        "authorization.availabilityDomain must be configured when authorization.serviceEnclave "
+                                + "is true and no explicit serviceUri is provided");
+            }
+
+            client.serviceEnclave();
+            client.availabilityDomain(AvailabilityDomain.fromName(config.availabilityDomain().orElseThrow()));
+            return;
+        }
+
+        if (config.region().isEmpty()) {
+            throw new IllegalStateException(
+                    "authorization.region must be configured when authorization.serviceUri is not provided");
+        }
+        if (config.physicalAd().isEmpty()) {
+            throw new IllegalStateException(
+                    "authorization.physicalAd must be configured for non-service-enclave authorization");
+        }
+
+        client.region(Region.fromPublicRegionName(config.region().orElseThrow()));
+    }
+
+    private void configureExplicitEndpoint(AuthorizationClient.Builder client) {
+        String endpoint = config.serviceUri().orElseThrow().toString();
+        client.authorizationEndpoint(endpoint);
+
+        boolean explicitServiceEnclaveEndpoint = isServiceEnclaveEndpoint(endpoint);
+        if (explicitServiceEnclaveEndpoint) {
+            if (config.region().isPresent()) {
+                throw new IllegalStateException(
+                        "authorization.region must not be set when authorization.serviceUri points to "
+                                + "a service-enclave endpoint");
+            }
+            if (config.availabilityDomain().isPresent()) {
+                throw new IllegalStateException(
+                        "authorization.availabilityDomain is redundant when authorization.serviceUri "
+                                + "is explicitly configured");
+            }
+            if (config.physicalAd().isPresent()
+                    && !Constants.REGIONAL_AD_VALUE.equalsIgnoreCase(config.physicalAd().orElseThrow())) {
+                throw new IllegalStateException(
+                        "authorization.physicalAd must be omitted or set to the regional AD value when "
+                                + "authorization.serviceUri points to a service-enclave endpoint");
+            }
+            if (config.serviceEnclave()) {
+                client.serviceEnclave();
+            }
+            return;
+        }
+
+        if (config.serviceEnclave()) {
+            throw new IllegalStateException(
+                    "authorization.serviceEnclave must not be set when authorization.serviceUri points "
+                            + "to a non-service-enclave endpoint");
+        }
+        if (config.region().isEmpty()) {
+            throw new IllegalStateException(
+                    "authorization.region must be configured when authorization.serviceUri points to "
+                            + "a non-service-enclave endpoint");
+        }
+        if (config.physicalAd().isEmpty()) {
+            throw new IllegalStateException(
+                    "authorization.physicalAd must be configured when authorization.serviceUri points to "
+                            + "a non-service-enclave endpoint");
+        }
+
+        client.region(Region.fromPublicRegionName(config.region().orElseThrow()));
+    }
+
+    private boolean isServiceEnclaveEndpoint(String endpoint) {
+        String host = java.net.URI.create(endpoint).getHost();
+        return host != null && host.toLowerCase().startsWith("authservice");
     }
 }

@@ -46,6 +46,7 @@ public class HelidonContainerRequestContext implements ContainerRequestContext {
     private int abortStatus = 0;
     private String abortMessage;
     private InputStream entityStream;
+
     /**
      * Create a request context with ResourceInfo for post-matching filters.
      *
@@ -69,6 +70,17 @@ public class HelidonContainerRequestContext implements ContainerRequestContext {
      */
     public ResourceInfo getResourceInfo() {
         return resourceInfo;
+    }
+
+    /**
+     * Returns an unmodifiable snapshot of all properties associated with this request
+     * context. The returned map is a read-only copy of the current {@code properties} and
+     * reflects their state at the time of the call.
+     *
+     * @return an unmodifiable map containing the current request properties
+     */
+    public Map<String, Object> properties() {
+        return Map.copyOf(properties);
     }
 
     @Override

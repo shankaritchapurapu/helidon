@@ -4,7 +4,6 @@
 
 ## Contents
 
-
 * [Overview](#overview)
 * [Maven Coordinates](#maven-coordinates)
 * [Usage](#usage)
@@ -12,120 +11,232 @@
 * [References](#references)
 
 ---
+
 ## Overview
-This module provides support for OCI native identity, authentication, and authorization.
+
+The Identity module integrates Helidon with the OCI Auth SDK. It provides configured service-registry factories for:
+
+* `ServiceAuthenticationClient`
+* `AuthenticatorClient`
+* `Optional<IAuthorizationClient>`
+* per-request `IdentityContext`
+
+The configuration root is `oci.identity`. Authentication and authorization are configured independently under:
+
+* `oci.identity.authentication`
+* `oci.identity.authorization`
+
+For request handling, authorization is applied through the Helidon OCI code generation integration. Methods annotated with OCI authorization annotations such as `@AuthorizationPermission` are intercepted automatically. The generated interceptor runs `AuthContextRequestFilter`, performs authentication and optional authorization, and registers an `IdentityContext` into the Helidon request context. This replaces the older filter-path configuration model and does not require configuring `oci.identity.filters.*`.
+
+---
 
 ## Maven Coordinates
-Start by including a dependency to this module in your pom file as shown below. All relevant
-providers will be automatically loaded into your application.
+
+Add the Identity module dependency to your project:
 
 ```xml
 <dependency>
     <groupId>com.oracle.helidon.oci</groupId>
     <artifactId>helidon-oci-identity</artifactId>
-</depenency>
+</dependency>
 ```
+
+---
 
 ## Usage
 
-Helidon provides its own version of the [Identity SDK](https://internal-docs.oraclecorp.com/en-us/iaas/internalcontent/svcintegration/identity/config-for-identity-service/integrating-your-service-with-identity-auth-sdk.htm) to make its usage with Jakartified JAX-RS endpoints and latest public OCI SDK possible.
-Usage is very similar as with Dropwizard with the main difference being that Auth JAX-RS filters are set over Helidon configuration.
+When the Helidon service registry is enabled, the module contributes the Identity services automatically. The generated authorization interceptor obtains `AuthenticatorClient` and `IAuthorizationClient` from the registry and applies them to intercepted endpoints.
 
+The recommended way to access authenticated request data in an endpoint is to inject `Supplier<IdentityContext>`. This is required because `IdentityContext` is request-scoped.
 
-Example of configuration where `FILTER_CONFIG_OPTION` is a placeholder for identity auth JAX-RS filter:
-```properties
-oci.identity.filters.FILTER_CONFIG_OPTION.paths.path.0=/v1/cars
-```
-
-Posible values for `FILTER_CONFIG_OPTION`:
-
-| Identity Filter(FILTER_CONFIG_OPTION)    | Auth SDK filter                                                                                                                                                                                                                                          |
-|------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| auth-context                             | [AuthContextRequestFilter](https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/sdk/src/main/java/com/oracle/pic/identity/authorization/sdk/AuthContextRequestFilter.java)                                                                                                                                                                                                                                 |
-| backend-service-auth-context             | [BackendServiceAuthContextRequestFilter](https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/sdk/src/main/java/com/oracle/pic/identity/authorization/sdk/BackendServiceAuthContextRequestFilter.java)                                                                                                                                                                                                                   |
-| oauth-context                            | [OauthContextRequestFilter](https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/sdk/src/main/java/com/oracle/pic/identity/authorization/sdk/OauthContextRequestFilter.java)                                                                                                                                                                                                                                |
-| splat-authorization-verification         | [SplatAuthorizationVerificationFilter](https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/sdk/src/main/java/com/oracle/pic/identity/authorization/sdk/SplatAuthorizationVerificationFilter.java)                                                                                                                                                                                                                     |
-| splat-aware-auth-context                 | [SplatAwareAuthContextRequestFilter](https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/sdk/src/main/java/com/oracle/pic/identity/authorization/sdk/SplatAwareAuthContextRequestFilter.java)                                                                                                                                                                                                                       |
-| splat-aware-backend-service-auth-context | [SplatAwareBackendServiceAuthContextRequestFilter](https://bitbucket.oci.oraclecorp.com/projects/IDENT/repos/authorization-sdk/browse/sdk/src/main/java/com/oracle/pic/identity/authorization/sdk/SplatAwareBackendServiceAuthContextRequestFilter.java) |
-
-
-Example of AuthContextRequestFilter usage(configured with `auth-context`) in <i>META-INF/microprofile-config.properties</i>:
-```properties
-oci.identity.filters.auth-context.paths.path.0=/v1/cars
-oci.identity.filters.auth-context.paths.path.1=/v1/bikes
-```
-
-Example of AuthContextRequestFilter usage(configured with `auth-context`) in <i>application.yaml</i>:
-```yaml
-oci.identity:
-  filters:
-    auth-context:
-      paths:
-      - path: /v1/cars
-      - path: /v1/bikes
-```
-
-Example of identity SDK API usage in Helidon JAX-RS resource:
 ```java
+import java.util.function.Supplier;
+
+import io.helidon.http.Http;
+import io.helidon.service.registry.Service;
+import io.helidon.webserver.http.RestServer;
+
+import com.oracle.helidon.oci.identity.IdentityContext;
 import com.oracle.pic.identity.authentication.Principal;
 import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
-import com.oracle.pic.identity.authorization.sdk.AuthorizationRequest;
-import com.oracle.pic.identity.authorization.sdk.context.PrincipalContext;
-import com.oracle.pic.identity.authorization.sdk.context.AuthorizationRequestContext;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PUT;
 
-@Path("/v1")
-@Consumes("application/json; charset=utf-8")
-@Produces("application/json")
-@ApplicationScoped
-public class CarResource {
+import static com.oracle.pic.identity.authorization.sdk.AuthContextRequestFilter.PIC_PRINCIPAL;
 
-    private final Map<Integer, Car> cars = new ConcurrentHashMap<>();
+@RestServer.Endpoint
+@Http.Path("/echo")
+@Service.Singleton
+class EchoEndpoint {
+    private final Supplier<IdentityContext> identityContextSupplier;
 
-    @PUT
-    @Path("/cars")
-    @Consumes("application/json; charset=utf-8")
-    @Produces("application/json")
-    @AuthorizationPermission("CAR_WRITE")
-    public Car addCar(Car car,
-                      @PrincipalContext Principal principal,
-                      @AuthorizationRequestContext AuthorizationRequest authorizationRequest) {
-        cars.put(car.getId(), car);
-        return car;
+    @Service.Inject
+    EchoEndpoint(Supplier<IdentityContext> identityContextSupplier) {
+        this.identityContextSupplier = identityContextSupplier;
+    }
+
+    @Http.POST
+    @Http.Path("once")
+    @AuthorizationPermission("ECHO_ONCE")
+    String once(@Http.Entity String message) {
+        Principal principal = (Principal) identityContextSupplier.get().get(PIC_PRINCIPAL);
+        return principal.getSubjectId() + ": " + message;
     }
 }
 ```
 
-## Configuration
-Next, optionally configure the provider using the Helidon microprofile configuration framework by which the ConfigSource defaults to
-`microprofile-config.properties`. Alternatively, you can also use other ConfigSources such as `application.yaml`.
+If `oci.identity.authorization.enabled=false`, the authorization client is not created. Authentication still remains available through `ServiceAuthenticationClient` and `AuthenticatorClient`.
 
-| config key                                         | Default Value                             | Description                                                                                                            |
-|----------------------------------------------------|-------------------------------------------|----------------------------------------------------------------------------------------------------------------------- |
-| oci.app.name                                       | xxxx                                      | The application name.                                                                                                  | 
-| oci.app.teamName                                   | x-team                                    | The application team name.                                                                                             | 
-| oci.app.teamName                                   | GBU                                       | The global business unit name.                                                                                         | 
-| oci.app.stage                                      | DEVELOPMENT                               | The application lifecycle stage (DEVELOPMENT, TEST, PRODUCTION).                                                       | 
-| oci.identity.authEnabled                           | false                                     | Flag indicating whether AuthN is enabled. When disabled an offline AuthN authenticator will be returned.               | 
-| oci.identity.metricsEnabled                        | false                                     | Flag indicating whether AuthN metrics are enabled. This is only applicable when authN is enabled.                      | 
-| oci.identity.rootCertPath                          | /etc/oci-pki/ca-bundle.pem                | The root certificate path.                                                                                             | 
-| oci.identity.metadataEndpoint                      | http://localhost:8080                     | The metadata service endpoint. Normally in stages other than DEVELOPMENT this would be set to http://169.254.169.254   | 
-| oci.identity.authServiceEndpoint                   | https://auth.us-phoenix-1.oraclecloud.com | The auth service endpoint.                                                                                             | 
-| oci.identity.refreshAuthTokenBeforeSecondsToExpire | 5                                         | The seconds before token expiry to refresh the token.                                                                  | 
-| oci.identity.uriPrefix(.0..n)                      | /                                         | List of URI path prefixes that will trigger a SHA-256 digest header (see headerTag) to be created on the server side   | 
-| oci.identity.headerTag                             | X-HELIDON-SHA-DIGEST                      | The header tag header key name that will be used.                                                                      | 
-| oci.identity.memoryThreshold                       | 8 K                                       | The in-memory buffer size. Anything after this value will be streamed to offline file storage.                         | 
-| oci.identity.streamThreshold                       | 256 MB                                    | The threshold length of the stream permitted to be offlined on temp file storage before a runtime exception is thrown. | 
-| oci.identity.useFilesystem                         | true                                      | Flag indicating whether offline should be enabled. Note: will use temp files that are auto deleted.                    | 
-| oci.identity.useEncryption                         | false                                     | Flag indicating whether offline storage should be encrypted.                                                           | 
-| oci.identity.encryptionAlgorithm                   | AES                                       | The encryption algorithm to use for offline encrypted storage.                                                         | 
-| oci.identity.encryptionCipher                      | AES/CBC/PKCS5Padding                      | The encryption cipher to use for offline encrypted storage.                                                            | 
+---
+
+## Configuration
+
+The root configuration is `oci.identity`.
+
+### Authentication
+
+Authentication config is loaded from `oci.identity.authentication`.
+
+Minimal example using region-based endpoint resolution and instance principals:
+
+```yaml
+oci:
+  identity:
+    authentication:
+      global-business-unit: "Cloud-Infra"
+      team-name: "ExampleTeam"
+      application-name: "ExampleService"
+      region: "us-phoenix-1"
+      use-instance-principal: true
+```
+
+Example using an explicit Auth endpoint:
+
+```yaml
+oci:
+  identity:
+    authentication:
+      global-business-unit: "Cloud-Infra"
+      team-name: "ExampleTeam"
+      application-name: "ExampleService"
+      service-uri: "https://auth.us-phoenix-1.oraclecloud.com"
+      use-instance-principal: true
+```
+
+Example using explicit certificates instead of instance principals:
+
+```yaml
+oci:
+  identity:
+    authentication:
+      global-business-unit: "Cloud-Infra"
+      team-name: "ExampleTeam"
+      application-name: "ExampleService"
+      region: "us-phoenix-1"
+      use-instance-principal: false
+      certificates:
+        - certificate: "/path/to/sp_cert.pem"
+          private-key: "/path/to/sp_key.pem"
+          passphrase: ""
+      root-cert-path: "/etc/oci-pki/ca-bundle.pem"
+```
+
+| Key | Default Value | Description |
+|-----|---------------|-------------|
+| `oci.identity.authentication.service-uri` | | Explicit Auth service endpoint. Mutually exclusive with `region`. |
+| `oci.identity.authentication.global-business-unit` | | Required global business unit passed to the Auth SDK. |
+| `oci.identity.authentication.team-name` | | Required team name passed to the Auth SDK. |
+| `oci.identity.authentication.application-name` | | Required application name passed to the Auth SDK. |
+| `oci.identity.authentication.region` | | Region used to derive the Auth endpoint. Mutually exclusive with `service-uri`. |
+| `oci.identity.authentication.use-instance-principal` | `true` | Whether to load certificates from instance metadata. |
+| `oci.identity.authentication.instance-principal-uri` | | Optional override for the instance metadata endpoint. |
+| `oci.identity.authentication.certificates` | `[]` | Explicit certificate list used when `use-instance-principal=false`. |
+| `oci.identity.authentication.certificates[].certificate` | | Required certificate resource path. |
+| `oci.identity.authentication.certificates[].private-key` | | Optional private key resource path. |
+| `oci.identity.authentication.certificates[].passphrase` | `""` | Optional private key passphrase. |
+| `oci.identity.authentication.root-cert-path` | | Optional CA bundle or root certificate path. |
+| `oci.identity.authentication.metrics-lib` | | Optional Auth SDK metrics library name. |
+| `oci.identity.authentication.hard-coded-key-supplier` | `false` | Uses the Auth SDK hard-coded key supplier, typically for development or test only. |
+
+Authentication validation rules:
+
+* Exactly one of `oci.identity.authentication.service-uri` or `oci.identity.authentication.region` must be configured.
+* `global-business-unit`, `team-name`, and `application-name` are required.
+* When `use-instance-principal=false` and `hard-coded-key-supplier=false`, at least one certificate entry must be configured.
+
+### Authorization
+
+Authorization config is loaded from `oci.identity.authorization`.
+
+Example using a non-enclave overlay endpoint derived from region and physical AD:
+
+```yaml
+oci:
+  identity:
+    authorization:
+      enabled: true
+      service-name: "example-service"
+      region: "us-phoenix-1"
+      physical-ad: "PHX-AD-1"
+```
+
+Example using service-enclave authorization with derived endpoint:
+
+```yaml
+oci:
+  identity:
+    authorization:
+      enabled: true
+      service-name: "example-service"
+      service-enclave: true
+      availability-domain: "PHX-AD-1"
+```
+
+Example using an explicit authorization endpoint:
+
+```yaml
+oci:
+  identity:
+    authorization:
+      enabled: true
+      service-name: "example-service"
+      service-uri: "https://authservice.svc.ad1.us-phoenix-1"
+      service-enclave: true
+```
+
+| Key | Default Value | Description |
+|-----|---------------|-------------|
+| `oci.identity.authorization.enabled` | `true` | Enables creation of the authorization client. |
+| `oci.identity.authorization.service-uri` | | Optional explicit authorization endpoint. |
+| `oci.identity.authorization.service-name` | | Required service name passed to the authorization client. |
+| `oci.identity.authorization.region` | | Region for non-enclave authorization. |
+| `oci.identity.authorization.physical-ad` | | Physical AD for non-enclave authorization, or the regional AD value for explicit enclave endpoints. |
+| `oci.identity.authorization.availability-domain` | | Availability domain used to derive service-enclave endpoints when `service-enclave=true` and `service-uri` is not set. |
+| `oci.identity.authorization.service-enclave` | `false` | Enables service-enclave authorization mode. |
+| `oci.identity.authorization.root-cert-path` | | Optional CA bundle or root certificate path. |
+| `oci.identity.authorization.metrics-lib` | | Optional Auth SDK metrics library name. |
+
+Authorization validation rules:
+
+* If `service-uri` is not configured and `service-enclave=false`, both `region` and `physical-ad` are required.
+* If `service-uri` is not configured and `service-enclave=true`, `region` must not be set and `availability-domain` is required.
+* If `service-uri` points to a non-service-enclave endpoint, `service-enclave` must be `false`, and both `region` and `physical-ad` are required.
+* If `service-uri` points to a service-enclave endpoint, `region` must not be set, `availability-domain` must not be set, and `physical-ad` must be omitted or set to the regional AD value.
+
+### Request Context
+
+`IdentityContext` is registered into `request.context()` only for intercepted endpoints. In practice, that means the endpoint must participate in the authorization integration, typically by using an OCI authorization annotation such as `@AuthorizationPermission`.
+
+The context is a read-only map of Auth SDK request properties. A common example is the authenticated principal under `AuthContextRequestFilter.PIC_PRINCIPAL`.
+
+---
 
 ## References
-* [Helidon Security Extensibility](https://helidon.io/docs/v2/#/se/security/05_extensibility)
-* [Creating a CA and self-signed Cert](../identity/self-singed-cert-readme.md)
-* [Identity Auth SDK](https://internal-docs.oraclecorp.com/en-us/iaas/internalcontent/svcintegration/identity/config-for-identity-service/integrating-your-service-with-identity-auth-sdk.htm)
+
+* [IdentityConfigBlueprint](../identity/src/main/java/com/oracle/helidon/oci/identity/IdentityConfigBlueprint.java)
+* [AuthenticationConfigBlueprint](../identity/src/main/java/com/oracle/helidon/oci/identity/AuthenticationConfigBlueprint.java)
+* [AuthorizationConfigBlueprint](../identity/src/main/java/com/oracle/helidon/oci/identity/AuthorizationConfigBlueprint.java)
+* [ServiceAuthenticationClientFactory](../identity/src/main/java/com/oracle/helidon/oci/identity/ServiceAuthenticationClientFactory.java)
+* [AuthenticatorClientFactory](../identity/src/main/java/com/oracle/helidon/oci/identity/AuthenticatorClientFactory.java)
+* [AuthorizationClientFactory](../identity/src/main/java/com/oracle/helidon/oci/identity/AuthorizationClientFactory.java)
+* [IdentityContext](../identity/src/main/java/com/oracle/helidon/oci/identity/IdentityContext.java)
+* [OciAuthorizationExtension](../codegen/src/main/java/com/oracle/helidon/oci/codegen/OciAuthorizationExtension.java)
+* [Echo example](../examples/echo/src/main/java/com/oracle/helidon/oci/examples/echo/EchoEndpoint.java)

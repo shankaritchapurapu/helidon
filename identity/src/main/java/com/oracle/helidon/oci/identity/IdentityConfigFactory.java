@@ -32,10 +32,9 @@ class IdentityConfigFactory implements Supplier<IdentityConfig> {
     }
 
     /**
-     * Creates a new {@link IdentityConfig} from the {@code oci.identity} configuration
-     * section.
+     * Get a new instance of {@link com.oracle.helidon.oci.identity.IdentityConfig}.
      *
-     * @return a newly created {@link IdentityConfig}
+     * @return a new instance of {@link com.oracle.helidon.oci.identity.IdentityConfig}
      */
     @Override
     public IdentityConfig get() {

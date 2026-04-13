@@ -41,8 +41,9 @@ public class ServiceAuthenticationClientFactory implements Supplier<ServiceAuthe
                 .globalBusinessUnit(config.globalBusinessUnit())
                 .teamName(config.teamName())
                 .applicationName(config.applicationName())
-                .purpose(X509FederationRequest.Purpose.SERVICE_PRINCIPAL)
-                .region(Region.fromPublicRegionName(config.region()));
+                .purpose(X509FederationRequest.Purpose.SERVICE_PRINCIPAL);
+
+        configureEndpoint(builder);
 
         config.rootCertPath().ifPresent(builder::rootCertPath);
 
@@ -65,11 +66,31 @@ public class ServiceAuthenticationClientFactory implements Supplier<ServiceAuthe
                     : new InstancePrincipalCertificateSupplier();
             builder.certificateSupplier(supplier);
         } else {
+            if (config.certificates().isEmpty()) {
+                throw new IllegalStateException(
+                        "Certificates must be configured when instance principal authentication is disabled");
+            }
             // use a certificate list from configuration
             builder.certificateSupplier(() -> loadCertificates(config));
         }
 
         return builder.build();
+    }
+
+    private void configureEndpoint(AuthServiceAuthenticationClient.Builder builder) {
+        boolean hasServiceUri = config.serviceUri().isPresent();
+        boolean hasRegion = config.region().isPresent();
+
+        if (hasServiceUri == hasRegion) {
+            throw new IllegalStateException(
+                    "Exactly one of authentication.serviceUri or authentication.region must be configured");
+        }
+
+        if (hasServiceUri) {
+            builder.authServiceEndpoint(config.serviceUri().get().toString());
+        } else {
+            builder.region(Region.fromPublicRegionName(config.region().orElseThrow()));
+        }
     }
 
     static List<X509CertificateAndRsaPrivateKey> loadCertificates(AuthenticationConfig config) {
