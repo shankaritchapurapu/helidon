@@ -18,6 +18,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>audit</module>
         <module>echo</module>
         <module>limits</module>
         <module>request-id</module>

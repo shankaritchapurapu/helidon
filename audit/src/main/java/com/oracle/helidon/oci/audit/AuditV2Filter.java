@@ -90,12 +90,17 @@ class AuditV2Filter implements Filter {
             AuditPayloadAppenderImpl appender = new AuditPayloadAppenderImpl(event);
             // Allow subsequent handlers to modify the event via the appender
             request.context().register(APPENDER_ATTRIBUTE_NAME, appender);
+            if (attachSummary(request)) {
+                response.beforeSend(() -> {
+                    addResponse(response, event.getData().getRequest(), event.getData().getResponse());
+                    attachSummary(response, generateEvents(appender, request, response));
+                });
+            }
             try {
                 filterChain.proceed();
             } finally {
                 addResponse(response, event.getData().getRequest(), event.getData().getResponse());
                 List<AuditEventV2> events = generateEvents(appender, request, response);
-                attachSummary(request, response, events);
                 for (AuditEventV2 ev : events) {
                     try {
                         auditLogger.log(ev);
@@ -107,29 +112,30 @@ class AuditV2Filter implements Filter {
         }
     }
 
-    private void attachSummary(RoutingRequest request, RoutingResponse response, List<AuditEventV2> events) {
-        if (attachSummary(request) && !events.isEmpty()) {
-            List<Map.Entry<String, Integer>> summary = new ArrayList<>();
-            for (AuditEventV2 ev : events) {
-                int hash = Objects.hash(ev.getData().getCompartmentId(),
-                    ev.getData().getCompartmentName(),
-                    ev.getData().getEventName(),
-                    ev.getSource(),
-                    ev.getEventType(),
-                    ev.getData().getIdentity().getPrincipalId(),
-                    ev.getData().getRequest().getAction(),
-                    ev.getData().getIdentity().getUserAgent(),
-                    ev.getData().getRequest().getId(),
-                    ev.getData().getResponse().getStatus(),
-                    ev.getData().getIdentity().getTenantId());
-                summary.add(new AbstractMap.SimpleEntry<>(ev.getEventId(), hash));
-            }
-            String[] jsonList = summary.stream()
-                    .sorted(Map.Entry.comparingByValue())
-                    .map(e -> String.format("{\"%s\",\"%s\"}", e.getKey(), e.getValue()))
-                    .toArray(String[]::new);
-            response.headers().set(EVENT_SUMMARY_HEADER_NAME, jsonList);
+    private void attachSummary(RoutingResponse response, List<AuditEventV2> events) {
+        if (events.isEmpty()) {
+            return;
         }
+        List<Map.Entry<String, Integer>> summary = new ArrayList<>();
+        for (AuditEventV2 ev : events) {
+            int hash = Objects.hash(ev.getData().getCompartmentId(),
+                ev.getData().getCompartmentName(),
+                ev.getData().getEventName(),
+                ev.getSource(),
+                ev.getEventType(),
+                ev.getData().getIdentity().getPrincipalId(),
+                ev.getData().getRequest().getAction(),
+                ev.getData().getIdentity().getUserAgent(),
+                ev.getData().getRequest().getId(),
+                ev.getData().getResponse().getStatus(),
+                ev.getData().getIdentity().getTenantId());
+            summary.add(new AbstractMap.SimpleEntry<>(ev.getEventId(), hash));
+        }
+        String[] jsonList = summary.stream()
+                .sorted(Map.Entry.comparingByValue())
+                .map(e -> String.format("{\"%s\",\"%s\"}", e.getKey(), e.getValue()))
+                .toArray(String[]::new);
+        response.headers().set(EVENT_SUMMARY_HEADER_NAME, jsonList);
     }
 
     private Whitelister whitelister() {

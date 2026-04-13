@@ -1,0 +1,46 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+server:
+  port: 8080
+  host: 0.0.0.0
+
+declarative:
+  ignore-incubating: true
+
+oci:
+  auditv2:
+    enabled: true
+    event-source: helidon-audit-example
+    respect-splat-audited-flag: true
+    request-parameter-rules:
+      - resources: "/audit/orders"
+        actions: "GET"
+        values: "orderId"
+      - resources: "/audit/orders"
+        actions: "GET"
+        values: "expand"
+      - resources: "/audit/orders/approve"
+        actions: "POST"
+        values: "orderId"
+    request-header-rules:
+      - resources: "/audit/orders"
+        actions: "GET"
+        values: "opc-request-id"
+      - resources: "/audit/orders"
+        actions: "GET"
+        values: "x-audit-example-tenant"
+      - resources: "/audit/orders/approve"
+        actions: "POST"
+        values: "opc-request-id"
+      - resources: "/audit/orders/approve"
+        actions: "POST"
+        values: "x-audit-example-tenant"
+    response-header-rules:
+      - resources: "/audit/orders"
+        actions: "GET"
+        values: "x-audit-example-version"
+      - resources: "/audit/orders/approve"
+        actions: "POST"
+        values: "x-audit-example-version"

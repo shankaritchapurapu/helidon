@@ -36,6 +36,8 @@
         <bcpkix-fips-lib-version>1.0.6</bcpkix-fips-lib-version>
         <javax-ws-rs-version>2.1.1</javax-ws-rs-version>
         <j2objc-lib-version>3.0.0</j2objc-lib-version>
+        <version.lib.logback>1.3.11</version.lib.logback>
+        <version.lib.slf4j>2.0.9</version.lib.slf4j>
     </properties>
 
     <dependencyManagement>
@@ -389,6 +391,16 @@
             </dependency>
 
             <!-- Others -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${version.lib.slf4j}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>${version.lib.logback}</version>
+            </dependency>
             <dependency>
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
