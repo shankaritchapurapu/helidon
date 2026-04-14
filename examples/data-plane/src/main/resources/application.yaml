@@ -1,0 +1,102 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+server:
+  port: 8080
+  host: 0.0.0.0
+
+declarative:
+  ignore-incubating: true
+
+oci:
+  kiev:
+    backend: "IN_MEMORY"
+    store-name: helidon-data-plane-example
+    app-name: helidon-data-plane-example
+    transaction-max-reads: 1000
+    transaction-max-writes: 100
+  identity:
+    authentication:
+      global-business-unit: my-business-unit
+      team-name: my-team
+      application-name: helidon-data-plane-example
+      region: us-ashburn-1
+      instance-principal-uri: http://localhost:8000
+      root-cert-path: /etc/oci-pki/ca-bundle.pem
+      hard-coded-key-supplier: ${helidon.oci.hardCodedKeySupplier}
+    authorization:
+      region: us-ashburn-1
+      service-name: helidon-data-plane-example
+      physical-ad: AD-1
+      root-cert-path: /etc/oci-pki/ca-bundle.pem
+  auditv2:
+    enabled: true
+    event-source: helidon-data-plane-example
+    request-parameter-rules:
+      - resources: /data-plane/robots
+        actions: GET
+        values: displayName
+      - resources: /data-plane/robots
+        actions: GET
+        values: compartmentId
+    request-header-rules:
+      - resources: /data-plane/robots.*
+        actions: POST|PUT|DELETE
+        values: opc-request-id
+    response-header-rules:
+      - resources: /data-plane.*
+        actions: GET|POST|PUT|DELETE
+        values: opc-request-id
+
+# To persist robots in Oracle DB instead of the in-memory Kiev backend:
+# oci:
+#   kiev:
+#     backend: "DIRECT_DB"
+#     store-name: pdbdev
+#     app-name: helidon-data-plane-example
+#     transaction-max-reads: 1000
+#     transaction-max-writes: 100
+#     direct-db:
+#       jdbc-url: jdbc:oracle:thin:@//localhost:1521/pdbdev
+#       user-name: helidon
+#       password: changeit
+#       schema-name: helidon
+
+# To use Kiev as a service instead:
+# oci:
+#   kiev:
+#     backend: "SERVICE"
+#     store-name: your-store
+#     app-name: helidon-data-plane-example
+#     service:
+#       compartment-id: ocid1.compartment.oc1...
+#       frontend-endpoint: https://your-kiev-endpoint
+#       locality: "REGIONAL"
+#       auth:
+#         type: "INSTANCE"
+#         root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+
+# Optional examples for configuration-oriented integrations:
+#
+# To enable Secret Service V2 TLS rotation:
+# server:
+#   tls:
+#     endpoint-identification-algorithm: "NONE"
+#     client-auth: "REQUIRED"
+#     manager:
+#       oci-ssv2:
+#         reload.cron: "0/30 * * * * ? *"
+#         pki.secret: /secret/xxx/data-plane/tls/latest
+#         trust.path: /etc/oci-pki/ca-bundle.pem
+#
+# To enable T2 metrics publishing once the metrics module is wired:
+# oci:
+#   metrics:
+#     enabled: true
+#     project: helidon_oci
+#     fleet: dataplane
+#
+# To use environment-derived endpoints:
+# data-plane:
+#   downstream-endpoint: https://wfaas-overlay.${oci.env.ad-number}.${oci.env.iaas-domain-name}

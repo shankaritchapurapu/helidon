@@ -23,5 +23,6 @@
         <module>request-id</module>
         <module>store</module>
         <module>workflow</module>
+        <module>data-plane</module>
     </modules>
 </project>

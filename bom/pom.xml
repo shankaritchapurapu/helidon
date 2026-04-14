@@ -51,6 +51,11 @@
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-audit</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.oracle.helidon.oci.requestid</groupId>
                 <artifactId>helidon-oci-request-id</artifactId>
                 <version>${helidon.oci.version}</version>
@@ -66,7 +71,7 @@
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.oracle.helidon.oci.splat</groupId>
+                <groupId>com.oracle.helidon.oci</groupId>
                 <artifactId>helidon-oci-splat</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>

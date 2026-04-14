@@ -108,7 +108,7 @@ class AuditV2Filter implements Filter {
     }
 
     private void attachSummary(RoutingRequest request, RoutingResponse response, List<AuditEventV2> events) {
-        if (attachSummary(request)) {
+        if (attachSummary(request) && !events.isEmpty()) {
             List<Map.Entry<String, Integer>> summary = new ArrayList<>();
             for (AuditEventV2 ev : events) {
                 int hash = Objects.hash(ev.getData().getCompartmentId(),

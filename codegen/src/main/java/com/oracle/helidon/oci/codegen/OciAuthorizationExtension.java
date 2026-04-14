@@ -161,8 +161,11 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
             HelidonContextInjector.inject(filter, context);
             HelidonContextInjector.postConstruct(filter);
 
-            // call filter after buffering entity
-            request.content().buffer();
+            // Buffering a bodyless request delegates to an empty entity implementation,
+            // whose default buffer() method throws UnsupportedOperationException.
+            if (context.hasEntity()) {
+                request.content().buffer();
+            }
             try {
                 filter.filter(context);
             } catch (WebApplicationException e) {
