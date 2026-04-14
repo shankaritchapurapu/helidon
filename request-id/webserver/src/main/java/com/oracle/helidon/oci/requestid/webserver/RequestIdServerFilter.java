@@ -5,7 +5,6 @@
 package com.oracle.helidon.oci.requestid.webserver;
 
 import io.helidon.common.Weight;
-import io.helidon.common.context.Contexts;
 import io.helidon.http.Header;
 import io.helidon.http.HeaderName;
 import io.helidon.http.HeaderNames;
@@ -53,7 +52,7 @@ class RequestIdServerFilter implements Filter {
 
         // register requestId in useful contexts
         HelidonMdc.set(OciRequestId.OCI_REQUEST_ID, requestId.upstreamHeaderValue());
-        Contexts.context().ifPresent(c -> c.register(requestId));
+        routingRequest.context().register(requestId);
 
         // must use the upstream header value, as this is the response to our client
         routingResponse.headers()

@@ -20,6 +20,7 @@
     <modules>
         <module>echo</module>
         <module>limits</module>
+        <module>request-id</module>
         <module>store</module>
         <module>workflow</module>
     </modules>

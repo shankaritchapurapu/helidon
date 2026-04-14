@@ -13,6 +13,7 @@ import io.helidon.http.ServerResponseHeaders;
 import io.helidon.http.WritableHeaders;
 import io.helidon.logging.common.LogConfig;
 import io.helidon.logging.jul.JulMdc;
+import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.FilterChain;
 import io.helidon.webserver.http.RoutingRequest;
 import io.helidon.webserver.http.RoutingResponse;
@@ -85,6 +86,26 @@ class RequestIdServerFilterTest {
                    optionalValue(is(reqHeaders.get(OCI_REQUEST_ID_HEADER).getString())));
     }
 
+    @Test
+    void testInjectableFactory() {
+        WritableHeaders<?> reqHeaders = WritableHeaders.create();
+        ServerResponseHeaders resHeaders = ServerResponseHeaders.create();
+
+        Context context = Context.create();
+        Contexts.runInContext(context, () -> {
+            RequestIdServerFilter filter = new RequestIdServerFilter();
+            filter.filter(mockFilterChain(),
+                          mockRoutingRequest(reqHeaders),
+                          mockRoutingResponse(resHeaders));
+        });
+
+        ServerRequest serverRequest = mock(ServerRequest.class);
+        when(serverRequest.context()).thenReturn(context);
+
+        OciRequestId requestId = new OciRequestIdFactory(serverRequest).get();
+        assertThat(requestId.upstreamHeaderValue(), is(reqHeaders.get(OCI_REQUEST_ID_HEADER).getString()));
+    }
+
     private static FilterChain mockFilterChain() {
         return mock(FilterChain.class);
     }
@@ -93,6 +114,7 @@ class RequestIdServerFilterTest {
         ServerRequestHeaders requestHeaders = ServerRequestHeaders.create(headers);
         RoutingRequest mock = mock(RoutingRequest.class);
         when(mock.headers()).thenReturn(requestHeaders);
+        when(mock.context()).thenReturn(Contexts.context().orElseGet(Context::create));
 
         doAnswer(invocation -> {
             headers.set(invocation.getArgument(0));
