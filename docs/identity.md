@@ -47,11 +47,9 @@ Add the Identity module dependency to your project:
 
 When the Helidon service registry is enabled, the module contributes the Identity services automatically. The generated authorization interceptor obtains `AuthenticatorClient` and `IAuthorizationClient` from the registry and applies them to intercepted endpoints.
 
-The recommended way to access authenticated request data in an endpoint is to inject `Supplier<IdentityContext>`. This is required because `IdentityContext` is request-scoped.
+The recommended way to access authenticated request data in a REST endpoint method is to declare an `IdentityContext` parameter directly. The generated handler resolves it from `request.context()` for each request.
 
 ```java
-import java.util.function.Supplier;
-
 import io.helidon.http.Http;
 import io.helidon.service.registry.Service;
 import io.helidon.webserver.http.RestServer;
@@ -66,19 +64,33 @@ import static com.oracle.pic.identity.authorization.sdk.AuthContextRequestFilter
 @Http.Path("/echo")
 @Service.Singleton
 class EchoEndpoint {
-    private final Supplier<IdentityContext> identityContextSupplier;
-
-    @Service.Inject
-    EchoEndpoint(Supplier<IdentityContext> identityContextSupplier) {
-        this.identityContextSupplier = identityContextSupplier;
-    }
 
     @Http.POST
     @Http.Path("once")
     @AuthorizationPermission("ECHO_ONCE")
-    String once(@Http.Entity String message) {
-        Principal principal = (Principal) identityContextSupplier.get().get(PIC_PRINCIPAL);
+    String once(@Http.Entity String message, IdentityContext identityContext) {
+        Principal principal = (Principal) identityContext.get(PIC_PRINCIPAL);
         return principal.getSubjectId() + ": " + message;
+    }
+}
+```
+
+If you need request-scoped access from an injected singleton field or constructor dependency, inject `Supplier<IdentityContext>` instead:
+
+```java
+import java.util.function.Supplier;
+
+import io.helidon.service.registry.Service;
+
+import com.oracle.helidon.oci.identity.IdentityContext;
+
+class AuditService {
+
+    private final Supplier<IdentityContext> identityContextSupplier;
+
+    @Service.Inject
+    AuditService(Supplier<IdentityContext> identityContextSupplier) {
+        this.identityContextSupplier = identityContextSupplier;
     }
 }
 ```
@@ -223,7 +235,7 @@ Authorization validation rules:
 
 ### Request Context
 
-`IdentityContext` is registered into `request.context()` only for intercepted endpoints. In practice, that means the endpoint must participate in the authorization integration, typically by using an OCI authorization annotation such as `@AuthorizationPermission`.
+`IdentityContext` is registered into `request.context()` only for intercepted endpoints. In practice, that means the endpoint must participate in the authorization integration, typically by using an OCI authorization annotation such as `@AuthorizationPermission`. Direct `IdentityContext` parameter injection depends on that context entry being present.
 
 The context is a read-only map of Auth SDK request properties. A common example is the authenticated principal under `AuthContextRequestFilter.PIC_PRINCIPAL`.
 

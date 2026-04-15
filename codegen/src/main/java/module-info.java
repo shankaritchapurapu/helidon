@@ -2,9 +2,10 @@
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
 
-import com.oracle.helidon.oci.codegen.OciKievTransactionExtensionProvider;
+import com.oracle.helidon.oci.codegen.IdentityContextParameterCodegenProvider;
 import com.oracle.helidon.oci.codegen.OciAuthorizationExtensionProvider;
 import com.oracle.helidon.oci.codegen.OciHttpParameterLoaderExtensionProvider;
+import com.oracle.helidon.oci.codegen.OciKievTransactionExtensionProvider;
 import com.oracle.helidon.oci.codegen.OciRequestIdParameterCodegenProvider;
 
 /**
@@ -28,5 +29,6 @@ module io.helidon.examples.oci.poc.codegen {
                     OciHttpParameterLoaderExtensionProvider;
 
     provides io.helidon.declarative.codegen.http.webserver.spi.HttpParameterCodegenProvider
-            with OciRequestIdParameterCodegenProvider;
+            with OciRequestIdParameterCodegenProvider,
+                    IdentityContextParameterCodegenProvider;
 }
