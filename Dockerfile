@@ -18,7 +18,7 @@ RUN set -x && \
 COPY build_config/pipeline/build-stage-settings.xml /maven/conf/settings.xml
 
 # Install Java
-RUN rpm -ivh  https://jpg-data.us.oracle.com/artifactory/re-release-local/jdk/21.0.4/8/bundles/linux-aarch64/jdk-21.0.4+8_linux-aarch64_bin.rpm
+RUN rpm -ivh  https://jpg-data.us.oracle.com/artifactory/re-release-local/jdk/25.0.2/8/bundles/linux-aarch64/jdk-25.0.2+8_linux-aarch64_bin.rpm
 
 WORKDIR /oci-helidon
 

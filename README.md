@@ -15,7 +15,7 @@ libraries that OCI teams produce (that are not part of the public OCI SDK), then
 
 ## Prerequisites
 
-- JDK 21 or higher
+- JDK 25
 - Maven 3.6.1 or higher
 - Helidon 4.1.1 or higher
 

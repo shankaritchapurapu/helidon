@@ -7,10 +7,10 @@
     <toolchain>
         <type>jdk</type>
         <provides>
-            <version>21</version>
+            <version>25</version>
         </provides>
         <configuration>
-            <jdkHome>/usr/lib/jvm/jdk-21.0.1</jdkHome>
+            <jdkHome>/usr/lib/jvm/jdk-25.0.2</jdkHome>
         </configuration>
     </toolchain>
 </toolchains>

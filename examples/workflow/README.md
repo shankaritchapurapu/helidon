@@ -7,7 +7,7 @@ workflow and polls for status updates.
 
 ## Prerequisites
 
-- JDK 21
+- JDK 25
 - Maven
 - Access to a WFaaS endpoint for the real integration test path
 

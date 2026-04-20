@@ -23,10 +23,14 @@
 
     <properties>
         <helidon.oci.version>2.0.0-SNAPSHOT</helidon.oci.version>
-        <version.lib.guava>33.3.1-jre</version.lib.guava>
+        <version.plugin.compiler>3.14.1</version.plugin.compiler>
+        <version.plugin.failsafe>3.5.5</version.plugin.failsafe>
+        <version.plugin.surefire>3.5.5</version.plugin.surefire>
+        <version.lib.classgraph>4.8.184</version.lib.classgraph>
         <jersey-lib-version>2.47</jersey-lib-version>
         <version.lib.logback>1.5.32</version.lib.logback>
         <version.lib.slf4j>2.0.9</version.lib.slf4j>
+        <maven.compiler.release>25</maven.compiler.release>
     </properties>
 
     <dependencyManagement>

@@ -18,10 +18,6 @@
     <name>Helidon OCI Codegen</name>
     <version>2.0.0-SNAPSHOT</version>
 
-    <properties>
-        <version.plugin.helidon-build-tools>4.0.23</version.plugin.helidon-build-tools>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.helidon.common</groupId>
@@ -58,7 +54,6 @@
             <plugin>
                 <groupId>io.helidon.build-tools</groupId>
                 <artifactId>helidon-services-plugin</artifactId>
-                <version>${version.plugin.helidon-build-tools}</version>
                 <executions>
                     <execution>
                         <id>generate-meta-inf-services</id>

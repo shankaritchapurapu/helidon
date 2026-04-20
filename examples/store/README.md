@@ -6,7 +6,7 @@ This example shows how to use the Helidon OCI Kiev integration through a simple 
 
 ## Prerequisites
 
-- JDK 21
+- JDK 25
 - Maven
 - Docker
 
