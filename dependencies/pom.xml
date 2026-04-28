@@ -26,6 +26,7 @@
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
         <oracle-internal-kiev-version>2.0.35</oracle-internal-kiev-version>
         <oracle-internal-workflow-version>14.0.0</oracle-internal-workflow-version>
+        <oracle-internal-splat-sdk-version>0.1.39635</oracle-internal-splat-sdk-version>
         <oracle-oci-sdk-version>2.88.0</oracle-oci-sdk-version>
         <sherlock-version>3.0.13</sherlock-version>
         <version-lib-joda-time>2.10.14</version-lib-joda-time>
@@ -215,6 +216,21 @@
                 <groupId>com.oracle.pic.workflow</groupId>
                 <artifactId>wfaas-sdk</artifactId>
                 <version>${oracle-internal-workflow-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.platform.splat.sdk</groupId>
+                <artifactId>splat-sdk</artifactId>
+                <version>${oracle-internal-splat-sdk-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.http-client</groupId>
+                        <artifactId>google-http-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.commons</groupId>
+                        <artifactId>core-resources</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- Jersey -->

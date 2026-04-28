@@ -4,21 +4,20 @@
 
 package com.oracle.helidon.oci.splat;
 
-import java.util.List;
 import java.util.Optional;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 
 /**
- * Blueprint configuration for {@link com.oracle.helidon.oci.splat.SplatMtlsFilter}.
+ * Blueprint configuration for SPLAT validation of generated Helidon endpoints.
  */
 @Prototype.Blueprint
 @Prototype.Configured("oci.splat")
-interface SplatMtlsConfigBlueprint extends Prototype.Factory<SplatMtlsFeature> {
+interface SplatMtlsConfigBlueprint {
 
     /**
-     * Whether the Splat mTLS Filter support is enabled.  This defaults to {@code true}.
+     * Whether SPLAT mTLS validation is enabled. This defaults to {@code true}.
      *
      * @return {@code true} if enabled; {@code false} otherwise
      */
@@ -27,9 +26,9 @@ interface SplatMtlsConfigBlueprint extends Prototype.Factory<SplatMtlsFeature> {
     boolean enabled();
 
     /**
-     * Whether the Splat Authorization validation check is enabled. This defaults to {@code true}.
+     * Whether the SPLAT authorization validation check should be skipped. This defaults to {@code false}.
      *
-     * @return {@code true} if enabled; {@code false} otherwise
+     * @return {@code true} if skipped; {@code false} otherwise
      */
     @Option.Configured
     @Option.DefaultBoolean(false)
@@ -45,19 +44,11 @@ interface SplatMtlsConfigBlueprint extends Prototype.Factory<SplatMtlsFeature> {
     boolean rejectXRegionCalls();
 
     /**
-     * Overrides the Oci region that is automatically retrieved from the environment (ex, us-ashburn-1).
+     * Overrides the OCI region that is automatically retrieved from the environment (for example, `us-ashburn-1`).
      *
-     * @return Oci region name
+     * @return OCI region name
      */
     @Option.Configured
     Optional<String> region();
 
-    /**
-     * Webserver socket names the SplatMtlsFilter should be exposed on. If not defined, defaults to
-     * the default socket name ({@value io.helidon.webserver.WebServer#DEFAULT_SOCKET_NAME}).
-     *
-     * @return list of sockets to register SplatMtlsFilter on
-     */
-    @Option.Configured
-    List<String> sockets();
 }

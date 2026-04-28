@@ -5,6 +5,9 @@ package com.oracle.helidon.oci.jaxrs;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -35,6 +38,8 @@ public class HelidonContainerRequestContext implements ContainerRequestContext {
 
     /** Property key for storing ResourceInfo in the context. */
     public static final String RESOURCE_INFO_PROPERTY = "javax.ws.rs.container.ResourceInfo";
+    /** Property key for storing the TLS client certificate chain. */
+    public static final String X509_CERTIFICATE_PROPERTY = "javax.servlet.request.X509Certificate";
 
     private final ServerRequest request;
     private final HelidonUriInfo uriInfo;
@@ -60,6 +65,22 @@ public class HelidonContainerRequestContext implements ContainerRequestContext {
         this.httpHeaders = new HelidonHttpHeaders(request);
         this.resourceInfo = resourceInfo;
         this.properties.put(RESOURCE_INFO_PROPERTY, resourceInfo);
+        preloadClientCertificates();
+    }
+
+    private void preloadClientCertificates() {
+        request.remotePeer()
+                .tlsCertificates()
+                .map(this::toX509Certificates)
+                .filter(certificates -> certificates.length > 0)
+                .ifPresent(certificates -> properties.put(X509_CERTIFICATE_PROPERTY, certificates));
+    }
+
+    private X509Certificate[] toX509Certificates(Certificate[] certificates) {
+        return Arrays.stream(certificates)
+                .filter(X509Certificate.class::isInstance)
+                .map(X509Certificate.class::cast)
+                .toArray(X509Certificate[]::new);
     }
 
     /**
@@ -226,5 +247,3 @@ public class HelidonContainerRequestContext implements ContainerRequestContext {
         return request;
     }
 }
-
-

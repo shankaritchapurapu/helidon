@@ -1,0 +1,33 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+server:
+  port: 8443
+  host: 0.0.0.0
+  # Configure the listener itself for mTLS so Helidon populates the peer certificates
+  # that the upstream SPLAT filter reads from the request context.
+  #
+  # tls:
+  #   client-auth: "REQUIRED"
+  #   endpoint-identification-algorithm: "NONE"
+  #   trust:
+  #     pem:
+  #       cert-chain:
+  #         resource.path: /path/to/trusted-client-ca.pem
+  #   private-key:
+  #     pem:
+  #       key:
+  #         resource.path: /path/to/server-key.pem
+  #       cert-chain:
+  #         resource.path: /path/to/server-cert-chain.pem
+
+declarative:
+  ignore-incubating: true
+
+oci:
+  splat:
+    enabled: true
+    skip-authz-validation-check: false
+    reject-x-region-calls: false
+    region: us-ashburn-1

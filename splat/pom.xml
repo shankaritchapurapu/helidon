@@ -28,6 +28,17 @@
             <artifactId>helidon-webserver</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.oracle.helidon.oci.jaxrs</groupId>
+            <artifactId>helidon-oci-jaxrs</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.config</groupId>
             <artifactId>helidon-config</artifactId>
         </dependency>
@@ -65,6 +76,10 @@
         <dependency>
             <groupId>com.oracle.pic.identity.authentication</groupId>
             <artifactId>authentication-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.platform.splat.sdk</groupId>
+            <artifactId>splat-sdk</artifactId>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
