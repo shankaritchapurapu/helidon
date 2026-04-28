@@ -20,7 +20,7 @@
 
     <properties>
         <oracle-internal-commons-core-version>5.0.90</oracle-internal-commons-core-version>
-        <oracle-internal-commons-core-regions-version>1.2.19</oracle-internal-commons-core-regions-version>
+        <oracle-internal-commons-core-regions-version>2.1.85</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-request-id-version>1.1.55</oracle-internal-commons-request-id-version>
         <oracle-internal-limits-version>1.9</oracle-internal-limits-version>
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>

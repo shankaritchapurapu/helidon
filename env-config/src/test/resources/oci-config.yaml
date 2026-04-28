@@ -1,0 +1,15 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+helidon:
+  oci:
+    region: "eu-frankfurt-1"
+  oci-env:
+    prefix: "oci.file"
+    dynamic-core-regions:
+      enabled: false
+    location-override:
+      region: "us-ashburn-1"
+      availability-domain: "iad-ad-1"
+      fault-domain: 5

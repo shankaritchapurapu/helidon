@@ -4,6 +4,13 @@
 
 ## Overview
 
-This module provides support for populating Helidon Config with OCI environment specific data similar to the feature provided by the [EnvironmentTypeSafeReader](https://internal-docs.oraclecorp.com/en-us/iaas/internalcontent/tools/shepherd/shepherd-tips-and-tricks/reducing-configuration-files-for-dropwizard-services.htm?Highlight=EnvironmentTypeSafe#using-environmenttypesafereader).
+This module provides the `oci-env` Helidon config source and companion declarative region
+providers. It publishes derived OCI environment values for Helidon configuration, supports
+declarative bootstrap and explicit meta-config usage, reads optional `helidon.oci-env` settings
+from `oci-config.yaml`, and supports location overrides and dynamic core-regions import.
+
+For declarative service-registry bootstrap, the module can provide both the public OCI SDK
+`com.oracle.bmc.Region` and the PIC commons `com.oracle.pic.commons.util.Region` from the same
+lazy `oci-env` location resolution.
 
 For more details, please check [Environment Config](../docs/environment-config.md) under [Helidon-OCI Native Services Integration Guide](../docs/README.md).
