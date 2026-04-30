@@ -23,7 +23,8 @@ class SplatMtlsRequestHandlerTest {
                 .skipAuthzValidationCheck(true)
                 .rejectXRegionCalls(true)
                 .buildPrototype();
-        SplatMtlsRequestHandler handler = new SplatMtlsRequestHandler(config);
+        SplatMtlsRequestHandler handler = new SplatMtlsRequestHandler(config,
+                                                                      SplatMtlsRequestHandlerTest::failRegionLookup);
 
         var upstreamConfig = handler.upstreamConfig();
 
@@ -34,9 +35,9 @@ class SplatMtlsRequestHandlerTest {
 
     @Test
     void shouldUseDefaultRegionWhenConfigDoesNotSpecifyOne() {
-        SplatMtlsRequestHandler handler = SplatMtlsRequestHandler.createForTesting(
+        SplatMtlsRequestHandler handler = new SplatMtlsRequestHandler(
                 SplatMtlsConfig.builder().buildPrototype(),
-                () -> "us-ashburn-1");
+                () -> Region.fromPublicRegionName("us-ashburn-1"));
 
         assertThat(handler.resolveRegion(), is(Region.fromPublicRegionName("us-ashburn-1")));
     }
@@ -44,7 +45,8 @@ class SplatMtlsRequestHandlerTest {
     @Test
     void shouldNotCreateFilterWhenDisabled() {
         SplatMtlsRequestHandler handler = new SplatMtlsRequestHandler(
-                SplatMtlsConfig.builder().enabled(false).buildPrototype());
+                SplatMtlsConfig.builder().enabled(false).buildPrototype(),
+                SplatMtlsRequestHandlerTest::failRegionLookup);
 
         assertTrue(handler.createFilter().isEmpty());
     }
@@ -52,8 +54,13 @@ class SplatMtlsRequestHandlerTest {
     @Test
     void shouldCreateJaxRsFilterWhenEnabled() {
         SplatMtlsRequestHandler handler = new SplatMtlsRequestHandler(
-                SplatMtlsConfig.builder().region("us-ashburn-1").buildPrototype());
+                SplatMtlsConfig.builder().region("us-ashburn-1").buildPrototype(),
+                SplatMtlsRequestHandlerTest::failRegionLookup);
 
         assertTrue(handler.createFilter().filter(ContainerRequestFilter.class::isInstance).isPresent());
+    }
+
+    private static Region failRegionLookup() {
+        throw new AssertionError("Default region should not be resolved");
     }
 }

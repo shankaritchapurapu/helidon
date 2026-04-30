@@ -4,13 +4,14 @@
 
 package com.oracle.helidon.oci.splat;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 
 import io.helidon.service.registry.Service;
-import io.helidon.service.registry.Services;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 
@@ -23,21 +24,13 @@ import com.oracle.pic.commons.util.Region;
 @Service.Singleton
 class SplatMtlsRequestHandler {
     private final SplatMtlsConfig config;
-    private final java.util.function.Supplier<String> defaultRegionIdSupplier;
+    private final Supplier<Region> defaultRegionSupplier;
 
-    SplatMtlsRequestHandler(SplatMtlsConfig config) {
-        this(config, () -> Services.get(com.oracle.bmc.Region.class).getRegionId());
-    }
-
-    static SplatMtlsRequestHandler createForTesting(SplatMtlsConfig config,
-                                                    java.util.function.Supplier<String> defaultRegionIdSupplier) {
-        return new SplatMtlsRequestHandler(config, defaultRegionIdSupplier);
-    }
-
-    private SplatMtlsRequestHandler(SplatMtlsConfig config,
-                                    java.util.function.Supplier<String> defaultRegionIdSupplier) {
+    @Service.Inject
+    SplatMtlsRequestHandler(SplatMtlsConfig config,
+                            Supplier<Region> defaultRegionSupplier) {
         this.config = config;
-        this.defaultRegionIdSupplier = defaultRegionIdSupplier;
+        this.defaultRegionSupplier = Objects.requireNonNull(defaultRegionSupplier);
     }
 
     boolean shouldAllow(ServerRequest request,
@@ -61,8 +54,9 @@ class SplatMtlsRequestHandler {
     }
 
     Region resolveRegion() {
-        String regionId = config.region().orElseGet(defaultRegionIdSupplier);
-        return Region.fromPublicRegionName(regionId);
+        return config.region()
+                .map(Region::fromPublicRegionName)
+                .orElseGet(defaultRegionSupplier);
     }
 
     com.oracle.pic.platform.splat.sdk.config.SplatMtlsFilterConfig upstreamConfig() {
