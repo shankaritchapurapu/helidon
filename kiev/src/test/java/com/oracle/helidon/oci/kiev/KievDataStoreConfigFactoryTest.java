@@ -4,12 +4,16 @@
 
 package com.oracle.helidon.oci.kiev;
 
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
 
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 
+import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
+import com.oracle.pic.commons.ssl.DynamicSslContextProviderConfig;
 import com.oracle.pic.kiev.DataStoreConfig;
 import com.oracle.pic.kiev.DirectDbStoreConfig;
 import com.oracle.pic.kiev.KaasStoreConfig;
@@ -23,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class KievDataStoreConfigFactoryTest {
@@ -76,10 +81,10 @@ class KievDataStoreConfigFactoryTest {
                 Map.entry("oci.kiev.transaction-max-writes", "222"),
                 Map.entry("oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example"),
                 Map.entry("oci.kiev.service.frontend-endpoint", "https://frontend.example"),
-                Map.entry("oci.kiev.service.auth.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
                 Map.entry("oci.kiev.service.auth.auth-endpoint", "https://auth.example"),
-                Map.entry("oci.kiev.service.auth.cert-reload-duration", "PT5M"),
-                Map.entry("oci.kiev.service.auth.cert-ssl-algorithm", "SunX509")
+                Map.entry("oci.kiev.service.auth.tls.cert-reload-duration", "PT5M"),
+                Map.entry("oci.kiev.service.auth.tls.cert-ssl-algorithm", "SunX509")
         )).get();
 
         KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
@@ -111,14 +116,14 @@ class KievDataStoreConfigFactoryTest {
                 Map.entry("oci.kiev.service.locality", "AD1"),
                 Map.entry("oci.kiev.service.auth.type", "S2S"),
                 Map.entry("oci.kiev.service.auth.auth-endpoint", "https://auth.example"),
-                Map.entry("oci.kiev.service.auth.root-cert-pem-path", "/tmp/root.pem"),
-                Map.entry("oci.kiev.service.auth.leaf-cert-path", "/tmp/leaf.pem"),
-                Map.entry("oci.kiev.service.auth.leaf-cert-key-path", "/tmp/leaf.key"),
-                Map.entry("oci.kiev.service.auth.intermediate-cert-path", "/tmp/intermediate.pem"),
-                Map.entry("oci.kiev.service.auth.tenant-id", "ocid1.tenancy.oc1..example"),
-                Map.entry("oci.kiev.service.auth.key-passphrase", "secret"),
-                Map.entry("oci.kiev.service.auth.cert-reload-duration", "PT15M"),
-                Map.entry("oci.kiev.service.auth.cert-ssl-algorithm", "SunX509")
+                Map.entry("oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
+                Map.entry("oci.kiev.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example"),
+                Map.entry("oci.kiev.service.auth.s2s.key-passphrase", "secret"),
+                Map.entry("oci.kiev.service.auth.tls.cert-reload-duration", "PT15M"),
+                Map.entry("oci.kiev.service.auth.tls.cert-ssl-algorithm", "SunX509")
         )).get();
 
         KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
@@ -160,6 +165,55 @@ class KievDataStoreConfigFactoryTest {
     }
 
     @Test
+    void testCreatesOverriddenService() {
+        BasicAuthenticationDetailsProvider authProvider = new TestBasicAuthenticationDetailsProvider();
+
+        DataStoreConfig config = factory(Map.of(
+                "oci.kiev.backend", "SERVICE",
+                "oci.kiev.store-name", "remote-store",
+                "oci.kiev.app-name", "StoreApp",
+                "oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.service.frontend-endpoint", "https://frontend.example",
+                "oci.kiev.service.auth.type", "OVERRIDDEN"
+        ), Optional.of(authProvider)).get();
+
+        KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
+        AuthDetailsConfig.OverriddenAuthDetailsConfig authConfig =
+                assertInstanceOf(AuthDetailsConfig.OverriddenAuthDetailsConfig.class, dataStoreConfig.getAuthDetailsConfig());
+        assertSame(authProvider, authConfig.getAuthProviderOverride());
+        assertNull(dataStoreConfig.getRegistryConfig());
+    }
+
+    @Test
+    void testCreatesOverriddenServiceWithTls() {
+        BasicAuthenticationDetailsProvider authProvider = new TestBasicAuthenticationDetailsProvider();
+
+        DataStoreConfig config = factory(Map.ofEntries(
+                Map.entry("oci.kiev.backend", "SERVICE"),
+                Map.entry("oci.kiev.store-name", "remote-store"),
+                Map.entry("oci.kiev.app-name", "StoreApp"),
+                Map.entry("oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.service.auth.type", "OVERRIDDEN"),
+                Map.entry("oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.service.auth.tls.cert-reload-duration", "PT5M"),
+                Map.entry("oci.kiev.service.auth.tls.cert-ssl-algorithm", "SunX509")
+        ), Optional.of(authProvider)).get();
+
+        KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
+        AuthDetailsConfig.OverriddenAuthDetailsConfig authConfig =
+                assertInstanceOf(AuthDetailsConfig.OverriddenAuthDetailsConfig.class, dataStoreConfig.getAuthDetailsConfig());
+        assertSame(authProvider, authConfig.getAuthProviderOverride());
+        DynamicSslContextProviderConfig dynamicSslConfig = authConfig.getDynamicSslContextProviderConfig();
+        assertNotNull(dynamicSslConfig);
+        assertEquals("/tmp/root.pem", dynamicSslConfig.getRootCertPath());
+        assertNull(dynamicSslConfig.getLeafCertPath());
+        assertNull(dynamicSslConfig.getLeafCertKeyPath());
+        assertEquals(Duration.ofMinutes(5), dynamicSslConfig.getDuration());
+        assertEquals("SunX509", dynamicSslConfig.getSslAlgorithm());
+    }
+
+    @Test
     void testFailsWithoutDirectDb() {
         IllegalStateException ex = assertThrows(IllegalStateException.class, () -> factory(Map.of(
                 "oci.kiev.backend", "DIRECT_DB",
@@ -183,21 +237,98 @@ class KievDataStoreConfigFactoryTest {
 
     @Test
     void testFailsWithoutS2sAuthEndpoint() {
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> factory(Map.ofEntries(
+                Map.entry("oci.kiev.backend", "SERVICE"),
+                Map.entry("oci.kiev.store-name", "remote-store"),
+                Map.entry("oci.kiev.app-name", "StoreApp"),
+                Map.entry("oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.service.auth.type", "S2S"),
+                Map.entry("oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
+                Map.entry("oci.kiev.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example")
+        )).get());
+
+        assertEquals("oci.kiev.service.auth.auth-endpoint must be configured", ex.getMessage());
+    }
+
+    @Test
+    void testFailsWithoutS2sSection() {
         IllegalStateException ex = assertThrows(IllegalStateException.class, () -> factory(Map.of(
                 "oci.kiev.backend", "SERVICE",
                 "oci.kiev.store-name", "remote-store",
                 "oci.kiev.app-name", "StoreApp",
                 "oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example",
                 "oci.kiev.service.frontend-endpoint", "https://frontend.example",
-                "oci.kiev.service.auth.type", "S2S"
+                "oci.kiev.service.auth.type", "S2S",
+                "oci.kiev.service.auth.auth-endpoint", "https://auth.example",
+                "oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"
         )).get());
 
-        assertEquals("oci.kiev.service.auth.auth-endpoint must be configured", ex.getMessage());
+        assertEquals("oci.kiev.service.auth.s2s must be configured", ex.getMessage());
+    }
+
+    @Test
+    void testFailsWithoutInstanceTls() {
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> factory(Map.of(
+                "oci.kiev.backend", "SERVICE",
+                "oci.kiev.store-name", "remote-store",
+                "oci.kiev.app-name", "StoreApp",
+                "oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.service.frontend-endpoint", "https://frontend.example",
+                "oci.kiev.service.auth.type", "INSTANCE"
+        )).get());
+
+        assertEquals("oci.kiev.service.auth.tls must be configured", ex.getMessage());
+    }
+
+    @Test
+    void testFailsWithoutOverriddenAuthProvider() {
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> factory(Map.of(
+                "oci.kiev.backend", "SERVICE",
+                "oci.kiev.store-name", "remote-store",
+                "oci.kiev.app-name", "StoreApp",
+                "oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.service.frontend-endpoint", "https://frontend.example",
+                "oci.kiev.service.auth.type", "OVERRIDDEN"
+        )).get());
+
+        assertEquals("oci.kiev.service.auth.type=OVERRIDDEN requires BasicAuthenticationDetailsProvider to be available",
+                     ex.getMessage());
     }
 
     private static KievDataStoreConfigFactory factory(Map<String, String> values) {
+        return factory(values, Optional.empty());
+    }
+
+    private static KievDataStoreConfigFactory factory(Map<String, String> values,
+                                                      Optional<BasicAuthenticationDetailsProvider> authProvider) {
         Config config = Config.just(ConfigSources.create(values));
         KievConfig kievConfig = new KievConfigFactory(config).get();
-        return new KievDataStoreConfigFactory(kievConfig);
+        return new KievDataStoreConfigFactory(kievConfig, authProvider);
+    }
+
+    private static final class TestBasicAuthenticationDetailsProvider implements BasicAuthenticationDetailsProvider {
+        @Override
+        public String getKeyId() {
+            return "test-key-id";
+        }
+
+        @Override
+        public InputStream getPrivateKey() {
+            return InputStream.nullInputStream();
+        }
+
+        @Override
+        public String getPassPhrase() {
+            return null;
+        }
+
+        @Override
+        public char[] getPassphraseCharacters() {
+            return null;
+        }
     }
 }

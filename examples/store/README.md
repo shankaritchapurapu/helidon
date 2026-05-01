@@ -28,6 +28,10 @@ From `examples/store`:
 java -jar ./target/helidon-oci-examples-store.jar
 ```
 
+The sample `application.yaml` also includes a commented Kiev-as-a-service configuration that uses
+`oci.kiev.service.auth.type=OVERRIDDEN`. In that mode, the example reuses the shared OCI SDK auth
+provider from `helidon.oci.*` and keeps Kiev-specific TLS settings under `oci.kiev.service.auth.tls.*`.
+
 The service exposes five plain-text routes:
 
 - `POST /store/items` with a `key=value` body to create an item

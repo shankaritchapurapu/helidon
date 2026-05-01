@@ -17,7 +17,11 @@ oci:
     transaction-max-reads: 100
     transaction-max-writes: 100
 
-# To switch to Kiev as a service, change the backend and supply service config:
+# To switch to Kiev as a service with a shared OCI SDK auth provider:
+# helidon:
+#   oci:
+#     authentication-method: instance-principal
+#
 # oci:
 #   kiev:
 #     backend: "SERVICE"
@@ -28,8 +32,35 @@ oci:
 #       frontend-endpoint: https://your-kiev-endpoint
 #       locality: "REGIONAL"
 #       auth:
-#         type: "INSTANCE"
-#         root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+#         type: "OVERRIDDEN"
+#         tls:
+#           root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+#           cert-reload-duration: PT5M
+#           cert-ssl-algorithm: SunX509
+#
+# For Kiev as a service with S2S auth:
+# oci:
+#   kiev:
+#     backend: "SERVICE"
+#     store-name: your-store
+#     app-name: your-app
+#     service:
+#       compartment-id: ocid1.compartment.oc1...
+#       frontend-endpoint: https://your-kiev-endpoint
+#       locality: "AD1"
+#       auth:
+#         type: "S2S"
+#         auth-endpoint: https://auth.example
+#         tls:
+#           root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+#           cert-reload-duration: PT15M
+#           cert-ssl-algorithm: SunX509
+#         s2s:
+#           tenant-id: ocid1.tenancy.oc1...
+#           leaf-cert-path: /path/to/leaf.pem
+#           leaf-cert-key-path: /path/to/leaf.key
+#           intermediate-cert-path: /path/to/intermediate.pem
+#           key-passphrase: secret
 #
 # For local KIAB KaaS, use:
 # oci:

@@ -13,6 +13,10 @@ public enum KievAuthType {
      */
     INSTANCE,
     /**
+     * Use an externally provided OCI authentication provider.
+     */
+    OVERRIDDEN,
+    /**
      * Service-to-service authentication.
      */
     S2S,

@@ -87,7 +87,8 @@ oci:
       locality: "REGIONAL"
       auth:
         type: "INSTANCE"
-        root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+        tls:
+          root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
 ```
 
 For Kiev as a service with S2S auth:
@@ -105,14 +106,40 @@ oci:
       auth:
         type: "S2S"
         auth-endpoint: https://auth.example
-        root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
-        leaf-cert-path: /path/to/leaf.pem
-        leaf-cert-key-path: /path/to/leaf.key
-        intermediate-cert-path: /path/to/intermediate.pem
-        tenant-id: ocid1.tenancy.oc1...
-        key-passphrase: secret
-        cert-reload-duration: PT15M
-        cert-ssl-algorithm: SunX509
+        tls:
+          root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+          cert-reload-duration: PT15M
+          cert-ssl-algorithm: SunX509
+        s2s:
+          tenant-id: ocid1.tenancy.oc1...
+          leaf-cert-path: /path/to/leaf.pem
+          leaf-cert-key-path: /path/to/leaf.key
+          intermediate-cert-path: /path/to/intermediate.pem
+          key-passphrase: secret
+```
+
+For Kiev as a service with a shared OCI SDK auth provider and Kiev-managed TLS:
+
+```yaml
+helidon:
+  oci:
+    authentication-method: instance-principal
+
+oci:
+  kiev:
+    backend: "SERVICE"
+    store-name: your-store
+    app-name: your-app
+    service:
+      compartment-id: ocid1.compartment.oc1...
+      frontend-endpoint: https://your-kiev-endpoint
+      locality: "REGIONAL"
+      auth:
+        type: "OVERRIDDEN"
+        tls:
+          root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+          cert-reload-duration: PT5M
+          cert-ssl-algorithm: SunX509
 ```
 
 For local KIAB KaaS testing:
@@ -211,7 +238,7 @@ Required when `oci.kiev.backend=SERVICE`.
 | `oci.kiev.service.compartment-id`    |               | Compartment containing the Kiev store. |
 | `oci.kiev.service.frontend-endpoint` |               | Kiev frontend endpoint. |
 | `oci.kiev.service.locality`          | `REGIONAL`    | Store locality such as `REGIONAL`, `AD1`, `AD2`, or `AD3`. |
-| `oci.kiev.service.auth.type`         | `INSTANCE`    | Auth type: `INSTANCE`, `S2S`, or `KIAB_LOCAL`. |
+| `oci.kiev.service.auth.type`         | `INSTANCE`    | Auth type: `INSTANCE`, `S2S`, `OVERRIDDEN`, or `KIAB_LOCAL`. |
 
 ### Service auth configuration
 
@@ -219,24 +246,28 @@ Required when `oci.kiev.backend=SERVICE`.
 
 | Key                                        | Default value | Description |
 |--------------------------------------------|---------------|-------------|
-| `oci.kiev.service.auth.root-cert-pem-path` |               | Root certificate PEM path. |
 | `oci.kiev.service.auth.auth-endpoint`      |               | Optional auth endpoint override. |
-| `oci.kiev.service.auth.cert-reload-duration` |             | Optional certificate reload interval. |
-| `oci.kiev.service.auth.cert-ssl-algorithm` |               | Optional SSL algorithm override. |
+| `oci.kiev.service.auth.tls.root-cert-pem-path` |            | Root certificate PEM path. |
+| `oci.kiev.service.auth.tls.cert-reload-duration` |          | Optional certificate reload interval. |
+| `oci.kiev.service.auth.tls.cert-ssl-algorithm` |            | Optional SSL algorithm override. |
 
 `S2S` auth requires:
 
 | Key                                            | Default value | Description |
 |------------------------------------------------|---------------|-------------|
 | `oci.kiev.service.auth.auth-endpoint`          |               | Identity auth endpoint. |
-| `oci.kiev.service.auth.root-cert-pem-path`     |               | Root certificate PEM path. |
-| `oci.kiev.service.auth.leaf-cert-path`         |               | Leaf certificate path. |
-| `oci.kiev.service.auth.leaf-cert-key-path`     |               | Leaf private key path. |
-| `oci.kiev.service.auth.intermediate-cert-path` |               | Intermediate certificate path. |
-| `oci.kiev.service.auth.tenant-id`              |               | Tenant OCID. |
-| `oci.kiev.service.auth.key-passphrase`         |               | Optional private key passphrase. |
-| `oci.kiev.service.auth.cert-reload-duration`   |               | Optional certificate reload interval. |
-| `oci.kiev.service.auth.cert-ssl-algorithm`     |               | Optional SSL algorithm override. |
+| `oci.kiev.service.auth.tls.root-cert-pem-path` |              | Root certificate PEM path. |
+| `oci.kiev.service.auth.tls.cert-reload-duration` |            | Optional certificate reload interval. |
+| `oci.kiev.service.auth.tls.cert-ssl-algorithm` |              | Optional SSL algorithm override. |
+| `oci.kiev.service.auth.s2s.tenant-id`          |              | Tenant OCID. |
+| `oci.kiev.service.auth.s2s.leaf-cert-path`     |              | Leaf certificate path used for S2S credentials. |
+| `oci.kiev.service.auth.s2s.leaf-cert-key-path` |              | Leaf private key path used for S2S credentials. |
+| `oci.kiev.service.auth.s2s.intermediate-cert-path` |          | Intermediate certificate path used for S2S credentials. |
+| `oci.kiev.service.auth.s2s.key-passphrase`     |              | Optional private key passphrase for S2S credentials. |
+
+`OVERRIDDEN` auth requires a `BasicAuthenticationDetailsProvider` to be available from the Helidon service registry,
+such as one created by the public OCI SDK integration under `helidon.oci.*`. It can also use the same
+`oci.kiev.service.auth.tls.*` settings when Kiev-specific TLS handling is still needed.
 
 `KIAB_LOCAL` auth is intended for local KIAB KaaS testing and does not require extra auth properties.
 

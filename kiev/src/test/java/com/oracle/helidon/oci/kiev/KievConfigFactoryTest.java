@@ -70,7 +70,7 @@ class KievConfigFactoryTest {
                 "oci.kiev.app-name", "StoreApp",
                 "oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example",
                 "oci.kiev.service.frontend-endpoint", "http://localhost:16666",
-                "oci.kiev.service.auth.root-cert-pem-path", "/tmp/root.pem"
+                "oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"
         ))).get();
 
         assertEquals(KievBackend.SERVICE, config.backend());
@@ -80,7 +80,8 @@ class KievConfigFactoryTest {
         assertEquals(ClientRegistryLocality.REGIONAL, config.service().get().locality());
         assertTrue(config.service().get().auth().isPresent());
         assertEquals(KievAuthType.INSTANCE, config.service().get().auth().get().type());
-        assertEquals("/tmp/root.pem", config.service().get().auth().get().rootCertPemPath().orElseThrow());
+        assertTrue(config.service().get().auth().get().tls().isPresent());
+        assertEquals("/tmp/root.pem", config.service().get().auth().get().tls().orElseThrow().rootCertPemPath().orElseThrow());
         assertFalse(config.service().get().auth().get().authEndpoint().isPresent());
     }
 
@@ -99,6 +100,20 @@ class KievConfigFactoryTest {
     }
 
     @Test
+    void testLoadsOverriddenAuth() {
+        KievConfig config = new KievConfigFactory(config(Map.of(
+                "oci.kiev.backend", "SERVICE",
+                "oci.kiev.store-name", "kaaspdb",
+                "oci.kiev.app-name", "StoreApp",
+                "oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.service.frontend-endpoint", "https://frontend.example",
+                "oci.kiev.service.auth.type", "OVERRIDDEN"
+        ))).get();
+
+        assertEquals(KievAuthType.OVERRIDDEN, config.service().orElseThrow().auth().orElseThrow().type());
+    }
+
+    @Test
     void testLoadsS2sAuth() {
         KievConfig config = new KievConfigFactory(config(Map.ofEntries(
                 Map.entry("oci.kiev.backend", "SERVICE"),
@@ -109,29 +124,31 @@ class KievConfigFactoryTest {
                 Map.entry("oci.kiev.service.locality", "AD1"),
                 Map.entry("oci.kiev.service.auth.type", "S2S"),
                 Map.entry("oci.kiev.service.auth.auth-endpoint", "https://auth.example"),
-                Map.entry("oci.kiev.service.auth.root-cert-pem-path", "/tmp/root.pem"),
-                Map.entry("oci.kiev.service.auth.leaf-cert-path", "/tmp/leaf.pem"),
-                Map.entry("oci.kiev.service.auth.leaf-cert-key-path", "/tmp/leaf.key"),
-                Map.entry("oci.kiev.service.auth.intermediate-cert-path", "/tmp/intermediate.pem"),
-                Map.entry("oci.kiev.service.auth.tenant-id", "ocid1.tenancy.oc1..example"),
-                Map.entry("oci.kiev.service.auth.key-passphrase", "secret"),
-                Map.entry("oci.kiev.service.auth.cert-reload-duration", "PT15M"),
-                Map.entry("oci.kiev.service.auth.cert-ssl-algorithm", "SunX509")
+                Map.entry("oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
+                Map.entry("oci.kiev.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example"),
+                Map.entry("oci.kiev.service.auth.s2s.key-passphrase", "secret"),
+                Map.entry("oci.kiev.service.auth.tls.cert-reload-duration", "PT15M"),
+                Map.entry("oci.kiev.service.auth.tls.cert-ssl-algorithm", "SunX509")
         ))).get();
 
         KievServiceConfig serviceConfig = config.service().orElseThrow();
         KievServiceAuthConfig authConfig = serviceConfig.auth().orElseThrow();
+        KievServiceS2sConfig s2sConfig = authConfig.s2s().orElseThrow();
+        KievServiceTlsConfig tlsConfig = authConfig.tls().orElseThrow();
         assertEquals(ClientRegistryLocality.AD1, serviceConfig.locality());
         assertEquals(KievAuthType.S2S, authConfig.type());
         assertEquals("https://auth.example", authConfig.authEndpoint().orElseThrow());
-        assertEquals("/tmp/root.pem", authConfig.rootCertPemPath().orElseThrow());
-        assertEquals("/tmp/leaf.pem", authConfig.leafCertPath().orElseThrow());
-        assertEquals("/tmp/leaf.key", authConfig.leafCertKeyPath().orElseThrow());
-        assertEquals("/tmp/intermediate.pem", authConfig.intermediateCertPath().orElseThrow());
-        assertEquals("ocid1.tenancy.oc1..example", authConfig.tenantId().orElseThrow());
-        assertEquals("secret", authConfig.keyPassphrase().orElseThrow());
-        assertEquals(Duration.ofMinutes(15), authConfig.certReloadDuration().orElseThrow());
-        assertEquals("SunX509", authConfig.certSslAlgorithm().orElseThrow());
+        assertEquals("/tmp/root.pem", tlsConfig.rootCertPemPath().orElseThrow());
+        assertEquals("/tmp/leaf.pem", s2sConfig.leafCertPath().orElseThrow());
+        assertEquals("/tmp/leaf.key", s2sConfig.leafCertKeyPath().orElseThrow());
+        assertEquals("/tmp/intermediate.pem", s2sConfig.intermediateCertPath().orElseThrow());
+        assertEquals("ocid1.tenancy.oc1..example", s2sConfig.tenantId().orElseThrow());
+        assertEquals("secret", s2sConfig.keyPassphrase().orElseThrow());
+        assertEquals(Duration.ofMinutes(15), tlsConfig.certReloadDuration().orElseThrow());
+        assertEquals("SunX509", tlsConfig.certSslAlgorithm().orElseThrow());
     }
 
     private static Config config(Map<String, String> values) {
