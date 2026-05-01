@@ -36,7 +36,7 @@ Add the Identity module dependency to your project:
 
 ```xml
 <dependency>
-    <groupId>com.oracle.helidon.oci</groupId>
+    <groupId>com.oracle.helidon.oci.identity</groupId>
     <artifactId>helidon-oci-identity</artifactId>
 </dependency>
 ```

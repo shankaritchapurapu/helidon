@@ -53,7 +53,8 @@ The `oci.limits` configuration can be customized using YAML configuration. The f
 
 * `connection-timeout`: The connection timeout duration. Default is PT10S (10 seconds).
 * `read-timeout`: The read timeout duration. Default is PT1M (one minute).
-* `max-async-threads`: The maximum number of asynchronous threads. Default is 10.
+* `max-async-threads`: The maximum number of asynchronous threads. Default is 50.
+* `endpoint`: Optional explicit OCI Limits endpoint override.
 
 Example configuration in `application.yaml`:
 
@@ -63,6 +64,7 @@ oci:
     connection-timeout: PT5S
     read-timeout: PT30S
     max-async-threads: 20
+    endpoint: https://limits.example.oraclecloud.com
 ```
 
 ---

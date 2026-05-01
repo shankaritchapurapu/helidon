@@ -1,4 +1,4 @@
-# error-code
+# Error Code
 
 ---
 
@@ -14,7 +14,7 @@
 ## Overview
 
 This module provides support for error codes described in
-in [OCI Error Codes](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEX&title=Error+Codes) as part of the [API Consistency Guidelines](https://confluence.oci.oraclecorp.com/display/DEX/API+Consistency+Guidelines).
+[OCI Error Codes](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEX&title=Error+Codes) as part of the [API Consistency Guidelines](https://confluence.oci.oraclecorp.com/display/DEX/API+Consistency+Guidelines).
 
 ---
 
@@ -22,10 +22,10 @@ in [OCI Error Codes](https://confluence.oci.oraclecorp.com/pages/viewpage.action
 
 To enable the error-code module, add the following dependency to your Helidon SE project’s pom.xml:
 
-```
+```xml
 <dependency>
     <groupId>com.oracle.helidon.oci.errorcode</groupId>
-    <artifactId>helidon-oci-error-code-webserver</artifactId>
+    <artifactId>helidon-oci-errorcode-webserver</artifactId>
     <scope>runtime</scope>
 </dependency>
 ```
@@ -42,7 +42,7 @@ mapper that automatically converts this exception to a `ServerResponse`. For exa
 ```java
     if (notAuthenticated()) {
         throw new RenderableException(
-            ErrorCode.NotAuthenticated,
+            ErrorCodes.NotAuthenticated,
             "User 'helidon' is not authenticated",
             "Authentication failure for 'helidon'",
             "Authentication failure for '{user}'",
