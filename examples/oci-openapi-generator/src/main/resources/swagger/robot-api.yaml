@@ -1,0 +1,162 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+swagger: "2.0"
+info:
+  title: Helidon OCI Splat/RQS Generator Example API
+  version: "1.0.0"
+  description: >
+    Example Swagger 2 document showing Splat Store and RQS metadata on a
+    resource API that can be validated by the Splat Maven plugin and used as
+    input to the Helidon declarative OpenAPI generator.
+basePath: /
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+x-obmcs-splat:
+  version: "1.2"
+  services:
+    helidonExample:
+      servicePrincipalName: helidon-example
+      allowingUnreviewedEntityType: true
+      whitelistedTenanciesOnly:
+        splatFeatureList:
+          - rqs
+        serviceLimitGroup: helidon-example
+paths:
+  /robots:
+    post:
+      tags:
+        - robots
+      summary: Create a robot
+      operationId: createRobot
+      x-obmcs-splat:
+        serviceList:
+          - helidonExample
+        routing:
+          strategy: route-to-any-ad
+        resources:
+          robotResource:
+            serviceResourceName: Robot
+            actionKind: CREATE
+            reconciliationCanStartAfterSecs: 30
+            targetCompartmentId: request.body.compartmentId
+            permissions:
+              - HELIDON_EXAMPLE_ROBOT_CREATE
+        search:
+          mode: backfilling
+          operationResourceName: robotResource
+      parameters:
+        - name: createRobotRequest
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/CreateRobotRequest"
+      responses:
+        "200":
+          description: Created robot
+          schema:
+            $ref: "#/definitions/Robot"
+  /robots/{id}:
+    get:
+      tags:
+        - robots
+      summary: Get a robot
+      operationId: getRobot
+      x-obmcs-splat:
+        serviceList:
+          - helidonExample
+        routing:
+          strategy: route-to-any-ad
+        resources:
+          robotResource:
+            serviceResourceName: Robot
+            actionKind: READ
+            resourceOcid: request.parameter.id
+            targetCompartmentId: downstream.body.compartmentId
+            permissions:
+              - HELIDON_EXAMPLE_ROBOT_READ
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Robot
+          schema:
+            $ref: "#/definitions/Robot"
+    delete:
+      tags:
+        - robots
+      summary: Delete a robot
+      operationId: deleteRobot
+      x-obmcs-splat:
+        serviceList:
+          - helidonExample
+        routing:
+          strategy: route-to-any-ad
+        resources:
+          robotResource:
+            serviceResourceName: Robot
+            actionKind: DELETE
+            reconciliationCanStartAfterSecs: 30
+            resourceOcid: request.parameter.id
+            targetCompartmentId: downstream.body.compartmentId
+            permissions:
+              - HELIDON_EXAMPLE_ROBOT_DELETE
+        search:
+          mode: backfilling
+          operationResourceName: robotResource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+      responses:
+        "204":
+          description: Deleted robot
+definitions:
+  CreateRobotRequest:
+    type: object
+    required:
+      - compartmentId
+      - displayName
+    properties:
+      compartmentId:
+        type: string
+      displayName:
+        type: string
+  Robot:
+    type: object
+    x-obmcs-splat:
+      ocidEntityType: helidon-example-robot
+      resourceKind: robot
+      adLocality: regional
+      activeLifecycleStates:
+        - ACTIVE
+      deletedLifecycleStates:
+        - DELETED
+      getOperationId: getRobot
+      searchMetadata:
+        resourceSchemaVersion: "1"
+        resourceType: helidon-example-robot
+        scope: customer
+    required:
+      - id
+      - compartmentId
+      - displayName
+      - lifecycleState
+    properties:
+      id:
+        type: string
+      compartmentId:
+        type: string
+      displayName:
+        type: string
+      lifecycleState:
+        type: string

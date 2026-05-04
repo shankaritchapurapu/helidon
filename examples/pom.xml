@@ -27,5 +27,6 @@
         <module>store</module>
         <module>workflow</module>
         <module>data-plane</module>
+        <module>oci-openapi-generator</module>
     </modules>
 </project>

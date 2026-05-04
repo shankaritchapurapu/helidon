@@ -25,11 +25,15 @@
         <helidon.oci.version>2.0.0-SNAPSHOT</helidon.oci.version>
         <version.plugin.compiler>3.14.1</version.plugin.compiler>
         <version.plugin.failsafe>3.5.5</version.plugin.failsafe>
+        <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
+        <version.plugin.openapi-generator-maven-plugin>7.11.0</version.plugin.openapi-generator-maven-plugin>
+        <version.plugin.splat-swagger-maven-plugin>0.3.9</version.plugin.splat-swagger-maven-plugin>
         <version.plugin.surefire>3.5.5</version.plugin.surefire>
         <version.lib.classgraph>4.8.184</version.lib.classgraph>
         <jersey-lib-version>2.47</jersey-lib-version>
         <version.lib.logback>1.5.32</version.lib.logback>
         <version.lib.slf4j>2.0.9</version.lib.slf4j>
+        <version.helidon.extensions.openapi-generator>4.0.0-RC1</version.helidon.extensions.openapi-generator>
         <maven.compiler.release>25</maven.compiler.release>
     </properties>
 
@@ -70,5 +74,32 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>io.helidon.service</groupId>
+                    <artifactId>helidon-service-maven-plugin</artifactId>
+                    <version>${helidon.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>${version.plugin.maven-build-helper-plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.openapitools</groupId>
+                    <artifactId>openapi-generator-maven-plugin</artifactId>
+                    <version>${version.plugin.openapi-generator-maven-plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.oracle.pic.platform.splat</groupId>
+                    <artifactId>splat-swagger-maven-plugin</artifactId>
+                    <version>${version.plugin.splat-swagger-maven-plugin}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
 </project>
