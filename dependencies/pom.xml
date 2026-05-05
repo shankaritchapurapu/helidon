@@ -24,6 +24,9 @@
         <oracle-internal-commons-request-id-version>1.1.55</oracle-internal-commons-request-id-version>
         <oracle-internal-limits-version>1.9</oracle-internal-limits-version>
         <oracle-internal-identity-version>3.1.336</oracle-internal-identity-version>
+        <oracle-internal-metrics-module-version>2.0.12</oracle-internal-metrics-module-version>
+        <oracle-internal-metrics-lib-module-version>1.1.30</oracle-internal-metrics-lib-module-version>
+        <oracle-internal-telemetry-commons-module-version>1.0.53</oracle-internal-telemetry-commons-module-version>
         <oracle-internal-kiev-version>2.0.35</oracle-internal-kiev-version>
         <oracle-internal-workflow-version>14.0.0</oracle-internal-workflow-version>
         <oracle-internal-splat-sdk-version>0.1.39635</oracle-internal-splat-sdk-version>
@@ -175,6 +178,73 @@
                 <groupId>com.oracle.pic.kiev</groupId>
                 <artifactId>in-memory-library</artifactId>
                 <version>${oracle-internal-kiev-version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.oracle.pic.telemetry.overlay.metrics</groupId>
+                <artifactId>metrics-module</artifactId>
+                <version>${oracle-internal-metrics-module-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.oracle.pic.commons</groupId>
+                        <artifactId>service-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.commons</groupId>
+                        <artifactId>core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.telemetry.overlay.metrics</groupId>
+                        <artifactId>public-telemetry-reporter</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.telemetry.commons</groupId>
+                        <artifactId>metrics-reporter</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty.http2</groupId>
+                        <artifactId>http2-server</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.eclipse.jetty.http2</groupId>
+                        <artifactId>http2-common</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>com.oracle.pic.telemetry.commons</groupId>
+                <artifactId>metrics-lib</artifactId>
+                <version>${oracle-internal-metrics-lib-module-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.telemetry.commons</groupId>
+                <artifactId>telemetry-commons</artifactId>
+                <version>${oracle-internal-telemetry-commons-module-version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.oracle.pic.telemetry.overlay.metrics</groupId>
+                <artifactId>public-telemetry-reporter</artifactId>
+                <version>${oracle-internal-metrics-module-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.oracle.oci.sdk</groupId>
+                        <artifactId>oci-java-sdk-common</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.oci.sdk</groupId>
+                        <artifactId>oci-java-sdk-monitoring</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.telemetry.commons</groupId>
+                        <artifactId>metrics-lib</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.commons</groupId>
+                        <artifactId>core</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- https://artifactory.oci.oraclecorp.com/list/workflow-release-maven-local/com/oracle/pic/workflow/wfaas-client-parent/ -->

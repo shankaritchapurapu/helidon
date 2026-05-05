@@ -1,0 +1,13 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+metrics:
+  publishers:
+    - type: oci
+      enabled: true
+      project: test-project
+      fleet: test-fleet
+      default-dimensions: {}
+      sample-gauges: true
+      gauge-sample-interval: PT1S
+      request-headers: {}

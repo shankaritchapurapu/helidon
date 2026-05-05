@@ -1,0 +1,21 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+server:
+  host: 0.0.0.0
+  port: 8080
+
+declarative:
+  ignore-incubating: true
+
+metrics:
+  publishers:
+    - type: oci
+      enabled: true
+      project: helidon-metrics-test-project
+      fleet: helidon-metrics-test-fleet
+      region-id: us-ashburn-1
+      default-dimensions: { }
+      sample-gauges: true
+      gauge-sample-interval: PT1S
+      request-headers: { }
