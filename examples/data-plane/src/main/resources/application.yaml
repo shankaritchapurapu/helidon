@@ -75,7 +75,8 @@ oci:
 #       locality: "REGIONAL"
 #       auth:
 #         type: "INSTANCE"
-#         root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+#         tls:
+#           root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
 
 # Optional examples for configuration-oriented integrations:
 #

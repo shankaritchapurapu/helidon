@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
@@ -175,7 +176,7 @@ class KievDataStoreConfigFactoryTest {
                 "oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example",
                 "oci.kiev.service.frontend-endpoint", "https://frontend.example",
                 "oci.kiev.service.auth.type", "OVERRIDDEN"
-        ), Optional.of(authProvider)).get();
+        ), () -> Optional.of(authProvider)).get();
 
         KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
         AuthDetailsConfig.OverriddenAuthDetailsConfig authConfig =
@@ -198,7 +199,7 @@ class KievDataStoreConfigFactoryTest {
                 Map.entry("oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
                 Map.entry("oci.kiev.service.auth.tls.cert-reload-duration", "PT5M"),
                 Map.entry("oci.kiev.service.auth.tls.cert-ssl-algorithm", "SunX509")
-        ), Optional.of(authProvider)).get();
+        ), () -> Optional.of(authProvider)).get();
 
         KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
         AuthDetailsConfig.OverriddenAuthDetailsConfig authConfig =
@@ -211,6 +212,51 @@ class KievDataStoreConfigFactoryTest {
         assertNull(dynamicSslConfig.getLeafCertKeyPath());
         assertEquals(Duration.ofMinutes(5), dynamicSslConfig.getDuration());
         assertEquals("SunX509", dynamicSslConfig.getSslAlgorithm());
+    }
+
+    @Test
+    void testDoesNotResolveAuthProviderForNonOverriddenBackends() {
+        Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider = () -> {
+            throw new AssertionError("Auth provider should only be resolved for OVERRIDDEN auth");
+        };
+
+        factory(Map.of(
+                "oci.kiev.store-name", "store",
+                "oci.kiev.app-name", "app"
+        ), authProvider).get();
+
+        factory(Map.of(
+                "oci.kiev.backend", "DIRECT_DB",
+                "oci.kiev.store-name", "pdbdev",
+                "oci.kiev.app-name", "KievTest",
+                "oci.kiev.direct-db.jdbc-url", "jdbc:oracle:thin:@//localhost:1521/pdbdev",
+                "oci.kiev.direct-db.user-name", "helidon",
+                "oci.kiev.direct-db.password", "changeit"
+        ), authProvider).get();
+
+        factory(Map.ofEntries(
+                Map.entry("oci.kiev.backend", "SERVICE"),
+                Map.entry("oci.kiev.store-name", "remote-store"),
+                Map.entry("oci.kiev.app-name", "StoreApp"),
+                Map.entry("oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem")
+        ), authProvider).get();
+
+        factory(Map.ofEntries(
+                Map.entry("oci.kiev.backend", "SERVICE"),
+                Map.entry("oci.kiev.store-name", "remote-store"),
+                Map.entry("oci.kiev.app-name", "StoreApp"),
+                Map.entry("oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.service.auth.type", "S2S"),
+                Map.entry("oci.kiev.service.auth.auth-endpoint", "https://auth.example"),
+                Map.entry("oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
+                Map.entry("oci.kiev.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example")
+        ), authProvider).get();
     }
 
     @Test
@@ -300,11 +346,11 @@ class KievDataStoreConfigFactoryTest {
     }
 
     private static KievDataStoreConfigFactory factory(Map<String, String> values) {
-        return factory(values, Optional.empty());
+        return factory(values, () -> Optional.empty());
     }
 
     private static KievDataStoreConfigFactory factory(Map<String, String> values,
-                                                      Optional<BasicAuthenticationDetailsProvider> authProvider) {
+                                                      Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
         Config config = Config.just(ConfigSources.create(values));
         KievConfig kievConfig = new KievConfigFactory(config).get();
         return new KievDataStoreConfigFactory(kievConfig, authProvider);

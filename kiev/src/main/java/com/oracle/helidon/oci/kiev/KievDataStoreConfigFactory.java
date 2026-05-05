@@ -4,6 +4,7 @@
 
 package com.oracle.helidon.oci.kiev;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -26,13 +27,13 @@ import com.oracle.pic.kiev.registry.config.ClientRegistryConfig;
 class KievDataStoreConfigFactory implements Supplier<DataStoreConfig> {
 
     private final KievConfig kievConfig;
-    private final Optional<BasicAuthenticationDetailsProvider> authProvider;
+    private final Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider;
 
     @Service.Inject
     KievDataStoreConfigFactory(KievConfig kievConfig,
-                               Optional<BasicAuthenticationDetailsProvider> authProvider) {
-        this.kievConfig = kievConfig;
-        this.authProvider = authProvider;
+                               Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
+        this.kievConfig = Objects.requireNonNull(kievConfig);
+        this.authProvider = Objects.requireNonNull(authProvider);
     }
 
     @Override
@@ -124,7 +125,7 @@ class KievDataStoreConfigFactory implements Supplier<DataStoreConfig> {
     }
 
     private AuthDetailsConfig.OverriddenAuthDetailsConfig toOverriddenAuthConfig() {
-        return toOverriddenAuthConfig(authProvider.orElseThrow(() -> new IllegalStateException(
+        return toOverriddenAuthConfig(authProvider.get().orElseThrow(() -> new IllegalStateException(
                 "oci.kiev.service.auth.type=OVERRIDDEN requires BasicAuthenticationDetailsProvider to be available")),
                                       kievConfig.service()
                                               .flatMap(KievServiceConfig::auth)
