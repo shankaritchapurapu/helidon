@@ -11,13 +11,14 @@ declarative:
 
 oci:
   kiev:
-    backend: "DIRECT_DB"
-    store-name: pdbdev
-    app-name: KievTest
-    transaction-max-reads: 100
-    transaction-max-writes: 100
-    direct-db:
-      jdbc-url: jdbc:oracle:thin:@//localhost:1521/pdbdev
-      user-name: helidon
-      password: changeit
-      schema-name: helidon
+    data-stores:
+      - backend: "DIRECT_DB"
+        store-name: helidon-store-example
+        app-name: helidon-store-example
+        transaction-max-reads: 100
+        transaction-max-writes: 100
+        direct-db:
+          jdbc-url: jdbc:oracle:thin:@//localhost:1521/pdbdev
+          user-name: helidon
+          password: changeit
+          schema-name: helidon

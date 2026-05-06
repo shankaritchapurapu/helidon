@@ -11,11 +11,12 @@ declarative:
 
 oci:
   kiev:
-    backend: "IN_MEMORY"
-    store-name: helidon-store-example
-    app-name: helidon-store-example
-    transaction-max-reads: 100
-    transaction-max-writes: 100
+    data-stores:
+      - backend: "IN_MEMORY"
+        store-name: helidon-store-example
+        app-name: helidon-store-example
+        transaction-max-reads: 100
+        transaction-max-writes: 100
 
 # To switch to Kiev as a service with a shared OCI SDK auth provider:
 # helidon:
@@ -24,53 +25,56 @@ oci:
 #
 # oci:
 #   kiev:
-#     backend: "SERVICE"
-#     store-name: your-store
-#     app-name: your-app
-#     service:
-#       compartment-id: ocid1.compartment.oc1...
-#       frontend-endpoint: https://your-kiev-endpoint
-#       locality: "REGIONAL"
-#       auth:
-#         type: "OVERRIDDEN"
-#         tls:
-#           root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
-#           cert-reload-duration: PT5M
-#           cert-ssl-algorithm: SunX509
+#     data-stores:
+#       - backend: "SERVICE"
+#         store-name: helidon-store-example
+#         app-name: helidon-store-example
+#         service:
+#           compartment-id: ocid1.compartment.oc1...
+#           frontend-endpoint: https://your-kiev-endpoint
+#           locality: "REGIONAL"
+#           auth:
+#             type: "OVERRIDDEN"
+#             tls:
+#               root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+#               cert-reload-duration: PT5M
+#               cert-ssl-algorithm: SunX509
 #
 # For Kiev as a service with S2S auth:
 # oci:
 #   kiev:
-#     backend: "SERVICE"
-#     store-name: your-store
-#     app-name: your-app
-#     service:
-#       compartment-id: ocid1.compartment.oc1...
-#       frontend-endpoint: https://your-kiev-endpoint
-#       locality: "AD1"
-#       auth:
-#         type: "S2S"
-#         auth-endpoint: https://auth.example
-#         tls:
-#           root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
-#           cert-reload-duration: PT15M
-#           cert-ssl-algorithm: SunX509
-#         s2s:
-#           tenant-id: ocid1.tenancy.oc1...
-#           leaf-cert-path: /path/to/leaf.pem
-#           leaf-cert-key-path: /path/to/leaf.key
-#           intermediate-cert-path: /path/to/intermediate.pem
-#           key-passphrase: secret
+#     data-stores:
+#       - backend: "SERVICE"
+#         store-name: helidon-store-example
+#         app-name: helidon-store-example
+#         service:
+#           compartment-id: ocid1.compartment.oc1...
+#           frontend-endpoint: https://your-kiev-endpoint
+#           locality: "AD1"
+#           auth:
+#             type: "S2S"
+#             auth-endpoint: https://auth.example
+#             tls:
+#               root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+#               cert-reload-duration: PT15M
+#               cert-ssl-algorithm: SunX509
+#             s2s:
+#               tenant-id: ocid1.tenancy.oc1...
+#               leaf-cert-path: /path/to/leaf.pem
+#               leaf-cert-key-path: /path/to/leaf.key
+#               intermediate-cert-path: /path/to/intermediate.pem
+#               key-passphrase: secret
 #
 # For local KIAB KaaS, use:
 # oci:
 #   kiev:
-#     backend: "SERVICE"
-#     store-name: kaaspdb
-#     app-name: KievTest
-#     service:
-#       compartment-id: ocid1.compartment.dev..aaaaaaaawbxxkux3w7df6qki32ejszm75vsxsnztljeerhzrw3vsa7d3rjmq
-#       frontend-endpoint: http://localhost:16666
-#       locality: "REGIONAL"
-#       auth:
-#         type: "KIAB_LOCAL"
+#     data-stores:
+#       - backend: "SERVICE"
+#         store-name: helidon-store-example
+#         app-name: helidon-store-example
+#         service:
+#           compartment-id: ocid1.compartment.dev..aaaaaaaawbxxkux3w7df6qki32ejszm75vsxsnztljeerhzrw3vsa7d3rjmq
+#           frontend-endpoint: http://localhost:16666
+#           locality: "REGIONAL"
+#           auth:
+#             type: "KIAB_LOCAL"

@@ -18,7 +18,6 @@ import com.oracle.helidon.oci.audit.AuditV2Config;
 import com.oracle.helidon.oci.errorcode.ErrorCodes;
 import com.oracle.helidon.oci.errorcode.RenderableException;
 import com.oracle.helidon.oci.identity.IdentityContext;
-import com.oracle.helidon.oci.kiev.KievConfig;
 import com.oracle.helidon.oci.requestid.OciRequestId;
 import com.oracle.pic.identity.authentication.Principal;
 import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
@@ -43,11 +42,10 @@ class DataPlaneEndpoint {
 
     @Service.Inject
     DataPlaneEndpoint(DataPlaneReferenceService referenceService,
-                      AuditV2Config auditConfig,
-                      KievConfig kievConfig) {
+                      AuditV2Config auditConfig) {
         this.referenceService = referenceService;
         this.auditEnabled = auditConfig.enabled();
-        this.serviceName = kievConfig.appName();
+        this.serviceName = DataPlaneReferenceService.DATA_STORE_NAME;
     }
 
     @Http.GET

@@ -7,6 +7,8 @@ package com.oracle.helidon.oci.kiev;
 import java.util.Date;
 import java.util.List;
 
+import io.helidon.common.context.Context;
+
 import com.oracle.pic.kiev.Bucket;
 import com.oracle.pic.kiev.BucketDescription;
 import com.oracle.pic.kiev.ChecksumAlgorithm;
@@ -38,12 +40,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class KievTransactionSupportTest {
+    private final KievTransactions transactions = new KievTransactions();
 
     @Test
     void testCommitsWriteTxn() throws Exception {
         FakeTransaction transaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
         FakeDataStore dataStore = new FakeDataStore(transaction);
-        KievTransactionSupport support = new KievTransactionSupport(dataStore);
+        KievTransactionSupport support = transactionSupport("store", dataStore);
 
         String result = support.execute("store-put", false, current -> {
             assertSame(transaction, current);
@@ -64,7 +67,7 @@ class KievTransactionSupportTest {
     void testAbortsInFlightTxn() {
         FakeTransaction transaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
         FakeDataStore dataStore = new FakeDataStore(transaction);
-        KievTransactionSupport support = new KievTransactionSupport(dataStore);
+        KievTransactionSupport support = transactionSupport("store", dataStore);
         IllegalStateException failure = new IllegalStateException("boom");
 
         IllegalStateException thrown = assertThrows(IllegalStateException.class,
@@ -82,7 +85,7 @@ class KievTransactionSupportTest {
     void testSkipsAbortForFailedTxn() {
         FakeTransaction transaction = new FakeTransaction(Transaction.State.FAILED);
         FakeDataStore dataStore = new FakeDataStore(transaction);
-        KievTransactionSupport support = new KievTransactionSupport(dataStore);
+        KievTransactionSupport support = transactionSupport("store", dataStore);
 
         assertThrows(IllegalStateException.class,
                      () -> support.execute("store-put", false, current -> {
@@ -98,7 +101,7 @@ class KievTransactionSupportTest {
     void testUsesReadOnlyTxn() throws Exception {
         FakeTransaction transaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
         FakeDataStore dataStore = new FakeDataStore(transaction);
-        KievTransactionSupport support = new KievTransactionSupport(dataStore);
+        KievTransactionSupport support = transactionSupport("store", dataStore);
 
         String result = support.execute("store-get", true, current -> {
             assertSame(transaction, current);
@@ -116,12 +119,162 @@ class KievTransactionSupportTest {
         assertEquals(1, transaction.closeCalls);
     }
 
+    @Test
+    void testReusesExistingTransactionOnlyForSameStore() throws Exception {
+        FakeTransaction transaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        FakeDataStore dataStore = new FakeDataStore(transaction);
+        KievTransactionSupport support = transactionSupport("primary-store", dataStore);
+        TestTransactionMethod method = new TestTransactionMethod(support, 0);
+
+        String result = support.execute("outer", false, tx -> method.proceed(null, args -> {
+            assertSame(tx, args[0]);
+            return "done";
+        }, tx));
+
+        assertEquals("done", result);
+        assertEquals(1, dataStore.writeTransactionCalls);
+    }
+
+    @Test
+    void testRejectsExistingTransactionFromDifferentStore() throws Exception {
+        FakeTransaction primaryTransaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        FakeDataStore primaryDataStore = new FakeDataStore(primaryTransaction);
+        KievTransactionSupport primarySupport = transactionSupport("primary-store", primaryDataStore);
+        FakeTransaction secondaryTransaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        FakeDataStore secondaryDataStore = new FakeDataStore(secondaryTransaction);
+        KievTransactionSupport secondarySupport = transactionSupport("secondary-store", secondaryDataStore);
+        TestTransactionMethod secondaryMethod = new TestTransactionMethod(secondarySupport, 0);
+
+        primarySupport.execute("outer", false, tx -> {
+            IllegalStateException ex = assertThrows(IllegalStateException.class,
+                                                    () -> secondaryMethod.proceed(null, args -> "unexpected", tx));
+            assertEquals("Kiev transaction argument at index 0 is associated with store-name 'primary-store', "
+                                 + "but @KievTransaction requires store-name 'secondary-store'",
+                         ex.getMessage());
+            return null;
+        });
+
+        assertEquals(1, primaryDataStore.writeTransactionCalls);
+        assertEquals(0, secondaryDataStore.writeTransactionCalls);
+    }
+
+    @Test
+    void testRejectsUnmanagedExistingTransaction() {
+        FakeTransaction transaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        FakeDataStore dataStore = new FakeDataStore(new FakeTransaction(Transaction.State.IN_FLIGHT));
+        KievTransactionSupport support = transactionSupport("primary-store", dataStore);
+        TestTransactionMethod method = new TestTransactionMethod(support, 0);
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                                                () -> method.proceed(null, args -> "unexpected", transaction));
+
+        assertEquals("Kiev transaction argument at index 0 is not managed by Helidon Kiev "
+                             + "for store-name 'primary-store'",
+                     ex.getMessage());
+        assertEquals(0, dataStore.writeTransactionCalls);
+    }
+
+    @Test
+    void testRequestContextTracksTransactionsByStore() throws Exception {
+        Context context = Context.create();
+        FakeTransaction primaryTransaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        KievTransactionSupport primarySupport =
+                transactionSupport("primary-store", new FakeDataStore(primaryTransaction));
+        TestTransactionMethod primaryMethod = new TestTransactionMethod(primarySupport, -1);
+        FakeTransaction secondaryTransaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        KievTransactionSupport secondarySupport =
+                transactionSupport("secondary-store", new FakeDataStore(secondaryTransaction));
+        TestTransactionMethod secondaryMethod = new TestTransactionMethod(secondarySupport, -1);
+
+        String result = primaryMethod.proceed(null, primaryArgs -> {
+            assertSame(primaryTransaction, transactions.require(context, "primary-store"));
+            assertTrue(transactions.current(context, "secondary-store").isEmpty());
+
+            String secondaryResult = secondaryMethod.proceed(null, secondaryArgs -> {
+                assertSame(primaryTransaction, transactions.require(context, "primary-store"));
+                assertSame(secondaryTransaction, transactions.require(context, "secondary-store"));
+                return "done";
+            }, context);
+
+            assertSame(primaryTransaction, transactions.require(context, "primary-store"));
+            assertTrue(transactions.current(context, "secondary-store").isEmpty());
+            return secondaryResult;
+        }, context);
+
+        assertEquals("done", result);
+        assertTrue(transactions.current(context, "primary-store").isEmpty());
+        assertTrue(transactions.current(context, "secondary-store").isEmpty());
+    }
+
+    @Test
+    void testRequestContextRestoresNestedTransactionForSameStore() throws Exception {
+        Context context = Context.create();
+        FakeTransaction outerTransaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        KievTransactionSupport outerSupport =
+                transactionSupport("primary-store", new FakeDataStore(outerTransaction));
+        TestTransactionMethod outerMethod = new TestTransactionMethod(outerSupport, -1);
+        FakeTransaction innerTransaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        KievTransactionSupport innerSupport =
+                transactionSupport("primary-store", new FakeDataStore(innerTransaction));
+        TestTransactionMethod innerMethod = new TestTransactionMethod(innerSupport, -1);
+
+        String result = outerMethod.proceed(null, outerArgs -> {
+            assertSame(outerTransaction, transactions.require(context, "primary-store"));
+
+            String innerResult = innerMethod.proceed(null, innerArgs -> {
+                assertSame(innerTransaction, transactions.require(context, "primary-store"));
+                return "done";
+            }, context);
+
+            assertSame(outerTransaction, transactions.require(context, "primary-store"));
+            return innerResult;
+        }, context);
+
+        assertEquals("done", result);
+        assertTrue(transactions.current(context, "primary-store").isEmpty());
+    }
+
+    private KievTransactionSupport transactionSupport(String storeName, FakeDataStore dataStore) {
+        return new KievTransactionSupport(storeName, dataStore, transactions);
+    }
+
+    private static final class TestTransactionMethod extends KievTransactionSupport.TransactionMethod {
+        private final KievTransactionSupport support;
+        private final int transactionParameterIndex;
+
+        private TestTransactionMethod(KievTransactionSupport support, int transactionParameterIndex) {
+            this.support = support;
+            this.transactionParameterIndex = transactionParameterIndex;
+        }
+
+        @Override
+        protected KievTransactionSupport support() {
+            return support;
+        }
+
+        @Override
+        protected String transactionName() {
+            return "test-transaction";
+        }
+
+        @Override
+        protected boolean readOnly() {
+            return false;
+        }
+
+        @Override
+        protected int transactionParameterIndex() {
+            return transactionParameterIndex;
+        }
+    }
+
     private static final class FakeDataStore implements DataStore {
         private final FakeTransaction transaction;
         private String lastWriteTransactionName;
         private String lastReadOnlyTransactionName;
         private long lastReadOnlyTimestamp;
         private boolean readOnlyStarted;
+        private int writeTransactionCalls;
 
         private FakeDataStore(FakeTransaction transaction) {
             this.transaction = transaction;
@@ -130,6 +283,7 @@ class KievTransactionSupportTest {
         @Override
         public Transaction beginTransaction(String transactionName) {
             this.lastWriteTransactionName = transactionName;
+            this.writeTransactionCalls++;
             return transaction;
         }
 

@@ -4,11 +4,8 @@
 
 package com.oracle.helidon.oci.kiev;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
-
-import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.pic.commons.s2s.util.OfflineAuth;
@@ -23,37 +20,46 @@ import com.oracle.pic.kiev.registry.config.ClientRegistryConfig;
 /**
  * Factory for creating Kiev {@link DataStoreConfig} instances from Helidon configuration.
  */
-@Service.Singleton
-class KievDataStoreConfigFactory implements Supplier<DataStoreConfig> {
+class KievDataStoreConfigFactory {
+    private static final String DATA_STORES_CONFIG_KEY = "oci.kiev.data-stores[]";
 
-    private final KievConfig kievConfig;
-    private final Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider;
-
-    @Service.Inject
-    KievDataStoreConfigFactory(KievConfig kievConfig,
-                               Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
-        this.kievConfig = Objects.requireNonNull(kievConfig);
-        this.authProvider = Objects.requireNonNull(authProvider);
+    private KievDataStoreConfigFactory() {
     }
 
-    @Override
-    public DataStoreConfig get() {
-        DataStoreConfig dataStoreConfig = switch (kievConfig.backend()) {
-        case IN_MEMORY -> new InMemoryDataStoreConfig(kievConfig.storeName(), kievConfig.appName());
-        case DIRECT_DB -> createDirectDbConfig();
-        case SERVICE -> createServiceConfig();
+    static DataStoreConfig create(KievStoreConfig storeConfig,
+                                  Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
+        return create(new StoreDefinition(storeConfig.backend(),
+                                          storeConfig.storeName(),
+                                          storeConfig.appName(),
+                                          storeConfig.transactionMaxReads(),
+                                          storeConfig.transactionMaxWrites(),
+                                          storeConfig.directDb(),
+                                          storeConfig.service(),
+                                          authProvider));
+    }
+
+    private static DataStoreConfig create(StoreDefinition store) {
+        validateRequired(store.storeName(), dataStoreKey("store-name"));
+        validateRequired(store.appName(), dataStoreKey("app-name"), store.storeName());
+
+        DataStoreConfig dataStoreConfig = switch (store.backend()) {
+        case IN_MEMORY -> new InMemoryDataStoreConfig(store.storeName(), store.appName());
+        case DIRECT_DB -> createDirectDbConfig(store);
+        case SERVICE -> createServiceConfig(store);
         };
-        dataStoreConfig.setTransactionMaxReads(kievConfig.transactionMaxReads());
-        dataStoreConfig.setTransactionMaxWrites(kievConfig.transactionMaxWrites());
+        dataStoreConfig.setTransactionMaxReads(store.transactionMaxReads());
+        dataStoreConfig.setTransactionMaxWrites(store.transactionMaxWrites());
         return dataStoreConfig;
     }
 
-    private DirectDbStoreConfig createDirectDbConfig() {
-        KievDirectDbConfig directDbConfig = kievConfig.directDb()
-                .orElseThrow(() -> new IllegalStateException("oci.kiev.direct-db must be configured for DIRECT_DB backend"));
+    private static DirectDbStoreConfig createDirectDbConfig(StoreDefinition store) {
+        KievDirectDbConfig directDbConfig = store.directDb()
+                .orElseThrow(() -> new IllegalStateException(missingBackendConfigMessage(dataStoreKey("direct-db"),
+                                                                                         KievBackend.DIRECT_DB,
+                                                                                         store.storeName())));
 
-        DirectDbStoreConfig dataStoreConfig = new DirectDbStoreConfig(kievConfig.storeName(),
-                                                                      kievConfig.appName(),
+        DirectDbStoreConfig dataStoreConfig = new DirectDbStoreConfig(store.storeName(),
+                                                                      store.appName(),
                                                                       directDbConfig.jdbcUrl(),
                                                                       directDbConfig.userName(),
                                                                       directDbConfig.password());
@@ -61,17 +67,21 @@ class KievDataStoreConfigFactory implements Supplier<DataStoreConfig> {
         return dataStoreConfig;
     }
 
-    private KaasStoreConfig createServiceConfig() {
-        KievServiceConfig serviceConfig = kievConfig.service()
-                .orElseThrow(() -> new IllegalStateException("oci.kiev.service must be configured for SERVICE backend"));
+    private static KaasStoreConfig createServiceConfig(StoreDefinition store) {
+        KievServiceConfig serviceConfig = store.service()
+                .orElseThrow(() -> new IllegalStateException(missingBackendConfigMessage(dataStoreKey("service"),
+                                                                                         KievBackend.SERVICE,
+                                                                                         store.storeName())));
         KievServiceAuthConfig authConfig = serviceConfig.auth()
-                .orElseThrow(() -> new IllegalStateException("oci.kiev.service.auth must be configured for SERVICE backend"));
+                .orElseThrow(() -> new IllegalStateException(missingBackendConfigMessage(dataStoreKey("service.auth"),
+                                                                                         KievBackend.SERVICE,
+                                                                                         store.storeName())));
 
-        KaasStoreConfig dataStoreConfig = new KaasStoreConfig(kievConfig.storeName(), kievConfig.appName());
+        KaasStoreConfig dataStoreConfig = new KaasStoreConfig(store.storeName(), store.appName());
         dataStoreConfig.setCompartmentId(serviceConfig.compartmentId());
         dataStoreConfig.setFrontendEndpoint(serviceConfig.frontendEndpoint());
         dataStoreConfig.setLocality(serviceConfig.locality());
-        dataStoreConfig.setAuthDetailsConfig(toAuthDetailsConfig(authConfig));
+        dataStoreConfig.setAuthDetailsConfig(toAuthDetailsConfig(authConfig, store));
         if (authConfig.type() == KievAuthType.KIAB_LOCAL) {
             dataStoreConfig.setRegistryConfig(ClientRegistryConfig.builder()
                                                     .enabled(false)
@@ -81,81 +91,139 @@ class KievDataStoreConfigFactory implements Supplier<DataStoreConfig> {
         return dataStoreConfig;
     }
 
-    private AuthDetailsConfig toAuthDetailsConfig(KievServiceAuthConfig authConfig) {
+    private static AuthDetailsConfig toAuthDetailsConfig(KievServiceAuthConfig authConfig, StoreDefinition store) {
         return switch (authConfig.type()) {
-        case INSTANCE -> toInstanceAuthConfig(authConfig);
-        case S2S -> toS2sAuthConfig(authConfig);
-        case OVERRIDDEN -> toOverriddenAuthConfig();
+        case INSTANCE -> toInstanceAuthConfig(authConfig, store.storeName());
+        case S2S -> toS2sAuthConfig(authConfig, store.storeName());
+        case OVERRIDDEN -> toOverriddenAuthConfig(authConfig, store);
         case KIAB_LOCAL -> toKiabLocalAuthConfig();
         };
     }
 
-    private AuthDetailsConfig.InstanceAuthDetailsConfig toInstanceAuthConfig(KievServiceAuthConfig authConfig) {
-        KievServiceTlsConfig tlsConfig = authConfig.tls()
-                .orElseThrow(() -> new IllegalStateException("oci.kiev.service.auth.tls must be configured"));
+    private static AuthDetailsConfig.InstanceAuthDetailsConfig toInstanceAuthConfig(KievServiceAuthConfig authConfig,
+                                                                                   String storeName) {
+        KievServiceTlsConfig tlsConfig = requiredValue(authConfig.tls(),
+                                                       dataStoreKey("service.auth.tls"),
+                                                       storeName);
         AuthDetailsConfig.InstanceAuthDetailsConfig config = new AuthDetailsConfig.InstanceAuthDetailsConfig();
         authConfig.authEndpoint().ifPresent(config::setAuthEndpoint);
-        config.setRootCertPemPath(requiredValue(tlsConfig.rootCertPemPath(), "oci.kiev.service.auth.tls.root-cert-pem-path"));
+        config.setRootCertPemPath(requiredValue(tlsConfig.rootCertPemPath(),
+                                                dataStoreKey("service.auth.tls.root-cert-pem-path"),
+                                                storeName));
         tlsConfig.certReloadDuration().ifPresent(config::setCertReloadDuration);
         tlsConfig.certSslAlgorithm().ifPresent(config::setCertSslAlgorithm);
         return config;
     }
 
-    private AuthDetailsConfig.S2sAuthDetailsConfig toS2sAuthConfig(KievServiceAuthConfig authConfig) {
-        KievServiceTlsConfig tlsConfig = authConfig.tls()
-                .orElseThrow(() -> new IllegalStateException("oci.kiev.service.auth.tls must be configured"));
-        KievServiceS2sConfig s2sConfig = authConfig.s2s()
-                .orElseThrow(() -> new IllegalStateException("oci.kiev.service.auth.s2s must be configured"));
+    private static AuthDetailsConfig.S2sAuthDetailsConfig toS2sAuthConfig(KievServiceAuthConfig authConfig,
+                                                                          String storeName) {
+        KievServiceTlsConfig tlsConfig = requiredValue(authConfig.tls(),
+                                                       dataStoreKey("service.auth.tls"),
+                                                       storeName);
+        KievServiceS2sConfig s2sConfig = requiredValue(authConfig.s2s(),
+                                                       dataStoreKey("service.auth.s2s"),
+                                                       storeName);
         AuthDetailsConfig.S2sAuthDetailsConfig config = new AuthDetailsConfig.S2sAuthDetailsConfig();
-        config.setAuthEndpoint(requiredValue(authConfig.authEndpoint(), "oci.kiev.service.auth.auth-endpoint"));
-        config.setRootCertPemPath(requiredValue(tlsConfig.rootCertPemPath(), "oci.kiev.service.auth.tls.root-cert-pem-path"));
-        config.setLeafCertPath(requiredValue(s2sConfig.leafCertPath(), "oci.kiev.service.auth.s2s.leaf-cert-path"));
-        config.setLeafCertKeyPath(requiredValue(s2sConfig.leafCertKeyPath(), "oci.kiev.service.auth.s2s.leaf-cert-key-path"));
+        config.setAuthEndpoint(requiredValue(authConfig.authEndpoint(),
+                                             dataStoreKey("service.auth.auth-endpoint"),
+                                             storeName));
+        config.setRootCertPemPath(requiredValue(tlsConfig.rootCertPemPath(),
+                                                dataStoreKey("service.auth.tls.root-cert-pem-path"),
+                                                storeName));
+        config.setLeafCertPath(requiredValue(s2sConfig.leafCertPath(),
+                                             dataStoreKey("service.auth.s2s.leaf-cert-path"),
+                                             storeName));
+        config.setLeafCertKeyPath(requiredValue(s2sConfig.leafCertKeyPath(),
+                                                dataStoreKey("service.auth.s2s.leaf-cert-key-path"),
+                                                storeName));
         config.setIntermediateCertPath(requiredValue(s2sConfig.intermediateCertPath(),
-                                                     "oci.kiev.service.auth.s2s.intermediate-cert-path"));
-        config.setTenantId(requiredValue(s2sConfig.tenantId(), "oci.kiev.service.auth.s2s.tenant-id"));
+                                                     dataStoreKey("service.auth.s2s.intermediate-cert-path"),
+                                                     storeName));
+        config.setTenantId(requiredValue(s2sConfig.tenantId(),
+                                         dataStoreKey("service.auth.s2s.tenant-id"),
+                                         storeName));
         s2sConfig.keyPassphrase().ifPresent(config::setKeyPassphrase);
         tlsConfig.certReloadDuration().ifPresent(config::setCertReloadDuration);
         tlsConfig.certSslAlgorithm().ifPresent(config::setCertSslAlgorithm);
         return config;
     }
 
-    private AuthDetailsConfig.OverriddenAuthDetailsConfig toKiabLocalAuthConfig() {
-        return toOverriddenAuthConfig(OfflineAuth.authProvider());
+    private static AuthDetailsConfig.OverriddenAuthDetailsConfig toKiabLocalAuthConfig() {
+        return toOverriddenAuthConfig(OfflineAuth.authProvider(), Optional.empty(), null);
     }
 
-    private AuthDetailsConfig.OverriddenAuthDetailsConfig toOverriddenAuthConfig() {
-        return toOverriddenAuthConfig(authProvider.get().orElseThrow(() -> new IllegalStateException(
-                "oci.kiev.service.auth.type=OVERRIDDEN requires BasicAuthenticationDetailsProvider to be available")),
-                                      kievConfig.service()
-                                              .flatMap(KievServiceConfig::auth)
-                                              .flatMap(KievServiceAuthConfig::tls));
-    }
-
-    private static AuthDetailsConfig.OverriddenAuthDetailsConfig toOverriddenAuthConfig(
-            BasicAuthenticationDetailsProvider authProvider) {
-        return toOverriddenAuthConfig(authProvider, Optional.empty());
+    private static AuthDetailsConfig.OverriddenAuthDetailsConfig toOverriddenAuthConfig(KievServiceAuthConfig authConfig,
+                                                                                       StoreDefinition store) {
+        BasicAuthenticationDetailsProvider authProvider = store.authProvider().get()
+                .orElseThrow(() -> new IllegalStateException(dataStoreKey("service.auth.type")
+                                                                     + "=OVERRIDDEN requires "
+                                                                     + "BasicAuthenticationDetailsProvider "
+                                                                     + "to be available"
+                                                                     + storeContext(store.storeName())));
+        return toOverriddenAuthConfig(authProvider, authConfig.tls(), store.storeName());
     }
 
     private static AuthDetailsConfig.OverriddenAuthDetailsConfig toOverriddenAuthConfig(
             BasicAuthenticationDetailsProvider authProvider,
-            Optional<KievServiceTlsConfig> tlsConfig) {
+            Optional<KievServiceTlsConfig> tlsConfig,
+            String storeName) {
         AuthDetailsConfig.OverriddenAuthDetailsConfig config = new AuthDetailsConfig.OverriddenAuthDetailsConfig();
         config.setAuthProviderOverride(authProvider);
-        tlsConfig.map(KievDataStoreConfigFactory::toDynamicSslContextProviderConfig)
+        tlsConfig.map(it -> toDynamicSslContextProviderConfig(it, storeName))
                 .ifPresent(config::setDynamicSslContextProviderConfig);
         return config;
     }
 
-    private static DynamicSslContextProviderConfig toDynamicSslContextProviderConfig(KievServiceTlsConfig tlsConfig) {
+    private static DynamicSslContextProviderConfig toDynamicSslContextProviderConfig(KievServiceTlsConfig tlsConfig,
+                                                                                    String storeName) {
         DynamicSslContextProviderConfig config = new DynamicSslContextProviderConfig();
-        config.setRootCertPath(requiredValue(tlsConfig.rootCertPemPath(), "oci.kiev.service.auth.tls.root-cert-pem-path"));
+        config.setRootCertPath(requiredValue(tlsConfig.rootCertPemPath(),
+                                             dataStoreKey("service.auth.tls.root-cert-pem-path"),
+                                             storeName));
         tlsConfig.certReloadDuration().ifPresent(config::setDuration);
         tlsConfig.certSslAlgorithm().ifPresent(config::setSslAlgorithm);
         return config;
     }
 
-    private static <T> T requiredValue(java.util.Optional<T> value, String key) {
-        return value.orElseThrow(() -> new IllegalStateException(key + " must be configured"));
+    private static void validateRequired(String value, String key) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(key + " must be configured");
+        }
+    }
+
+    private static void validateRequired(String value, String key, String storeName) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(missingConfigMessage(key, storeName));
+        }
+    }
+
+    private static <T> T requiredValue(java.util.Optional<T> value, String key, String storeName) {
+        return value.orElseThrow(() -> new IllegalStateException(missingConfigMessage(key, storeName)));
+    }
+
+    private static String dataStoreKey(String suffix) {
+        return DATA_STORES_CONFIG_KEY + "." + suffix;
+    }
+
+    private static String missingConfigMessage(String key, String storeName) {
+        return key + " must be configured" + storeContext(storeName);
+    }
+
+    private static String missingBackendConfigMessage(String key, KievBackend backend, String storeName) {
+        return key + " must be configured for " + backend + " backend" + storeContext(storeName);
+    }
+
+    private static String storeContext(String storeName) {
+        return storeName == null || storeName.isBlank() ? "" : " for store-name '" + storeName + "'";
+    }
+
+    private record StoreDefinition(KievBackend backend,
+                                   String storeName,
+                                   String appName,
+                                   int transactionMaxReads,
+                                   int transactionMaxWrites,
+                                   java.util.Optional<KievDirectDbConfig> directDb,
+                                   java.util.Optional<KievServiceConfig> service,
+                                   Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
     }
 }

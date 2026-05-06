@@ -24,6 +24,7 @@ import com.oracle.pic.kiev.mapping.Page;
  */
 @Service.Singleton
 class DataPlaneReferenceService {
+    static final String DATA_STORE_NAME = "helidon-data-plane-example";
     private static final String ACTIVE = "ACTIVE";
     private static final String BUCKET_NAME = "data_plane_robots";
     private static final String BUCKET_DESCRIPTION = "Helidon OCI data-plane example robots";
@@ -34,7 +35,8 @@ class DataPlaneReferenceService {
     private final MappedHashBucket<String, RobotEntity> bucket;
 
     @Service.Inject
-    DataPlaneReferenceService(MappedDataStore mappedDataStore, KievTransactionSupport transactionSupport) {
+    DataPlaneReferenceService(@Service.Named(DATA_STORE_NAME) MappedDataStore mappedDataStore,
+                              @Service.Named(DATA_STORE_NAME) KievTransactionSupport transactionSupport) {
         this.bucket = mappedDataStore.getOrCreateBucket(BUCKET_NAME,
                                                         BUCKET_DESCRIPTION,
                                                         String.class,
@@ -46,7 +48,7 @@ class DataPlaneReferenceService {
         return list(null, compartmentId, displayName);
     }
 
-    @KievTransaction(value = "data-plane-list", readOnly = true)
+    @KievTransaction(value = "data-plane-list", dataStore = DATA_STORE_NAME, readOnly = true)
     RobotCollection list(Transaction tx, String compartmentId, String displayName) {
         List<RobotSummary> items = readAll(tx).stream()
                 .filter(robot -> compartmentId == null || compartmentId.equals(robot.compartmentId))
@@ -60,7 +62,7 @@ class DataPlaneReferenceService {
         return get(null, id);
     }
 
-    @KievTransaction(value = "data-plane-get", readOnly = true)
+    @KievTransaction(value = "data-plane-get", dataStore = DATA_STORE_NAME, readOnly = true)
     Optional<Robot> get(Transaction tx, String id) {
         return bucket.get(tx, id)
                 .map(DataPlaneReferenceService::toRobot);
@@ -70,7 +72,7 @@ class DataPlaneReferenceService {
         return create(null, displayName, compartmentId);
     }
 
-    @KievTransaction("data-plane-create")
+    @KievTransaction(value = "data-plane-create", dataStore = DATA_STORE_NAME)
     Robot create(Transaction tx, String displayName, String compartmentId) {
         RobotEntity robot = new RobotEntity(newRobotId(),
                                             compartmentId,
@@ -87,7 +89,7 @@ class DataPlaneReferenceService {
         return update(null, id, displayName);
     }
 
-    @KievTransaction("data-plane-update")
+    @KievTransaction(value = "data-plane-update", dataStore = DATA_STORE_NAME)
     Optional<Robot> update(Transaction tx, String id, String displayName) {
         return bucket.get(tx, id)
                 .map(existing -> {
@@ -103,7 +105,7 @@ class DataPlaneReferenceService {
         return delete(null, id);
     }
 
-    @KievTransaction("data-plane-delete")
+    @KievTransaction(value = "data-plane-delete", dataStore = DATA_STORE_NAME)
     Optional<Robot> delete(Transaction tx, String id) {
         Optional<RobotEntity> existing = bucket.get(tx, id);
         if (existing.isEmpty()) {
@@ -117,7 +119,7 @@ class DataPlaneReferenceService {
         return count(null);
     }
 
-    @KievTransaction(value = "data-plane-count", readOnly = true)
+    @KievTransaction(value = "data-plane-count", dataStore = DATA_STORE_NAME, readOnly = true)
     int count(Transaction tx) {
         return readAll(tx).size();
     }

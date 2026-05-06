@@ -21,7 +21,7 @@ It supports three backends:
 2. `DIRECT_DB` for a Kiev store reached through a direct Oracle database connection
 3. `SERVICE` for Kiev as a service
 
-When this module is on the classpath, Helidon can create and inject:
+When this module is on the classpath, Helidon creates configured Kiev data stores and exposes named access to:
 
 * `com.oracle.pic.kiev.DataStore`
 * `com.oracle.pic.kiev.mapping.MappedDataStore`
@@ -53,9 +53,10 @@ At minimum, configure the backend, store name, and application name:
 ```yaml
 oci:
   kiev:
-    backend: "IN_MEMORY"
-    store-name: helidon-store-example
-    app-name: helidon-store-example
+    data-stores:
+      - backend: "IN_MEMORY"
+        store-name: helidon-store-example
+        app-name: helidon-store-example
 ```
 
 For a direct database connection:
@@ -63,14 +64,15 @@ For a direct database connection:
 ```yaml
 oci:
   kiev:
-    backend: "DIRECT_DB"
-    store-name: pdbdev
-    app-name: KievTest
-    direct-db:
-      jdbc-url: jdbc:oracle:thin:@//localhost:1521/pdbdev
-      user-name: helidon
-      password: changeit
-      schema-name: helidon
+    data-stores:
+      - backend: "DIRECT_DB"
+        store-name: pdbdev
+        app-name: KievTest
+        direct-db:
+          jdbc-url: jdbc:oracle:thin:@//localhost:1521/pdbdev
+          user-name: helidon
+          password: changeit
+          schema-name: helidon
 ```
 
 For Kiev as a service with instance auth:
@@ -78,17 +80,18 @@ For Kiev as a service with instance auth:
 ```yaml
 oci:
   kiev:
-    backend: "SERVICE"
-    store-name: your-store
-    app-name: your-app
-    service:
-      compartment-id: ocid1.compartment.oc1...
-      frontend-endpoint: https://your-kiev-endpoint
-      locality: "REGIONAL"
-      auth:
-        type: "INSTANCE"
-        tls:
-          root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+    data-stores:
+      - backend: "SERVICE"
+        store-name: your-store
+        app-name: your-app
+        service:
+          compartment-id: ocid1.compartment.oc1...
+          frontend-endpoint: https://your-kiev-endpoint
+          locality: "REGIONAL"
+          auth:
+            type: "INSTANCE"
+            tls:
+              root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
 ```
 
 For Kiev as a service with S2S auth:
@@ -96,26 +99,27 @@ For Kiev as a service with S2S auth:
 ```yaml
 oci:
   kiev:
-    backend: "SERVICE"
-    store-name: your-store
-    app-name: your-app
-    service:
-      compartment-id: ocid1.compartment.oc1...
-      frontend-endpoint: https://your-kiev-endpoint
-      locality: "AD1"
-      auth:
-        type: "S2S"
-        auth-endpoint: https://auth.example
-        tls:
-          root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
-          cert-reload-duration: PT15M
-          cert-ssl-algorithm: SunX509
-        s2s:
-          tenant-id: ocid1.tenancy.oc1...
-          leaf-cert-path: /path/to/leaf.pem
-          leaf-cert-key-path: /path/to/leaf.key
-          intermediate-cert-path: /path/to/intermediate.pem
-          key-passphrase: secret
+    data-stores:
+      - backend: "SERVICE"
+        store-name: your-store
+        app-name: your-app
+        service:
+          compartment-id: ocid1.compartment.oc1...
+          frontend-endpoint: https://your-kiev-endpoint
+          locality: "AD1"
+          auth:
+            type: "S2S"
+            auth-endpoint: https://auth.example
+            tls:
+              root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+              cert-reload-duration: PT15M
+              cert-ssl-algorithm: SunX509
+            s2s:
+              tenant-id: ocid1.tenancy.oc1...
+              leaf-cert-path: /path/to/leaf.pem
+              leaf-cert-key-path: /path/to/leaf.key
+              intermediate-cert-path: /path/to/intermediate.pem
+              key-passphrase: secret
 ```
 
 For Kiev as a service with a shared OCI SDK auth provider and Kiev-managed TLS:
@@ -127,19 +131,20 @@ helidon:
 
 oci:
   kiev:
-    backend: "SERVICE"
-    store-name: your-store
-    app-name: your-app
-    service:
-      compartment-id: ocid1.compartment.oc1...
-      frontend-endpoint: https://your-kiev-endpoint
-      locality: "REGIONAL"
-      auth:
-        type: "OVERRIDDEN"
-        tls:
-          root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
-          cert-reload-duration: PT5M
-          cert-ssl-algorithm: SunX509
+    data-stores:
+      - backend: "SERVICE"
+        store-name: your-store
+        app-name: your-app
+        service:
+          compartment-id: ocid1.compartment.oc1...
+          frontend-endpoint: https://your-kiev-endpoint
+          locality: "REGIONAL"
+          auth:
+            type: "OVERRIDDEN"
+            tls:
+              root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+              cert-reload-duration: PT5M
+              cert-ssl-algorithm: SunX509
 ```
 
 For local KIAB KaaS testing:
@@ -147,28 +152,54 @@ For local KIAB KaaS testing:
 ```yaml
 oci:
   kiev:
-    backend: "SERVICE"
-    store-name: kaaspdb
-    app-name: KievTest
-    service:
-      compartment-id: ocid1.compartment.dev...
-      frontend-endpoint: http://localhost:16666
-      locality: "REGIONAL"
-      auth:
-        type: "KIAB_LOCAL"
+    data-stores:
+      - backend: "SERVICE"
+        store-name: kaaspdb
+        app-name: KievTest
+        service:
+          compartment-id: ocid1.compartment.dev...
+          frontend-endpoint: http://localhost:16666
+          locality: "REGIONAL"
+          auth:
+            type: "KIAB_LOCAL"
 ```
+
+To configure more than one data store, add more `data-stores` entries. Store access is always by
+`store-name`:
+
+```yaml
+oci:
+  kiev:
+    data-stores:
+      - backend: "IN_MEMORY"
+        store-name: primary-store
+        app-name: primary-app
+      - backend: "DIRECT_DB"
+        store-name: reporting-store
+        app-name: reporting-app
+        direct-db:
+          jdbc-url: jdbc:oracle:thin:@//localhost:1521/reporting
+          user-name: helidon
+          password: changeit
+```
+
+`DataStore`, `MappedDataStore`, and `KievTransactionSupport` injection points must use
+`@Service.Named`. Unqualified injection fails and reports the registered store names so the
+injection point can be qualified with one of the configured `data-stores[].store-name` values.
 
 ### Inject the Kiev services
 
-You can inject `MappedDataStore` and create or open mapped buckets in your service layer:
+Inject a named `MappedDataStore` and create or open mapped buckets in your service layer:
 
 ```java
 @Service.Singleton
 class StoreService {
+    private static final String DATA_STORE_NAME = "helidon-store-example";
+
     private final MappedHashBucket<String, StoreItem> bucket;
 
     @Service.Inject
-    StoreService(MappedDataStore mappedDataStore) {
+    StoreService(@Service.Named(DATA_STORE_NAME) MappedDataStore mappedDataStore) {
         this.bucket = mappedDataStore.getOrCreateBucket("store_example_items",
                                                         "Helidon OCI Kiev store example bucket",
                                                         String.class,
@@ -177,31 +208,65 @@ class StoreService {
 }
 ```
 
+For another store, qualify the injection point with its `store-name`:
+
+```java
+@Service.Singleton
+class ReportingService {
+    private final MappedDataStore reportingStore;
+
+    @Service.Inject
+    ReportingService(@Service.Named("reporting-store") MappedDataStore reportingStore) {
+        this.reportingStore = reportingStore;
+    }
+}
+```
+
+### Access a Transaction
+
+Application code obtains a `com.oracle.pic.kiev.Transaction` from a transaction boundary. Use either a
+`Transaction` parameter on an annotated service method, or the callback parameter passed by
+`KievTransactionSupport.execute`. Pass that `Transaction` to Kiev bucket operations and to any helper methods
+that need to participate in the same transaction.
+
+```java
+@KievTransaction(value = "store-put", dataStore = DATA_STORE_NAME)
+String put(Transaction tx, String id, String value) {
+    return writeItem(tx, id, value);
+}
+```
+
+```java
+String value = transactionSupport.execute("store-get", true, tx -> readItem(tx, id));
+```
+
 ### Use declarative transactions
 
 Annotate service methods with `@KievTransaction`. If the method declares a
 `com.oracle.pic.kiev.Transaction` parameter, the active transaction is supplied automatically.
+Each transaction annotation must use the configured `store-name`.
 
 ```java
-@KievTransaction("store-put")
+@KievTransaction(value = "store-put", dataStore = DATA_STORE_NAME)
 String put(Transaction tx, String id, String value) {
     StoreItem item = bucket.put(tx, new StoreItem(id, value));
     return item.value;
 }
 
-@KievTransaction(value = "store-get", readOnly = true)
+@KievTransaction(value = "store-get", dataStore = DATA_STORE_NAME, readOnly = true)
 Optional<String> get(Transaction tx, String id) {
     return bucket.get(tx, id).map(item -> item.value);
 }
 ```
 
-### Access the current transaction from context
-
-If a request `io.helidon.common.context.Context` is available, the active transaction can also be
-retrieved through `KievTransactions`:
+For programmatic transaction handling, inject the named `KievTransactionSupport`:
 
 ```java
-Transaction tx = KievTransactions.require(context);
+ReportingService(@Service.Named("reporting-store") KievTransactionSupport transactionSupport) {
+    this.transactionSupport = transactionSupport;
+}
+
+String value = transactionSupport.execute("reporting-read", true, tx -> bucket.get(tx, id).orElseThrow().value());
 ```
 
 ---
@@ -212,33 +277,43 @@ Transaction tx = KievTransactions.require(context);
 
 | Key                             | Default value | Description |
 |---------------------------------|---------------|-------------|
-| `oci.kiev.backend`              | `IN_MEMORY`   | Kiev backend to use: `IN_MEMORY`, `DIRECT_DB`, or `SERVICE`. |
-| `oci.kiev.store-name`           |               | Kiev store name. |
-| `oci.kiev.app-name`             |               | Application name passed to the Kiev client. |
-| `oci.kiev.transaction-max-reads`  | `100`       | Maximum reads per transaction. |
-| `oci.kiev.transaction-max-writes` | `100`       | Maximum writes per transaction. |
+| `oci.kiev.data-stores`          |               | List of Kiev data store configurations. |
+
+At least one `data-stores` entry is required. All store access uses the configured `store-name`.
+
+### Data store configuration
+
+Each `oci.kiev.data-stores` entry defines one Kiev data store.
+
+| Key                                      | Default value | Description |
+|------------------------------------------|---------------|-------------|
+| `oci.kiev.data-stores[].backend`         | `IN_MEMORY`   | Kiev backend to use: `IN_MEMORY`, `DIRECT_DB`, or `SERVICE`. |
+| `oci.kiev.data-stores[].store-name`      |               | Kiev store name used with `@Service.Named` and `@KievTransaction`. For `SERVICE` backends, this is the KaaS `kiev_name`/data store name and must follow KaaS limits, including the 30-character maximum. |
+| `oci.kiev.data-stores[].app-name`        |               | Application name passed to the Kiev client. |
+| `oci.kiev.data-stores[].transaction-max-reads` | `100` | Maximum reads per transaction. |
+| `oci.kiev.data-stores[].transaction-max-writes` | `100` | Maximum writes per transaction. |
 
 ### Direct DB configuration
 
-Required when `oci.kiev.backend=DIRECT_DB`.
+Required when `backend=DIRECT_DB`.
 
 | Key                            | Default value | Description |
 |--------------------------------|---------------|-------------|
-| `oci.kiev.direct-db.jdbc-url`  |               | Oracle JDBC URL. |
-| `oci.kiev.direct-db.user-name` |               | Database user name. |
-| `oci.kiev.direct-db.password`  |               | Database password. |
-| `oci.kiev.direct-db.schema-name` |             | Optional schema name. If omitted, the Kiev client default is used. |
+| `oci.kiev.data-stores[].direct-db.jdbc-url`  |               | Oracle JDBC URL. |
+| `oci.kiev.data-stores[].direct-db.user-name` |               | Database user name. |
+| `oci.kiev.data-stores[].direct-db.password`  |               | Database password. |
+| `oci.kiev.data-stores[].direct-db.schema-name` |             | Optional schema name. If omitted, the Kiev client default is used. |
 
 ### Service configuration
 
-Required when `oci.kiev.backend=SERVICE`.
+Required when `backend=SERVICE`.
 
 | Key                                  | Default value | Description |
 |--------------------------------------|---------------|-------------|
-| `oci.kiev.service.compartment-id`    |               | Compartment containing the Kiev store. |
-| `oci.kiev.service.frontend-endpoint` |               | Kiev frontend endpoint. |
-| `oci.kiev.service.locality`          | `REGIONAL`    | Store locality such as `REGIONAL`, `AD1`, `AD2`, or `AD3`. |
-| `oci.kiev.service.auth.type`         | `INSTANCE`    | Auth type: `INSTANCE`, `S2S`, `OVERRIDDEN`, or `KIAB_LOCAL`. |
+| `oci.kiev.data-stores[].service.compartment-id`    |               | Compartment containing the Kiev store. |
+| `oci.kiev.data-stores[].service.frontend-endpoint` |               | Kiev frontend endpoint. |
+| `oci.kiev.data-stores[].service.locality`          | `REGIONAL`    | Store locality such as `REGIONAL`, `AD1`, `AD2`, or `AD3`. |
+| `oci.kiev.data-stores[].service.auth.type`         | `INSTANCE`    | Auth type: `INSTANCE`, `S2S`, `OVERRIDDEN`, or `KIAB_LOCAL`. |
 
 ### Service auth configuration
 
@@ -246,28 +321,28 @@ Required when `oci.kiev.backend=SERVICE`.
 
 | Key                                        | Default value | Description |
 |--------------------------------------------|---------------|-------------|
-| `oci.kiev.service.auth.auth-endpoint`      |               | Optional auth endpoint override. |
-| `oci.kiev.service.auth.tls.root-cert-pem-path` |            | Root certificate PEM path. |
-| `oci.kiev.service.auth.tls.cert-reload-duration` |          | Optional certificate reload interval. |
-| `oci.kiev.service.auth.tls.cert-ssl-algorithm` |            | Optional SSL algorithm override. |
+| `oci.kiev.data-stores[].service.auth.auth-endpoint`      |               | Optional auth endpoint override. |
+| `oci.kiev.data-stores[].service.auth.tls.root-cert-pem-path` |            | Root certificate PEM path. |
+| `oci.kiev.data-stores[].service.auth.tls.cert-reload-duration` |          | Optional certificate reload interval. |
+| `oci.kiev.data-stores[].service.auth.tls.cert-ssl-algorithm` |            | Optional SSL algorithm override. |
 
 `S2S` auth requires:
 
 | Key                                            | Default value | Description |
 |------------------------------------------------|---------------|-------------|
-| `oci.kiev.service.auth.auth-endpoint`          |               | Identity auth endpoint. |
-| `oci.kiev.service.auth.tls.root-cert-pem-path` |              | Root certificate PEM path. |
-| `oci.kiev.service.auth.tls.cert-reload-duration` |            | Optional certificate reload interval. |
-| `oci.kiev.service.auth.tls.cert-ssl-algorithm` |              | Optional SSL algorithm override. |
-| `oci.kiev.service.auth.s2s.tenant-id`          |              | Tenant OCID. |
-| `oci.kiev.service.auth.s2s.leaf-cert-path`     |              | Leaf certificate path used for S2S credentials. |
-| `oci.kiev.service.auth.s2s.leaf-cert-key-path` |              | Leaf private key path used for S2S credentials. |
-| `oci.kiev.service.auth.s2s.intermediate-cert-path` |          | Intermediate certificate path used for S2S credentials. |
-| `oci.kiev.service.auth.s2s.key-passphrase`     |              | Optional private key passphrase for S2S credentials. |
+| `oci.kiev.data-stores[].service.auth.auth-endpoint`          |               | Identity auth endpoint. |
+| `oci.kiev.data-stores[].service.auth.tls.root-cert-pem-path` |              | Root certificate PEM path. |
+| `oci.kiev.data-stores[].service.auth.tls.cert-reload-duration` |            | Optional certificate reload interval. |
+| `oci.kiev.data-stores[].service.auth.tls.cert-ssl-algorithm` |              | Optional SSL algorithm override. |
+| `oci.kiev.data-stores[].service.auth.s2s.tenant-id`          |              | Tenant OCID. |
+| `oci.kiev.data-stores[].service.auth.s2s.leaf-cert-path`     |              | Leaf certificate path used for S2S credentials. |
+| `oci.kiev.data-stores[].service.auth.s2s.leaf-cert-key-path` |              | Leaf private key path used for S2S credentials. |
+| `oci.kiev.data-stores[].service.auth.s2s.intermediate-cert-path` |          | Intermediate certificate path used for S2S credentials. |
+| `oci.kiev.data-stores[].service.auth.s2s.key-passphrase`     |              | Optional private key passphrase for S2S credentials. |
 
 `OVERRIDDEN` auth requires a `BasicAuthenticationDetailsProvider` to be available from the Helidon service registry,
 such as one created by the public OCI SDK integration under `helidon.oci.*`. It can also use the same
-`oci.kiev.service.auth.tls.*` settings when Kiev-specific TLS handling is still needed.
+`oci.kiev.data-stores[].service.auth.tls.*` settings when Kiev-specific TLS handling is still needed.
 
 `KIAB_LOCAL` auth is intended for local KIAB KaaS testing and does not require extra auth properties.
 

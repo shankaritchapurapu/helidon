@@ -18,7 +18,7 @@ The example combines the OCI Helidon pieces that fit naturally in a single SE ap
 - `helidon-oci-identity`: write operations require a signed request via
   `@AuthorizationPermission`, and the endpoint injects `IdentityContext` directly
   into secured resource methods to access the authenticated principal
-- `helidon-oci-kiev`: robots are stored through Kiev, with the default example
+- `helidon-oci-kiev`: robots are stored through Kiev, with the example
   configuration using the `IN_MEMORY` backend so the service stays runnable without
   external infrastructure
 - `helidon-oci-audit`: mutating operations enrich the current audit payload when audit is
@@ -113,10 +113,10 @@ It enables:
 - audit via `oci.auditv2`
 - identity authn/authz settings via `oci.identity`
 
-The default Kiev backend is `IN_MEMORY`, which keeps the example self-contained.
-After that service code is in place, switching to `DIRECT_DB` or `SERVICE` is a
-configuration change: update `oci.kiev.backend` and provide the backend-specific
-settings shown in the same file.
+The configured Kiev data store uses the `IN_MEMORY` backend, which keeps the example
+self-contained. Switching to `DIRECT_DB` or
+`SERVICE` is a configuration change: update the `oci.kiev.data-stores` entry and
+provide the backend-specific settings shown in the same file.
 
 The same file also includes commented examples for:
 

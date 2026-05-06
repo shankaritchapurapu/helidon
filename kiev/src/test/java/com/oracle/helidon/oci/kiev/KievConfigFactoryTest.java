@@ -20,121 +20,152 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class KievConfigFactoryTest {
 
     @Test
-    void testLoadsDefaults() {
+    void testLoadsEmptyRootConfig() {
+        KievConfig config = new KievConfigFactory(config(Map.of())).get();
+
+        assertTrue(config.dataStores().isEmpty());
+    }
+
+    @Test
+    void testLoadsInMemoryDefaults() {
         KievConfig config = new KievConfigFactory(config(Map.of(
-                "oci.kiev.store-name", "test-store",
-                "oci.kiev.app-name", "test-app"
+                "oci.kiev.data-stores.0.store-name", "test-store",
+                "oci.kiev.data-stores.0.app-name", "test-app"
         ))).get();
 
-        assertEquals(KievBackend.IN_MEMORY, config.backend());
-        assertEquals("test-store", config.storeName());
-        assertEquals("test-app", config.appName());
-        assertEquals(100, config.transactionMaxReads());
-        assertEquals(100, config.transactionMaxWrites());
-        assertTrue(config.directDb().isEmpty());
-        assertTrue(config.service().isEmpty());
+        KievStoreConfig storeConfig = config.dataStores().get(0);
+        assertEquals(KievBackend.IN_MEMORY, storeConfig.backend());
+        assertEquals("test-store", storeConfig.storeName());
+        assertEquals("test-app", storeConfig.appName());
+        assertEquals(100, storeConfig.transactionMaxReads());
+        assertEquals(100, storeConfig.transactionMaxWrites());
+        assertTrue(storeConfig.directDb().isEmpty());
+        assertTrue(storeConfig.service().isEmpty());
     }
 
     @Test
     void testLoadsDirectDb() {
         KievConfig config = new KievConfigFactory(config(Map.of(
-                "oci.kiev.backend", "DIRECT_DB",
-                "oci.kiev.store-name", "pdbdev",
-                "oci.kiev.app-name", "KievTest",
-                "oci.kiev.transaction-max-reads", "111",
-                "oci.kiev.transaction-max-writes", "222",
-                "oci.kiev.direct-db.jdbc-url", "jdbc:oracle:thin:@//localhost:1521/pdbdev",
-                "oci.kiev.direct-db.user-name", "helidon",
-                "oci.kiev.direct-db.password", "changeit",
-                "oci.kiev.direct-db.schema-name", "helidon"
+                "oci.kiev.data-stores.0.backend", "DIRECT_DB",
+                "oci.kiev.data-stores.0.store-name", "pdbdev",
+                "oci.kiev.data-stores.0.app-name", "KievTest",
+                "oci.kiev.data-stores.0.transaction-max-reads", "111",
+                "oci.kiev.data-stores.0.transaction-max-writes", "222",
+                "oci.kiev.data-stores.0.direct-db.jdbc-url", "jdbc:oracle:thin:@//localhost:1521/pdbdev",
+                "oci.kiev.data-stores.0.direct-db.user-name", "helidon",
+                "oci.kiev.data-stores.0.direct-db.password", "changeit",
+                "oci.kiev.data-stores.0.direct-db.schema-name", "helidon"
         ))).get();
 
-        assertEquals(KievBackend.DIRECT_DB, config.backend());
-        assertEquals("pdbdev", config.storeName());
-        assertEquals("KievTest", config.appName());
-        assertEquals(111, config.transactionMaxReads());
-        assertEquals(222, config.transactionMaxWrites());
-        assertTrue(config.directDb().isPresent());
-        assertEquals("jdbc:oracle:thin:@//localhost:1521/pdbdev", config.directDb().get().jdbcUrl());
-        assertEquals("helidon", config.directDb().get().userName());
-        assertEquals("changeit", config.directDb().get().password());
-        assertEquals("helidon", config.directDb().get().schemaName().orElseThrow());
-        assertTrue(config.service().isEmpty());
+        KievStoreConfig storeConfig = config.dataStores().get(0);
+        assertEquals(KievBackend.DIRECT_DB, storeConfig.backend());
+        assertEquals("pdbdev", storeConfig.storeName());
+        assertEquals("KievTest", storeConfig.appName());
+        assertEquals(111, storeConfig.transactionMaxReads());
+        assertEquals(222, storeConfig.transactionMaxWrites());
+        assertTrue(storeConfig.directDb().isPresent());
+        assertEquals("jdbc:oracle:thin:@//localhost:1521/pdbdev", storeConfig.directDb().get().jdbcUrl());
+        assertEquals("helidon", storeConfig.directDb().get().userName());
+        assertEquals("changeit", storeConfig.directDb().get().password());
+        assertEquals("helidon", storeConfig.directDb().get().schemaName().orElseThrow());
+        assertTrue(storeConfig.service().isEmpty());
+    }
+
+    @Test
+    void testLoadsMultipleDataStores() {
+        KievConfig config = new KievConfigFactory(config(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.store-name", "primary-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "primary-app"),
+                Map.entry("oci.kiev.data-stores.1.backend", "DIRECT_DB"),
+                Map.entry("oci.kiev.data-stores.1.store-name", "secondary-store"),
+                Map.entry("oci.kiev.data-stores.1.app-name", "secondary-app"),
+                Map.entry("oci.kiev.data-stores.1.direct-db.jdbc-url", "jdbc:oracle:thin:@//localhost:1521/pdbdev"),
+                Map.entry("oci.kiev.data-stores.1.direct-db.user-name", "helidon"),
+                Map.entry("oci.kiev.data-stores.1.direct-db.password", "changeit")
+        ))).get();
+
+        assertEquals(2, config.dataStores().size());
+        assertEquals("primary-store", config.dataStores().get(0).storeName());
+        assertEquals(KievBackend.IN_MEMORY, config.dataStores().get(0).backend());
+        assertEquals("secondary-store", config.dataStores().get(1).storeName());
+        assertEquals(KievBackend.DIRECT_DB, config.dataStores().get(1).backend());
+        assertTrue(config.dataStores().get(1).directDb().isPresent());
     }
 
     @Test
     void testLoadsServiceDefaults() {
         KievConfig config = new KievConfigFactory(config(Map.of(
-                "oci.kiev.backend", "SERVICE",
-                "oci.kiev.store-name", "kaaspdb",
-                "oci.kiev.app-name", "StoreApp",
-                "oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example",
-                "oci.kiev.service.frontend-endpoint", "http://localhost:16666",
-                "oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"
+                "oci.kiev.data-stores.0.backend", "SERVICE",
+                "oci.kiev.data-stores.0.store-name", "kaaspdb",
+                "oci.kiev.data-stores.0.app-name", "StoreApp",
+                "oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.data-stores.0.service.frontend-endpoint", "http://localhost:16666",
+                "oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"
         ))).get();
 
-        assertEquals(KievBackend.SERVICE, config.backend());
-        assertTrue(config.service().isPresent());
-        assertEquals("ocid1.compartment.oc1..example", config.service().get().compartmentId());
-        assertEquals("http://localhost:16666", config.service().get().frontendEndpoint());
-        assertEquals(ClientRegistryLocality.REGIONAL, config.service().get().locality());
-        assertTrue(config.service().get().auth().isPresent());
-        assertEquals(KievAuthType.INSTANCE, config.service().get().auth().get().type());
-        assertTrue(config.service().get().auth().get().tls().isPresent());
-        assertEquals("/tmp/root.pem", config.service().get().auth().get().tls().orElseThrow().rootCertPemPath().orElseThrow());
-        assertFalse(config.service().get().auth().get().authEndpoint().isPresent());
+        KievServiceConfig serviceConfig = config.dataStores().get(0).service().orElseThrow();
+        KievServiceAuthConfig authConfig = serviceConfig.auth().orElseThrow();
+        KievServiceTlsConfig tlsConfig = authConfig.tls().orElseThrow();
+        assertEquals(ClientRegistryLocality.REGIONAL, serviceConfig.locality());
+        assertEquals("ocid1.compartment.oc1..example", serviceConfig.compartmentId());
+        assertEquals("http://localhost:16666", serviceConfig.frontendEndpoint());
+        assertEquals(KievAuthType.INSTANCE, authConfig.type());
+        assertEquals("/tmp/root.pem", tlsConfig.rootCertPemPath().orElseThrow());
+        assertFalse(authConfig.authEndpoint().isPresent());
     }
 
     @Test
     void testLoadsKiabLocalAuth() {
         KievConfig config = new KievConfigFactory(config(Map.of(
-                "oci.kiev.backend", "SERVICE",
-                "oci.kiev.store-name", "kaaspdb",
-                "oci.kiev.app-name", "StoreApp",
-                "oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example",
-                "oci.kiev.service.frontend-endpoint", "http://localhost:16666",
-                "oci.kiev.service.auth.type", "KIAB_LOCAL"
+                "oci.kiev.data-stores.0.backend", "SERVICE",
+                "oci.kiev.data-stores.0.store-name", "kaaspdb",
+                "oci.kiev.data-stores.0.app-name", "StoreApp",
+                "oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.data-stores.0.service.frontend-endpoint", "http://localhost:16666",
+                "oci.kiev.data-stores.0.service.auth.type", "KIAB_LOCAL"
         ))).get();
 
-        assertEquals(KievAuthType.KIAB_LOCAL, config.service().orElseThrow().auth().orElseThrow().type());
+        assertEquals(KievAuthType.KIAB_LOCAL,
+                     config.dataStores().get(0).service().orElseThrow().auth().orElseThrow().type());
     }
 
     @Test
     void testLoadsOverriddenAuth() {
         KievConfig config = new KievConfigFactory(config(Map.of(
-                "oci.kiev.backend", "SERVICE",
-                "oci.kiev.store-name", "kaaspdb",
-                "oci.kiev.app-name", "StoreApp",
-                "oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example",
-                "oci.kiev.service.frontend-endpoint", "https://frontend.example",
-                "oci.kiev.service.auth.type", "OVERRIDDEN"
+                "oci.kiev.data-stores.0.backend", "SERVICE",
+                "oci.kiev.data-stores.0.store-name", "kaaspdb",
+                "oci.kiev.data-stores.0.app-name", "StoreApp",
+                "oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example",
+                "oci.kiev.data-stores.0.service.auth.type", "OVERRIDDEN"
         ))).get();
 
-        assertEquals(KievAuthType.OVERRIDDEN, config.service().orElseThrow().auth().orElseThrow().type());
+        assertEquals(KievAuthType.OVERRIDDEN,
+                     config.dataStores().get(0).service().orElseThrow().auth().orElseThrow().type());
     }
 
     @Test
     void testLoadsS2sAuth() {
         KievConfig config = new KievConfigFactory(config(Map.ofEntries(
-                Map.entry("oci.kiev.backend", "SERVICE"),
-                Map.entry("oci.kiev.store-name", "remote-store"),
-                Map.entry("oci.kiev.app-name", "StoreApp"),
-                Map.entry("oci.kiev.service.compartment-id", "ocid1.compartment.oc1..example"),
-                Map.entry("oci.kiev.service.frontend-endpoint", "https://frontend.example"),
-                Map.entry("oci.kiev.service.locality", "AD1"),
-                Map.entry("oci.kiev.service.auth.type", "S2S"),
-                Map.entry("oci.kiev.service.auth.auth-endpoint", "https://auth.example"),
-                Map.entry("oci.kiev.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
-                Map.entry("oci.kiev.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
-                Map.entry("oci.kiev.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
-                Map.entry("oci.kiev.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
-                Map.entry("oci.kiev.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example"),
-                Map.entry("oci.kiev.service.auth.s2s.key-passphrase", "secret"),
-                Map.entry("oci.kiev.service.auth.tls.cert-reload-duration", "PT15M"),
-                Map.entry("oci.kiev.service.auth.tls.cert-ssl-algorithm", "SunX509")
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.locality", "AD1"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.key-passphrase", "secret"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.cert-reload-duration", "PT15M"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.cert-ssl-algorithm", "SunX509")
         ))).get();
 
-        KievServiceConfig serviceConfig = config.service().orElseThrow();
+        KievServiceConfig serviceConfig = config.dataStores().get(0).service().orElseThrow();
         KievServiceAuthConfig authConfig = serviceConfig.auth().orElseThrow();
         KievServiceS2sConfig s2sConfig = authConfig.s2s().orElseThrow();
         KievServiceTlsConfig tlsConfig = authConfig.tls().orElseThrow();

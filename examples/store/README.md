@@ -20,7 +20,7 @@ mvn package
 
 ## Run
 
-By default the example uses the in-memory Kiev backend:
+The bundled `application.yaml` uses the in-memory Kiev backend:
 
 From `examples/store`:
 
@@ -29,8 +29,9 @@ java -jar ./target/helidon-oci-examples-store.jar
 ```
 
 The sample `application.yaml` also includes a commented Kiev-as-a-service configuration that uses
-`oci.kiev.service.auth.type=OVERRIDDEN`. In that mode, the example reuses the shared OCI SDK auth
-provider from `helidon.oci.*` and keeps Kiev-specific TLS settings under `oci.kiev.service.auth.tls.*`.
+`oci.kiev.data-stores[].service.auth.type=OVERRIDDEN`. In that mode, the example reuses the shared
+OCI SDK auth provider from `helidon.oci.*` and keeps Kiev-specific TLS settings under
+`oci.kiev.data-stores[].service.auth.tls.*`.
 
 The service exposes five plain-text routes:
 
@@ -55,15 +56,15 @@ mvn test
 The integration test profile in `src/test/resources/application-it.yaml` is configured for a local KIAB
 Oracle-backed Kiev store using the direct DB client with:
 
-- `backend: "DIRECT_DB"`
-- `store-name: pdbdev`
-- `app-name: KievTest`
-- `direct-db.jdbc-url: jdbc:oracle:thin:@//localhost:1521/pdbdev`
-- `direct-db.user-name: helidon`
-- `direct-db.password: changeit`
-- `direct-db.schema-name: helidon`
+- `data-stores[0].backend: "DIRECT_DB"`
+- `data-stores[0].store-name: helidon-store-example`
+- `data-stores[0].app-name: helidon-store-example`
+- `data-stores[0].direct-db.jdbc-url: jdbc:oracle:thin:@//localhost:1521/pdbdev`
+- `data-stores[0].direct-db.user-name: helidon`
+- `data-stores[0].direct-db.password: changeit`
+- `data-stores[0].direct-db.schema-name: helidon`
 
-This path uses the stock Kiev direct DB client against a plain KIAB-created store in `pdbdev`. It does
+This path uses the stock Kiev direct DB client against a plain KIAB-created store. It does
 not require starting the local KIAB KaaS services.
 
 ### 1. Install KIAB
@@ -113,10 +114,11 @@ Create the KIAB CDB container. This provisions the default PDB named `pdbdev`:
 kiab cdb create
 ```
 
-Create a Kiev store in `pdbdev` using the same user, password, and schema that the integration test is configured to use:
+Create a Kiev store in `pdbdev` using the same store name, user, password, and schema that the integration test is
+configured to use:
 
 ```shell
-kiab kiev create -d pdbdev -n pdbdev -u helidon -p changeit
+kiab kiev create -d pdbdev -n helidon-store-example -u helidon -p changeit
 ```
 
 For more details on installing and using KIAB, see

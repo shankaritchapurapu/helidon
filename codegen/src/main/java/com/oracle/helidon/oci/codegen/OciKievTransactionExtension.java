@@ -74,6 +74,12 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
         String transactionName = annotation.stringValue()
                 .filter(it -> !it.isBlank())
                 .orElse(methodName);
+        String dataStoreName = annotation.stringValue("dataStore")
+                .filter(it -> !it.isBlank())
+                .orElseThrow(() -> new CodegenException("@KievTransaction dataStore must be set to a configured "
+                                                                 + "oci.kiev.data-stores[].store-name on "
+                                                                 + element.signature().text(),
+                                                         element.originatingElementValue()));
         boolean readOnly = annotation.booleanValue("readOnly").orElse(false);
         int transactionParameterIndex = transactionParameterIndex(element);
 
@@ -96,6 +102,8 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
                                          .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_INJECT))
                                          .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                                          .addParameter(param -> param
+                                                 .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_NAMED,
+                                                                                  dataStoreName))
                                                  .type(OciTypes.KIEV_TRANSACTION_SUPPORT)
                                                  .name("transactionSupport"))
                                          .addContentLine("this.transactionSupport = transactionSupport;"));

@@ -11,26 +11,27 @@ import io.helidon.http.HttpException;
 import io.helidon.http.Status;
 import io.helidon.service.registry.Service;
 
-import com.oracle.pic.kiev.Bucket;
-import com.oracle.pic.kiev.mapping.Page;
 import com.oracle.helidon.oci.kiev.KievTransaction;
+import com.oracle.pic.kiev.Bucket;
 import com.oracle.pic.kiev.Transaction;
 import com.oracle.pic.kiev.exceptions.DuplicateKeyException;
 import com.oracle.pic.kiev.mapping.MappedDataStore;
 import com.oracle.pic.kiev.mapping.MappedHashBucket;
+import com.oracle.pic.kiev.mapping.Page;
 
 /**
  * Small application service that hides Kiev setup and transaction management from the endpoint.
  */
 @Service.Singleton
 class StoreService {
+    private static final String DATA_STORE_NAME = "helidon-store-example";
     private static final String BUCKET_NAME = "store_example_items";
     private static final String HASH_KEY_COLUMN = "id";
 
     private final MappedHashBucket<String, StoreItem> bucket;
 
     @Service.Inject
-    StoreService(MappedDataStore mappedDataStore) {
+    StoreService(@Service.Named(DATA_STORE_NAME) MappedDataStore mappedDataStore) {
         this.bucket = mappedDataStore.getOrCreateBucket(BUCKET_NAME,
                                                         "Helidon OCI Kiev store example bucket",
                                                         String.class,
@@ -41,7 +42,7 @@ class StoreService {
         return post(null, id, value);
     }
 
-    @KievTransaction("store-post")
+    @KievTransaction(value = "store-post", dataStore = DATA_STORE_NAME)
     String post(Transaction tx, String id, String value) {
         try {
             StoreItem item = bucket.insert(tx, new StoreItem(id, value));
@@ -55,7 +56,7 @@ class StoreService {
         return put(null, id, value);
     }
 
-    @KievTransaction("store-put")
+    @KievTransaction(value = "store-put", dataStore = DATA_STORE_NAME)
     String put(Transaction tx, String id, String value) {
         Optional<StoreItem> existing = bucket.get(tx, id);
         if (existing.isEmpty()) {
@@ -69,7 +70,7 @@ class StoreService {
         return get(null, id);
     }
 
-    @KievTransaction("store-get")
+    @KievTransaction(value = "store-get", dataStore = DATA_STORE_NAME)
     Optional<String> get(Transaction tx, String id) {
         return bucket.get(tx, id).map(item -> item.value);
     }
@@ -78,7 +79,7 @@ class StoreService {
         return delete(null, id);
     }
 
-    @KievTransaction("store-delete")
+    @KievTransaction(value = "store-delete", dataStore = DATA_STORE_NAME)
     Optional<String> delete(Transaction tx, String id) {
         Optional<StoreItem> existing = bucket.get(tx, id);
         existing.ifPresent(item -> bucket.delete(tx, id));
@@ -89,7 +90,7 @@ class StoreService {
         return list(null, pageToken, pageSize);
     }
 
-    @KievTransaction(value = "store-list", readOnly = true)
+    @KievTransaction(value = "store-list", dataStore = DATA_STORE_NAME, readOnly = true)
     StorePage list(Transaction tx, String pageToken, int pageSize) {
         Page<StoreItem> page = pageToken == null
                 ? bucket.rangeGet(tx, pageSize, Bucket.Direction.ASCENDING)

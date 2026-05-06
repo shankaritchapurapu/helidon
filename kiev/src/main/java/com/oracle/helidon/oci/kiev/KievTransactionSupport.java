@@ -4,10 +4,11 @@
 
 package com.oracle.helidon.oci.kiev;
 
+import java.util.Optional;
+
 import io.helidon.common.context.Context;
 import io.helidon.service.registry.Interception;
 import io.helidon.service.registry.InterceptionContext;
-import io.helidon.service.registry.Service;
 
 import com.oracle.pic.kiev.DataStore;
 import com.oracle.pic.kiev.Transaction;
@@ -15,13 +16,15 @@ import com.oracle.pic.kiev.Transaction;
 /**
  * Utility service used by generated and service-level interceptors to manage Kiev transactions.
  */
-@Service.Singleton
 public class KievTransactionSupport {
+    private final String storeName;
     private final DataStore dataStore;
+    private final KievTransactions transactions;
 
-    @Service.Inject
-    KievTransactionSupport(DataStore dataStore) {
+    KievTransactionSupport(String storeName, DataStore dataStore, KievTransactions transactions) {
+        this.storeName = storeName;
         this.dataStore = dataStore;
+        this.transactions = transactions;
     }
 
     /**
@@ -39,7 +42,10 @@ public class KievTransactionSupport {
         Transaction transaction = readOnly
                 ? dataStore.beginReadOnlyTransaction(effectiveTransactionName, DataStore.TIMESTAMP_NOW)
                 : dataStore.beginTransaction(effectiveTransactionName);
+        boolean registered = false;
         try {
+            transactions.register(storeName, transaction);
+            registered = true;
             T result = callback.execute(transaction);
             if (!readOnly) {
                 transaction.commit();
@@ -51,8 +57,18 @@ public class KievTransactionSupport {
             }
             throw e;
         } finally {
-            transaction.close();
+            try {
+                transaction.close();
+            } finally {
+                if (registered) {
+                    transactions.unregister(storeName, transaction);
+                }
+            }
         }
+    }
+
+    private boolean owns(Transaction transaction) {
+        return transactions.isForStore(transaction, storeName);
     }
 
     /**
@@ -67,6 +83,7 @@ public class KievTransactionSupport {
 
         @Override
         public <V> V proceed(InterceptionContext ctx, Chain<V> chain, Object... args) throws Exception {
+            KievTransactionSupport transactionSupport = support();
             int parameterIndex = transactionParameterIndex();
             if (parameterIndex >= args.length) {
                 throw new IllegalStateException("Transaction parameter index " + parameterIndex
@@ -78,8 +95,13 @@ public class KievTransactionSupport {
             if (parameterIndex >= 0) {
                 Object existing = args[parameterIndex];
                 if (existing != null) {
-                    if (existing instanceof Transaction) {
+                    if (existing instanceof Transaction transaction && transactionSupport.owns(transaction)) {
                         return chain.proceed(args);
+                    }
+                    if (existing instanceof Transaction transaction) {
+                        throw mismatchedTransactionException(parameterIndex,
+                                                             transactionSupport,
+                                                             transaction);
                     }
                     throw new IllegalStateException("Expected Kiev transaction argument at index "
                                                             + parameterIndex + " but got "
@@ -89,7 +111,7 @@ public class KievTransactionSupport {
 
             Object[] effectiveArgs = args.clone();
             Context requestContext = requestContext(args);
-            return support().execute(transactionName(), readOnly(), transaction -> {
+            return transactionSupport.execute(transactionName(), readOnly(), transaction -> {
                 if (parameterIndex >= 0) {
                     effectiveArgs[parameterIndex] = transaction;
                 }
@@ -97,11 +119,17 @@ public class KievTransactionSupport {
                     return chain.proceed(effectiveArgs);
                 }
 
-                requestContext.register(KievTransactions.CONTEXT_KEY, transaction);
+                Optional<Transaction> previousTransaction =
+                        transactionSupport.transactions.register(requestContext,
+                                                                 transactionSupport.storeName,
+                                                                 transaction);
                 try {
                     return chain.proceed(effectiveArgs);
                 } finally {
-                    requestContext.unregister(KievTransactions.CONTEXT_KEY, transaction);
+                    transactionSupport.transactions.unregister(requestContext,
+                                                               transactionSupport.storeName,
+                                                               transaction,
+                                                               previousTransaction);
                 }
             });
         }
@@ -113,6 +141,19 @@ public class KievTransactionSupport {
                 }
             }
             return null;
+        }
+
+        private IllegalStateException mismatchedTransactionException(int parameterIndex,
+                                                                     KievTransactionSupport transactionSupport,
+                                                                     Transaction transaction) {
+            String prefix = "Kiev transaction argument at index " + parameterIndex;
+            String storeName = transactionSupport.storeName;
+            return transactionSupport.transactions.storeName(transaction)
+                    .<IllegalStateException>map(actualStoreName -> new IllegalStateException(prefix
+                            + " is associated with store-name '" + actualStoreName
+                            + "', but @KievTransaction requires store-name '" + storeName + "'"))
+                    .orElseGet(() -> new IllegalStateException(prefix
+                            + " is not managed by Helidon Kiev for store-name '" + storeName + "'"));
         }
 
         /**

@@ -4,7 +4,7 @@
 
 package com.oracle.helidon.oci.kiev;
 
-import java.util.Optional;
+import java.util.List;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
@@ -17,61 +17,10 @@ import io.helidon.builder.api.Prototype;
 interface KievConfigBlueprint {
 
     /**
-     * Selected Kiev backend.
+     * Named Kiev data stores.
      *
-     * @return backend type
+     * @return configured data stores
      */
     @Option.Configured
-    @Option.Default("IN_MEMORY")
-    KievBackend backend();
-
-    /**
-     * Kiev store name.
-     *
-     * @return store name
-     */
-    @Option.Configured
-    String storeName();
-
-    /**
-     * Kiev application name.
-     *
-     * @return application name
-     */
-    @Option.Configured
-    String appName();
-
-    /**
-     * Maximum reads per transaction.
-     *
-     * @return transaction read limit
-     */
-    @Option.Configured
-    @Option.DefaultInt(100)
-    int transactionMaxReads();
-
-    /**
-     * Maximum writes per transaction.
-     *
-     * @return transaction write limit
-     */
-    @Option.Configured
-    @Option.DefaultInt(100)
-    int transactionMaxWrites();
-
-    /**
-     * Direct DB backend configuration.
-     *
-     * @return optional direct DB configuration
-     */
-    @Option.Configured
-    Optional<KievDirectDbConfig> directDb();
-
-    /**
-     * Service backend configuration.
-     *
-     * @return optional service configuration
-     */
-    @Option.Configured
-    Optional<KievServiceConfig> service();
+    List<KievStoreConfig> dataStores();
 }
