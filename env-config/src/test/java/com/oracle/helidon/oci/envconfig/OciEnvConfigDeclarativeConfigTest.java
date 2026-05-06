@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -65,8 +66,11 @@ class OciEnvConfigDeclarativeConfigTest {
             GlobalServiceRegistry.registry(registryManager.registry());
 
             Config config = Services.get(Config.class);
+            ConfigSource ociEnvSource = Services.firstNamed(ConfigSource.class, OciEnvConfigSourceProvider.TYPE)
+                    .orElseThrow();
 
-            assertThat(Services.firstNamed(ConfigSource.class, OciEnvConfigSourceProvider.TYPE).isPresent(), is(true));
+            assertThat(Services.firstNamed(ConfigSource.class, OciEnvConfigSourceProvider.TYPE).orElseThrow(),
+                       sameInstance(ociEnvSource));
             assertThat(Services.all(ConfigSource.class)
                                .stream()
                                .anyMatch(source -> OciEnvConfigSource.DESCRIPTION.equals(source.description())),

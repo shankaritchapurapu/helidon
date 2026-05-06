@@ -37,14 +37,20 @@
         <bc-fips-lib-version>1.0.2.4</bc-fips-lib-version>
         <nimbus-jose-jwt-lib-version>9.10.1</nimbus-jose-jwt-lib-version>
         <bcpkix-fips-lib-version>1.0.6</bcpkix-fips-lib-version>
-        <javax-ws-rs-version>2.1.1</javax-ws-rs-version>
+        <jakarta-ws-rs-version>2.1.6</jakarta-ws-rs-version>
         <j2objc-lib-version>3.0.0</j2objc-lib-version>
         <version.lib.logback>1.3.11</version.lib.logback>
         <version.lib.slf4j>2.0.9</version.lib.slf4j>
+        <pic-vault-user-version>1.0.8</pic-vault-user-version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.oracle.pic.vault</groupId>
+                <artifactId>vault-user-java-client</artifactId>
+                <version>${pic-vault-user-version}</version>
+            </dependency>
             <!-- Oracle PIC -->
             <!-- https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/PEG/repositories/core -->
             <dependency>
@@ -305,11 +311,11 @@
                 </exclusions>
             </dependency>
 
-            <!-- Jersey -->
+            <!-- JAX-RS -->
             <dependency>
-                <groupId>javax.ws.rs</groupId>
-                <artifactId>javax.ws.rs-api</artifactId>
-                <version>${javax-ws-rs-version}</version>
+                <groupId>jakarta.ws.rs</groupId>
+                <artifactId>jakarta.ws.rs-api</artifactId>
+                <version>${jakarta-ws-rs-version}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey</groupId>
@@ -321,6 +327,11 @@
             <dependency>
                 <groupId>org.glassfish.jersey.core</groupId>
                 <artifactId>jersey-client</artifactId>
+                <version>${jersey-lib-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.inject</groupId>
+                <artifactId>jersey-hk2</artifactId>
                 <version>${jersey-lib-version}</version>
             </dependency>
             <dependency>

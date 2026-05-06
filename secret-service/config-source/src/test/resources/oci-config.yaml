@@ -1,0 +1,25 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+helidon:
+  oci-env:
+    prefix: "oci.file"
+    dynamic-core-regions:
+      enabled: false
+    location-override:
+      region: "us-ashburn-1"
+      availability-domain: "iad-ad-1"
+      fault-domain: 5
+
+  oci-secret-service:
+    prefix: "oci.file.ssv2"
+    cache-ttl: "PT5M"
+    poll-interval: "PT15S"
+    client:
+      enabled: false
+      endpoint: "https://secret-service-ce.${oci.env.iaas-domain-name}/v1"
+      tls-config:
+        ca-bundle: "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+      retry-config:
+        max-retries: 3

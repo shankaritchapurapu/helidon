@@ -14,19 +14,31 @@
 ## Overview
 
 The Secret Service V2 (SSv2) integration provides the following features:
-1. Secret Service Config Source - SSv2 secrets retrieval over MicroProfile Config
+1. Secret Service Config Source - SSv2 secrets retrieval over Helidon Config
 2. Secret Service TLS Manager - Server and Client mTls rotation
 
 ---
 
 ## Maven Coordinates
 
-To enable Secret Service V2 (SSv2) add the following dependency to your projectâ€™s pom.xml:
+Add the dependency for the SSv2 feature you use:
+
+Config source:
 
 ```xml
 <dependency>
-    <groupId>com.oracle.helidon.oci</groupId>
-    <artifactId>helidon-oci-secret-service</artifactId>
+    <groupId>com.oracle.helidon.oci.secret-service</groupId>
+    <artifactId>helidon-oci-secret-service-config-source</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+TLS manager:
+
+```xml
+<dependency>
+    <groupId>com.oracle.helidon.oci.secret-service</groupId>
+    <artifactId>helidon-oci-secret-service-tls-manager</artifactId>
     <scope>runtime</scope>
 </dependency>
 ```
@@ -37,34 +49,142 @@ To enable Secret Service V2 (SSv2) add the following dependency to your projectâ
 
 ### Secret Service Config Source
 
-SSv2 config source maps MicroProfile configuration properties to SSv2 secret paths.
+SSv2 config source is a lazy Helidon config source backed by SSv2 and maps configuration properties to SSv2 secret paths.
 
-Properties with default prefix `oci.ssv2` are being resolved as following:
+Properties with configurable prefix `oci.ssv2` by default are being resolved as following:
 * `oci.ssv2/secret/helidon/test-secret/latest` is being resolved from SSv2 as `/secret/helidon/test-secret/latest`
 
+Keys outside the configured prefix are ignored by this source.
+
 ```java
-@Inject
-@ConfigProperty(name = "oci.ssv2/secret/helidon/test-secret/latest")
-Supplier<String> testSecret;
+import io.helidon.config.Config;
+import io.helidon.service.registry.Service;
+
+@Service.Singleton
+final class SecretAwareService {
+    private final String testSecret;
+
+    @Service.Inject
+    SecretAwareService(Config config) {
+        this.testSecret = config.get("oci.ssv2/secret/helidon/test-secret/latest")
+                .asString()
+                .orElseThrow();
+    }
+}
 ```
 
-Optional config source configuration in `mp-meta-config.yaml`:
+Primary declarative configuration uses `oci-config.yaml`. When no explicit
+`meta-config.*` bootstrap file is present and the application uses Helidon's default
+declarative bootstrap, the SSv2 config source is auto-registered and reads
+`helidon.oci-secret-service` from `oci-config.yaml`. The same file can also configure
+`oci-env`, which publishes the region and IaaS domain values used by the default SSv2
+endpoint:
+
+```yaml
+helidon:
+  oci-env:
+    prefix: "oci.env"
+    location-override:
+      region: "sol-mars-1"
+      availability-domain: "sol-mars-1-ad-1"
+      fault-domain: 5
+
+  oci-secret-service:
+    prefix: "oci.ssv2"
+    cache-ttl: "PT5M"
+    poll-interval: "PT30M"
+    client:
+      endpoint: "https://secret-service-ce.${oci.env.iaas-domain-name}/v1"
+      tls-config:
+        ca-bundle: "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+
+  oci:
+    authentication-method: "auto"
+    allowed-authentication-methods: ["config", "config-file"]
+    authentication:
+      config-file:
+        profile: "DEFAULT"
+        path: "/custom/path/.oci/config"
+      config:
+        region: "${oci.env.region-name}"
+        fingerprint: "0A0B..."
+        tenant-id: "ocid"
+        user-id: "ocid"
+        private-key:
+          resource-path: "/on/classpath/private-key.pem"
+      session-token:
+        session-token: "token"
+        session-lifetime-hours: 8
+        region: "${oci.env.region-name}"
+```
+
+Optional explicit config source configuration in `meta-config.yaml`. This example includes
+`oci-env` because explicit meta-config disables the automatic `oci-env` source registration
+path, and SSv2 uses env-config to resolve the current region's IaaS domain:
 ```yaml
 sources:
-  - type: 'oci-secret-service'
-    # Optional config
-    prefix: oci.ssv2
-    # <<region>> placeholder is automatically resolved 
-    endpoint: "https://secret-service-ce.<<region>>.oracleiaas.com/v1"
-    tlsConfig.caBundle: "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
-    cacheConfig:
-      cacheType: IN_MEMORY_CACHE
-      cacheExpiryInSeconds: 10
-      cacheRefreshIntervalInSeconds: 2
-    retryConfig:
-      maxRetries: 3
-      minRetryDelayInMs: 100
+  - type: "oci-env"
+  - type: "oci-secret-service"
+    properties:
+      prefix: "oci.ssv2"
+      cache-ttl: "PT5M"
+      poll-interval: "PT30M"
+      client:
+        endpoint: "https://secret-service-ce.${oci.env.iaas-domain-name}/v1"
+        tls-config:
+          ca-bundle: "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+        retry-config:
+          max-retries: 3
+          min-retry-delay-in-ms: 100
 ```
+
+Endpoint region and domain resolution is delegated to
+[Environment Configuration](environment-config.md). The config-source module brings
+`helidon-oci-envconfig` at runtime, and the default SSv2 endpoint uses
+`${oci.env.iaas-domain-name}`:
+
+```yaml
+client:
+  endpoint: "https://secret-service-ce.${oci.env.iaas-domain-name}/v1"
+```
+
+`oci-env` resolves the active region from its normal location sources, imports dynamic
+core-regions metadata when needed, and publishes domain keys such as
+`oci.env.iaas-domain-name`. For example, `us-phoenix-1` resolves the IaaS domain to
+`r2.oracleiaas.com`, so the endpoint becomes
+`https://secret-service-ce.r2.oracleiaas.com/v1`. `us-seattle-1` resolves to
+`r1.oracleiaas.com`, and other realms use their realm-specific IaaS domain suffix.
+
+When explicit `meta-config.*` is used, include `type: "oci-env"` before
+`type: "oci-secret-service"` so the endpoint placeholder can be resolved during config
+bootstrap. If no explicit `meta-config.*` is present and the application uses Helidon's
+default declarative bootstrap, `oci-env` is auto-registered when `helidon-oci-envconfig`
+is on the classpath, and SSv2 reads `helidon.oci-secret-service` from `oci-config.yaml`.
+If the placeholder is still unresolved, SSv2 client initialization fails and the endpoint
+must be configured explicitly.
+
+SSv2 client configuration can be provided either under `client` or directly in the source definition. If both styles are used, values from `client` override duplicate root-level client settings.
+
+If `cache-ttl` is not configured, the direct-read secret-value cache defaults to
+`PT5M`. If `poll-interval` is not configured, background polling defaults to
+`PT30M`. `cache-ttl` does not change the default polling cadence.
+
+The SSv2 source uses the same keys in `oci-config.yaml` and `meta-config.*`; only the
+parent path differs. `oci-config.yaml` uses `helidon.oci-secret-service`, while
+`meta-config.*` uses the `properties` block of a source entry with
+`type: "oci-secret-service"`. Explicit `meta-config.*` has higher bootstrap precedence, so
+`oci-config.yaml` is not consulted for SSv2 source settings on that path.
+
+Runtime behavior:
+* Reads are lazy and each requested key becomes tracked on first access.
+* Tracked values are cached for configurable `cache-ttl`.
+* Background polling starts only when config change listeners are active.
+* Only tracked keys are polled and included in emitted root snapshots.
+* Direct lazy reads can publish an updated tracked snapshot immediately when they refresh a value while listeners are active.
+* Root snapshot publication is serialized internally to keep poll-driven and on-demand refreshes consistent.
+* The config source uses an internal SSv2 vault client backed by OCI SDK request signing, retry support, and the generated SSv2 response model.
+* The source-level `cache-ttl` is the effective secret-value cache for this feature.
+
 ### Secret Service TLS Manager
 
 TLS manager `oci-ssv2` is capable of mTLS rotation with keys and certificates produced by PKI service and stored in SSv2 in JSON format.

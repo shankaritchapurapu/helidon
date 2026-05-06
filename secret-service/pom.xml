@@ -14,30 +14,18 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>com.oracle.helidon.oci.secret-service</groupId>
-    <artifactId>helidon-oci-secret-service</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <artifactId>helidon-oci-secret-service-project</artifactId>
 
-    <name>Helidon OCI Secret Service</name>
+    <name>Helidon OCI Secret Service Project</name>
 
-    <properties>
-        <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>
-    </properties>
-
-    <dependencies/>
+    <packaging>pom</packaging>
+    <modules>
+        <module>config-source</module>
+        <module>tls-manager</module>
+    </modules>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Automatic-Module-Name>com.oracle.helidon.oci.secret</Automatic-Module-Name>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
