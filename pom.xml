@@ -78,6 +78,7 @@
         <module>splat</module>
         <module>audit</module>
         <module>limits</module>
+        <module>tagging</module>
         <module>kiev</module>
         <module>workflow</module>
         <module>tests</module>

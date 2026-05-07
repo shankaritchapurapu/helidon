@@ -21,6 +21,7 @@ JDK 25.
 * [Secret Service V2](./secret-service.md) - Secret retrieval and TLS rotation support through Secret Service.
 * [SPLAT](./splat.md) - mTLS validation integration for Helidon endpoints using the upstream SPLAT filter.
 * [OCI OpenAPI Generation With Splat Validation](./oci-openapi-generator.md)
+* [Tagging](./tagging.md) - Tagging integration.
 * [Workflow](./workflow.md) - Generated configuration and bindings for OCI Workflow-as-a-Service integration.
 
 ### Platform Utilities

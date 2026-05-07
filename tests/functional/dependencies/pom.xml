@@ -45,7 +45,8 @@
                             <includeProperties>
                                 oracle-internal-commons-request-id-version,
                                 oracle-internal-limits-version,
-                                sherlock-version
+                                sherlock-version,
+                                oracle-internal-tagging-version
                                 <!-- oracle-internal-kiev-version -->
                             </includeProperties>
                             <!--suppress UnresolvedMavenProperty -->
