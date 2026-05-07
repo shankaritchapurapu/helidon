@@ -73,6 +73,7 @@
         <module>request-id</module>
         <module>identity</module>
         <module>metrics</module>
+        <module>metering</module>
         <module>secret-service</module>
         <module>splat</module>
         <module>audit</module>

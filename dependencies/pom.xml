@@ -29,6 +29,8 @@
         <oracle-internal-telemetry-commons-module-version>1.0.53</oracle-internal-telemetry-commons-module-version>
         <oracle-internal-kiev-version>2.0.35</oracle-internal-kiev-version>
         <oracle-internal-workflow-version>14.0.0</oracle-internal-workflow-version>
+        <oracle-internal-metering-emitter-dp-version>1.0.0.9</oracle-internal-metering-emitter-dp-version>
+        <oracle-internal-metering-agent-version>11.0.0.68</oracle-internal-metering-agent-version>
         <oracle-internal-splat-sdk-version>0.1.39635</oracle-internal-splat-sdk-version>
         <oracle-oci-sdk-version>2.88.0</oracle-oci-sdk-version>
         <sherlock-version>3.0.13</sherlock-version>
@@ -37,6 +39,7 @@
         <bc-fips-lib-version>1.0.2.4</bc-fips-lib-version>
         <nimbus-jose-jwt-lib-version>9.10.1</nimbus-jose-jwt-lib-version>
         <bcpkix-fips-lib-version>1.0.6</bcpkix-fips-lib-version>
+        <checker-qual-lib-version>3.49.5</checker-qual-lib-version>
         <jakarta-ws-rs-version>2.1.6</jakarta-ws-rs-version>
         <j2objc-lib-version>3.0.0</j2objc-lib-version>
         <version.lib.logback>1.3.11</version.lib.logback>
@@ -182,6 +185,11 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>kiev-core</artifactId>
+                <version>${oracle-internal-kiev-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
                 <artifactId>in-memory-library</artifactId>
                 <version>${oracle-internal-kiev-version}</version>
             </dependency>
@@ -296,6 +304,75 @@
                 <version>${oracle-internal-workflow-version}</version>
             </dependency>
             <dependency>
+                <groupId>com.oracle.pic.bling</groupId>
+                <artifactId>emitter-dp</artifactId>
+                <version>${oracle-internal-metering-emitter-dp-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.bling</groupId>
+                <artifactId>metering-agent</artifactId>
+                <version>${oracle-internal-metering-agent-version}</version>
+                <exclusions>
+                    <!-- For convergence of metering and Kiev. Let the Kiev integration module drive the dep mgt for these. -->
+                    <exclusion>
+                        <groupId>com.oracle.pic.kiev</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.commons</groupId>
+                        <artifactId>kiev-commons</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.commons</groupId>
+                        <artifactId>core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.vault</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.identity.authentication</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.identity.authorization</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.commons.client</groupId>
+                        <artifactId>java-rest-client</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.nimbusds</groupId>
+                        <artifactId>nimbus-jose-jwt</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.apache.maven</groupId>
+                        <artifactId>maven-model</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.oracle.pic.bling</groupId>
+                        <artifactId>lease-kiev</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.dropwizard</groupId>
+                        <artifactId>dropwizard-lifecycle</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.assertj</groupId>
+                        <artifactId>assertj-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.google.guava</groupId>
+                        <artifactId>guava</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
                 <groupId>com.oracle.pic.platform.splat.sdk</groupId>
                 <artifactId>splat-sdk</artifactId>
                 <version>${oracle-internal-splat-sdk-version}</version>
@@ -309,6 +386,12 @@
                         <artifactId>core-resources</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <!-- For convergence between metering-agent and emitter-dp -->
+            <dependency>
+                <groupId>org.checkerframework</groupId>
+                <artifactId>checker-qual</artifactId>
+                <version>${checker-qual-lib-version}</version>
             </dependency>
 
             <!-- JAX-RS -->
