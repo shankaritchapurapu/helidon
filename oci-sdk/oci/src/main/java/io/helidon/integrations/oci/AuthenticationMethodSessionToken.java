@@ -4,7 +4,7 @@
 
 package io.helidon.integrations.oci;
 
-import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.System.Logger.Level;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -17,6 +17,7 @@ import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.ConfigFileReader;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
+import com.oracle.bmc.auth.SessionTokenAuthenticationDetailsProvider;
 
 /**
  * Session token authentication method, uses the {@link com.oracle.bmc.auth.SessionTokenAuthenticationDetailsProvider}.
@@ -33,8 +34,8 @@ class AuthenticationMethodSessionToken implements OciAuthenticationMethod {
 
     AuthenticationMethodSessionToken(OciConfig config,
                                      Supplier<Optional<ConfigFileReader.ConfigFile>> configFileSupplier,
-                                     Supplier<SessionTokenAuthenticationDetailsProviderBuilder> builder) {
-        provider = LazyValue.create(() -> createProvider(config, configFileSupplier, builder));
+                                     Supplier<SessionTokenAuthenticationDetailsProvider> providerSupplier) {
+        provider = LazyValue.create(() -> createProvider(config, configFileSupplier, providerSupplier));
     }
 
     @Override
@@ -50,7 +51,7 @@ class AuthenticationMethodSessionToken implements OciAuthenticationMethod {
     private static Optional<BasicAuthenticationDetailsProvider>
     createProvider(OciConfig config,
                    Supplier<Optional<ConfigFileReader.ConfigFile>> configFileSupplier,
-                   Supplier<SessionTokenAuthenticationDetailsProviderBuilder> builder) {
+                   Supplier<SessionTokenAuthenticationDetailsProvider> providerSupplier) {
 
         /*
         Session tokens provide is available if either of the following is true:
@@ -63,8 +64,8 @@ class AuthenticationMethodSessionToken implements OciAuthenticationMethod {
 
         if (hasSecurityToken(maybeConfigFile) || maybeSessionTokenConfig.isPresent()) {
             try {
-                return Optional.of(builder.get().build());
-            } catch (IOException e) {
+                return Optional.of(providerSupplier.get());
+            } catch (UncheckedIOException e) {
                 if (LOGGER.isLoggable(Level.TRACE)) {
                     LOGGER.log(Level.TRACE, "Cannot create session token authentication provider", e);
                 }

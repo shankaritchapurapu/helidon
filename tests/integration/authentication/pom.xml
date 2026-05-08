@@ -29,14 +29,6 @@
             <artifactId>helidon-oci-sdk-authentication-instance</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.integrations.oci</groupId>
-            <artifactId>helidon-integrations-oci</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.integrations.oci.authentication</groupId>
-            <artifactId>helidon-integrations-oci-authentication-instance</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.oracle.helidon.oci.jaxrs</groupId>
             <artifactId>helidon-oci-jaxrs</artifactId>
         </dependency>

@@ -8,78 +8,25 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.oracle.helidon.oci</groupId>
-        <artifactId>helidon-oci-sdk</artifactId>
+        <artifactId>helidon-oci-sdk-authentication</artifactId>
         <version>2.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>helidon-oci-sdk-oci</artifactId>
+    <artifactId>helidon-oci-sdk-authentication-resource</artifactId>
     <packaging>jar</packaging>
 
-    <name>Helidon OCI SDK Common</name>
-
-    <properties>
-        <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>
-    </properties>
+    <name>Helidon OCI SDK Authentication Resource</name>
 
     <dependencies>
         <dependency>
-            <groupId>io.helidon.integrations.oci</groupId>
-            <artifactId>helidon-integrations-oci</artifactId>
-            <version>${helidon.version}</version>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-sdk-oci</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.integrations.oci.authentication</groupId>
+            <artifactId>helidon-integrations-oci-authentication-resource</artifactId>
             <!-- We don't want it in classpath -->
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.service</groupId>
-            <artifactId>helidon-service-registry</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.common</groupId>
-            <artifactId>helidon-common-configurable</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.config</groupId>
-            <artifactId>helidon-config</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.config</groupId>
-            <artifactId>helidon-config-metadata</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.config</groupId>
-            <artifactId>helidon-config-yaml</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.json</groupId>
-            <artifactId>jakarta.json-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.ws.rs</groupId>
-            <artifactId>jakarta.ws.rs-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.webclient</groupId>
-            <artifactId>helidon-webclient</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.http.media</groupId>
-            <artifactId>helidon-http-media-jsonp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -89,6 +36,21 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -166,7 +128,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>io.helidon.integrations.oci</Automatic-Module-Name>
+                            <Automatic-Module-Name>io.helidon.integrations.oci.authentication.resource</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -184,24 +146,17 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>io.helidon.integrations.oci</groupId>
-                                    <artifactId>helidon-integrations-oci</artifactId>
+                                    <groupId>io.helidon.integrations.oci.authentication</groupId>
+                                    <artifactId>helidon-integrations-oci-authentication-resource</artifactId>
                                     <classifier>sources</classifier>
                                     <type>jar</type>
                                     <overWrite>true</overWrite>
                                     <outputDirectory>${project.build.directory}/generated-sources/helidon</outputDirectory>
                                     <!-- Exclude every class we are going to overwrite or generated by annotation processor -->
                                     <excludes>
-                                        io/helidon/integrations/oci/ImdsInstanceInfo.java,
-                                        io/helidon/integrations/oci/ConfigMethodConfig.java,
-                                        io/helidon/integrations/oci/AuthenticationMethodConfig.java,
-                                        io/helidon/integrations/oci/OciConfig.java,
-                                        io/helidon/integrations/oci/SessionTokenMethodConfig.java,
-                                        io/helidon/integrations/oci/ConfigFileMethodConfig.java,
-                                        io/helidon/integrations/oci/*__ServiceDescriptor.java,
-                                        io/helidon/integrations/oci/AdpSessionTokenBuilderProvider*,
-                                        io/helidon/integrations/oci/AuthenticationMethodSessionToken*,
-                                        io/helidon/integrations/oci/RegionProviderSdk*
+                                        io/helidon/integrations/oci/authentication/resource/*__ServiceDescriptor.java,
+                                        io/helidon/integrations/oci/authentication/resource/package-info.java,
+                                        io/helidon/integrations/oci/authentication/resource/ResourcePrincipalBuilderProvider.java
                                     </excludes>
                                 </artifactItem>
                             </artifactItems>
@@ -227,19 +182,23 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- The upstream oci-sdk dependency is declared as provided, which still makes it available
-     to Surefire tests. Exclude it from test runtime so tests do not discover the published jar. -->
+            <!-- The upstream resource-auth dependency is declared as provided, which still makes it available
+                 to Surefire tests. Exclude it from test runtime so tests do not discover the published jar. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
+                    <environmentVariables>
+                        <OCI_RESOURCE_PRINCIPAL_VERSION>2.2</OCI_RESOURCE_PRINCIPAL_VERSION>
+                    </environmentVariables>
                     <classpathDependencyExcludes>
                         <classpathDependencyExclude>
-                            io.helidon.integrations.oci:helidon-integrations-oci
+                            io.helidon.integrations.oci.authentication:helidon-integrations-oci-authentication-resource
                         </classpathDependencyExclude>
                     </classpathDependencyExcludes>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
 </project>

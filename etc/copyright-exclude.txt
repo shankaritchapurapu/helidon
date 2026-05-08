@@ -4,6 +4,7 @@ jvm.config
 .args
 .bundle
 .class
+.crt
 .ddl
 .exe
 .gif

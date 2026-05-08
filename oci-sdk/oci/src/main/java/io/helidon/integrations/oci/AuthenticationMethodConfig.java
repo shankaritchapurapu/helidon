@@ -67,7 +67,7 @@ class AuthenticationMethodConfig implements OciAuthenticationMethod {
         if (config.privateKey().isPresent()) {
             // as a resource (classpath, file system, base64, plain text)
             Resource resource = config.privateKey().get();
-            Supplier<InputStream> supplier = () -> new ByteArrayInputStream(config.privateKey().get().bytes());
+            Supplier<InputStream> supplier = () -> new ByteArrayInputStream(resource.bytes());
             builder.privateKeySupplier(supplier);
         } else {
             // or as the default location in user.home/.oci/oic_api_key.pem

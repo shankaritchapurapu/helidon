@@ -40,7 +40,6 @@
         <checkstyle.skip>false</checkstyle.skip>
 
         <helidon.version>4.4.1</helidon.version>
-        <version.lib.oci>3.75.0</version.lib.oci>
         <version.lib.checkstyle>13.3.0</version.lib.checkstyle>
         <version.lib.mockito>5.22.0</version.lib.mockito>
 
@@ -174,7 +173,7 @@
                         <dependency>
                             <groupId>com.oracle.oci.sdk</groupId>
                             <artifactId>oci-java-sdk-enforcer-rules</artifactId>
-                            <version>${version.lib.oci}</version>
+                            <version>${oracle-oci-sdk-version}</version>
                             <optional>false</optional>
                         </dependency>
                         <dependency>
@@ -203,21 +202,16 @@
                                             <excludedGav>javax.annotation:javax.annotation-api:.*</excludedGav>
                                         </excludedGavRegExs>
                                     </helidonDependenciesRule -->
-                                    <!-- bannedDependencies>
+                                    <bannedDependencies>
                                         <searchTransitive>true</searchTransitive>
+                                        <message>OCI Java SDK dependencies must resolve to ${oracle-oci-sdk-version}</message>
                                         <excludes>
-                                            <exclude>io.dropwizard</exclude>
-                                            <exclude>junit</exclude>
-                                            <exclude>lombok</exclude>
+                                            <exclude>com.oracle.oci.sdk:*:[0,${oracle-oci-sdk-version})</exclude>
+                                            <exclude>com.oracle.oci.sdk:*:(${oracle-oci-sdk-version},)</exclude>
                                         </excludes>
-                                    </bannedDependencies -->
+                                    </bannedDependencies>
                                     <noMixedOciJavaSdkVersionsRule implementation="com.oracle.bmc.enforcer.rule.NoMixedOciJavaSdkVersionsRule">
-                                        <allowedDependencies>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common:*</allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-circuitbreaker:*</allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-common-httpclient:*</allowedDependency>
-                                            <allowedDependency>com.oracle.oci.sdk:oci-java-sdk-objectstorage-generated:*</allowedDependency>
-                                        </allowedDependencies>
+                                        <allowedDependencies/>
                                     </noMixedOciJavaSdkVersionsRule>
                                     <!-- https://maven.apache.org/enforcer/enforcer-rules/dependencyConvergence.html -->
                                     <DependencyConvergence/>

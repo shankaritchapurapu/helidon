@@ -19,5 +19,7 @@
 
     <modules>
         <module>instance</module>
+        <module>resource</module>
+        <module>oke-workload</module>
     </modules>
 </project>

@@ -601,6 +601,11 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-addons-oke-workload-identity</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-audit</artifactId>
                 <version>${oracle-oci-sdk-version}</version>
             </dependency>
