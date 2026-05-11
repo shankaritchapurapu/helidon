@@ -237,8 +237,27 @@
                         <artifactId>jakarta.ws.rs-api</artifactId>
                     </exclusion>
                     <exclusion>
+                        <groupId>javax.ws.rs</groupId>
+                        <artifactId>javax.ws.rs-api</artifactId>
+                    </exclusion>
+                    <exclusion>
                         <groupId>com.google.code.findbugs</groupId>
                         <artifactId>annotations</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.tagging</groupId>
+                <artifactId>common</artifactId>
+                <version>${oracle-internal-tagging-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.oracle.pic.commons</groupId>
+                        <artifactId>metrics</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -632,6 +651,11 @@
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-identitydataplane</artifactId>
+                <version>${oracle-oci-sdk-version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-identity</artifactId>
                 <version>${oracle-oci-sdk-version}</version>
             </dependency>
             <dependency>

@@ -19,6 +19,7 @@
 
     <modules>
         <module>oci</module>
+        <module>identity-client</module>
         <module>authentication</module>
     </modules>
 

@@ -32,6 +32,7 @@
         <version.lib.classgraph>4.8.184</version.lib.classgraph>
         <jersey-lib-version>2.47</jersey-lib-version>
         <version.lib.logback>1.5.32</version.lib.logback>
+        <version.lib.mockito>5.22.0</version.lib.mockito>
         <version.lib.slf4j>2.0.9</version.lib.slf4j>
         <version.helidon.extensions.openapi-generator>4.0.0-RC1</version.helidon.extensions.openapi-generator>
         <maven.compiler.release>25</maven.compiler.release>
@@ -71,6 +72,11 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${version.lib.logback}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${version.lib.mockito}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

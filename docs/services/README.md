@@ -6,6 +6,7 @@ Helidon OCI provides integration with the following services.
 |-----------------------------------------------|--------------------------------------------------------------------------------------|
 | [Audit](audit.md)                             | OCI `AuditV2Filter` integration for capturing audited request and response activity. |
 | [Identity](identity.md)                       | Authentication, authorization, and request-scoped identity context integration.      |
+| [OCI Identity Client](identity-client.md)     | Helidon service registry binding for the OCI Java SDK Identity client.              |
 | [Kiev](kiev.md)                               | Helidon configuration and service registry bindings for Kiev client libraries.       |
 | [Limits](limits.md)                           | Helidon service integration for interacting with OCI Limits.                         |
 | [Metering](metering.md)                       | Helidon APIs for reporting to OCI metering.                                          |

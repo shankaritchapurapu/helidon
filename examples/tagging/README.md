@@ -2,19 +2,19 @@
 
 ## Overview
 
-This example shows how to use Helidon together with the OCI internal tagging client.
+This example shows how to use Helidon together with:
 
-It supports:
+* `helidon-oci-tagging` for binary tag slug creation
+* `helidon-oci-identity` for Auth SDK authentication, authorization, and request context
+* `helidon-oci-identity-client` for the OCI Java SDK Identity client
 
-* converting `freeformTags`, `definedTags`, and optional `systemTags` into a tag slug
-* decoding a tag slug back into tag maps
-* creating an empty tag slug for write paths that do not carry tags
+The example exposes separate paths for creating an OCI Identity tag definition and for creating a tagged resource. The
+resource path converts existing request tags into a tag slug, sends that slug to Authorization Service with
+`AuthorizationRequestFactory.setNewTags(...)`, and returns a resource representation containing the authorized tag slug.
 
-The example uses the reusable `helidon-oci-tagging` module. The endpoints do not call OCI; they use the
-module-created internal tagging client to convert resource tag maps to and from tag slugs.
 Metrics emission is disabled in [`src/main/resources/application.yaml`](./src/main/resources/application.yaml).
 
-For background and the tag slug workflow, see [Tagging](../../docs/tagging.md) under the
+For background and the tag slug workflow, see [Tagging](../../docs/services/tagging.md) under the
 [Helidon-OCI Native Services Integration Guide](../../docs/README.md).
 
 ## Prerequisites
@@ -42,20 +42,32 @@ The service starts on `http://localhost:8080/tagging`.
 
 ## Endpoints
 
-The service exposes:
+Both endpoints are protected by the Auth SDK configuration. The `curl` snippets show the request body shape; live calls
+must use the signed request or development authentication setup for the target environment.
 
-* `POST /tagging/slugs`
-* `POST /tagging/tag-sets`
-* `GET /tagging/slugs/empty`
-
-Create a tag slug from an existing resource with freeform, defined, and system tags:
+Create the OCI Identity tag definition first:
 
 ```shell
-curl -X POST http://localhost:8080/tagging/slugs \
+curl -X POST http://localhost:8080/tagging/tag-definitions \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json' \
   -d '{
-        "resourceId": "ocid1.instance.oc1..example",
+        "tagNamespaceId": "ocid1.tagnamespace.oc1..example",
+        "tagName": "CostCenter",
+        "description": "Cost center tag",
+        "costTracking": false
+      }'
+```
+
+After the tag definition exists, create a tagged resource:
+
+```shell
+curl -X POST http://localhost:8080/tagging/resources \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json' \
+  -d '{
+        "resourceId": "ocid1.exampletaggedresource.oc1..example",
+        "compartmentId": "ocid1.compartment.oc1..example",
         "tags": {
           "freeformTags": {
             "owner": "platform",
@@ -75,7 +87,26 @@ curl -X POST http://localhost:8080/tagging/slugs \
       }'
 ```
 
-Use `POST /tagging/tag-sets` with `resourceId` and `tagSlug` to decode a slug back into a tagged resource.
+The resource response is a tagged resource view. The `tagSlug` value is the authorized slug returned by Authorization
+Service, and the response tag maps are decoded from that authorized slug.
+
+## Configuration
+
+The example uses instance principal authentication for the OCI Java SDK Identity client:
+
+```yaml
+helidon:
+  oci:
+    authentication-method: instance-principal
+
+oci:
+  identity-client:
+    region: us-ashburn-1
+```
+
+The Auth SDK configuration is under `oci.identity`. Replace the placeholder values in
+[`src/main/resources/application.yaml`](./src/main/resources/application.yaml) with the service name, region, physical
+AD, and trust material for the target environment.
 
 ## Test
 
@@ -87,4 +118,5 @@ From `examples/tagging`:
 mvn test
 ```
 
-The tests start the example application and use the tagging client supplied by `helidon-oci-tagging`.
+The tests start the example application, mock `IAuthorizationClient` and OCI SDK `Identity` through test-only service
+registry bindings, and exercise the HTTP tag definition and resource creation paths without making real OCI calls.

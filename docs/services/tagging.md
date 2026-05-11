@@ -74,6 +74,10 @@ The corresponding read-path pattern is:
 * extract a `TagSet`
 * read the maps back using `getFreeformTags()`, `getDefinedTags()`, and `getSystemTags()`
 
+For write paths that persist or update tags, the tag slug should be validated through Authorization Service before it
+is stored with the resource. The tagging client creates the local slug; the Auth SDK validates it and can return the
+slug that should be stored.
+
 ---
 
 ## Configuration
@@ -105,13 +109,13 @@ java -jar examples/tagging/target/helidon-oci-examples-tagging.jar
 
 The sample exposes:
 
-* `GET /tagging/slugs/empty`
-* `POST /tagging/slugs`
-* `POST /tagging/tag-sets`
+* `POST /tagging/tag-definitions`
+* `POST /tagging/resources`
 
 The example depends on `helidon-oci-tagging` and demonstrates converting tagged resources to tag slugs and back
-again. It starts through the Helidon service registry, so the endpoint receives the tagging client from the module
-rather than constructing it directly.
+again. It also demonstrates Auth SDK authorization and OCI SDK Identity tag definition calls. The application starts
+through the Helidon service registry, so the endpoint receives the tagging and identity clients from their modules
+rather than constructing them directly.
 
 ---
 
