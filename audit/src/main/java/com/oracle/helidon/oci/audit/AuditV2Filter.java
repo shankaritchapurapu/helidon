@@ -218,6 +218,7 @@ class AuditV2Filter implements Filter {
         Data dataToCopy = eventToCopy.getData();
         Data data = Data.builder()
                 // Reuse some references
+                .eventName(dataToCopy.getEventName())
                 .identity(dataToCopy.getIdentity())
                 .request(dataToCopy.getRequest())
                 .response(dataToCopy.getResponse())

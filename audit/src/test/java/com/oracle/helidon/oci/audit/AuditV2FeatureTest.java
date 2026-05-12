@@ -5,6 +5,10 @@
 package com.oracle.helidon.oci.audit;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +26,7 @@ import io.helidon.webserver.testing.junit5.SetUpRoute;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -33,6 +38,7 @@ import com.oracle.pic.sherlock.common.event.AuditEventV2;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 
 @RoutingTest
 class AuditV2FeatureTest {
@@ -115,5 +121,57 @@ class AuditV2FeatureTest {
         // tolerate async/different-thread completion
         Mockito.verify(auditLogger, Mockito.timeout(2000).atLeast(2))
                .log(captor.capture());
+    }
+
+    @Test
+    void testCustomLoggerWritesAuditEventsToFile(@TempDir Path tempDir) throws Exception {
+        Path auditFile = tempDir.resolve("custom.audit");
+        AUDIT_LOGGER_REF.set(event -> Files.writeString(auditFile,
+                                                         auditLine(event),
+                                                         StandardCharsets.UTF_8,
+                                                         StandardOpenOption.CREATE,
+                                                         StandardOpenOption.APPEND));
+
+        try (Http1ClientResponse response = client.get("/get")
+                .queryParam("reqparam1", "param1")
+                .header(HeaderNames.create("opc-request-id"), "ID 1")
+                .header(HeaderNames.create("reqheader1"), "header1")
+                .request()) {
+            assertThat(response.status(), is(Status.OK_200));
+        }
+
+        List<String> lines = Files.readAllLines(auditFile, StandardCharsets.UTF_8);
+        assertThat(lines.size(), is(2));
+
+        String content = Files.readString(auditFile, StandardCharsets.UTF_8);
+        assertThat(content, containsString("test-source|com.oraclecloud.test-source.test|test|1|3|ID 1|/get|GET|200 OK"
+                                                   + "|param1|header1"));
+        assertThat(content, containsString("test-source|com.oraclecloud.test-source.test|test|1|2|ID 1|/get|GET|200 OK"
+                                                   + "|param1|header1"));
+    }
+
+    private static String auditLine(AuditEventV2 event) {
+        AuditEventV2.Data data = event.getData();
+        return String.join("|",
+                           event.getSource(),
+                           event.getEventType(),
+                           data.getEventName(),
+                           data.getCompartmentId(),
+                           data.getResourceId(),
+                           data.getRequest().getId(),
+                           data.getRequest().getPath(),
+                           data.getRequest().getAction(),
+                           data.getResponse().getStatus(),
+                           first(data.getRequest().getParameters(), "reqparam1"),
+                           first(data.getRequest().getHeaders(), "reqheader1"))
+                + System.lineSeparator();
+    }
+
+    private static String first(Map<String, String[]> values, String key) {
+        String[] result = values.get(key);
+        if (result == null || result.length == 0) {
+            return "";
+        }
+        return result[0];
     }
 }
