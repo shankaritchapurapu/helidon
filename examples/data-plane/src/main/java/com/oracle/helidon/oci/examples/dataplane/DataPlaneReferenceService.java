@@ -48,7 +48,7 @@ class DataPlaneReferenceService {
         return list(null, compartmentId, displayName);
     }
 
-    @KievTransaction(value = "data-plane-list", dataStore = DATA_STORE_NAME, readOnly = true)
+    @KievTransaction(value = DATA_STORE_NAME, name = "data-plane-list", readOnly = true)
     RobotCollection list(Transaction tx, String compartmentId, String displayName) {
         List<RobotSummary> items = readAll(tx).stream()
                 .filter(robot -> compartmentId == null || compartmentId.equals(robot.compartmentId))
@@ -62,7 +62,7 @@ class DataPlaneReferenceService {
         return get(null, id);
     }
 
-    @KievTransaction(value = "data-plane-get", dataStore = DATA_STORE_NAME, readOnly = true)
+    @KievTransaction(value = DATA_STORE_NAME, name = "data-plane-get", readOnly = true)
     Optional<Robot> get(Transaction tx, String id) {
         return bucket.get(tx, id)
                 .map(DataPlaneReferenceService::toRobot);
@@ -72,7 +72,7 @@ class DataPlaneReferenceService {
         return create(null, displayName, compartmentId);
     }
 
-    @KievTransaction(value = "data-plane-create", dataStore = DATA_STORE_NAME)
+    @KievTransaction(value = DATA_STORE_NAME, name = "data-plane-create")
     Robot create(Transaction tx, String displayName, String compartmentId) {
         RobotEntity robot = new RobotEntity(newRobotId(),
                                             compartmentId,
@@ -89,7 +89,7 @@ class DataPlaneReferenceService {
         return update(null, id, displayName);
     }
 
-    @KievTransaction(value = "data-plane-update", dataStore = DATA_STORE_NAME)
+    @KievTransaction(value = DATA_STORE_NAME, name = "data-plane-update")
     Optional<Robot> update(Transaction tx, String id, String displayName) {
         return bucket.get(tx, id)
                 .map(existing -> {
@@ -105,7 +105,7 @@ class DataPlaneReferenceService {
         return delete(null, id);
     }
 
-    @KievTransaction(value = "data-plane-delete", dataStore = DATA_STORE_NAME)
+    @KievTransaction(value = DATA_STORE_NAME, name = "data-plane-delete")
     Optional<Robot> delete(Transaction tx, String id) {
         Optional<RobotEntity> existing = bucket.get(tx, id);
         if (existing.isEmpty()) {
@@ -119,7 +119,7 @@ class DataPlaneReferenceService {
         return count(null);
     }
 
-    @KievTransaction(value = "data-plane-count", dataStore = DATA_STORE_NAME, readOnly = true)
+    @KievTransaction(value = DATA_STORE_NAME, name = "data-plane-count", readOnly = true)
     int count(Transaction tx) {
         return readAll(tx).size();
     }

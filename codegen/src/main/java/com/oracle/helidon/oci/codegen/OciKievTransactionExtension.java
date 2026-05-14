@@ -71,12 +71,12 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
 
         String methodName = serviceType.fqName() + "." + element.signature().text();
         Annotation annotation = element.annotation(OciTypes.KIEV_TRANSACTION);
-        String transactionName = annotation.stringValue()
+        String transactionName = annotation.stringValue("name")
                 .filter(it -> !it.isBlank())
                 .orElse(methodName);
-        String dataStoreName = annotation.stringValue("dataStore")
+        String dataStoreName = annotation.stringValue()
                 .filter(it -> !it.isBlank())
-                .orElseThrow(() -> new CodegenException("@KievTransaction dataStore must be set to a configured "
+                .orElseThrow(() -> new CodegenException("@KievTransaction value must be set to a configured "
                                                                  + "oci.kiev.data-stores[].store-name on "
                                                                  + element.signature().text(),
                                                          element.originatingElementValue()));

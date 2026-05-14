@@ -21,18 +21,18 @@ import io.helidon.service.registry.Interception;
 @Target(ElementType.METHOD)
 public @interface KievTransaction {
     /**
-     * Kiev store name used by this transaction.
+     * Kiev data store name used by this transaction.
      *
-     * @return Kiev store name
+     * @return Kiev data store name
      */
-    String dataStore();
+    String value();
 
     /**
      * Transaction name used for diagnostics.
      *
      * @return transaction name, or empty string to use a generated default
      */
-    String value() default "";
+    String name() default "";
 
     /**
      * Whether the transaction should be read only.

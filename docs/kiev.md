@@ -230,7 +230,7 @@ Application code obtains a `com.oracle.pic.kiev.Transaction` from a transaction 
 that need to participate in the same transaction.
 
 ```java
-@KievTransaction(value = "store-put", dataStore = DATA_STORE_NAME)
+@KievTransaction(value = DATA_STORE_NAME, name = "store-put")
 String put(Transaction tx, String id, String value) {
     return writeItem(tx, id, value);
 }
@@ -244,16 +244,17 @@ String value = transactionSupport.execute("store-get", true, tx -> readItem(tx, 
 
 Annotate service methods with `@KievTransaction`. If the method declares a
 `com.oracle.pic.kiev.Transaction` parameter, the active transaction is supplied automatically.
-Each transaction annotation must use the configured `store-name`.
+Each transaction annotation value must use the configured `store-name`. Use `name` to set the transaction name
+used for diagnostics; otherwise Helidon generates one from the intercepted method.
 
 ```java
-@KievTransaction(value = "store-put", dataStore = DATA_STORE_NAME)
+@KievTransaction(value = DATA_STORE_NAME, name = "store-put")
 String put(Transaction tx, String id, String value) {
     StoreItem item = bucket.put(tx, new StoreItem(id, value));
     return item.value;
 }
 
-@KievTransaction(value = "store-get", dataStore = DATA_STORE_NAME, readOnly = true)
+@KievTransaction(value = DATA_STORE_NAME, name = "store-get", readOnly = true)
 Optional<String> get(Transaction tx, String id) {
     return bucket.get(tx, id).map(item -> item.value);
 }
