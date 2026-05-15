@@ -2,16 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Example](#example)
-* [References](#references)
-
----
-
 ## Overview
 
 The request-id integration provides OCI `opc-request-id` handling for Helidon SE applications.
@@ -171,8 +161,8 @@ span=D7D339B1429A3E27AA189FA6E8262321
 
 ## References
 
-* [OciRequestId](../request-id/request-id/src/main/java/com/oracle/helidon/oci/requestid/OciRequestId.java)
-* [RequestIdServerFilter](../request-id/webserver/src/main/java/com/oracle/helidon/oci/requestid/webserver/RequestIdServerFilter.java)
-* [OciRequestIdFactory](../request-id/webserver/src/main/java/com/oracle/helidon/oci/requestid/webserver/OciRequestIdFactory.java)
-* [Request ID example](../examples/request-id/src/main/java/com/oracle/helidon/oci/examples/requestid/RequestIdEndpoint.java)
+* [OciRequestId](../../request-id/request-id/src/main/java/com/oracle/helidon/oci/requestid/OciRequestId.java)
+* [RequestIdServerFilter](../../request-id/webserver/src/main/java/com/oracle/helidon/oci/requestid/webserver/RequestIdServerFilter.java)
+* [OciRequestIdFactory](../../request-id/webserver/src/main/java/com/oracle/helidon/oci/requestid/webserver/OciRequestIdFactory.java)
+* [Request ID example](../../examples/request-id/src/main/java/com/oracle/helidon/oci/examples/requestid/RequestIdEndpoint.java)
 * [Request IDs](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEX&title=Request+IDs)

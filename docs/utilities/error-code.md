@@ -2,15 +2,6 @@
 
 ---
 
-## Contents
-
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-
----
-
 ## Overview
 
 This module provides support for error codes described in

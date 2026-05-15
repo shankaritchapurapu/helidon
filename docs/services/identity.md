@@ -2,16 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Configuration](#configuration)
-* [References](#references)
-
----
-
 ## Overview
 
 The Identity module integrates Helidon with the OCI Auth SDK. It provides configured service-registry factories for:
@@ -243,12 +233,12 @@ The context is a read-only map of Auth SDK request properties. A common example 
 
 ## References
 
-* [IdentityConfigBlueprint](../identity/src/main/java/com/oracle/helidon/oci/identity/IdentityConfigBlueprint.java)
-* [AuthenticationConfigBlueprint](../identity/src/main/java/com/oracle/helidon/oci/identity/AuthenticationConfigBlueprint.java)
-* [AuthorizationConfigBlueprint](../identity/src/main/java/com/oracle/helidon/oci/identity/AuthorizationConfigBlueprint.java)
-* [ServiceAuthenticationClientFactory](../identity/src/main/java/com/oracle/helidon/oci/identity/ServiceAuthenticationClientFactory.java)
-* [AuthenticatorClientFactory](../identity/src/main/java/com/oracle/helidon/oci/identity/AuthenticatorClientFactory.java)
-* [AuthorizationClientFactory](../identity/src/main/java/com/oracle/helidon/oci/identity/AuthorizationClientFactory.java)
-* [IdentityContext](../identity/src/main/java/com/oracle/helidon/oci/identity/IdentityContext.java)
-* [OciAuthorizationExtension](../codegen/src/main/java/com/oracle/helidon/oci/codegen/OciAuthorizationExtension.java)
-* [Echo example](../examples/echo/src/main/java/com/oracle/helidon/oci/examples/echo/EchoEndpoint.java)
+* [IdentityConfigBlueprint](../../identity/src/main/java/com/oracle/helidon/oci/identity/IdentityConfigBlueprint.java)
+* [AuthenticationConfigBlueprint](../../identity/src/main/java/com/oracle/helidon/oci/identity/AuthenticationConfigBlueprint.java)
+* [AuthorizationConfigBlueprint](../../identity/src/main/java/com/oracle/helidon/oci/identity/AuthorizationConfigBlueprint.java)
+* [ServiceAuthenticationClientFactory](../../identity/src/main/java/com/oracle/helidon/oci/identity/ServiceAuthenticationClientFactory.java)
+* [AuthenticatorClientFactory](../../identity/src/main/java/com/oracle/helidon/oci/identity/AuthenticatorClientFactory.java)
+* [AuthorizationClientFactory](../../identity/src/main/java/com/oracle/helidon/oci/identity/AuthorizationClientFactory.java)
+* [IdentityContext](../../identity/src/main/java/com/oracle/helidon/oci/identity/IdentityContext.java)
+* [OciAuthorizationExtension](../../codegen/src/main/java/com/oracle/helidon/oci/codegen/OciAuthorizationExtension.java)
+* [Echo example](../../examples/echo/src/main/java/com/oracle/helidon/oci/examples/echo/EchoEndpoint.java)

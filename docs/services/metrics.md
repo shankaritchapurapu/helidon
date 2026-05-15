@@ -2,16 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Configuration](#configuration)
-* [References](#references)
-
----
-
 ## Overview
 
 The Helidon OCI metrics integration component sends updates of Helidon neutral metrics--registered and updated both imperatively and declaratively (annotations)--to the OCI metrics backend. It layers on top of any
@@ -298,5 +288,5 @@ metrics:
 
 ## References
 
-* [Metrics example](../examples/metrics/README.md)
+* [Metrics example](../../examples/metrics/README.md)
 * [Helidon metrics API](https://helidon.io/docs/latest/se/metrics/metrics)

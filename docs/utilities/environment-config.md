@@ -2,20 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Config Source](#config-source)
-  * [Published Keys](#published-keys)
-* [Dynamic Core Regions](#dynamic-core-regions)
-* [Region Providers](#region-providers)
-* [Configuration](#configuration)
-  * [Location Resolution and Overrides](#location-resolution-and-overrides)
-* [References](#references)
-
----
-
 ## Overview
 
 The `env-config` module provides the lazy `oci-env` Helidon config source and companion

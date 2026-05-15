@@ -2,17 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Configuration](#configuration)
-* [Example](#example)
-* [References](#references)
-
----
-
 ## Overview
 
 The internal tagging onboarding flow is centered on the OCI internal
@@ -22,7 +11,7 @@ The internal tagging onboarding flow is centered on the OCI internal
 * the binary tag slug persisted with the resource or passed to downstream authorization flows
 
 This repository provides a reusable `helidon-oci-tagging` module that contributes that client to the Helidon
-service registry. A Helidon example is available under [`examples/tagging`](../examples/tagging/README.md).
+service registry. A Helidon example is available under [`examples/tagging`](../../examples/tagging/README.md).
 
 ---
 
@@ -107,7 +96,7 @@ oci:
 
 ## Example
 
-Build and run the sample from [`examples/tagging`](../examples/tagging/README.md):
+Build and run the sample from [`examples/tagging`](../../examples/tagging/README.md):
 
 ```shell
 mvn -pl examples/tagging -am package

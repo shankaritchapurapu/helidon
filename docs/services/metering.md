@@ -2,16 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Configuration](#configuration)
-* [References](#references)
-
----
-
 ## Overview
 
 The metering integrations provide Helidon-friendly configuration, service registry bindings, and declarative

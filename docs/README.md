@@ -1,37 +1,12 @@
 # Helidon OCI Documentation
 
-This repository contains Helidon extensions for OCI-native services and OCI-specific platform
-capabilities. The modules in `oci-helidon` help Helidon applications integrate with internal OCI
-services, wire OCI-aware configuration and request handling into the runtime, and adopt common OCI
-operational patterns such as auditing, metrics publishing, request tracing, and secure secret
-retrieval.
+Index of Helidon OCI documentation.
 
-The project currently targets [Helidon 4](https://helidon.io/docs/v4/about/doc_overview) and
-JDK 25.
+| Topic                               | Description                                                            |
+|-------------------------------------|------------------------------------------------------------------------|
+| [About Helidon OCI](about/about.md) | What is Helidon OCI?                                                   |
+| [Get Started](about/get-started.md)  | Helidon OCI reference application                                      |
+| [Services](services/README.md)      | Integrations with native services such as Identity, Kiev, etc          |
+| [Utilities](utilities/README.md)    | Integrations with platform utilities like error codes and request ids. |
+| [Guides](guides/README.md)          | Operational guidance for telemetry, Jipher, etc                        |
 
-## Documentation Guide
-
-### Service Integrations
-
-* [Audit](./audit.md) - OCI `AuditV2Filter` integration for capturing audited request and response activity.
-* [Identity](./identity.md) - Authentication, authorization, and request-scoped identity context integration.
-* [Kiev](./kiev.md) - Helidon configuration and service registry bindings for Kiev client libraries.
-* [Limits](./limits.md) - Helidon service integration for interacting with OCI Limits.
-* [Metrics](./metrics.md) - Publishing Helidon and application metrics to T2.
-* [Secret Service V2](./secret-service.md) - Secret retrieval and TLS rotation support through Secret Service.
-* [SPLAT](./splat.md) - mTLS validation integration for Helidon endpoints using the upstream SPLAT filter.
-* [OCI OpenAPI Generation With Splat Validation](./oci-openapi-generator.md)
-* [Tagging](./tagging.md) - Tagging integration.
-* [Workflow](./workflow.md) - Generated configuration and bindings for OCI Workflow-as-a-Service integration.
-
-### Platform Utilities
-
-* [Environment Configuration](./environment-config.md) - OCI-aware Helidon config source and region providers.
-* [Error Code](./error-code.md) - Support for OCI-standard error code handling in Helidon services.
-* [Request ID](./request-id.md) - `opc-request-id` propagation, generation, and logging context support.
-
-### Operational Guidance
-
-* [Oracle APM](./apm.md) - OpenTelemetry configuration guidance for exporting Helidon tracing data to Oracle APM.
-* [Jipher](./jipher.md) - Guidance for enabling the Oracle Jipher security provider for FIPS-oriented deployments.
-* [Lumberjack](./lumberjack.md) - Logging and onboarding guidance for sending service logs to Lumberjack.

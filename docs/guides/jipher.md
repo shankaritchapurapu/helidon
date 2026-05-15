@@ -2,22 +2,12 @@
 
 ---
 
-## Contents
-
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Configuration](#configuration)
-* [References](#references)
-
----
 ## Overview
 This document aims to provide guidance on how to integrate [Jipher](https://confluence.oraclecorp.com/confluence/display/OCICRYPTO/Jipher) with Helidon utilizing the Pegasus [com.oracle.pic.commons:core](https://devops.oci.oraclecorp.com/devops-coderepository/repositories/ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyaqldtoy4kbrhjcwazanam6ea2qjcbxyntwm5dn2hnzulq?_ctx=us-phoenix-1%2Cdevops_scm_central) library. Jipher is a JCE Security Provider developed by Oracle used for achieving FIPS (Federal Information Processing Standards) compliance.
 
 ## Maven Coordinates
-Integration with  [Splat](./splat.md), [Secret Service](./secret-service.md) and 
-[Identity](./identity.md) already adds the [com.oracle.pic.commons:core](https://devops.oci.oraclecorp.com/devops-coderepository/repositories/ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyaqldtoy4kbrhjcwazanam6ea2qjcbxyntwm5dn2hnzulq?_ctx=us-phoenix-1%2Cdevops_scm_central) dependency that provides Jipher Support. If neither of these integrations are used in your project, you can directly include the dependency to your project’s pom.xml:
+Integration with  [Splat](../services/splat.md), [Secret Service](../services/secret-service.md) and
+[Identity](../services/identity.md) already adds the [com.oracle.pic.commons:core](https://devops.oci.oraclecorp.com/devops-coderepository/repositories/ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyaqldtoy4kbrhjcwazanam6ea2qjcbxyntwm5dn2hnzulq?_ctx=us-phoenix-1%2Cdevops_scm_central) dependency that provides Jipher Support. If neither of these integrations are used in your project, you can directly include the dependency to your project’s pom.xml:
 
 ```xml
 <dependency>
@@ -37,7 +27,7 @@ Jipher JCE can be registered using `dynamic registration` or `static registratio
       public class ReferenceServiceMain {
 
           static {
-               // Place Jiphe JCE provider registration code here
+               // Place Jipher JCE provider registration code here
           }
           ...
           ...

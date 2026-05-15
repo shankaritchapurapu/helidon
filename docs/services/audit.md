@@ -2,18 +2,6 @@
 
 ---
 
-## Contents
-
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Example Application](#example-application)
-* [Configuration](#configuration)
-* [References](#references)
-
----
-
 ## Overview
 
 The audit module provides support for OCI `AuditV2Filter` integration. The filter automatically captures and logs
@@ -38,7 +26,7 @@ To enable audit support, add the following dependency to your project’s `pom.x
 ## Usage
 
 `AuditV2Filter` is registered on the WebServer using
-[AuditV2Feature](../audit/src/main/java/com/oracle/helidon/oci/audit/AuditV2Feature.java), which is a
+[AuditV2Feature](../../audit/src/main/java/com/oracle/helidon/oci/audit/AuditV2Feature.java), which is a
 [Helidon Server Feature](https://helidon.io/docs/v4/se/webserver/webserver#_server_features). When the
 [Service Registry](https://helidon.io/docs/v4/se/injection/injection#generate-binding) is started on an
 application as shown below:
@@ -118,6 +106,6 @@ oci:
 
 ## References
 
-* [Audit example](../examples/audit/README.md)
-* [Audit example configuration](../examples/audit/src/main/resources/application.yaml)
+* [Audit example](../../examples/audit/README.md)
+* [Audit example configuration](../../examples/audit/src/main/resources/application.yaml)
 * [Audit v2 User Guide](https://confluence.oraclecorp.com/confluence/display/OCIPLAT/MON-2%3A+Events+and+Audit+v2)

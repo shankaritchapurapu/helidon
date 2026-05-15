@@ -2,16 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Configuration](#configuration)
-* [References](#references)
-
----
-
 ## Overview
 
 The Splat module integrates the upstream SPLAT JAX-RS mTLS filter into generated Helidon `@RestServer.Endpoint`
@@ -39,10 +29,10 @@ To enable SPLAT mTLS validation, add the following dependency to your project’
 When the Helidon service registry is enabled, this module enables discovery of the SPLAT endpoint interceptor and SPLAT filter
 factory automatically. This sets request flow as:
 
-- [SplatMtlsEndpointInterceptor](../splat/src/main/java/com/oracle/helidon/oci/splat/SplatMtlsEndpointInterceptor.java) is a
+- [SplatMtlsEndpointInterceptor](../../splat/src/main/java/com/oracle/helidon/oci/splat/SplatMtlsEndpointInterceptor.java) is a
   SPLAT-owned `HttpEntryPoint.Interceptor`
   that runs for generated `@RestServer.Endpoint` handlers, which Helidon wires through `HttpEntryPoint.EntryPoints.handler(...)`.
-- [SplatMtlsRequestHandler](../splat/src/main/java/com/oracle/helidon/oci/splat/SplatMtlsRequestHandler.java) creates the
+- [SplatMtlsRequestHandler](../../splat/src/main/java/com/oracle/helidon/oci/splat/SplatMtlsRequestHandler.java) creates the
   upstream SPLAT JAX-RS filter and bridges Helidon request/response objects to JAX-RS filter execution.
 
 ### Listener And Certificate Requirements
@@ -80,4 +70,4 @@ Configure SPLAT validation behavior using the `application.yaml` file.
 * [Splat Concepts](https://confluence.oci.oraclecorp.com/display/PLAT/1.+Splat+Concepts)
 * [Splat Onboarding](https://confluence.oci.oraclecorp.com/display/PLAT/2.+Splat+Onboarding)
 * [Splat Features](https://confluence.oci.oraclecorp.com/display/PLAT/3.+Splat+Features)
-* [Splat Example](../examples/splat/README.md)
+* [Splat Example](../../examples/splat/README.md)

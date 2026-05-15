@@ -2,16 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Boundary](#boundary)
-* [Maven Usage](#maven-usage)
-* [Example](#example)
-* [References](#references)
-
----
-
 ## Overview
 
 OCI services that onboard to Splat/RQS still need a Splat-facing Swagger 2 API
@@ -124,7 +114,7 @@ Swagger 2 file:
 
 ## Example
 
-See [examples/oci-openapi-generator](../examples/oci-openapi-generator/README.md)
+See [examples/oci-openapi-generator](../../examples/oci-openapi-generator/README.md)
 for a smoke-test example that:
 
 * Keeps `robot-api.yaml` as the Splat-facing Swagger 2 source.

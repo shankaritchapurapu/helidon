@@ -2,17 +2,6 @@
 
 ---
 
-## Contents
-
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Configuration](#configuration)
-* [References](#references)
-
----
-
 ## Overview
 
 The limits module provides support for OCI limits integration.

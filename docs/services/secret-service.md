@@ -2,15 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Configuration](#configuration)
-
----
-
 ## Overview
 
 The Secret Service V2 (SSv2) integration provides the following features:
@@ -139,7 +130,7 @@ sources:
 ```
 
 Endpoint region and domain resolution is delegated to
-[Environment Configuration](environment-config.md). The config-source module brings
+[Environment Configuration](../utilities/environment-config.md). The config-source module brings
 `helidon-oci-envconfig` at runtime, and the default SSv2 endpoint uses
 `${oci.env.iaas-domain-name}`:
 

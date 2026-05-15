@@ -2,16 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Configuration](#configuration)
-* [References](#references)
-
----
-
 ## Overview
 
 The Kiev integration provides Helidon-friendly configuration and service registry bindings for the Kiev client libraries.
@@ -351,5 +341,5 @@ such as one created by the public OCI SDK integration under `helidon.oci.*`. It 
 
 ## References
 
-* [Store example](../examples/store/README.md)
-* [Kiev library configuration in the store example](../examples/store/src/main/resources/application.yaml)
+* [Store example](../../examples/store/README.md)
+* [Kiev library configuration in the store example](../../examples/store/src/main/resources/application.yaml)

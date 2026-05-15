@@ -2,19 +2,6 @@
 
 ---
 
-## Contents
-
-* [Overview](#overview)
-* [Maven Coordinates](#maven-coordinates)
-* [Usage](#usage)
-* [Example Application](#example-application)
-* [Configuration](#configuration)
-* [Migration](#migration)
-* [Main Flow](#main-flow)
-* [Testing](#testing)
-
----
-
 ## Overview
 
 The workflow module provides generated configuration and service registry bindings for OCI Workflow-as-a-Service
