@@ -51,13 +51,13 @@ import com.oracle.pic.identity.authorization.permissions.annotations.Authorizati
 import static com.oracle.pic.identity.authorization.sdk.AuthContextRequestFilter.PIC_PRINCIPAL;
 
 @RestServer.Endpoint
-@Http.Path("/echo")
+@Http.Path("/identity")
 @Service.Singleton
-class EchoEndpoint {
+class IdentityEndpoint {
 
     @Http.POST
     @Http.Path("once")
-    @AuthorizationPermission("ECHO_ONCE")
+    @AuthorizationPermission("IDENTITY_ONCE")
     String once(@Http.Entity String message, IdentityContext identityContext) {
         Principal principal = (Principal) identityContext.get(PIC_PRINCIPAL);
         return principal.getSubjectId() + ": " + message;
@@ -241,4 +241,4 @@ The context is a read-only map of Auth SDK request properties. A common example 
 * [AuthorizationClientFactory](../../identity/src/main/java/com/oracle/helidon/oci/identity/AuthorizationClientFactory.java)
 * [IdentityContext](../../identity/src/main/java/com/oracle/helidon/oci/identity/IdentityContext.java)
 * [OciAuthorizationExtension](../../codegen/src/main/java/com/oracle/helidon/oci/codegen/OciAuthorizationExtension.java)
-* [Echo example](../../examples/echo/src/main/java/com/oracle/helidon/oci/examples/echo/EchoEndpoint.java)
+* [Identity example](../../examples/identity/src/main/java/com/oracle/helidon/oci/examples/identity/IdentityEndpoint.java)

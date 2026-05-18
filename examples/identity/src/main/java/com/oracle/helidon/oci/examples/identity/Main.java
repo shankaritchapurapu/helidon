@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
-package com.oracle.helidon.oci.examples.echo;
+package com.oracle.helidon.oci.examples.identity;
 
 import java.security.Security;
 
@@ -49,6 +49,6 @@ public class Main {
         ServiceRegistryManager.start(ApplicationBinding.create());
 
         WebServer webServer = Services.get(WebServer.class);
-        System.out.println("Server started on: http://localhost:" + webServer.port() + "/echo");
+        System.out.println("Server started on: http://localhost:" + webServer.port() + "/identity");
     }
 }

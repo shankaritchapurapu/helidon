@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
-package com.oracle.helidon.oci.examples.echo;
+package com.oracle.helidon.oci.examples.identity;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,8 +32,8 @@ import org.junit.jupiter.api.BeforeAll;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-abstract class EchoEndpointBase {
-    private static final System.Logger LOGGER = System.getLogger(EchoEndpointBase.class.getName());
+abstract class IdentityEndpointBase {
+    private static final System.Logger LOGGER = System.getLogger(IdentityEndpointBase.class.getName());
 
     static {
         System.setProperty("jdk.httpclient.allowRestrictedHeaders", "host,content-length");
@@ -41,7 +41,7 @@ abstract class EchoEndpointBase {
 
     private final String baseUri;
 
-    public EchoEndpointBase(WebServer webServer) {
+    public IdentityEndpointBase(WebServer webServer) {
         this.baseUri = "http://localhost:" + webServer.port();
     }
 
@@ -56,7 +56,7 @@ abstract class EchoEndpointBase {
     }
 
     void testPing(int status, String body) throws Exception {
-        URI uri = URI.create(this.baseUri + "/echo");
+        URI uri = URI.create(this.baseUri + "/identity");
         HttpRequest.Builder request = HttpRequest.newBuilder(uri);
 
         try (HttpClient client = HttpClient.newHttpClient()) {
@@ -94,11 +94,11 @@ abstract class EchoEndpointBase {
     }
 
     void testOnceSuccess(int status, String body) throws Exception {
-        testCall(status, body, "/echo/once");
+        testCall(status, body, "/identity/once");
     }
 
     void testTwiceSuccess(int status, String body) throws Exception {
-        testCall(status, body, "/echo/twice");
+        testCall(status, body, "/identity/twice");
     }
 
     static byte[] readBodyBytes(Object body) throws IOException {

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
-package com.oracle.helidon.oci.examples.echo;
+package com.oracle.helidon.oci.examples.identity;
 
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.http.Http;
@@ -17,10 +17,10 @@ import static java.lang.System.Logger.Level;
 
 @SuppressWarnings("deprecation")
 @RestServer.Endpoint
-@Http.Path("/echo")
+@Http.Path("/identity")
 @Service.Singleton
-class EchoEndpoint {
-    private static final System.Logger LOGGER = System.getLogger(EchoEndpoint.class.getName());
+class IdentityEndpoint {
+    private static final System.Logger LOGGER = System.getLogger(IdentityEndpoint.class.getName());
 
     @Http.GET
     @Http.Produces(MediaTypes.TEXT_PLAIN_VALUE)
@@ -32,7 +32,7 @@ class EchoEndpoint {
     @Http.Consumes(MediaTypes.TEXT_PLAIN_VALUE)
     @Http.Produces(MediaTypes.TEXT_PLAIN_VALUE)
     @Http.Path("once")
-    @AuthorizationPermission("ECHO_ONCE")
+    @AuthorizationPermission("IDENTITY_ONCE")
     String once(@Http.Entity String message, IdentityContext identityContext) {
         LOGGER.log(Level.DEBUG, "Resource method 'once' called for " + principal(identityContext).getSubjectId());
         return message;
@@ -42,7 +42,7 @@ class EchoEndpoint {
     @Http.Consumes(MediaTypes.TEXT_PLAIN_VALUE)
     @Http.Produces(MediaTypes.TEXT_PLAIN_VALUE)
     @Http.Path("twice")
-    @AuthorizationPermission("ECHO_TWICE")
+    @AuthorizationPermission("IDENTITY_TWICE")
     String twice(@Http.Entity String message, IdentityContext identityContext) {
         LOGGER.log(Level.DEBUG, "Resource method 'twice' called for " + principal(identityContext).getSubjectId());
         return message + message;

@@ -19,7 +19,7 @@
 
     <modules>
         <module>audit</module>
-        <module>echo</module>
+        <module>identity</module>
         <module>limits</module>
         <module>metrics</module>
         <module>request-id</module>

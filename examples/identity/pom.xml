@@ -15,11 +15,11 @@
         <relativePath>../../applications/se</relativePath>
     </parent>
 
-    <artifactId>helidon-oci-examples-echo</artifactId>
-    <name>Helidon OCI Examples Echo</name>
+    <artifactId>helidon-oci-examples-identity</artifactId>
+    <name>Helidon OCI Examples Identity</name>
 
     <properties>
-        <mainClass>com.oracle.helidon.oci.examples.echo.Main</mainClass>
+        <mainClass>com.oracle.helidon.oci.examples.identity.Main</mainClass>
     </properties>
 
     <dependencies>

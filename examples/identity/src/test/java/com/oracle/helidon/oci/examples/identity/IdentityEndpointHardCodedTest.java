@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
-package com.oracle.helidon.oci.examples.echo;
+package com.oracle.helidon.oci.examples.identity;
 
 import java.net.URI;
 import java.security.interfaces.RSAPublicKey;
@@ -23,14 +23,14 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 @ServerTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class EchoEndpointHardCodedTest extends EchoEndpointBase {
+public class IdentityEndpointHardCodedTest extends IdentityEndpointBase {
 
     static {
         // needs to run in a fresh Java VM
         System.setProperty("helidon.oci.hardCodedKeySupplier", "true");
     }
 
-    public EchoEndpointHardCodedTest(WebServer webServer) {
+    public IdentityEndpointHardCodedTest(WebServer webServer) {
         super(webServer);
     }
 

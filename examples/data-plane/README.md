@@ -93,10 +93,10 @@ curl -s http://localhost:8080/data-plane/probe
 ## Authentication
 
 Write operations are protected by OCI Identity authorization annotations. The test suite
-uses the hard-coded key supplier mode, already used by `examples/echo`, to exercise the
+uses the hard-coded key supplier mode, already used by `examples/identity`, to exercise the
 secured routes without a live OCI environment.
 
-For a real environment you can switch to the same patterns used by `examples/echo`:
+For a real environment you can switch to the same patterns used by `examples/identity`:
 
 - hard-coded key supplier for local/dev signing
 - OCI API key signing through `~/.oci/config`

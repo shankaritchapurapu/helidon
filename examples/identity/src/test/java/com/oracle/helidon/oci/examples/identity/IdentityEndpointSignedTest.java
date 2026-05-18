@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
-package com.oracle.helidon.oci.examples.echo;
+package com.oracle.helidon.oci.examples.identity;
 
 import java.io.IOException;
 import java.net.URI;
@@ -50,14 +50,14 @@ import org.junit.jupiter.api.TestMethodOrder;
  */
 @ServerTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class EchoEndpointSignedTest extends EchoEndpointBase {
+public class IdentityEndpointSignedTest extends IdentityEndpointBase {
 
     static {
         // needs to run in a fresh Java VM
         System.setProperty("hard.coded.key.supplier", "false");
     }
 
-    public EchoEndpointSignedTest(WebServer webServer) {
+    public IdentityEndpointSignedTest(WebServer webServer) {
         super(webServer);
     }
 
