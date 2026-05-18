@@ -1,0 +1,27 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+server:
+  port: 8080
+  host: 0.0.0.0
+  features:
+    request-scope:
+      enabled: true
+
+declarative:
+  ignore-incubating: true
+
+oci:
+  identity:
+    authentication:
+      global-business-unit: helidonocidev-test
+      team-name: helidonocidev-test
+      application-name: helidonocidev-test
+      region: us-phoenix-1
+      root-cert-path: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+    authorization:
+      region: us-phoenix-1
+      service-name: helidonocidev-test
+      physical-ad: PHX-AD-1
+      root-cert-path: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem

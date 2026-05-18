@@ -21,6 +21,7 @@
 
     <modules>
         <module>authentication</module>
+        <module>identity</module>
     </modules>
 
     <build>
@@ -66,6 +67,7 @@
                             <environmentVariables>
                                 <HELIDON_OCI_IMDS_DASH_BASE_DASH_URI>http://localhost:8000/opc/v2/
                                 </HELIDON_OCI_IMDS_DASH_BASE_DASH_URI>
+                                <OCI_IDENTITY_AUTHENTICATION_INSTANCE_DASH_PRINCIPAL_DASH_URI>http://localhost:8000</OCI_IDENTITY_AUTHENTICATION_INSTANCE_DASH_PRINCIPAL_DASH_URI>
                             </environmentVariables>
                         </configuration>
                         <executions>
