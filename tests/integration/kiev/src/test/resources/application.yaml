@@ -1,0 +1,21 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+declarative:
+  ignore-incubating: true
+
+oci:
+  kiev:
+    data-stores:
+      - backend: "SERVICE"
+        store-name: kiev-regional-overlay
+        app-name: kiev-regional-overlay
+        service:
+          compartment-id: ocid1.compartment.oc1..aaaaaaaanrt7nvvhqyrlqs3lmc5qzsq2fh3a5o4aj7sificg7bjqtn4kqova
+          frontend-endpoint: https://9633acea-ad68-4f32-9455-c56cdd66fdeb.kiev.us-phoenix-1.oci.oracleiaas.com
+          locality: "AD3"
+          auth:
+            type: "INSTANCE"
+            tls:
+              root-cert-pem-path: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem

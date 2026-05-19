@@ -22,6 +22,9 @@ steps:
       docker run \
       --network host \
       --name ${DOCKER_IMAGE_NAME} \
+      --mount type=bind,src=/etc/region,target=/etc/region,readonly \
+      --mount type=bind,src=/etc/fault-domain,target=/etc/fault-domain,readonly \
+      --mount type=bind,src=/etc/availability-domain,target=/etc/availability-domain,readonly \
       --mount type=bind,src=/etc/oci-pki/ca-bundle.pem,target=/etc/oci-pki/ca-bundle.pem,readonly \
       --mount type=bind,src=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem,target=/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem,readonly \
       odo-docker-signed-local.pipelines.artifactory.us-phoenix-1.oci.oracleiaas.com/${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_VERSION}

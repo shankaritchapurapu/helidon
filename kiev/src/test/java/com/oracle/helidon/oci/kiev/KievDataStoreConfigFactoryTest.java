@@ -4,8 +4,11 @@
 
 package com.oracle.helidon.oci.kiev;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Proxy;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +23,9 @@ import io.helidon.service.registry.Qualifier;
 import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
+import com.oracle.bmc.http.ClientConfigurator;
+import com.oracle.bmc.http.CompositeClientConfigurator;
+import com.oracle.pic.commons.s2s.config.SslTrustStoreConfigurator;
 import com.oracle.pic.commons.ssl.DynamicSslContextProviderConfig;
 import com.oracle.pic.kiev.DataStore;
 import com.oracle.pic.kiev.DataStoreConfig;
@@ -31,6 +37,7 @@ import com.oracle.pic.kiev.mapping.MappedDataStore;
 import com.oracle.pic.kiev.registry.config.ClientRegistryConfig;
 import com.oracle.pic.kiev.registry.data.ClientRegistryLocality;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -40,7 +47,6 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class KievDataStoreConfigFactoryTest {
-
     @Test
     void testCreatesInMemory() {
         DataStoreConfig config = dataStoreConfig(Map.of(
@@ -154,6 +160,44 @@ class KievDataStoreConfigFactoryTest {
     }
 
     @Test
+    void testInstanceAuthUsesFactorySslConfigurator(@TempDir Path tempDir) throws IOException {
+        String rootCertPemPath = Files.createFile(tempDir.resolve("root.pem")).toString();
+        DataStoreConfig config = dataStoreConfig(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", rootCertPemPath)
+        ), "remote-store");
+
+        KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
+        assertUsesFactorySslConfigurator(dataStoreConfig.getAuthDetailsConfig().buildClientConfigurator());
+    }
+
+    @Test
+    void testS2sAuthUsesFactorySslConfigurator(@TempDir Path tempDir) throws IOException {
+        String rootCertPemPath = Files.createFile(tempDir.resolve("root.pem")).toString();
+        DataStoreConfig config = dataStoreConfig(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", rootCertPemPath),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example")
+        ), "remote-store");
+
+        KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
+        assertUsesFactorySslConfigurator(dataStoreConfig.getAuthDetailsConfig().buildClientConfigurator());
+    }
+
+    @Test
     void testCreatesKiabLocalService() {
         DataStoreConfig config = dataStoreConfig(Map.of(
                 "oci.kiev.data-stores.0.backend", "SERVICE",
@@ -170,10 +214,7 @@ class KievDataStoreConfigFactoryTest {
                                  dataStoreConfig.getAuthDetailsConfig());
         assertNotNull(authConfig.getAuthProviderOverride());
 
-        ClientRegistryConfig registryConfig = dataStoreConfig.getRegistryConfig();
-        assertNotNull(registryConfig);
-        assertEquals(Boolean.FALSE, registryConfig.getEnabled());
-        assertEquals("http://localhost:16666", registryConfig.getEndpointOverride());
+        assertRegistryDisabled(dataStoreConfig, "http://localhost:16666");
     }
 
     @Test
@@ -621,6 +662,19 @@ class KievDataStoreConfigFactoryTest {
                              + "Registered store names: " + registeredNames
                              + ". Add @Service.Named with one of these names.",
                      transactionSupportFailure.getMessage());
+    }
+
+    private static void assertUsesFactorySslConfigurator(ClientConfigurator clientConfigurator) {
+        CompositeClientConfigurator composite = assertInstanceOf(CompositeClientConfigurator.class, clientConfigurator);
+        assertEquals(2, composite.getConfigurators().size());
+        assertInstanceOf(SslTrustStoreConfigurator.class, composite.getConfigurators().get(1));
+    }
+
+    private static void assertRegistryDisabled(KaasStoreConfig dataStoreConfig, String endpointOverride) {
+        ClientRegistryConfig registryConfig = dataStoreConfig.getRegistryConfig();
+        assertNotNull(registryConfig);
+        assertEquals(Boolean.FALSE, registryConfig.getEnabled());
+        assertEquals(endpointOverride, registryConfig.getEndpointOverride());
     }
 
     private static <T> T namedService(List<Service.QualifiedInstance<T>> services, String storeName) {

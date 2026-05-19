@@ -22,6 +22,7 @@
     <modules>
         <module>authentication</module>
         <module>identity</module>
+        <module>kiev</module>
     </modules>
 
     <build>
@@ -68,6 +69,8 @@
                                 <HELIDON_OCI_IMDS_DASH_BASE_DASH_URI>http://localhost:8000/opc/v2/
                                 </HELIDON_OCI_IMDS_DASH_BASE_DASH_URI>
                                 <OCI_IDENTITY_AUTHENTICATION_INSTANCE_DASH_PRINCIPAL_DASH_URI>http://localhost:8000</OCI_IDENTITY_AUTHENTICATION_INSTANCE_DASH_PRINCIPAL_DASH_URI>
+                                <OCI_METADATA_BASE_URL>http://localhost:8000/opc/v2/
+                                </OCI_METADATA_BASE_URL>
                             </environmentVariables>
                         </configuration>
                         <executions>

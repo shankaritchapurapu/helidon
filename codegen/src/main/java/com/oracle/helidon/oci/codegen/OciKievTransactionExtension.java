@@ -3,6 +3,10 @@
  */
 package com.oracle.helidon.oci.codegen;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -26,7 +30,11 @@ import io.helidon.service.codegen.ServiceCodegenTypes;
 import io.helidon.service.codegen.spi.RegistryCodegenExtension;
 
 final class OciKievTransactionExtension implements RegistryCodegenExtension {
+    private static final String GENERATED_TRANSACTION_NAME_PREFIX = "kt-";
+    private static final int GENERATED_TRANSACTION_NAME_MAX_LENGTH = 58;
+    private static final int GENERATED_TRANSACTION_NAME_HASH_BYTES = 8;
     private static final TypeName GENERATOR = TypeName.create(OciKievTransactionExtension.class);
+    private static final HexFormat HEX_FORMAT = HexFormat.of();
 
     OciKievTransactionExtension(RegistryCodegenContext ignored) {
     }
@@ -73,8 +81,10 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
         Annotation annotation = element.annotation(OciTypes.KIEV_TRANSACTION);
         String transactionName = annotation.stringValue("name")
                 .filter(it -> !it.isBlank())
-                .orElse(methodName);
-        String dataStoreName = annotation.stringValue()
+                .orElseGet(() -> defaultTransactionName(methodName,
+                                                        serviceType.classNameWithEnclosingNames(),
+                                                        element.elementName()));
+        String dataStoreName = annotation.stringValue("value")
                 .filter(it -> !it.isBlank())
                 .orElseThrow(() -> new CodegenException("@KievTransaction value must be set to a configured "
                                                                  + "oci.kiev.data-stores[].store-name on "
@@ -141,6 +151,37 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
         addToString(classModel, serviceType, element.signature());
 
         roundContext.addGeneratedType(generatedType, classModel, serviceType, element.originatingElementValue());
+    }
+
+    static String defaultTransactionName(String methodName, String className, String elementName) {
+        String hash = hash(methodName);
+        String readableName = sanitizeNamePart(className) + "-" + sanitizeNamePart(elementName);
+        int readableNameMaxLength = GENERATED_TRANSACTION_NAME_MAX_LENGTH
+                - GENERATED_TRANSACTION_NAME_PREFIX.length()
+                - hash.length()
+                - 1;
+        if (readableName.length() > readableNameMaxLength) {
+            readableName = readableName.substring(0, readableNameMaxLength);
+        }
+        return GENERATED_TRANSACTION_NAME_PREFIX + readableName + "-" + hash;
+    }
+
+    private static String sanitizeNamePart(String name) {
+        StringBuilder result = new StringBuilder(name.length());
+        for (int i = 0; i < name.length(); i++) {
+            char ch = name.charAt(i);
+            result.append(Character.isLetterOrDigit(ch) ? ch : '-');
+        }
+        return result.toString();
+    }
+
+    private static String hash(String methodName) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(methodName.getBytes(StandardCharsets.UTF_8));
+            return HEX_FORMAT.formatHex(digest, 0, GENERATED_TRANSACTION_NAME_HASH_BYTES);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 digest is not available", e);
+        }
     }
 
     private int transactionParameterIndex(TypedElementInfo element) {
