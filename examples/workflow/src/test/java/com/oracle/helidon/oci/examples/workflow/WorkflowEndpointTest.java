@@ -161,10 +161,10 @@ class WorkflowEndpointTest {
                                 .id("wf-captured")
                                 .status(WorkflowStatus.Created)
                                 .workflowDefinitionId(WorkflowDefinitionId.builder()
-                                        .name("instance-create")
-                                        .majorVersion(3)
-                                        .minorVersion(1)
-                                        .build())
+                                                              .name("instance-create")
+                                                              .majorVersion(3)
+                                                              .minorVersion(1)
+                                                              .build())
                                 .build();
                     }
                     case "toString" -> "CapturingWorkflowClient";

@@ -31,21 +31,6 @@
         <tag>HEAD</tag>
     </scm>
 
-    <repositories>
-        <repository>
-            <id>libs-release</id>
-            <name>Libs release in Artifactory</name>
-            <url>https://artifactory.oci.oraclecorp.com/libs-release</url>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>libs-release</id>
-            <name>Libs release in Artifactory</name>
-            <url>https://artifactory.oci.oraclecorp.com/libs-release</url>
-        </pluginRepository>
-    </pluginRepositories>
-
     <properties>
         <version.plugin.clean>3.2.0</version.plugin.clean>
         <version.plugin.deploy>3.1.1</version.plugin.deploy>

@@ -211,8 +211,9 @@ record CreateTaggedResourceRequest(@Validation.NotNull
                                    String compartmentId,
                                    @Validation.Valid
                                    ResourceTags tags) {
-    CreateTaggedResourceRequest {
-        tags = tags == null ? ResourceTags.empty() : tags;
+    @Override
+    public ResourceTags tags() {
+        return tags == null ? ResourceTags.empty() : tags;
     }
 }
 
@@ -227,13 +228,22 @@ record CreateTagDefinitionRequest(@Validation.NotNull
                                   @Validation.NotNull
                                   @Validation.String.NotEmpty
                                   String description,
-                                  Boolean costTracking,
-                                  Map<String, String> freeformTags,
-                                  Map<String, Map<String, Object>> definedTags) {
-    CreateTagDefinitionRequest {
-        costTracking = costTracking == null ? Boolean.FALSE : costTracking;
-        freeformTags = freeformTags == null ? Map.of() : freeformTags;
-        definedTags = definedTags == null ? Map.of() : definedTags;
+	                                  Boolean costTracking,
+	                                  Map<String, String> freeformTags,
+	                                  Map<String, Map<String, Object>> definedTags) {
+    @Override
+    public Boolean costTracking() {
+        return costTracking == null ? Boolean.FALSE : costTracking;
+    }
+
+    @Override
+    public Map<String, String> freeformTags() {
+        return freeformTags == null ? Map.of() : freeformTags;
+    }
+
+    @Override
+    public Map<String, Map<String, Object>> definedTags() {
+        return definedTags == null ? Map.of() : definedTags;
     }
 }
 
@@ -255,10 +265,19 @@ record TagDefinitionView(String id,
 record ResourceTags(Map<String, String> freeformTags,
                     Map<String, Map<String, Object>> definedTags,
                     Map<String, Map<String, Object>> systemTags) {
-    ResourceTags {
-        freeformTags = freeformTags == null ? Map.of() : freeformTags;
-        definedTags = definedTags == null ? Map.of() : definedTags;
-        systemTags = systemTags == null ? Map.of() : systemTags;
+    @Override
+    public Map<String, String> freeformTags() {
+        return freeformTags == null ? Map.of() : freeformTags;
+    }
+
+    @Override
+    public Map<String, Map<String, Object>> definedTags() {
+        return definedTags == null ? Map.of() : definedTags;
+    }
+
+    @Override
+    public Map<String, Map<String, Object>> systemTags() {
+        return systemTags == null ? Map.of() : systemTags;
     }
 
     static ResourceTags empty() {

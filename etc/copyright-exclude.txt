@@ -49,3 +49,4 @@ target/
 src/main/resources/META-INF/services
 src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker
 secret-service/src/test/resources/mtls/ca.key
+maven.config
