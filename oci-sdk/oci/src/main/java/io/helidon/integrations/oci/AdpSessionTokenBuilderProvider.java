@@ -21,7 +21,7 @@ import com.oracle.bmc.ConfigFileReader.ConfigFile;
 import com.oracle.bmc.auth.SessionTokenAuthenticationDetailsProvider;
 
 @Service.Provider
-class AdpSessionTokenBuilderProvider implements Supplier<SessionTokenAuthenticationDetailsProvider> {
+class AdpSessionTokenBuilderProvider implements Supplier<Optional<SessionTokenAuthenticationDetailsProvider>> {
     private static final String DEFAULT_PRIVATE_KEY_FILE_PATH = "~/.oci/sessions/DEFAULT/oci_api_key.pem";
 
     private final OciConfig config;
@@ -35,7 +35,7 @@ class AdpSessionTokenBuilderProvider implements Supplier<SessionTokenAuthenticat
     }
 
     @Override
-    public SessionTokenAuthenticationDetailsProvider get() {
+    public Optional<SessionTokenAuthenticationDetailsProvider> get() {
         try {
             return build(config.sessionTokenMethodConfig());
         } catch (IOException e) {
@@ -62,13 +62,17 @@ class AdpSessionTokenBuilderProvider implements Supplier<SessionTokenAuthenticat
         }
     }
 
-    private SessionTokenAuthenticationDetailsProvider build(Optional<SessionTokenMethodConfig> maybeSessionTokenConfig)
+    private Optional<SessionTokenAuthenticationDetailsProvider> build(Optional<SessionTokenMethodConfig> maybeSessionTokenConfig)
             throws IOException {
         if (maybeSessionTokenConfig.isEmpty()) {
-            return new SessionTokenAuthenticationDetailsProvider(configFileSupplier.get().orElseThrow());
+            Optional<ConfigFile> maybeConfigFile = configFileSupplier.get();
+            if (maybeConfigFile.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(new SessionTokenAuthenticationDetailsProvider(maybeConfigFile.get()));
         }
 
-        return build(maybeSessionTokenConfig.get());
+        return Optional.of(build(maybeSessionTokenConfig.get()));
     }
 
     private SessionTokenAuthenticationDetailsProvider build(SessionTokenMethodConfig sessionTokenConfig) throws IOException {

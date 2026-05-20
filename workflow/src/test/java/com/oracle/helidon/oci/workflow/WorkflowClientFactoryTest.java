@@ -10,9 +10,13 @@ import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.helidon.config.Config;
+import io.helidon.config.ConfigSources;
 import io.helidon.service.registry.ServiceRegistryManager;
 import io.helidon.service.registry.Services;
 
@@ -31,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WorkflowClientFactoryTest {
 
@@ -126,6 +131,45 @@ class WorkflowClientFactoryTest {
         assertThrows(ArithmeticException.class,
                      () -> new WorkflowClientFactory(config, authProvider).get(),
                      "Timeouts larger than int millis should fail fast");
+    }
+
+    @Test
+    void createConfiguredChastWorkflowClientDoesNotResolveAuthProviderWhenDynamicSslAuthIsNotNeeded() {
+        AtomicInteger calls = new AtomicInteger();
+        WorkflowConfig config = WorkflowConfig.builder()
+                .domainId("localhost")
+                .build();
+        Config rootConfig = Config.just(ConfigSources.create(Map.of(
+                "oci.dynamic-ssl-context-provider.root-cert-path", "/etc/oci-pki/ca-bundle.pem")));
+
+        WorkflowClient client = new WorkflowClientFactory(rootConfig, config, () -> {
+            calls.incrementAndGet();
+            return Optional.empty();
+        }).get();
+
+        try {
+            assertEquals(0, calls.get(),
+                         "Auth provider supplier should not be called when localhost skips dynamic SSL auth details");
+        } finally {
+            ((WFaaSClient) ((ChastWorkflowClient) client).getClient()).close();
+        }
+    }
+
+    @Test
+    void createConfiguredChastWorkflowClientRequiresAuthProviderWhenDynamicSslRootCertIsConfigured() {
+        WorkflowConfig config = WorkflowConfig.builder()
+                .domainId("workflow-domain")
+                .build();
+        Config rootConfig = Config.just(ConfigSources.create(Map.of(
+                "oci.dynamic-ssl-context-provider.root-cert-path", "/etc/oci-pki/ca-bundle.pem")));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                                                       () -> new WorkflowClientFactory(rootConfig,
+                                                                                       config,
+                                                                                       Optional::empty).get());
+
+        assertTrue(exception.getMessage().contains("BasicAuthenticationDetailsProvider"),
+                   "Failure should explain the missing auth provider");
     }
 
     @Test

@@ -49,26 +49,29 @@ public class HelidonContextInjector {
         Class<?> clazz = instance.getClass();
 
         // field injection of @Context
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
-            field.setAccessible(true);
-            Annotation annotation = field.getAnnotation(Context.class);
-            if (annotation != null) {
-                Class<?> fieldType = field.getType();
-                try {
-                    if (fieldType.equals(UriInfo.class)) {
-                        field.set(instance, new HelidonUriInfo(context.getServerRequest()));
-                    } else if (fieldType.equals(ResourceInfo.class)) {
-                        field.set(instance, context.getResourceInfo());
-                    } else if (fieldType.equals(HttpServletRequest.class)) {
-                        field.set(instance, new HelidonHttpServletRequest(context.getServerRequest()));
-                    } else {
-                        throw new UnsupportedOperationException("@Context annotation is not supported for " + fieldType);
+        while (!clazz.equals(Object.class)) {
+            Field[] fields = clazz.getDeclaredFields();
+            for (Field field : fields) {
+                field.setAccessible(true);
+                Annotation annotation = field.getAnnotation(Context.class);
+                if (annotation != null) {
+                    Class<?> fieldType = field.getType();
+                    try {
+                        if (fieldType.equals(UriInfo.class)) {
+                            field.set(instance, new HelidonUriInfo(context.getServerRequest()));
+                        } else if (fieldType.equals(ResourceInfo.class)) {
+                            field.set(instance, context.getResourceInfo());
+                        } else if (fieldType.equals(HttpServletRequest.class)) {
+                            field.set(instance, new HelidonHttpServletRequest(context.getServerRequest()));
+                        } else {
+                            throw new UnsupportedOperationException("@Context annotation is not supported for " + fieldType);
+                        }
+                    } catch (IllegalArgumentException | IllegalAccessException e) {
+                        throw new RuntimeException(e);
                     }
-                } catch (IllegalArgumentException | IllegalAccessException e) {
-                    throw new RuntimeException(e);
                 }
             }
+            clazz = clazz.getSuperclass();
         }
     }
 

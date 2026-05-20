@@ -72,6 +72,11 @@ class BaseAuthenticationClientTest {
                     public AuthorizationConfig authorization() {
                         return authorizationConfig;
                     }
+
+                    @Override
+                    public SplatAwareConfig splatAware() {
+                        return SplatAwareConfig.builder().build();
+                    }
                 };
             }
         };

@@ -18,6 +18,7 @@ import io.helidon.builder.api.Prototype;
  *
  * @see AuthenticationConfig
  * @see AuthorizationConfig
+ * @see SplatAwareConfig
  */
 @Prototype.Blueprint
 @Prototype.Configured("oci.identity")
@@ -44,4 +45,14 @@ interface IdentityConfigBlueprint {
      */
     @Option.Configured
     AuthorizationConfig authorization();
+
+    /**
+     * Returns the SPLAT-aware Auth SDK filter configuration.
+     *
+     * @return the {@link SplatAwareConfig} used to identify SPLAT requests and
+     *         control SPLAT-specific authorization handling; never {@code null}
+     */
+    @Option.Configured
+    @Option.DefaultMethod("create")
+    SplatAwareConfig splatAware();
 }

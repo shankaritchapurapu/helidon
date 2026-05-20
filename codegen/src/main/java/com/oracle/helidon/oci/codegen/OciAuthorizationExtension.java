@@ -86,19 +86,16 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
                 .addImport(TypeNames.MAP)
                 .addImport(TypeNames.TYPE_NAME)
                 .addImport(TypeNames.TYPED_ELEMENT_INFO)
-                .addImport(TypeNames.OPTIONAL)
                 .addImport(URI.class)
                 .addImport(HashSet.class)
                 .addImport("javax.ws.rs.WebApplicationException")
                 .addImport("javax.ws.rs.core.Response")
                 .addImport("io.helidon.service.registry.Services")
-                .addImport("com.oracle.pic.identity.authorization.sdk.IAuthorizationClient")
-                .addImport("com.oracle.pic.identity.authentication.AuthenticatorClient")
                 .addImport("com.oracle.pic.identity.authorization.sdk.AuthContextRequestFilter")
+                .addImport("com.oracle.helidon.oci.identity.AuthContextRequestFilterFactory")
                 .addImport("com.oracle.helidon.oci.jaxrs.HelidonContainerRequestContext")
                 .addImport("com.oracle.helidon.oci.jaxrs.HelidonContextInjector")
                 .addImport("com.oracle.helidon.oci.jaxrs.HelidonResourceInfo")
-                .addImport("com.oracle.helidon.oci.identity.AuthorizationClientFactory")
                 .addImport("com.oracle.helidon.oci.identity.IdentityContext");
 
         builder.addField(field -> field.name("LOGGER")
@@ -149,13 +146,8 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
         if (INTERCEPTED_METHODS.contains(method)) {
             LOGGER.log(System.Logger.Level.DEBUG, "Intercepting call '" + typedElementInfo.signature() + "'");
 
-            // get clients from registry
-            AuthenticatorClient authnClient = Services.get(AuthenticatorClient.class);
-            Optional<IAuthorizationClient> authzClient = Services.first(IAuthorizationClient.class);
-
-            // create an initialize filter
-            AuthContextRequestFilter filter = authzClient.isEmpty() ? new AuthContextRequestFilter(authnClient)
-                    : new AuthContextRequestFilter(authnClient, authzClient.get());
+            // create and initialize filter
+            AuthContextRequestFilter filter = Services.get(AuthContextRequestFilterFactory.class).create();
             HelidonResourceInfo resourceInfo = new HelidonResourceInfo(serviceType, methodSignature);
             HelidonContainerRequestContext context = new HelidonContainerRequestContext(request, resourceInfo);
             HelidonContextInjector.inject(filter, context);

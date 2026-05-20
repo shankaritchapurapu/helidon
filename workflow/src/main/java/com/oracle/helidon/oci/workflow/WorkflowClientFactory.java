@@ -29,7 +29,7 @@ public class WorkflowClientFactory implements Supplier<WorkflowClient> {
 
     private final Config rootConfig;
     private final WorkflowConfig config;
-    private final BasicAuthenticationDetailsProvider authProvider;
+    private final Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider;
     private final ConnectionPoolStatsReporter poolStatsReporter = new ConnectionPoolStatsReporter();
 
     /**
@@ -37,12 +37,12 @@ public class WorkflowClientFactory implements Supplier<WorkflowClient> {
      *
      * @param rootConfig Helidon root configuration
      * @param config generated workflow configuration
-     * @param authProvider OCI authentication details provider
+     * @param authProvider lazy optional OCI authentication details provider
      */
     @Service.Inject
     public WorkflowClientFactory(Config rootConfig,
                                  WorkflowConfig config,
-                                 BasicAuthenticationDetailsProvider authProvider) {
+                                 Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
         this.rootConfig = rootConfig;
         this.config = config;
         this.authProvider = authProvider;
@@ -51,7 +51,7 @@ public class WorkflowClientFactory implements Supplier<WorkflowClient> {
 
     WorkflowClientFactory(WorkflowConfig config,
                           BasicAuthenticationDetailsProvider authProvider) {
-        this(Config.empty(), config, authProvider);
+        this(Config.empty(), config, () -> Optional.of(authProvider));
     }
 
     @Override
@@ -99,7 +99,10 @@ public class WorkflowClientFactory implements Supplier<WorkflowClient> {
                 sslConfig.rootCertPath().orElseThrow());
         sslConfig.intermediateCertPath().ifPresent(providerConfig::setIntermediateCertPath);
         sslConfig.duration().ifPresent(providerConfig::setDuration);
-        return Optional.of(new AuthDetailsConfig(providerConfig, authProvider));
+        BasicAuthenticationDetailsProvider provider = authProvider.get().orElseThrow(() -> new IllegalStateException(
+                "A BasicAuthenticationDetailsProvider must be available in the service registry when workflow "
+                        + "dynamic SSL context provider configuration includes a root certificate path."));
+        return Optional.of(new AuthDetailsConfig(providerConfig, provider));
     }
 
     private static String defaultWorkerIdentifier() {

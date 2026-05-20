@@ -34,7 +34,7 @@ class AuthenticationMethodSessionToken implements OciAuthenticationMethod {
 
     AuthenticationMethodSessionToken(OciConfig config,
                                      Supplier<Optional<ConfigFileReader.ConfigFile>> configFileSupplier,
-                                     Supplier<SessionTokenAuthenticationDetailsProvider> providerSupplier) {
+                                     Supplier<Optional<SessionTokenAuthenticationDetailsProvider>> providerSupplier) {
         provider = LazyValue.create(() -> createProvider(config, configFileSupplier, providerSupplier));
     }
 
@@ -51,7 +51,7 @@ class AuthenticationMethodSessionToken implements OciAuthenticationMethod {
     private static Optional<BasicAuthenticationDetailsProvider>
     createProvider(OciConfig config,
                    Supplier<Optional<ConfigFileReader.ConfigFile>> configFileSupplier,
-                   Supplier<SessionTokenAuthenticationDetailsProvider> providerSupplier) {
+                   Supplier<Optional<SessionTokenAuthenticationDetailsProvider>> providerSupplier) {
 
         /*
         Session tokens provide is available if either of the following is true:
@@ -64,7 +64,8 @@ class AuthenticationMethodSessionToken implements OciAuthenticationMethod {
 
         if (hasSecurityToken(maybeConfigFile) || maybeSessionTokenConfig.isPresent()) {
             try {
-                return Optional.of(providerSupplier.get());
+                return providerSupplier.get()
+                        .map(BasicAuthenticationDetailsProvider.class::cast);
             } catch (UncheckedIOException e) {
                 if (LOGGER.isLoggable(Level.TRACE)) {
                     LOGGER.log(Level.TRACE, "Cannot create session token authentication provider", e);

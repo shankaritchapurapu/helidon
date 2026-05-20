@@ -11,10 +11,13 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 import io.helidon.common.config.ConfigException;
+import io.helidon.service.registry.ServiceRegistryConfig;
+import io.helidon.service.registry.ServiceRegistryManager;
 
 import com.oracle.bmc.ConfigFileReader;
 import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AuthenticationDetailsProvider;
+import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.RefreshableOnNotAuthenticatedProvider;
 import com.oracle.bmc.auth.RegionProvider;
 import com.oracle.bmc.auth.SessionTokenAuthenticationDetailsProvider;
@@ -185,6 +188,31 @@ class AdpSessionTokenBuilderProviderTest {
     }
 
     @Test
+    void buildReturnsEmptyWhenSessionTokenConfigAndConfigFileAreAbsent() {
+        Optional<SessionTokenAuthenticationDetailsProvider> provider = optionalProvider(OciConfig.create(), Optional.empty());
+
+        assertThat(provider, is(Optional.empty()));
+    }
+
+    @Test
+    void serviceRegistryReturnsEmptyWhenSessionTokenConfigAndConfigFileAreAbsent() {
+        ServiceRegistryConfig registryConfig = ServiceRegistryConfig.builder()
+                .discoverServices(false)
+                .putContractInstance(OciConfig.class, OciConfig.create())
+                .addServiceDescriptor(AdpSessionTokenBuilderProvider__ServiceDescriptor.INSTANCE)
+                .build();
+        ServiceRegistryManager manager = ServiceRegistryManager.create(registryConfig);
+        try {
+            Optional<BasicAuthenticationDetailsProvider> provider =
+                    manager.registry().first(BasicAuthenticationDetailsProvider.class);
+
+            assertThat(provider, is(Optional.empty()));
+        } finally {
+            manager.shutdown();
+        }
+    }
+
+    @Test
     void buildFailsWhenSessionTokenConfigHasNoToken() {
         var sessionConfig = SessionTokenMethodConfig.builder()
                 .region("us-phoenix-1")
@@ -202,6 +230,12 @@ class AdpSessionTokenBuilderProviderTest {
 
     private static SessionTokenAuthenticationDetailsProvider provider(OciConfig config,
                                                                       Optional<ConfigFileReader.ConfigFile> configFile) {
+        return optionalProvider(config, configFile).orElseThrow();
+    }
+
+    private static Optional<SessionTokenAuthenticationDetailsProvider> optionalProvider(
+            OciConfig config,
+            Optional<ConfigFileReader.ConfigFile> configFile) {
         return new AdpSessionTokenBuilderProvider(config, () -> configFile).get();
     }
 
