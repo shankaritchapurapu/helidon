@@ -21,5 +21,6 @@
         <module>instance</module>
         <module>resource</module>
         <module>oke-workload</module>
+        <module>service-principal</module>
     </modules>
 </project>
