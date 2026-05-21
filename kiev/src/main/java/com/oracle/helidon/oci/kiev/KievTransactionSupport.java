@@ -30,7 +30,8 @@ public class KievTransactionSupport {
     /**
      * Execute callback within a Kiev transaction.
      *
-     * @param transactionName transaction name
+     * @param transactionName transaction base name; a unique runtime suffix is appended before opening
+     *        the transaction
      * @param readOnly whether to create a read only transaction
      * @param callback callback to execute
      * @param <T> callback result type

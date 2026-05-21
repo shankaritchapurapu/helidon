@@ -234,8 +234,15 @@ String value = transactionSupport.execute("store-get", true, tx -> readItem(tx, 
 
 Annotate service methods with `@KievTransaction`. If the method declares a
 `com.oracle.pic.kiev.Transaction` parameter, the active transaction is supplied automatically.
-Each transaction annotation value must use the configured `store-name`. Use `name` to set the transaction name
+Each transaction annotation value must use the configured `store-name`. Use `name` to set the transaction base name
 used for diagnostics; otherwise Helidon generates one from the intercepted method.
+
+Helidon appends a `-<System.nanoTime()>` suffix to the base name before opening the Kiev transaction. Generated
+transaction base names use the form `kt-<class-name>-<method-name>-<hash>`, where non-alphanumeric characters are
+replaced with `-`, long readable portions are truncated, and the hash is derived from the fully qualified method
+signature so overloaded methods still get distinct names. Generated base names are capped at 58 characters to leave
+room for the runtime suffix and keep the final name below Kiev's 80-character transaction-name limit. Explicit `name`
+values are used as provided, so keep custom names short enough for the final suffixed Kiev transaction name.
 
 ```java
 @KievTransaction(value = DATA_STORE_NAME, name = "store-put")

@@ -28,9 +28,9 @@ public @interface KievTransaction {
     String value();
 
     /**
-     * Transaction name used for diagnostics.
+     * Transaction base name used for diagnostics.
      *
-     * @return transaction name, or empty string to use a generated unique default with room for the runtime suffix
+     * @return transaction base name, or empty string to use a generated unique default with room for the runtime suffix
      */
     String name() default "";
 
