@@ -29,7 +29,6 @@ import io.helidon.webserver.http.RoutingResponse;
 import io.helidon.webserver.observe.metrics.MetricsObserverConfig;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -37,7 +36,6 @@ import static org.hamcrest.Matchers.notNullValue;
 
 class OciMetricsSemanticConventionsTest {
 
-    @EnabledIfSystemProperty(named = "helidon.oci.metrics.tests.local", matches = "true")
     @Test
     void reusesHttpMetersForRepeatedRequestsWithSameSemanticKey() {
         AtomicInteger addCount = new AtomicInteger();

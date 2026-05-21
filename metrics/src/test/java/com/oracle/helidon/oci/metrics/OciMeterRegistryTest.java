@@ -23,7 +23,6 @@ import io.helidon.metrics.api.Timer;
 import io.helidon.metrics.providers.micrometer.MicrometerMetricsFactoryProvider;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -32,7 +31,6 @@ import static org.hamcrest.Matchers.sameInstance;
 
 class OciMeterRegistryTest {
 
-    @EnabledIfSystemProperty(named = "helidon.oci.metrics.tests.local", matches = "true")
     @Test
     void counterMaintainsCountAndReusesRegistration() {
         OciMeterRegistry registry = createRegistry();
@@ -74,7 +72,6 @@ class OciMeterRegistryTest {
         assertThat(gauge.valueIfChanged(), is(Optional.empty()));
     }
 
-    @EnabledIfSystemProperty(named = "helidon.oci.metrics.tests.local", matches = "true")
     @Test
     void timerTracksCountTotalAndMax() {
         OciMeterRegistry registry = createRegistry();
@@ -90,7 +87,6 @@ class OciMeterRegistryTest {
         assertThat(timer.snapshot(), notNullValue());
     }
 
-    @EnabledIfSystemProperty(named = "helidon.oci.metrics.tests.local", matches = "true")
     @Test
     void distributionSummaryTracksCountTotalMeanAndMax() {
         OciMeterRegistry registry = createRegistry();
