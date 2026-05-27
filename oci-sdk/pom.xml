@@ -20,6 +20,7 @@
     <modules>
         <module>oci</module>
         <module>identity-client</module>
+        <module>object-storage</module>
         <module>authentication</module>
     </modules>
 

@@ -1,0 +1,122 @@
+# OCI Object Storage Client
+
+---
+
+## Contents
+
+* [Overview](#overview)
+* [Maven Coordinates](#maven-coordinates)
+* [Configuration](#configuration)
+* [Usage](#usage)
+
+---
+
+## Overview
+
+The `helidon-oci-sdk-object-storage` module contributes the OCI Java SDK
+`com.oracle.bmc.objectstorage.ObjectStorage` client to the Helidon service registry.
+
+The module wires the synchronous OCI Java SDK Object Storage client using the shared
+OCI SDK authentication provider. It supports explicit endpoint routing, configured
+regions, and the shared OCI SDK client configuration options.
+
+---
+
+## Maven Coordinates
+
+```xml
+<dependency>
+    <groupId>com.oracle.helidon.oci</groupId>
+    <artifactId>helidon-oci-sdk-object-storage</artifactId>
+</dependency>
+```
+
+The module uses the shared OCI SDK authentication provider. Add one authentication
+method module to the application, for example instance principals:
+
+```xml
+<dependency>
+    <groupId>com.oracle.helidon.oci</groupId>
+    <artifactId>helidon-oci-sdk-authentication-instance</artifactId>
+</dependency>
+```
+
+---
+
+## Configuration
+
+Client settings live under `oci.object-storage`:
+
+The `region` and `region-id` settings are both available for user convenience:
+`region-id` aligns with the OCI Object Storage API parameter name, while `region`
+aligns with the Helidon OCI configuration convention. Configure only one of them;
+setting both is rejected as invalid configuration.
+
+| Key | Default Value | Description |
+|-----|---------------|-------------|
+| `oci.object-storage.endpoint` | unset | Explicit Object Storage endpoint. When set, this overrides `region` and `region-id`. |
+| `oci.object-storage.region` | unset | OCI region used to derive the Object Storage endpoint when `endpoint` is not set. Region values can use public region name, internal name, or airport code. |
+| `oci.object-storage.region-id` | unset | Alias for `region` using the common OCI region ID name. |
+| `oci.object-storage.client-configuration.connection-timeout` | unset | OCI SDK connection timeout. |
+| `oci.object-storage.client-configuration.read-timeout` | unset | OCI SDK read timeout. |
+| `oci.object-storage.client-configuration.max-async-threads` | unset | Maximum async worker threads used by OCI SDK asynchronous helpers and waiters. |
+| `oci.object-storage.client-configuration.disable-data-buffering-on-upload` | unset | Whether upload buffering should be disabled. |
+| `oci.object-storage.client-configuration.retry-configuration` | unset | OCI SDK retry configuration. |
+| `oci.object-storage.client-configuration.circuit-breaker-configuration` | unset | OCI SDK circuit breaker configuration. |
+
+When `endpoint` is unset, the module resolves the region from `region` or its
+`region-id` alias; if neither is set, it uses the injected region supplier.
+
+Example:
+
+```yaml
+helidon:
+  oci:
+    authentication-method: instance-principal
+
+oci:
+  object-storage:
+    region-id: us-ashburn-1
+    client-configuration:
+      connection-timeout: PT10S
+      read-timeout: PT1M
+      disable-data-buffering-on-upload: true
+```
+
+Use `endpoint` instead of `region` for tests or explicit endpoint routing:
+
+```yaml
+oci:
+  object-storage:
+    endpoint: http://localhost:8081
+```
+
+---
+
+## Usage
+
+Inject the SDK interface from the Helidon service registry:
+
+```java
+import io.helidon.service.registry.Service;
+
+import com.oracle.bmc.objectstorage.ObjectStorage;
+import com.oracle.bmc.objectstorage.requests.ListBucketsRequest;
+
+@Service.Singleton
+class Buckets {
+    private final ObjectStorage objectStorage;
+
+    @Service.Inject
+    Buckets(ObjectStorage objectStorage) {
+        this.objectStorage = objectStorage;
+    }
+
+    void listBuckets(String namespaceName, String compartmentId) {
+        objectStorage.listBuckets(ListBucketsRequest.builder()
+                .namespaceName(namespaceName)
+                .compartmentId(compartmentId)
+                .build());
+    }
+}
+```

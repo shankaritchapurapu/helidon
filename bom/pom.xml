@@ -141,6 +141,11 @@
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-sdk-object-storage</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.oracle.helidon.oci.jaxrs</groupId>
                 <artifactId>helidon-oci-jaxrs</artifactId>
                 <version>${helidon.oci.version}</version>
