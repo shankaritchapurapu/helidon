@@ -21,7 +21,7 @@ interface Ssv2RetryConfigBlueprint {
      * @return maximum retry attempts
      */
     @Option.Configured
-    @Option.DefaultInt(Ssv2Client.DEFAULT_MAX_RETRIES)
+    @Option.DefaultInt(DefaultSsv2Client.DEFAULT_MAX_RETRIES)
     int maxRetries();
 
     /**
@@ -30,7 +30,7 @@ interface Ssv2RetryConfigBlueprint {
      * @return minimum retry delay
      */
     @Option.Configured
-    @Option.DefaultLong(Ssv2Client.DEFAULT_MIN_RETRY_DELAY_MS)
+    @Option.DefaultLong(DefaultSsv2Client.DEFAULT_MIN_RETRY_DELAY_MS)
     long minRetryDelayInMs();
 
     /**

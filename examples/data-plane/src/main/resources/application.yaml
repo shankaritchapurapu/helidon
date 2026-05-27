@@ -90,8 +90,8 @@ oci:
 #     client-auth: "REQUIRED"
 #     manager:
 #       oci-ssv2:
-#         reload.cron: "0/30 * * * * ? *"
-#         pki.secret: /secret/xxx/data-plane/tls/latest
+#         reload.expression: "0/30 * * * * ? *"
+#         pki.secret-path: /secret/xxx/data-plane/tls/latest
 #         trust.path: /etc/oci-pki/ca-bundle.pem
 #
 # To enable T2 metrics publishing once the metrics module is wired:

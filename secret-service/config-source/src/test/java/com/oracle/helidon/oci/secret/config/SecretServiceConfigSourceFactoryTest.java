@@ -26,7 +26,7 @@ class SecretServiceConfigSourceFactoryTest {
     @Test
     void readsOciConfigWhenMetaConfigMissing() {
         SecretServiceConfigSourceBuilder builder = new SecretServiceConfigSourceFactory(Optional.empty(),
-                                                                                        Optional.empty())
+                                                                                        Optional::empty)
                 .builder();
 
         SecretServiceConfigSourceConfig sourceConfig = builder.sourceConfig();
@@ -49,7 +49,7 @@ class SecretServiceConfigSourceFactoryTest {
                 "helidon.oci-secret-service.client.endpoint", "https://override.example.com/v1"),
                              () -> {
                                  SecretServiceConfigSourceBuilder builder =
-                                         new SecretServiceConfigSourceFactory(Optional.empty(), Optional.empty())
+                                         new SecretServiceConfigSourceFactory(Optional.empty(), Optional::empty)
                                                  .builder();
 
                                  assertThat(builder.sourceConfig().prefix(), is("oci.system.ssv2"));
@@ -59,8 +59,9 @@ class SecretServiceConfigSourceFactoryTest {
     }
 
     @Test
-    void systemPropertyEndpointReferenceUsesInjectedOciEnvSource() {
+    void systemPropertyEndpointReferenceIsResolvedByClientConfig() {
         withSystemProperties(Map.of(
+                "helidon.oci-secret-service.client.enabled", "true",
                 "helidon.oci-secret-service.client.endpoint",
                 "https://override.${oci.env.iaas-domain-name}/v1"),
                              () -> {
@@ -69,10 +70,12 @@ class SecretServiceConfigSourceFactoryTest {
                                                               "oci-env")
                                                  .build();
                                  SecretServiceConfigSourceBuilder builder =
-                                         new SecretServiceConfigSourceFactory(Optional.empty(), Optional.of(ociEnvSource))
+                                         new SecretServiceConfigSourceFactory(Optional.empty(), () -> Optional.of(ociEnvSource))
                                                  .builder();
 
                                  assertThat(builder.clientConfig().endpoint(),
+                                            is("https://override.${oci.env.iaas-domain-name}/v1"));
+                                 assertThat(builder.resolvedClientConfig().endpoint(),
                                             is("https://override.r1.oracleiaas.com/v1"));
                              });
     }
@@ -84,29 +87,84 @@ class SecretServiceConfigSourceFactoryTest {
         thread.setContextClassLoader(new ResourceFilteringClassLoader(original, Set.of("oci-config.")));
         try {
             SecretServiceConfigSourceBuilder builder = new SecretServiceConfigSourceFactory(Optional.empty(),
-                                                                                            Optional.empty())
+                                                                                            Optional::empty)
                     .builder();
 
             assertThat(builder.sourceConfig().prefix(), is("oci.ssv2"));
             assertThat(builder.sourceConfig().cacheTtl(), is(Duration.ofMinutes(5)));
             assertThat(builder.sourceConfig().effectivePollInterval(), is(Duration.ofMinutes(30)));
-            assertThat(builder.clientConfig().endpoint(), is(Ssv2Client.DEFAULT_ENDPOINT));
-            assertThat(builder.clientConfig().tlsConfig().caBundle(), is(Ssv2Client.DEFAULT_CA_BUNDLE));
-            assertThat(builder.clientConfig().retryConfig().maxRetries(), is(Ssv2Client.DEFAULT_MAX_RETRIES));
+            assertThat(builder.clientConfig().endpoint(), is(DefaultSsv2Client.DEFAULT_ENDPOINT));
+            assertThat(builder.clientConfig().tlsConfig().caBundle(), is(DefaultSsv2Client.DEFAULT_CA_BUNDLE));
+            assertThat(builder.clientConfig().retryConfig().maxRetries(), is(DefaultSsv2Client.DEFAULT_MAX_RETRIES));
         } finally {
             thread.setContextClassLoader(original);
         }
     }
 
     @Test
-    void passesInjectedOciEnvSourceToDefaultClient() {
-        ConfigSource ociEnvSource = ConfigSources.create(Map.of("oci.env.iaas-domain-name", "r2.oracleiaas.com"),
-                                                         "oci-env")
-                .build();
-        SecretServiceConfigSourceBuilder builder =
-                new SecretServiceConfigSourceFactory(Optional.empty(), Optional.of(ociEnvSource)).builder();
+    void defaultEndpointReferenceIsResolvedByClientConfig() {
+        withSystemProperties(Map.of("helidon.oci-secret-service.client.enabled", "true"),
+                             () -> {
+                                 ConfigSource ociEnvSource =
+                                         ConfigSources.create(Map.of("oci.env.iaas-domain-name", "r2.oracleiaas.com"),
+                                                              "oci-env")
+                                                 .build();
+                                 SecretServiceConfigSourceBuilder builder =
+                                         new SecretServiceConfigSourceFactory(Optional.empty(), () -> Optional.of(ociEnvSource))
+                                                 .builder();
 
-        assertThat(builder.clientConfig().endpoint(), is("https://secret-service-ce.r2.oracleiaas.com/v1"));
+                                 assertThat(builder.clientConfig().endpoint(), is(DefaultSsv2Client.DEFAULT_ENDPOINT));
+                                 assertThat(builder.resolvedClientConfig().endpoint(),
+                                            is("https://secret-service-ce.r2.oracleiaas.com/v1"));
+                             });
+    }
+
+    @Test
+    void concreteEndpointDoesNotResolveOciEnvSource() {
+        withSystemProperties(Map.of(
+                "helidon.oci-secret-service.client.enabled", "true",
+                "helidon.oci-secret-service.client.endpoint", "https://secret-service.example.com/v1"),
+                             () -> {
+                                 SecretServiceConfigSourceBuilder builder =
+                                         new SecretServiceConfigSourceFactory(Optional.empty(),
+                                                                              SecretServiceConfigSourceFactoryTest::failOciEnvLookup)
+                                                 .builder();
+
+                                 assertThat(builder.resolvedClientConfig().endpoint(),
+                                            is("https://secret-service.example.com/v1"));
+                             });
+    }
+
+    @Test
+    void escapedEndpointReferenceDoesNotResolveOciEnvSource() {
+        Config config = Config.builder()
+                .disableEnvironmentVariablesSource()
+                .disableSystemPropertiesSource()
+                .disableValueResolving()
+                .addSource(ConfigSources.create(Map.of(
+                        "client.enabled", "true",
+                        "client.endpoint", "https://secret-service.\\${oci.env.iaas-domain-name}/v1"))
+                                   .build())
+                .build();
+        SecretServiceConfigSourceBuilder builder = SecretServiceConfigSource.builder()
+                .config(config)
+                .ociEnvConfigSource(SecretServiceConfigSourceFactoryTest::failOciEnvLookup);
+
+        assertThat(builder.resolvedClientConfig().endpoint(),
+                   is("https://secret-service.${oci.env.iaas-domain-name}/v1"));
+    }
+
+    @Test
+    void disabledClientDoesNotResolveOciEnvSource() {
+        SecretServiceConfigSourceBuilder builder =
+                new SecretServiceConfigSourceFactory(Optional.empty(),
+                                                     SecretServiceConfigSourceFactoryTest::failOciEnvLookup)
+                        .builder();
+
+        Ssv2ClientConfig clientConfig = builder.resolvedClientConfig();
+
+        assertThat(clientConfig.enabled(), is(false));
+        assertThat(clientConfig.endpoint(), is(DefaultSsv2Client.DEFAULT_ENDPOINT));
     }
 
     private static void withSystemProperties(Map<String, String> properties, Runnable runnable) {
@@ -129,6 +187,10 @@ class SecretServiceConfigSourceFactoryTest {
             missingKeys.forEach(System::clearProperty);
             originalValues.forEach(System::setProperty);
         }
+    }
+
+    private static Optional<ConfigSource> failOciEnvLookup() {
+        throw new AssertionError("oci-env source should not be resolved");
     }
 
     private static final class ResourceFilteringClassLoader extends ClassLoader {

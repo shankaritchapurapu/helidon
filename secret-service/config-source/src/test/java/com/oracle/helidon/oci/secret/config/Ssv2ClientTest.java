@@ -6,6 +6,8 @@ package com.oracle.helidon.oci.secret.config;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import com.oracle.bmc.waiter.MaxAttemptsTerminationStrategy;
 import com.oracle.bmc.waiter.WaiterConfiguration;
@@ -15,6 +17,7 @@ import io.helidon.config.ConfigSources;
 import io.helidon.config.spi.ConfigSource;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -22,78 +25,102 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class Ssv2ClientTest {
     @Test
     void resolvesPhoenixToR2Endpoint() {
-        Ssv2Client client = new Ssv2Client(clientConfig(Map.of()), Optional.empty());
+        Ssv2ClientConfig config = resolvedClientConfig(Map.of(),
+                                                       () -> Optional.of(ociEnvSource("r2.oracleiaas.com")));
 
-        assertThat(client.resolvedEndpoint(envConfig("r2.oracleiaas.com")),
+        assertThat(config.endpoint(),
                    is("https://secret-service-ce.r2.oracleiaas.com/v1"));
     }
 
     @Test
     void resolvesSeattleToR1Endpoint() {
-        Ssv2Client client = new Ssv2Client(clientConfig(Map.of()), Optional.empty());
+        Ssv2ClientConfig config = resolvedClientConfig(Map.of(),
+                                                       () -> Optional.of(ociEnvSource("r1.oracleiaas.com")));
 
-        assertThat(client.resolvedEndpoint(envConfig("r1.oracleiaas.com")),
+        assertThat(config.endpoint(),
                    is("https://secret-service-ce.r1.oracleiaas.com/v1"));
     }
 
     @Test
     void resolvesRealmSpecificDomain() {
-        Ssv2Client client = new Ssv2Client(clientConfig(Map.of()), Optional.empty());
+        Ssv2ClientConfig config = resolvedClientConfig(
+                Map.of(),
+                () -> Optional.of(ociEnvSource("uk-gov-london-1.oraclegoviaas.uk")));
 
-        assertThat(client.resolvedEndpoint(envConfig("uk-gov-london-1.oraclegoviaas.uk")),
+        assertThat(config.endpoint(),
                    is("https://secret-service-ce.uk-gov-london-1.oraclegoviaas.uk/v1"));
     }
 
     @Test
     void resolvesDefaultEndpointFromInjectedOciEnvSource() {
-        ConfigSource ociEnvSource = ConfigSources.create(Map.of("oci.env.iaas-domain-name", "r1.oracleiaas.com"),
-                                                         "oci-env")
-                .build();
-        Ssv2Client client = new Ssv2Client(clientConfig(Map.of()), Optional.of(ociEnvSource));
+        ConfigSource ociEnvSource = ociEnvSource("r1.oracleiaas.com");
+        Ssv2ClientConfig config = resolvedClientConfig(Map.of(), () -> Optional.of(ociEnvSource));
 
-        assertThat(client.resolvedEndpoint(Config.empty()),
+        assertThat(config.endpoint(),
                    is("https://secret-service-ce.r1.oracleiaas.com/v1"));
     }
 
     @Test
-    void resolvesEnvConfigPlaceholdersInEndpointTemplate() {
-        Ssv2Client client = new Ssv2Client(clientConfig(Map.of(
-                "endpoint", "https://example.${oci.env.region-internal-name}.${oci.env.realm-iaas-domain-name}/v1"
-        )), Optional.empty());
+    void resolvesDefaultEndpointFromLazyOciEnvSource() {
+        AtomicReference<Optional<ConfigSource>> source = new AtomicReference<>(Optional.empty());
 
-        Config config = config(Map.of(
+        source.set(Optional.of(ConfigSources.create(Map.of("oci.env.iaas-domain-name", "r2.oracleiaas.com"),
+                                                    "oci-env")
+                                       .build()));
+
+        assertThat(resolvedClientConfig(Map.of(), source::get).endpoint(),
+                   is("https://secret-service-ce.r2.oracleiaas.com/v1"));
+    }
+
+    @Test
+    void resolvesEnvConfigPlaceholdersInEndpointTemplate() {
+        ConfigSource ociEnvSource = ociEnvSource(Map.of(
                 "oci.env.region-internal-name", "r2",
                 "oci.env.realm-iaas-domain-name", "oracleiaas.com"
         ));
+        Ssv2ClientConfig config = resolvedClientConfig(
+                Map.of("endpoint", "https://example.${oci.env.region-internal-name}.${oci.env.realm-iaas-domain-name}/v1"),
+                () -> Optional.of(ociEnvSource));
 
-        assertThat(client.resolvedEndpoint(config),
+        assertThat(config.endpoint(),
                    is("https://example.r2.oracleiaas.com/v1"));
     }
 
     @Test
     void keepsResolvedOverrideEndpoint() {
-        Ssv2Client client = new Ssv2Client(clientConfig(Map.of(
+        Ssv2ClientConfig config = resolvedClientConfig(Map.of(
                 "endpoint", "https://example.ap-chiyoda-1.oraclerealm8.com/v1"
-        )), Optional.empty());
+        ), Optional::empty);
 
-        assertThat(client.resolvedEndpoint(Config.empty()),
+        assertThat(config.endpoint(),
                    is("https://example.ap-chiyoda-1.oraclerealm8.com/v1"));
     }
 
     @Test
     void failsWhenDefaultEndpointPlaceholderIsUnresolved() {
-        Ssv2Client client = new Ssv2Client(clientConfig(Map.of()), Optional.empty());
+        ConfigException exception = assertThrows(ConfigException.class,
+                                                 () -> resolvedClientConfig(Map.of(), Optional::empty));
 
-        assertThrows(ConfigException.class, () -> client.resolvedEndpoint(Config.empty()));
+        assertThat(exception.getMessage(), containsString("endpoint"));
+    }
+
+    @Test
+    void disabledClientDoesNotResolveEndpointPlaceholders() {
+        Ssv2ClientConfig config = resolvedClientConfig(Map.of(
+                "enabled", "false"
+        ), Optional::empty);
+
+        assertThat(config.enabled(), is(false));
+        assertThat(config.endpoint(), is(DefaultSsv2Client.DEFAULT_ENDPOINT));
     }
 
     @Test
     void mapsRetryConfiguration() {
-        Ssv2Client client = new Ssv2Client(clientConfig(Map.of(
+        DefaultSsv2Client client = new DefaultSsv2Client(clientConfig(Map.of(
                 "retry-config.max-retries", "9",
                 "retry-config.min-retry-delay-in-ms", "100",
                 "retry-config.max-retry-delay-in-ms", "400"
-        )), Optional.empty());
+        )));
 
         var retryConfiguration = client.clientConfiguration().getRetryConfiguration();
         var terminationStrategy = (MaxAttemptsTerminationStrategy) retryConfiguration.getTerminationStrategy();
@@ -118,7 +145,20 @@ class Ssv2ClientTest {
         return Ssv2ClientConfig.create(config(values));
     }
 
-    private static Config envConfig(String iaasDomainName) {
-        return config(Map.of("oci.env.iaas-domain-name", iaasDomainName));
+    private static Ssv2ClientConfig resolvedClientConfig(Map<String, String> values,
+                                                         Supplier<Optional<ConfigSource>> ociEnvConfigSource) {
+        return SecretServiceConfigSource.builder()
+                .clientConfig(config(values))
+                .ociEnvConfigSource(ociEnvConfigSource)
+                .resolvedClientConfig();
+    }
+
+    private static ConfigSource ociEnvSource(String iaasDomainName) {
+        return ociEnvSource(Map.of("oci.env.iaas-domain-name", iaasDomainName));
+    }
+
+    private static ConfigSource ociEnvSource(Map<String, String> values) {
+        return ConfigSources.create(values, "oci-env")
+                .build();
     }
 }

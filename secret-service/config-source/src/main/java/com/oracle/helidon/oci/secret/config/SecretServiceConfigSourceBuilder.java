@@ -6,6 +6,7 @@ package com.oracle.helidon.oci.secret.config;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -13,22 +14,25 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
+import io.helidon.common.LazyValue;
 import io.helidon.config.AbstractConfigSourceBuilder;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigException;
+import io.helidon.config.ConfigSources;
 import io.helidon.config.spi.ConfigSource;
 
 /**
  * Builder for {@link SecretServiceConfigSource}.
  */
-public final class SecretServiceConfigSourceBuilder extends AbstractConfigSourceBuilder<SecretServiceConfigSourceBuilder, Void>
+final class SecretServiceConfigSourceBuilder extends AbstractConfigSourceBuilder<SecretServiceConfigSourceBuilder, Void>
         implements io.helidon.common.Builder<SecretServiceConfigSourceBuilder, SecretServiceConfigSource> {
 
     private static final AtomicInteger THREAD_COUNTER = new AtomicInteger();
 
     private final SecretServiceConfigSourceConfig.Builder sourceConfig = SecretServiceConfigSourceConfig.builder();
-    private Optional<ConfigSource> ociEnvConfigSource = Optional.empty();
+    private Supplier<Optional<ConfigSource>> ociEnvConfigSource = Optional::empty;
     private Function<String, Optional<String>> resolver;
     private AutoCloseable resolverCloseable;
     private Clock clock = Clock.systemUTC();
@@ -122,8 +126,8 @@ public final class SecretServiceConfigSourceBuilder extends AbstractConfigSource
         return this;
     }
 
-    SecretServiceConfigSourceBuilder ociEnvConfigSource(Optional<ConfigSource> ociEnvConfigSource) {
-        this.ociEnvConfigSource = Objects.requireNonNullElse(ociEnvConfigSource, Optional.empty());
+    SecretServiceConfigSourceBuilder ociEnvConfigSource(Supplier<Optional<ConfigSource>> ociEnvConfigSource) {
+        this.ociEnvConfigSource = Objects.requireNonNullElse(ociEnvConfigSource, Optional::empty);
         return this;
     }
 
@@ -149,6 +153,47 @@ public final class SecretServiceConfigSourceBuilder extends AbstractConfigSource
         return sourceConfig().client();
     }
 
+    Ssv2ClientConfig resolvedClientConfig() {
+        Ssv2ClientConfig clientConfig = clientConfig();
+        if (!clientConfig.enabled()) {
+            return clientConfig;
+        }
+
+        String endpoint = clientConfig.endpoint();
+        try {
+            endpoint = resolveEndpoint(endpoint, Optional.empty());
+        } catch (ConfigException e) {
+            Optional<ConfigSource> ociEnvSource = ociEnvConfigSource.get();
+            if (ociEnvSource.isEmpty()) {
+                throw e;
+            }
+            endpoint = resolveEndpoint(endpoint, ociEnvSource);
+        }
+        return resolvedEndpoint(clientConfig, endpoint);
+    }
+
+    private static String resolveEndpoint(String endpoint, Optional<ConfigSource> ociEnvSource) {
+        Config.Builder endpointConfig = Config.builder()
+                .disableEnvironmentVariablesSource()
+                .disableSystemPropertiesSource()
+                .failOnMissingValueReference(true)
+                .addSource(ConfigSources.create(Map.of("endpoint", endpoint)));
+        ociEnvSource.ifPresent(endpointConfig::addSource);
+        return endpointConfig.build()
+                .get("endpoint")
+                .asString()
+                .orElseThrow();
+    }
+
+    private static Ssv2ClientConfig resolvedEndpoint(Ssv2ClientConfig clientConfig, String endpoint) {
+        if (clientConfig.endpoint().equals(endpoint)) {
+            return clientConfig;
+        }
+        return Ssv2ClientConfig.builder(clientConfig)
+                .endpoint(endpoint)
+                .buildPrototype();
+    }
+
     boolean ownsScheduler() {
         return scheduler == null;
     }
@@ -158,9 +203,13 @@ public final class SecretServiceConfigSourceBuilder extends AbstractConfigSource
             return resolver;
         }
 
-        Ssv2Client client = new Ssv2Client(sourceConfig().client(), ociEnvConfigSource);
-        this.resolverCloseable = client;
-        return client::getSecretAsString;
+        LazyValue<DefaultSsv2Client> client = LazyValue.create(() -> new DefaultSsv2Client(resolvedClientConfig()));
+        this.resolverCloseable = () -> {
+            if (client.isLoaded()) {
+                client.get().close();
+            }
+        };
+        return path -> client.get().getSecretAsString(path);
     }
 
     AutoCloseable resolverCloseable() {

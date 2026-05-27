@@ -10,6 +10,10 @@ import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.config.MetaConfig;
 import io.helidon.config.spi.ConfigSource;
+import io.helidon.service.registry.GlobalServiceRegistry;
+import io.helidon.service.registry.ServiceRegistryManager;
+import io.helidon.service.registry.Services;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Map.entry;
@@ -18,6 +22,15 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class SecretServiceConfigSourceProviderTest {
+    private ServiceRegistryManager registryManager;
+
+    @AfterEach
+    void shutdownServices() {
+        if (registryManager != null) {
+            registryManager.shutdown();
+        }
+    }
+
     @Test
     void loadsSecretServiceSourceThroughMetaConfig() {
         Config metaConfig = Config.just(ConfigSources.create(Map.ofEntries(
@@ -31,5 +44,23 @@ class SecretServiceConfigSourceProviderTest {
 
         assertThat(source, instanceOf(SecretServiceConfigSource.class));
         assertThat(((SecretServiceConfigSource) source).uid(), is("custom.ssv2"));
+    }
+
+    @Test
+    void providerSourceResolvesDefaultEndpointFromLiveOciEnvSource() {
+        registryManager = ServiceRegistryManager.create();
+        GlobalServiceRegistry.registry(registryManager.registry());
+
+        ConfigSource ociEnvSource = ConfigSources.create(Map.of("oci.env.iaas-domain-name", "r2.oracleiaas.com"),
+                                                         "oci-env")
+                .build();
+        Services.setNamed(ConfigSource.class, ociEnvSource, "oci-env");
+
+        SecretServiceConfigSourceBuilder builder = SecretServiceConfigSource.builder()
+                .ociEnvConfigSource(SecretServiceConfigSourceProvider::ociEnvConfigSource)
+                .config(Config.empty());
+
+        assertThat(builder.resolvedClientConfig().endpoint(),
+                   is("https://secret-service-ce.r2.oracleiaas.com/v1"));
     }
 }

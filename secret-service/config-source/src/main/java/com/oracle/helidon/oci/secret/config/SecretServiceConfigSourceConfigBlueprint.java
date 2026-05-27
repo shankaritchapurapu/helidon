@@ -23,7 +23,7 @@ interface SecretServiceConfigSourceConfigBlueprint {
      * @return configured key prefix
      */
     @Option.Configured
-    @Option.Default(Ssv2Client.DEFAULT_PREFIX)
+    @Option.Default(DefaultSsv2Client.DEFAULT_PREFIX)
     String prefix();
 
     /**

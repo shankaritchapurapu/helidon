@@ -21,7 +21,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import io.helidon.common.Weight;
 import io.helidon.config.AbstractConfigSource;
 import io.helidon.config.ConfigException;
 import io.helidon.config.spi.ConfigContent;
@@ -39,7 +38,6 @@ import static java.lang.System.Logger.Level.WARNING;
  * Only keys that were already requested through this source are represented in
  * snapshots and change events.
  */
-@Weight(300D)
 @Service.Singleton
 @Service.Named(SecretServiceConfigSource.TYPE)
 public final class SecretServiceConfigSource extends AbstractConfigSource
@@ -85,12 +83,7 @@ public final class SecretServiceConfigSource extends AbstractConfigSource
         this.ownsScheduler = builder.ownsScheduler();
     }
 
-    /**
-     * Create a builder for this source.
-     *
-     * @return builder instance
-     */
-    public static SecretServiceConfigSourceBuilder builder() {
+    static SecretServiceConfigSourceBuilder builder() {
         return new SecretServiceConfigSourceBuilder();
     }
 

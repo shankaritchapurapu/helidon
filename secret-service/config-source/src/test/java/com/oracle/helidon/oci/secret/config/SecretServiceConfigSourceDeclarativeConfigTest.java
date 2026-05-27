@@ -72,9 +72,9 @@ class SecretServiceConfigSourceDeclarativeConfigTest {
             Duration.ofMinutes(5),
             Duration.ofMinutes(30),
             "true",
-            Ssv2Client.DEFAULT_ENDPOINT,
-            Ssv2Client.DEFAULT_CA_BUNDLE,
-            String.valueOf(Ssv2Client.DEFAULT_MAX_RETRIES));
+            DefaultSsv2Client.DEFAULT_ENDPOINT,
+            DefaultSsv2Client.DEFAULT_CA_BUNDLE,
+            String.valueOf(DefaultSsv2Client.DEFAULT_MAX_RETRIES));
 
     private ServiceRegistryManager registryManager;
     @TempDir

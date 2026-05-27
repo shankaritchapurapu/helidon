@@ -28,7 +28,7 @@ interface Ssv2ClientConfigBlueprint {
      * @return endpoint template
      */
     @Option.Configured
-    @Option.Default(Ssv2Client.DEFAULT_ENDPOINT)
+    @Option.Default(DefaultSsv2Client.DEFAULT_ENDPOINT)
     String endpoint();
 
     /**

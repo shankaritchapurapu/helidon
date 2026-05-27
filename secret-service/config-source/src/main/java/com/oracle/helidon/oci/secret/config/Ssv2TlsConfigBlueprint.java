@@ -19,6 +19,6 @@ interface Ssv2TlsConfigBlueprint {
      * @return CA bundle path
      */
     @Option.Configured
-    @Option.Default(Ssv2Client.DEFAULT_CA_BUNDLE)
+    @Option.Default(DefaultSsv2Client.DEFAULT_CA_BUNDLE)
     String caBundle();
 }

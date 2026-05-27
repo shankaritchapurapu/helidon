@@ -9,12 +9,16 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import io.helidon.common.LazyValue;
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.config.Config;
 import io.helidon.config.spi.ConfigNode;
 import io.helidon.config.spi.ConfigSource;
 import io.helidon.config.spi.LazyConfigSource;
 import io.helidon.service.registry.Service;
 
+// Keep oci-env ahead of default-weight OCI config sources that resolve ${oci.env.*} placeholders.
+@Weight(Weighted.DEFAULT_WEIGHT + 100)
 @Service.Singleton
 @Service.Named(OciEnvConfigSourceProvider.TYPE)
 final class OciEnvConfigSource implements ConfigSource, LazyConfigSource {

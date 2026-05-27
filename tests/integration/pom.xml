@@ -23,6 +23,7 @@
         <module>authentication</module>
         <module>identity</module>
         <module>kiev</module>
+        <module>secret-service</module>
     </modules>
 
     <build>

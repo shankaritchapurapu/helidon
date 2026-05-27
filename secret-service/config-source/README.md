@@ -13,7 +13,7 @@ It is intended for secrets that should:
 - expose updated values to Helidon config change listeners
 - keep a configurable source-level cache TTL
 
-For the Secret Service feature background, see [Secret Service](../../docs/secret-service.md).
+For the Secret Service feature background, see [Secret Service](../../docs/services/secret-service.md).
 
 ## Maven Coordinates
 
@@ -114,7 +114,7 @@ When an application uses explicit `meta-config.*`, list `type: "oci-env"` before
 `type: "oci-secret-service"` as shown above. Explicit meta-config disables the automatic
 `oci-env` source registration path, so omitting it leaves `${oci.env.iaas-domain-name}`
 unresolved unless `client.endpoint` is configured to a concrete URL. See
-[Environment Configuration](../../docs/environment-config.md) for the full region,
+[Environment Configuration](../../docs/utilities/environment-config.md) for the full region,
 domain, and bootstrap behavior.
 
 The same SSv2 keys are used on both configuration paths. `oci-config.yaml` uses
