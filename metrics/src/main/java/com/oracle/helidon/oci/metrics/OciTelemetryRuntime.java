@@ -167,12 +167,14 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                                + "was not applied.");
         } else {
             monitoring = config.monitoring().orElseGet(() -> Services.get(Monitoring.class));
-            String region = region();
+            Region region = RegionSupport.resolve(config.region(), () -> Services.get(Region.class));
+            String publicRegionName = region.getPublicRegionName();
+            LOGGER.log(System.Logger.Level.TRACE, "Resolved OCI region: {0}", region.getInternalName());
             LOGGER.log(System.Logger.Level.TRACE,
                        "Initializing OCI telemetry runtime; project={0}, fleet={1}, region={2}, monitoringFromConfig={3}",
                        config.project().orElse(""),
                        config.fleet().orElse(""),
-                       region,
+                       publicRegionName,
                        config.monitoring().isPresent());
             TelemetryReporterBuilder builder = new TelemetryReporterBuilder()
                     .monitoringClient(monitoring)
@@ -184,7 +186,7 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
             config.hostname().ifPresent(builder::hostname);
             config.availabilityDomain().ifPresent(builder::availabilityDomain);
             config.faultDomain().ifPresent(builder::faultDomain);
-            builder.region(region);
+            builder.region(publicRegionName);
             TelemetryReporter reporter = builder.build();
             Metrics.init(reporter, config.defaultDimensions());
             initializedMetrics = true;
@@ -193,22 +195,6 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                        config.defaultDimensions());
         }
         scheduleGaugeSampling();
-    }
-
-    private String region() {
-        Region region = region(config);
-        LOGGER.log(System.Logger.Level.TRACE, "Resolved OCI region: {0}", region.getInternalName());
-        return region.getPublicRegionName();
-    }
-
-    private static Region region(OciMetricsPublisherConfig config) {
-        return config.region()
-                .map(Region::fromPublicRegionName)
-                .orElseGet(() -> Services.first(Region.class)
-                        .orElseThrow(() -> new IllegalStateException("Helidon OCI metrics publishing requires a region. "
-                                                                             + "Set metrics.publishers.region or provide "
-                                                                             + "a Region service.")));
-
     }
 
     private void scheduleGaugeSampling() {
