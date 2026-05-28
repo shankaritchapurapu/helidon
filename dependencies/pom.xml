@@ -689,6 +689,15 @@
                 <groupId>com.oracle.pic.sherlock</groupId>
                 <artifactId>sherlock-collector-core</artifactId>
                 <version>${sherlock-version}</version>
+                <exclusions>
+                    <!-- Sherlock 3.0.13 still pulls authentication-common:2.0.85, which contains classes
+                         also provided by authentication-client:3.1.336. Keep the managed auth client as
+                         the single source for those classes. -->
+                    <exclusion>
+                        <groupId>com.oracle.pic.identity.authentication</groupId>
+                        <artifactId>authentication-common</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!-- Others -->

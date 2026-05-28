@@ -24,6 +24,10 @@
             <artifactId>sherlock-collector-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.oracle.pic.identity.authentication</groupId>
+            <artifactId>authentication-client</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.http</groupId>
             <artifactId>helidon-http</artifactId>
         </dependency>
@@ -42,6 +46,12 @@
         <dependency>
             <groupId>io.helidon.service</groupId>
             <artifactId>helidon-service-registry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci.identity</groupId>
+            <artifactId>helidon-oci-identity</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
