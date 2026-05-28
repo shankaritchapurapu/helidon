@@ -179,9 +179,23 @@
         <pluginManagement>
             <plugins>
                 <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <compilerArgs>
+                            <arg>-Ahelidon.api.preview=ignore</arg>
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
+                <plugin>
                     <groupId>io.helidon.service</groupId>
                     <artifactId>helidon-service-maven-plugin</artifactId>
                     <version>${helidon.version}</version>
+                    <configuration>
+                        <compilerArgs>
+                            <arg>-Ahelidon.api.preview=ignore</arg>
+                        </compilerArgs>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
