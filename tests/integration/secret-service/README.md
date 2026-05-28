@@ -8,9 +8,9 @@ value.
 
 ## Prerequisites
 
-The test uses instance principal authentication. Please see
-[How to locally test your OCI SDK Integration](../../../README.md) to set up
-SSH tunneling for the Instance Metadata Service when running locally.
+The test uses instance principal authentication and must run from an OCI
+environment that can reach both the Instance Metadata Service and Secret Service
+V2.
 
 The endpoint reads `/secret/helidon/helidon-path/latest` through the
 `oci.ssv2` config-source prefix. The expected secret value is
@@ -18,13 +18,7 @@ The endpoint reads `/secret/helidon/helidon-path/latest` through the
 
 ## Steps
 
-1. Run the SSH tunnel command to forward local port 8000 to the remote Instance
-   Metadata Service endpoint.
+1. Run the integration test from the OCI environment.
    ```shell
-   $ ssh -v -L 8000:169.254.169.254:80 oci-reference-service-ad1 -t watch -n 90 date
-   ```
-2. Run the integration test using the `STTest` profile, where `ST` stands for
-   `SSH Tunneling`.
-   ```shell
-   $ mvn -pl tests/integration/secret-service -am -Pintegration-tests -PSTTest verify
+   $ mvn -pl tests/integration/secret-service -am -Pintegration-tests verify
    ```

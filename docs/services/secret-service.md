@@ -149,6 +149,8 @@ core-regions metadata when needed, and publishes domain keys such as
 `r2.oracleiaas.com`, so the endpoint becomes
 `https://secret-service-ce.r2.oracleiaas.com/v1`. `us-seattle-1` resolves to
 `r1.oracleiaas.com`, and other realms use their realm-specific IaaS domain suffix.
+If runtime location files are unavailable, the default service-registry bootstrap path can also
+derive the same values from IMDS metadata.
 
 When explicit `meta-config.*` is used, include `type: "oci-env"` before
 `type: "oci-secret-service"` so the endpoint placeholder can be resolved during config

@@ -6,12 +6,15 @@ package com.oracle.helidon.oci.envconfig;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import com.oracle.pic.commons.util.AvailabilityDomain;
 import com.oracle.pic.commons.util.Region;
 
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
+import io.helidon.integrations.oci.ImdsInstanceInfo;
 
 import org.junit.jupiter.api.Test;
 import static java.util.Map.entry;
@@ -23,6 +26,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 class OciEnvConfigFactoryTest {
@@ -116,6 +120,56 @@ class OciEnvConfigFactoryTest {
     }
 
     @Test
+    void readsLocationFromImdsWhenEnvironmentFilesAreMissing() {
+        Config config = Config.just(ConfigSources.create(Map.ofEntries(
+                entry("dynamic-core-regions.enabled", "false"))));
+        OciEnvConfigFactory factory = mockFactory(config, imdsSupplier("us-phoenix-1", "phx", "phx-ad-1", "FAULT-DOMAIN-2"));
+        doReturn(Optional.empty()).when(factory).readFileValue(any(Path.class));
+
+        Config values = config(factory);
+
+        assertThat(values.get("oci.env.region").asString().orElseThrow(), is("us-phoenix-1"));
+        assertThat(values.get("oci.env.region-name").asString().orElseThrow(), is("phx"));
+        assertThat(values.get("oci.env.availability-domain").asString().orElseThrow(), is("phx-ad-1"));
+        assertThat(values.get("oci.env.fault-domain").asString().orElseThrow(), is("2"));
+        assertThat(values.get("oci.env.iaas-domain-name").asString().orElseThrow(), is("r2.oracleiaas.com"));
+    }
+
+    @Test
+    void regionProviderLookupDoesNotUseImdsFallback() {
+        AtomicBoolean imdsLoaded = new AtomicBoolean();
+        Config config = Config.just(ConfigSources.create(Map.ofEntries(
+                entry("dynamic-core-regions.enabled", "false"))));
+        OciEnvConfigFactory factory = mockFactory(config, () -> {
+            imdsLoaded.set(true);
+            return imdsInfo("us-phoenix-1", "phx", "phx-ad-1", "FAULT-DOMAIN-2");
+        });
+        doReturn(Optional.empty()).when(factory).readFileValue(any(Path.class));
+
+        assertThat(factory.region().isEmpty(), is(true));
+        assertThat(imdsLoaded.get(), is(false));
+    }
+
+    @Test
+    void environmentFilesTakePrecedenceOverImds() {
+        AtomicBoolean imdsLoaded = new AtomicBoolean();
+        OciEnvConfigFactory factory = mockFactory(Config.empty(), () -> {
+            imdsLoaded.set(true);
+            return imdsInfo("us-phoenix-1", "phx", "phx-ad-1", "FAULT-DOMAIN-2");
+        });
+        doReturn(Optional.of("eu-frankfurt-1")).when(factory).readFileValue(OciEnvConfigFactory.DEFAULT_REGION_PATH);
+        doReturn(Optional.of("ad1")).when(factory).readFileValue(OciEnvConfigFactory.DEFAULT_AVAILABILITY_DOMAIN_PATH);
+        doReturn(Optional.of("3")).when(factory).readFileValue(OciEnvConfigFactory.DEFAULT_FAULT_DOMAIN_PATH);
+
+        Config values = config(factory);
+
+        assertThat(values.get("oci.env.region").asString().orElseThrow(), is("eu-frankfurt-1"));
+        assertThat(values.get("oci.env.availability-domain").asString().orElseThrow(), is("eu-frankfurt-1-ad-1"));
+        assertThat(values.get("oci.env.fault-domain").asString().orElseThrow(), is("3"));
+        assertThat(imdsLoaded.get(), is(false));
+    }
+
+    @Test
     void readsPhysicalAvailabilityDomainWhenConfigured() {
         Config config = Config.just(ConfigSources.create(Map.ofEntries(
                 entry("dynamic-core-regions.enabled", "false"),
@@ -186,5 +240,29 @@ class OciEnvConfigFactoryTest {
     private static OciEnvConfigFactory mockFactory(Config config) {
         return mock(OciEnvConfigFactory.class,
                     withSettings().useConstructor(config).defaultAnswer(CALLS_REAL_METHODS));
+    }
+
+    private static OciEnvConfigFactory mockFactory(Config config, Supplier<Optional<ImdsInstanceInfo>> imdsInstanceInfo) {
+        return mock(OciEnvConfigFactory.class,
+                    withSettings().useConstructor(config, imdsInstanceInfo).defaultAnswer(CALLS_REAL_METHODS));
+    }
+
+    private static Supplier<Optional<ImdsInstanceInfo>> imdsSupplier(String canonicalRegionName,
+                                                                    String region,
+                                                                    String ociAdName,
+                                                                    String faultDomain) {
+        return () -> imdsInfo(canonicalRegionName, region, ociAdName, faultDomain);
+    }
+
+    private static Optional<ImdsInstanceInfo> imdsInfo(String canonicalRegionName,
+                                                      String region,
+                                                      String ociAdName,
+                                                      String faultDomain) {
+        ImdsInstanceInfo info = mock(ImdsInstanceInfo.class);
+        when(info.canonicalRegionName()).thenReturn(canonicalRegionName);
+        when(info.region()).thenReturn(region);
+        when(info.ociAdName()).thenReturn(ociAdName);
+        when(info.faultDomain()).thenReturn(faultDomain);
+        return Optional.of(info);
     }
 }

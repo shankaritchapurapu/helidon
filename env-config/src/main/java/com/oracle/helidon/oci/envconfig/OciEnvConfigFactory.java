@@ -14,12 +14,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
+import io.helidon.common.LazyValue;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigException;
 import io.helidon.config.ConfigSources;
 import io.helidon.config.MetaConfig;
 import io.helidon.config.spi.ConfigNode;
+import io.helidon.integrations.oci.ImdsInstanceInfo;
 import io.helidon.service.registry.Service;
 
 import com.oracle.pic.commons.configuration.EnvironmentConfig;
@@ -44,17 +47,32 @@ class OciEnvConfigFactory {
     private final OciEnvConfig config;
     private final OciEnvLocationOverride locationOverride;
     private final DynamicCoreRegions dynamicCoreRegions;
+    private final LazyValue<Optional<ImdsInstanceInfo>> imdsInstanceInfo;
 
     @Service.Inject
-    OciEnvConfigFactory(@Service.Named(OciEnvConfigSourceProvider.TYPE) Optional<MetaConfig> metaConfig) {
-        this(metaConfig.map(MetaConfig::metaConfiguration).orElseGet(OciEnvConfigFactory::ociConfig));
+    OciEnvConfigFactory(@Service.Named(OciEnvConfigSourceProvider.TYPE) Optional<MetaConfig> metaConfig,
+                        Supplier<Optional<ImdsInstanceInfo>> imdsInstanceInfo) {
+        this(metaConfig.map(MetaConfig::metaConfiguration).orElseGet(OciEnvConfigFactory::ociConfig),
+             imdsInstanceInfo);
     }
 
     OciEnvConfigFactory(Config config) {
+        this(config, Optional::empty);
+    }
+
+    OciEnvConfigFactory(Optional<MetaConfig> metaConfig) {
+        this(metaConfig.map(MetaConfig::metaConfiguration).orElseGet(OciEnvConfigFactory::ociConfig));
+    }
+
+    OciEnvConfigFactory(Config config, Supplier<Optional<ImdsInstanceInfo>> imdsInstanceInfo) {
         this.config = OciEnvConfig.create(config);
         this.locationOverride = this.config.locationOverride().orElseGet(OciEnvLocationOverride::create);
         this.dynamicCoreRegions = new DynamicCoreRegions(this.config.dynamicCoreRegions()
                                                                  .orElseGet(OciEnvDynamicCoreRegions::create));
+        this.imdsInstanceInfo = LazyValue.create(() -> {
+            Optional<ImdsInstanceInfo> value = Objects.requireNonNull(imdsInstanceInfo, "imdsInstanceInfo").get();
+            return value == null ? Optional.empty() : value;
+        });
         if (LOGGER.isLoggable(Level.DEBUG)) {
             LOGGER.log(Level.DEBUG,
                        "Initialized oci-env factory with prefix ''{0}'' and dev override {1}",
@@ -77,7 +95,7 @@ class OciEnvConfigFactory {
 
     Optional<Region> region() {
         dynamicCoreRegions.importIfConfigured();
-        return resolveRegionIfAvailable();
+        return resolveRegionIfAvailable(false);
     }
 
     Optional<String> regionId() {
@@ -162,7 +180,7 @@ class OciEnvConfigFactory {
             return devLocationOverride();
         }
 
-        Region region = resolveRegion();
+        Region region = resolveRegion(true);
         AvailabilityDomain availabilityDomain = resolveAvailabilityDomain(region);
         validateLocation(region, availabilityDomain);
         Optional<Integer> faultDomain = resolveFaultDomain();
@@ -189,13 +207,15 @@ class OciEnvConfigFactory {
                 .build();
     }
 
-    private Region resolveRegion() {
-        return resolveRegionIfAvailable()
-                .orElseThrow(() -> new ConfigException(String.format("Could not look up Region from local file (%s)",
-                                                                     DEFAULT_REGION_PATH)));
+    private Region resolveRegion(boolean useImdsFallback) {
+        return resolveRegionIfAvailable(useImdsFallback)
+                .orElseThrow(() -> new ConfigException(
+                        useImdsFallback
+                                ? String.format("Could not look up Region from local file (%s) or IMDS", DEFAULT_REGION_PATH)
+                                : String.format("Could not look up Region from local file (%s)", DEFAULT_REGION_PATH)));
     }
 
-    private Optional<Region> resolveRegionIfAvailable() {
+    private Optional<Region> resolveRegionIfAvailable(boolean useImdsFallback) {
         if (config.locationOverrideDev()) {
             if (LOGGER.isLoggable(Level.DEBUG)) {
                 LOGGER.log(Level.DEBUG, "Using DEV region override");
@@ -219,21 +239,30 @@ class OciEnvConfigFactory {
             return Optional.of(region);
         }
 
-        return readFileValue(DEFAULT_REGION_PATH)
-                .map(regionName -> Region.optionalFromInternalName(regionName)
-                        .orElseThrow(() -> new ConfigException(
-                                String.format("Could not look up Region for region '%s' found in local file (%s)",
-                                              regionName,
-                                              DEFAULT_REGION_PATH))))
-                .map(region -> {
-                    if (LOGGER.isLoggable(Level.DEBUG)) {
-                        LOGGER.log(Level.DEBUG,
-                                   "Resolved region from file ''{0}'' to ''{1}''",
-                                   DEFAULT_REGION_PATH,
-                                   region.getPublicRegionName());
-                    }
-                    return region;
-                });
+        Optional<String> fileRegion = readFileValue(DEFAULT_REGION_PATH);
+        if (fileRegion.isPresent()) {
+            return fileRegion
+                    .map(regionName -> Region.optionalFromInternalName(regionName)
+                            .orElseThrow(() -> new ConfigException(
+                                    String.format("Could not look up Region for region '%s' found in local file (%s)",
+                                                  regionName,
+                                                  DEFAULT_REGION_PATH))))
+                    .map(region -> {
+                        if (LOGGER.isLoggable(Level.DEBUG)) {
+                            LOGGER.log(Level.DEBUG,
+                                       "Resolved region from file ''{0}'' to ''{1}''",
+                                       DEFAULT_REGION_PATH,
+                                       region.getPublicRegionName());
+                        }
+                        return region;
+                    });
+        }
+
+        if (!useImdsFallback) {
+            return Optional.empty();
+        }
+
+        return resolveRegionFromImds();
     }
 
     private AvailabilityDomain resolveAvailabilityDomain(Region region) {
@@ -253,33 +282,41 @@ class OciEnvConfigFactory {
         Path availabilityDomainPath = config.usePhysicalAvailabilityDomain()
                 ? DEFAULT_PHYSICAL_AVAILABILITY_DOMAIN_PATH
                 : DEFAULT_AVAILABILITY_DOMAIN_PATH;
-        String availabilityDomainName = readFileValue(availabilityDomainPath)
-                .orElseThrow(() -> new ConfigException(String.format("Could not look up AD from local file (%s)",
-                                                                     availabilityDomainPath)));
-        try {
-            AvailabilityDomain availabilityDomain = AvailabilityDomain.fromRegionAndAdNumberName(region, availabilityDomainName);
-            if (LOGGER.isLoggable(Level.DEBUG)) {
-                LOGGER.log(Level.DEBUG,
-                           "Resolved availability domain from file ''{0}'' to ''{1}''",
-                           availabilityDomainPath,
-                           availabilityDomain.getName());
+        Optional<String> fileAvailabilityDomain = readFileValue(availabilityDomainPath);
+        if (fileAvailabilityDomain.isPresent()) {
+            String availabilityDomainName = fileAvailabilityDomain.get();
+            try {
+                AvailabilityDomain availabilityDomain =
+                        AvailabilityDomain.fromRegionAndAdNumberName(region, availabilityDomainName);
+                if (LOGGER.isLoggable(Level.DEBUG)) {
+                    LOGGER.log(Level.DEBUG,
+                               "Resolved availability domain from file ''{0}'' to ''{1}''",
+                               availabilityDomainPath,
+                               availabilityDomain.getName());
+                }
+                return availabilityDomain;
+            } catch (RuntimeException e) {
+                throw new ConfigException(
+                        String.format("Found invalid availability domain from region %s and ad number %s from "
+                                              + "local files (%s, %s)",
+                                      region.getInternalName(),
+                                      availabilityDomainName,
+                                      DEFAULT_REGION_PATH,
+                                      availabilityDomainPath),
+                        e);
             }
-            return availabilityDomain;
-        } catch (RuntimeException e) {
-            throw new ConfigException(
-                    String.format("Found invalid availability domain from region %s and ad number %s from local files (%s, %s)",
-                                  region.getInternalName(),
-                                  availabilityDomainName,
-                                  DEFAULT_REGION_PATH,
-                                  availabilityDomainPath),
-                    e);
         }
+
+        return resolveAvailabilityDomainFromImds(region)
+                .orElseThrow(() -> new ConfigException(String.format("Could not look up AD from local file (%s) or IMDS",
+                                                                     availabilityDomainPath)));
     }
 
     private Optional<Integer> resolveFaultDomain() {
         Optional<Integer> faultDomain = locationOverride.faultDomain()
                 .or(() -> readFileValue(DEFAULT_FAULT_DOMAIN_PATH)
-                        .flatMap(OciEnvConfigFactory::parseFaultDomain));
+                        .flatMap(OciEnvConfigFactory::parseFaultDomain))
+                .or(this::resolveFaultDomainFromImds);
         if (LOGGER.isLoggable(Level.DEBUG)) {
             LOGGER.log(Level.DEBUG,
                        "Resolved fault domain to ''{0}''",
@@ -312,8 +349,110 @@ class OciEnvConfigFactory {
         try {
             return Optional.of(Integer.parseInt(trimmed));
         } catch (NumberFormatException e) {
+            int separator = trimmed.lastIndexOf('-');
+            if (separator < 0 || separator == trimmed.length() - 1) {
+                return Optional.empty();
+            }
+            try {
+                return Optional.of(Integer.parseInt(trimmed.substring(separator + 1)));
+            } catch (NumberFormatException ignored) {
+                return Optional.empty();
+            }
+        }
+    }
+
+    private Optional<Region> resolveRegionFromImds() {
+        Optional<ImdsInstanceInfo> instanceInfo = imdsInstanceInfo.get();
+        if (instanceInfo.isEmpty()) {
             return Optional.empty();
         }
+
+        ImdsInstanceInfo metadata = instanceInfo.get();
+        Optional<Region> canonicalRegion = regionFromImdsValue(metadata.canonicalRegionName());
+        if (canonicalRegion.isPresent()) {
+            logImdsRegion(canonicalRegion.get());
+            return canonicalRegion;
+        }
+        Optional<Region> region = regionFromImdsValue(metadata.region());
+        if (region.isPresent()) {
+            logImdsRegion(region.get());
+            return region;
+        }
+        throw new ConfigException(String.format(
+                "Could not look up Region from IMDS metadata canonicalRegionName '%s' or region '%s'",
+                metadata.canonicalRegionName(),
+                metadata.region()));
+    }
+
+    private static void logImdsRegion(Region region) {
+        if (LOGGER.isLoggable(Level.DEBUG)) {
+            LOGGER.log(Level.DEBUG,
+                       "Resolved region from IMDS to ''{0}''",
+                       region.getPublicRegionName());
+        }
+    }
+
+    private Optional<Region> regionFromImdsValue(String value) {
+        Optional<String> candidate = nonBlank(value);
+        if (candidate.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(reverseRegionLookup().get(candidate.get().toLowerCase(Locale.ENGLISH)));
+    }
+
+    private Optional<AvailabilityDomain> resolveAvailabilityDomainFromImds(Region region) {
+        Optional<ImdsInstanceInfo> instanceInfo = imdsInstanceInfo.get();
+        if (instanceInfo.isEmpty()) {
+            return Optional.empty();
+        }
+
+        String imdsAvailabilityDomain = instanceInfo.get().ociAdName();
+        Optional<AvailabilityDomain> availabilityDomain = availabilityDomainFromImdsValue(region, imdsAvailabilityDomain);
+        if (availabilityDomain.isEmpty() && nonBlank(imdsAvailabilityDomain).isPresent()) {
+            throw new ConfigException(String.format(
+                    "Could not look up AvailabilityDomain from IMDS metadata ociAdName '%s' for region '%s'",
+                    imdsAvailabilityDomain,
+                    region.getPublicRegionName()));
+        }
+        availabilityDomain.ifPresent(ad -> {
+            if (LOGGER.isLoggable(Level.DEBUG)) {
+                LOGGER.log(Level.DEBUG,
+                           "Resolved availability domain from IMDS to ''{0}''",
+                           ad.getName());
+            }
+        });
+        return availabilityDomain;
+    }
+
+    private Optional<AvailabilityDomain> availabilityDomainFromImdsValue(Region region, String value) {
+        Optional<String> candidate = nonBlank(value);
+        if (candidate.isEmpty()) {
+            return Optional.empty();
+        }
+
+        String normalized = candidate.get().toLowerCase(Locale.ENGLISH);
+        AvailabilityDomain availabilityDomain = reverseAvailabilityDomainLookup().get(normalized);
+        if (availabilityDomain != null) {
+            return Optional.of(availabilityDomain);
+        }
+
+        try {
+            return Optional.of(AvailabilityDomain.fromRegionAndAdNumberName(region, normalized));
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Integer> resolveFaultDomainFromImds() {
+        return imdsInstanceInfo.get()
+                .map(ImdsInstanceInfo::faultDomain)
+                .flatMap(OciEnvConfigFactory::parseFaultDomain);
+    }
+
+    private static Optional<String> nonBlank(String value) {
+        return Optional.ofNullable(value)
+                .map(String::trim)
+                .filter(candidate -> !candidate.isEmpty());
     }
 
     private Map<String, Region> reverseRegionLookup() {

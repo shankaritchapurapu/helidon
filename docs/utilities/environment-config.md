@@ -105,11 +105,12 @@ Precedence:
 5. In that fallback path, environment variables have the highest priority, then system properties,
    then filesystem `oci-config.yaml`, and finally classpath `oci-config.yaml`.
 6. If none of those sources provides `helidon.oci-env`, the source still works with its defaults
-   and resolves location from runtime files such as `/etc/region`.
+   and resolves location from runtime files such as `/etc/region`. On the default service-registry
+   bootstrap path, it can fall back to IMDS metadata when runtime files are not available.
 
-The source stays lazy on both paths. It does not read `/etc/*` files or import dynamic
-core-regions metadata until Helidon requests a key under the configured prefix. Placeholder
-resolution in other config sources can trigger that lazy lookup during `Config.build()`.
+The source stays lazy on both paths. It does not read `/etc/*` files, request IMDS metadata,
+or import dynamic core-regions metadata until Helidon requests a key under the configured prefix.
+Placeholder resolution in other config sources can trigger that lazy lookup during `Config.build()`.
 
 Example placeholder usage:
 
@@ -236,9 +237,9 @@ providers backed by the same lazy environment resolution:
 
 Behavior:
 
-* If no `oci-env` region is configured or detected, the providers return no value. For SDK
-  `Region` lookup, this allows lower-priority Helidon OCI SDK region providers, such as
-  `helidon.oci.region`, authentication, or IMDS providers, to answer instead.
+* If no `oci-env` region is configured or detected from runtime files, the providers return no
+  value. For SDK `Region` lookup, this allows lower-priority Helidon OCI SDK region providers,
+  such as `helidon.oci.region`, authentication, or IMDS providers, to answer instead.
 * If an `oci-env` region value is present but invalid, such as an invalid
   `location-override.region` or invalid `/etc/region` value, resolution fails fast instead of
   falling back to lower-priority providers.
@@ -328,6 +329,12 @@ The location resolution follows the same design as `EnvironmentConfig`:
 * `use-physical-availability-domain=true` switches availability-domain lookup to
   `/etc/physical-availability-domain`.
 * `/etc/fault-domain` is treated as an integer value.
+* If runtime location files are not available, the default service-registry config-source path
+  falls back to IMDS instance metadata. It maps `canonicalRegionName` or `region` to the region,
+  `ociAdName` to the availability domain, and `faultDomain` to the fault-domain number when present.
+* IMDS fallback uses the standard `helidon.oci.imds-*` settings, including `imds-base-uri`,
+  `imds-timeout`, and `imds-detect-retries`. This is useful for local SSH-tunnel profiles that
+  point IMDS at `localhost`.
 
 Override behavior:
 
