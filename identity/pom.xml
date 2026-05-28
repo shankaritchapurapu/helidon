@@ -33,6 +33,11 @@
             <artifactId>helidon-service-registry</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.oracle.helidon.oci.envconfig</groupId>
+            <artifactId>helidon-oci-envconfig</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.config</groupId>
             <artifactId>helidon-config-metadata</artifactId>
         </dependency>

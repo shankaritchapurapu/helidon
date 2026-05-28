@@ -30,12 +30,14 @@ class AuthenticationDependencyCompatibilityTest {
     @Test
     void testAuthenticatorClientCreationUsesCompatibleAuthenticationClasses() {
         ServiceAuthenticationClient serviceAuthClient = new ServiceAuthenticationClientFactory(
-                identityConfigFactory(authenticationConfig(true), authorizationConfig()))
+                identityConfigFactory(authenticationConfig(true), authorizationConfig()),
+                locationDefaults())
                 .get();
         Services.set(ServiceAuthenticationClient.class, serviceAuthClient);
 
         AuthenticatorClient client = new AuthenticatorClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig()))
+                identityConfigFactory(authenticationConfig(false), authorizationConfig()),
+                locationDefaults())
                 .get();
 
         assertThat(client, notNullValue());
@@ -64,6 +66,12 @@ class AuthenticationDependencyCompatibilityTest {
                 };
             }
         };
+    }
+
+    private static OciEnvLocationDefaults locationDefaults() {
+        return new OciEnvLocationDefaults(Config.empty(), () -> {
+            throw new AssertionError("Default region should not be resolved when an explicit region is configured");
+        });
     }
 
     private static AuthenticationConfig authenticationConfig(boolean hardCodedKeys) {

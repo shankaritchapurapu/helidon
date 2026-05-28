@@ -37,6 +37,12 @@ Add the Identity module dependency to your project:
 </dependency>
 ```
 
+The Identity module brings in the OCI environment configuration provider at runtime. When an explicit identity region
+is not configured, authentication and non-service-enclave authorization use the region supplied by `oci-env`.
+For local tests or explicit environment overrides, set `helidon.oci-env.location-override` in `oci-config.yaml`.
+`oci-env` exposes those values as the default `Region` service and resolved `oci.env.*` entries. Identity uses the
+default region service and `oci.env.availability-domain` / `oci.env.fault-domain` as its default location inputs.
+
 ---
 
 ## Usage
@@ -218,7 +224,7 @@ The root configuration is `oci.identity`.
 
 Authentication config is loaded from `oci.identity.authentication`.
 
-Minimal example using region-based endpoint resolution and instance principals:
+Minimal example using the `oci-env` region and instance principals:
 
 ```yaml
 oci:
@@ -227,7 +233,6 @@ oci:
       global-business-unit: "Cloud-Infra"
       team-name: "ExampleTeam"
       application-name: "ExampleService"
-      region: "us-phoenix-1"
       use-instance-principal: true
 ```
 
@@ -268,7 +273,7 @@ oci:
 | `oci.identity.authentication.global-business-unit` | | Required global business unit passed to the Auth SDK. |
 | `oci.identity.authentication.team-name` | | Required team name passed to the Auth SDK. |
 | `oci.identity.authentication.application-name` | | Required application name passed to the Auth SDK. |
-| `oci.identity.authentication.region` | | Region used to derive the Auth endpoint. Mutually exclusive with `service-uri`. |
+| `oci.identity.authentication.region` | `oci-env` region | Region used to derive the Auth endpoint. Mutually exclusive with `service-uri`. |
 | `oci.identity.authentication.use-instance-principal` | `true` | Whether to load certificates from instance metadata. |
 | `oci.identity.authentication.instance-principal-uri` | | Optional override for the instance metadata endpoint. |
 | `oci.identity.authentication.certificates` | `[]` | Explicit certificate list used when `use-instance-principal=false`. |
@@ -281,7 +286,8 @@ oci:
 
 Authentication validation rules:
 
-* Exactly one of `oci.identity.authentication.service-uri` or `oci.identity.authentication.region` must be configured.
+* `oci.identity.authentication.service-uri` and `oci.identity.authentication.region` are mutually exclusive.
+* If neither `service-uri` nor `region` is configured, the `oci-env` default region must be available.
 * `global-business-unit`, `team-name`, and `application-name` are required.
 * When `use-instance-principal=false` and `hard-coded-key-supplier=false`, at least one certificate entry must be configured.
 
@@ -289,7 +295,7 @@ Authentication validation rules:
 
 Authorization config is loaded from `oci.identity.authorization`.
 
-Example using a non-enclave overlay endpoint derived from region and physical AD:
+Example using a non-enclave overlay endpoint derived from the `oci-env` region and physical AD:
 
 ```yaml
 oci:
@@ -297,7 +303,6 @@ oci:
     authorization:
       enabled: true
       service-name: "example-service"
-      region: "us-phoenix-1"
       physical-ad: "PHX-AD-1"
 ```
 
@@ -331,9 +336,9 @@ oci:
 | `oci.identity.authorization.service-uri` | | Optional explicit authorization endpoint. |
 | `oci.identity.authorization.service-name` | | Required service name passed to the authorization client. |
 | `oci.identity.authorization.service` | | Alias for `service-name`; configure only one of the two keys. |
-| `oci.identity.authorization.region` | | Region for non-enclave authorization. |
+| `oci.identity.authorization.region` | `oci-env` region | Region for non-enclave authorization. |
 | `oci.identity.authorization.physical-ad` | | Physical AD for non-enclave authorization, or the regional AD value for explicit enclave endpoints. |
-| `oci.identity.authorization.availability-domain` | | Availability domain used to derive service-enclave endpoints when `service-enclave=true` and `service-uri` is not set. |
+| `oci.identity.authorization.availability-domain` | `oci-env` availability domain | Availability domain used to derive service-enclave endpoints when `service-enclave=true` and `service-uri` is not set. |
 | `oci.identity.authorization.service-enclave` | `false` | Enables service-enclave authorization mode. |
 | `oci.identity.authorization.root-cert-path` | | Optional CA bundle or root certificate path. |
 | `oci.identity.authorization.metrics-lib` | | Optional Auth SDK metrics library name. |
@@ -343,9 +348,9 @@ in other Helidon OCI modules. Specify at most one name for an aliased setting, n
 
 Authorization validation rules:
 
-* If `service-uri` is not configured and `service-enclave=false`, both `region` and `physical-ad` are required.
-* If `service-uri` is not configured and `service-enclave=true`, `region` must not be set and `availability-domain` is required.
-* If `service-uri` points to a non-service-enclave endpoint, `service-enclave` must be `false`, and both `region` and `physical-ad` are required.
+* If `service-uri` is not configured and `service-enclave=false`, `physical-ad` is required and `region` must be configured or available from `oci-env`.
+* If `service-uri` is not configured and `service-enclave=true`, `region` must not be set and `availability-domain` must be configured or available from `oci-env`.
+* If `service-uri` points to a non-service-enclave endpoint, `service-enclave` must be `false`, `physical-ad` is required, and `region` must be configured or available from `oci-env`.
 * If `service-uri` points to a service-enclave endpoint, `region` must not be set, `availability-domain` must not be set, and `physical-ad` must be omitted or set to the regional AD value.
 
 ### SPLAT-Aware Request Filter

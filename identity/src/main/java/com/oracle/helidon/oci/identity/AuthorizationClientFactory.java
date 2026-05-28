@@ -36,9 +36,12 @@ import com.oracle.pic.identity.authorization.sdk.IAuthorizationClient;
 public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizationClient>> {
 
     private final AuthorizationConfig config;
+    private final OciEnvLocationDefaults locationDefaults;
 
-    AuthorizationClientFactory(IdentityConfigFactory factory) {
+    @Service.Inject
+    AuthorizationClientFactory(IdentityConfigFactory factory, OciEnvLocationDefaults locationDefaults) {
         this.config = factory.get().authorization();
+        this.locationDefaults = locationDefaults;
     }
 
     @Override
@@ -77,27 +80,21 @@ public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizat
                 throw new IllegalStateException(
                         "authorization.region must not be set when authorization.serviceEnclave is true");
             }
-            if (config.availabilityDomain().isEmpty()) {
-                throw new IllegalStateException(
-                        "authorization.availabilityDomain must be configured when authorization.serviceEnclave "
-                                + "is true and no explicit serviceUri is provided");
-            }
-
             client.serviceEnclave();
-            client.availabilityDomain(AvailabilityDomain.fromName(config.availabilityDomain().orElseThrow()));
+            client.availabilityDomain(AvailabilityDomain.fromName(locationDefaults.requireAvailabilityDomain(
+                    config.availabilityDomain(),
+                    "authorization.availabilityDomain or default availability domain must be available when "
+                            + "authorization.serviceEnclave is true and no explicit serviceUri is provided")));
             return;
         }
 
-        if (config.region().isEmpty()) {
-            throw new IllegalStateException(
-                    "authorization.region must be configured when authorization.serviceUri is not provided");
-        }
         if (config.physicalAd().isEmpty()) {
             throw new IllegalStateException(
                     "authorization.physicalAd must be configured for non-service-enclave authorization");
         }
 
-        client.region(Region.fromPublicRegionName(config.region().orElseThrow()));
+        client.region(resolveRegion(
+                "authorization.region or default region must be available when authorization.serviceUri is not provided"));
     }
 
     private void configureExplicitEndpoint(AuthorizationClient.Builder client) {
@@ -133,22 +130,23 @@ public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizat
                     "authorization.serviceEnclave must not be set when authorization.serviceUri points "
                             + "to a non-service-enclave endpoint");
         }
-        if (config.region().isEmpty()) {
-            throw new IllegalStateException(
-                    "authorization.region must be configured when authorization.serviceUri points to "
-                            + "a non-service-enclave endpoint");
-        }
         if (config.physicalAd().isEmpty()) {
             throw new IllegalStateException(
                     "authorization.physicalAd must be configured when authorization.serviceUri points to "
                             + "a non-service-enclave endpoint");
         }
 
-        client.region(Region.fromPublicRegionName(config.region().orElseThrow()));
+        client.region(resolveRegion(
+                "authorization.region or default region must be available when authorization.serviceUri points to "
+                        + "a non-service-enclave endpoint"));
     }
 
     private boolean isServiceEnclaveEndpoint(String endpoint) {
         String host = java.net.URI.create(endpoint).getHost();
         return host != null && host.toLowerCase().startsWith("authservice");
+    }
+
+    private Region resolveRegion(String missingMessage) {
+        return locationDefaults.resolveRegion(config.region(), missingMessage);
     }
 }

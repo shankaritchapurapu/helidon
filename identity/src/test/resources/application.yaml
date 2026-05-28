@@ -1,0 +1,15 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+oci:
+  identity:
+    authentication:
+      global-business-unit: "gbu"
+      team-name: "team"
+      application-name: "app"
+      hard-coded-key-supplier: true
+      use-instance-principal: false
+    authorization:
+      enabled: false
+      service-name: "service"

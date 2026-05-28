@@ -5,13 +5,20 @@ package com.oracle.helidon.oci.identity;
 
 import java.security.Security;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import io.helidon.config.Config;
+import io.helidon.config.ConfigSources;
 
 import com.oracle.jipher.provider.JipherJCE;
+import com.oracle.pic.commons.util.Region;
 import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
 
 class BaseAuthenticationClientTest {
+
+    private static final Region DEFAULT_REGION = Region.fromPublicRegionName("us-ashburn-1");
 
     static {
         Security.addProvider(new JipherJCE());
@@ -88,7 +95,42 @@ class BaseAuthenticationClientTest {
 
     ServiceAuthenticationClient serviceAuthenticationClient(boolean hardCodedKeys) {
         ServiceAuthenticationClientFactory clientFactory = new ServiceAuthenticationClientFactory(
-                identityConfigFactory(hardCodedKeys));
+                identityConfigFactory(hardCodedKeys), ociEnvLocationDefaults(failingDefaultRegion()));
         return clientFactory.get();
+    }
+
+    OciEnvLocationDefaults ociEnvLocationDefaults(Supplier<Optional<Region>> defaultRegion) {
+        return ociEnvLocationDefaults(Config.empty(), defaultRegion);
+    }
+
+    OciEnvLocationDefaults ociEnvLocationDefaults(Config config, Supplier<Optional<Region>> defaultRegion) {
+        return new OciEnvLocationDefaults(config, defaultRegion);
+    }
+
+    Config ociEnvLocationConfig() {
+        return Config.just(ConfigSources.create(java.util.Map.of(
+                "oci.env.availability-domain", "iad-ad-1",
+                "oci.env.fault-domain", "2")));
+    }
+
+    Supplier<Optional<Region>> defaultRegion() {
+        return () -> Optional.of(DEFAULT_REGION);
+    }
+
+    Supplier<Optional<Region>> defaultRegion(AtomicBoolean called) {
+        return () -> {
+            called.set(true);
+            return Optional.of(DEFAULT_REGION);
+        };
+    }
+
+    Supplier<Optional<Region>> emptyDefaultRegion() {
+        return Optional::empty;
+    }
+
+    Supplier<Optional<Region>> failingDefaultRegion() {
+        return () -> {
+            throw new AssertionError("Default region should not be resolved when an explicit region or endpoint is configured");
+        };
     }
 }

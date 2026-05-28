@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import io.helidon.service.registry.Service;
 import io.helidon.service.registry.Services;
 
+import com.oracle.pic.commons.util.Region;
 import com.oracle.pic.identity.auth.AuthMetricsFactory;
 import com.oracle.pic.identity.authentication.AuthenticatorClient;
 import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
@@ -27,12 +28,13 @@ import com.oracle.pic.identity.authentication.metrics.NoopAuthMetricsImpl;
 @Service.Singleton
 public class AuthenticatorClientFactory implements Supplier<AuthenticatorClient> {
 
-    private static final String SERVICE_URI = "https://auth.%s.oraclecloud.com";
-
     private final AuthenticationConfig config;
+    private final OciEnvLocationDefaults locationDefaults;
 
-    AuthenticatorClientFactory(IdentityConfigFactory config) {
+    @Service.Inject
+    AuthenticatorClientFactory(IdentityConfigFactory config, OciEnvLocationDefaults locationDefaults) {
         this.config = config.get().authentication();
+        this.locationDefaults = locationDefaults;
     }
 
     @Override
@@ -61,15 +63,17 @@ public class AuthenticatorClientFactory implements Supplier<AuthenticatorClient>
     }
 
     private URI resolveServiceUri() {
-        boolean hasServiceUri = config.serviceUri().isPresent();
-        boolean hasRegion = config.region().isPresent();
-
-        if (hasServiceUri == hasRegion) {
-            throw new IllegalStateException(
-                    "Exactly one of authentication.serviceUri or authentication.region must be configured");
+        if (config.serviceUri().isPresent()) {
+            if (config.region().isPresent()) {
+                throw new IllegalStateException(
+                        "authentication.region must not be configured when authentication.serviceUri is configured");
+            }
+            return config.serviceUri().orElseThrow();
         }
 
-        return config.serviceUri()
-                .orElseGet(() -> URI.create(String.format(SERVICE_URI, config.region().orElseThrow())));
+        Region region = locationDefaults.resolveRegion(
+                config.region(),
+                "One of authentication.serviceUri, authentication.region, or default region must be available");
+        return locationDefaults.authServiceUri(region);
     }
 }

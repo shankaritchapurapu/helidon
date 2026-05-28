@@ -33,6 +33,8 @@ interface AuthenticationConfigBlueprint {
      * This acts as an explicit endpoint override for the underlying Auth SDK.
      * When this option is configured, {@link #region()} must not also be
      * configured because the Auth SDK accepts exactly one endpoint source.
+     * If neither this option nor {@link #region()} is configured, the client
+     * uses the default region supplied by the OCI environment configuration.
      * </p>
      *
      * @return an {@link Optional} containing the configured authentication
@@ -92,12 +94,13 @@ interface AuthenticationConfigBlueprint {
      * The region is typically specified using its canonical public name
      * (for example, {@code "us-phoenix-1"}, {@code "eu-frankfurt-1"}) and is
      * used to derive the Auth SDK endpoint when {@link #serviceUri()} is not
-     * explicitly configured.
+     * explicitly configured. If this option is omitted, the client falls back
+     * to the default region supplied by the OCI environment configuration.
      * </p>
      *
      * @return an {@link Optional} containing the configured authentication
      *         region, or an empty {@code Optional} if an explicit
-     *         {@link #serviceUri()} is used instead
+     *         {@link #serviceUri()} or the default region is used instead
      */
     @Option.Configured
     Optional<String> region();

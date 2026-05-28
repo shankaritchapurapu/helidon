@@ -15,6 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -35,7 +36,8 @@ class AuthenticatorClientFactoryTest extends BaseAuthenticationClientTest {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void testClientCreation(boolean hardCodedKeys) {
-        AuthenticatorClientFactory factory = new AuthenticatorClientFactory(identityConfigFactory(hardCodedKeys));
+        AuthenticatorClientFactory factory = new AuthenticatorClientFactory(
+                identityConfigFactory(hardCodedKeys), ociEnvLocationDefaults(failingDefaultRegion()));
         AuthenticatorClient client = factory.get();
         assertThat(client, notNullValue());
     }
@@ -51,9 +53,28 @@ class AuthenticatorClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthenticatorClientFactory factory = new AuthenticatorClientFactory(
-                identityConfigFactory(authenticationConfig, authorizationConfig()));
+                identityConfigFactory(authenticationConfig, authorizationConfig()),
+                ociEnvLocationDefaults(failingDefaultRegion()));
         AuthenticatorClient client = factory.get();
         assertThat(client, notNullValue());
+    }
+
+    @Test
+    void testClientWithDefaultRegion() {
+        AuthenticationConfig authenticationConfig = AuthenticationConfig.builder()
+                .globalBusinessUnit("gbu")
+                .teamName("team")
+                .applicationName("app")
+                .useInstancePrincipal(false)
+                .build();
+
+        AtomicBoolean defaultRegionCalled = new AtomicBoolean();
+        AuthenticatorClientFactory factory = new AuthenticatorClientFactory(
+                identityConfigFactory(authenticationConfig, authorizationConfig()),
+                ociEnvLocationDefaults(defaultRegion(defaultRegionCalled)));
+        AuthenticatorClient client = factory.get();
+        assertThat(client, notNullValue());
+        assertThat(defaultRegionCalled.get(), is(true));
     }
 
     @Test
@@ -68,7 +89,23 @@ class AuthenticatorClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthenticatorClientFactory factory = new AuthenticatorClientFactory(
-                identityConfigFactory(authenticationConfig, authorizationConfig()));
+                identityConfigFactory(authenticationConfig, authorizationConfig()),
+                ociEnvLocationDefaults(failingDefaultRegion()));
+        assertThrows(IllegalStateException.class, factory::get);
+    }
+
+    @Test
+    void testRejectsMissingRegionAndDefault() {
+        AuthenticationConfig authenticationConfig = AuthenticationConfig.builder()
+                .globalBusinessUnit("gbu")
+                .teamName("team")
+                .applicationName("app")
+                .useInstancePrincipal(false)
+                .build();
+
+        AuthenticatorClientFactory factory = new AuthenticatorClientFactory(
+                identityConfigFactory(authenticationConfig, authorizationConfig()),
+                ociEnvLocationDefaults(emptyDefaultRegion()));
         assertThrows(IllegalStateException.class, factory::get);
     }
 }

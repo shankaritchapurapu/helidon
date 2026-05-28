@@ -13,7 +13,6 @@ import io.helidon.common.configurable.Resource;
 import io.helidon.common.pki.Keys;
 import io.helidon.service.registry.Service;
 
-import com.oracle.pic.commons.util.Region;
 import com.oracle.pic.identity.auth.AuthMetricsFactory;
 import com.oracle.pic.identity.authentication.AuthServiceAuthenticationClient;
 import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
@@ -29,9 +28,12 @@ import com.oracle.pic.identity.authentication.supplier.InstancePrincipalCertific
 public class ServiceAuthenticationClientFactory implements Supplier<ServiceAuthenticationClient> {
 
     private final AuthenticationConfig config;
+    private final OciEnvLocationDefaults locationDefaults;
 
-    ServiceAuthenticationClientFactory(IdentityConfigFactory config) {
+    @Service.Inject
+    ServiceAuthenticationClientFactory(IdentityConfigFactory config, OciEnvLocationDefaults locationDefaults) {
         this.config = config.get().authentication();
+        this.locationDefaults = locationDefaults;
     }
 
     @Override
@@ -78,18 +80,16 @@ public class ServiceAuthenticationClientFactory implements Supplier<ServiceAuthe
     }
 
     private void configureEndpoint(AuthServiceAuthenticationClient.Builder builder) {
-        boolean hasServiceUri = config.serviceUri().isPresent();
-        boolean hasRegion = config.region().isPresent();
-
-        if (hasServiceUri == hasRegion) {
-            throw new IllegalStateException(
-                    "Exactly one of authentication.serviceUri or authentication.region must be configured");
-        }
-
-        if (hasServiceUri) {
+        if (config.serviceUri().isPresent()) {
+            if (config.region().isPresent()) {
+                throw new IllegalStateException(
+                        "authentication.region must not be configured when authentication.serviceUri is configured");
+            }
             builder.authServiceEndpoint(config.serviceUri().get().toString());
         } else {
-            builder.region(Region.fromPublicRegionName(config.region().orElseThrow()));
+            builder.region(locationDefaults.resolveRegion(
+                    config.region(),
+                    "One of authentication.serviceUri, authentication.region, or default region must be available"));
         }
     }
 

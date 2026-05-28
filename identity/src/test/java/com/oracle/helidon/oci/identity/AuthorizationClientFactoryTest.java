@@ -33,7 +33,8 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
 
     @Test
     void testClientCreation() {
-        AuthorizationClientFactory factory = new AuthorizationClientFactory(identityConfigFactory());
+        AuthorizationClientFactory factory = new AuthorizationClientFactory(
+                identityConfigFactory(), ociEnvLocationDefaults(failingDefaultRegion()));
         Optional<IAuthorizationClient> client = factory.get();
         assertThat(client.isPresent(), is(true));
         assertThat(client.get(), is(notNullValue()));
@@ -48,10 +49,92 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig));
+                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                ociEnvLocationDefaults(failingDefaultRegion()));
         Optional<IAuthorizationClient> client = factory.get();
         assertThat(client.isPresent(), is(true));
         assertThat(client.get(), is(notNullValue()));
+    }
+
+    @Test
+    void testClientWithDefaultRegion() {
+        AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
+                .serviceName("service")
+                .physicalAd("AD-1")
+                .build();
+
+        AtomicBoolean defaultRegionCalled = new AtomicBoolean();
+        AuthorizationClientFactory factory = new AuthorizationClientFactory(
+                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                ociEnvLocationDefaults(defaultRegion(defaultRegionCalled)));
+        Optional<IAuthorizationClient> client = factory.get();
+        assertThat(client.isPresent(), is(true));
+        assertThat(client.get(), is(notNullValue()));
+        assertThat(defaultRegionCalled.get(), is(true));
+    }
+
+    @Test
+    void testClientWithExplicitNonEnclaveUriAndDefaultRegion() {
+        AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
+                .serviceName("service")
+                .serviceUri(java.net.URI.create("https://auth.us-ashburn-1.oraclecloud.com"))
+                .physicalAd("AD-1")
+                .build();
+
+        AtomicBoolean defaultRegionCalled = new AtomicBoolean();
+        AuthorizationClientFactory factory = new AuthorizationClientFactory(
+                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                ociEnvLocationDefaults(defaultRegion(defaultRegionCalled)));
+        Optional<IAuthorizationClient> client = factory.get();
+        assertThat(client.isPresent(), is(true));
+        assertThat(client.get(), is(notNullValue()));
+        assertThat(defaultRegionCalled.get(), is(true));
+    }
+
+    @Test
+    void testServiceEnclaveClientWithDefaultAvailabilityDomain() {
+        AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
+                .serviceName("service")
+                .serviceEnclave(true)
+                .build();
+
+        AuthorizationClientFactory factory = new AuthorizationClientFactory(
+                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                ociEnvLocationDefaults(ociEnvLocationConfig(), failingDefaultRegion()));
+        Optional<IAuthorizationClient> client = factory.get();
+        assertThat(client.isPresent(), is(true));
+        assertThat(client.get(), is(notNullValue()));
+    }
+
+    @Test
+    void testServiceEnclaveClientWithExplicitAvailabilityDomain() {
+        AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
+                .serviceName("service")
+                .serviceEnclave(true)
+                .availabilityDomain("iad-ad-2")
+                .build();
+
+        AuthorizationClientFactory factory = new AuthorizationClientFactory(
+                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                ociEnvLocationDefaults(failingDefaultRegion()));
+        Optional<IAuthorizationClient> client = factory.get();
+        assertThat(client.isPresent(), is(true));
+        assertThat(client.get(), is(notNullValue()));
+    }
+
+    @Test
+    void testRejectsEnclaveUriWithExplicitAvailabilityDomain() {
+        AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
+                .serviceName("service")
+                .serviceEnclave(true)
+                .serviceUri(java.net.URI.create("https://authservice.svc.ad1.us-phoenix-1"))
+                .availabilityDomain("iad-ad-1")
+                .build();
+
+        AuthorizationClientFactory factory = new AuthorizationClientFactory(
+                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                ociEnvLocationDefaults(ociEnvLocationConfig(), failingDefaultRegion()));
+        assertThrows(IllegalStateException.class, factory::get);
     }
 
     @Test
@@ -62,7 +145,8 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig));
+                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                ociEnvLocationDefaults(failingDefaultRegion()));
         assertThrows(IllegalStateException.class, factory::get);
     }
 
@@ -74,7 +158,21 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig));
+                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                ociEnvLocationDefaults(failingDefaultRegion()));
+        assertThrows(IllegalStateException.class, factory::get);
+    }
+
+    @Test
+    void testRejectsNonEnclaveWithoutRegionOrDefault() {
+        AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
+                .serviceName("service")
+                .physicalAd("AD-1")
+                .build();
+
+        AuthorizationClientFactory factory = new AuthorizationClientFactory(
+                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                ociEnvLocationDefaults(emptyDefaultRegion()));
         assertThrows(IllegalStateException.class, factory::get);
     }
 }

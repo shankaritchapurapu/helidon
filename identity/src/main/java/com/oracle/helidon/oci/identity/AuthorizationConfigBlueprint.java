@@ -40,7 +40,9 @@ interface AuthorizationConfigBlueprint {
      * as an explicit authorization endpoint. Additional fields such as
      * {@link #region()} and {@link #physicalAd()} can still be required by the
      * Auth SDK depending on whether the explicit endpoint targets an overlay or
-     * a service-enclave deployment.
+     * a service-enclave deployment. When a non-service-enclave endpoint needs a
+     * region and {@link #region()} is omitted, the client uses the default
+     * region supplied by the OCI environment configuration.
      * </p>
      *
      * @return authorization URI
@@ -72,10 +74,11 @@ interface AuthorizationConfigBlueprint {
      * <p>
      * The region can be used to scope authorization rules to a specific geographic
      * or logical region (for example, {@code "us-ashburn-1"} or {@code "eu-frankfurt-1"}).
-     * If no region is configured, then {@link #serviceEnclave()} must be set to {@code true}.
+     * If no region is configured for non-service-enclave authorization, the client falls back
+     * to the default region supplied by the OCI environment configuration.
      *
      * @return an {@link Optional} containing the configured region value, or an empty
-     *         {@link Optional} if running in a service enclave
+     *         {@link Optional} if running in a service enclave or using the default region
      */
     @Option.Configured
     Optional<String> region();
@@ -86,8 +89,8 @@ interface AuthorizationConfigBlueprint {
      * <p>
      * The physical AD can be used to further scope authorization rules within a
      * region to a specific availability domain (for example, {@code "AD-1"} or
-     * {@code "phx-ad-1"}). Typically needs to be provided together with
-     * {@link #region()} when {@link #serviceEnclave()} is {@code false}.
+     * {@code "phx-ad-1"}). Typically needs to be provided together with an
+     * explicit or default region when {@link #serviceEnclave()} is {@code false}.
      *
      * @return an {@link Optional} containing the configured physical availability
      *         domain value, or an empty {@link Optional} if no physical AD is set
@@ -102,11 +105,14 @@ interface AuthorizationConfigBlueprint {
      * This value is only used when {@link #serviceEnclave()} is {@code true}
      * and no explicit {@link #serviceUri()} is configured. In that case, the
      * underlying Auth SDK uses the availability domain to derive the
-     * service-enclave authorization endpoint.
+     * service-enclave authorization endpoint. If this option is omitted, the
+     * client falls back to the availability domain supplied by the OCI
+     * environment configuration.
      * </p>
      *
      * @return an {@link Optional} containing the configured availability
-     *         domain name, or an empty {@link Optional} if none is set
+     *         domain name, or an empty {@link Optional} if the default
+     *         availability domain is used
      */
     @Option.Configured
     Optional<String> availabilityDomain();
