@@ -5,7 +5,7 @@ Helidon OCI provides integration with the following services.
 | Topic                                         | Description                                                                          |
 |-----------------------------------------------|--------------------------------------------------------------------------------------|
 | [Audit](audit.md)                             | OCI `AuditV2Filter` integration for capturing audited request and response activity. |
-| [Identity](identity.md)                       | Authentication, authorization, and request-scoped identity context integration.      |
+| [Identity](identity.md)                       | Auth SDK authentication, authorization, and request data injection.                 |
 | [OCI Identity Client](identity-client.md)     | Helidon service registry binding for the OCI Java SDK Identity client.              |
 | [OCI Object Storage Client](object-storage-client.md) | Helidon service registry binding for the OCI Java SDK Object Storage client. |
 | [Kiev](kiev.md)                               | Helidon configuration and service registry bindings for Kiev client libraries.       |

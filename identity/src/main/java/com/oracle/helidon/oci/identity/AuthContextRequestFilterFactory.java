@@ -39,6 +39,15 @@ public class AuthContextRequestFilterFactory {
     }
 
     /**
+     * Create the SPLAT-aware Auth SDK request filter using only authentication.
+     *
+     * @return Auth SDK request filter without an authorization client
+     */
+    public AuthContextRequestFilter createAuthenticatedOnly() {
+        return create(Services.get(AuthenticatorClient.class), Optional.empty());
+    }
+
+    /**
      * Create the SPLAT-aware Auth SDK request filter.
      *
      * @param authenticatorClient authenticator client

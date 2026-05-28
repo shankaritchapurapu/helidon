@@ -18,8 +18,9 @@ The `helidon-oci-identity-client` module contributes the OCI Java SDK
 
 This module is separate from [`helidon-oci-identity`](./identity.md). The existing
 `helidon-oci-identity` module wires the internal Auth SDK for request authentication,
-authorization, and `IdentityContext`; this module wires the public OCI Java SDK Identity
-client used for Identity APIs such as `createTag`, `createTagNamespace`, and tag defaults.
+authorization, and request data such as `IdentityContext`, `Principal`, and
+`AuthorizationRequest`; this module wires the public OCI Java SDK Identity client used for
+Identity APIs such as `createTag`, `createTagNamespace`, and tag defaults.
 
 ---
 

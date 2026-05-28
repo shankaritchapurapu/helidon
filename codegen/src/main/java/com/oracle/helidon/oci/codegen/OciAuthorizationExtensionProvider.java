@@ -10,8 +10,6 @@ import io.helidon.service.codegen.RegistryCodegenContext;
 import io.helidon.service.codegen.spi.RegistryCodegenExtension;
 import io.helidon.service.codegen.spi.RegistryCodegenExtensionProvider;
 
-import static com.oracle.helidon.oci.codegen.OciTypes.AUTHORIZATION_PERMISSION;
-
 /**
  * Java {@link java.util.ServiceLoader} provider implementation for
  * {@link io.helidon.service.codegen.spi.RegistryCodegenExtensionProvider}.
@@ -29,7 +27,7 @@ public class OciAuthorizationExtensionProvider implements RegistryCodegenExtensi
 
     @Override
     public Set<TypeName> supportedAnnotations() {
-        return Set.of(AUTHORIZATION_PERMISSION);
+        return OciAuthorizationAnnotations.ALL;
     }
 
     @Override

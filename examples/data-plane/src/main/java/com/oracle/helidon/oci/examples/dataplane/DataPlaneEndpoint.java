@@ -17,15 +17,12 @@ import io.helidon.webserver.http.ServerResponse;
 import com.oracle.helidon.oci.audit.AuditV2Config;
 import com.oracle.helidon.oci.errorcode.ErrorCodes;
 import com.oracle.helidon.oci.errorcode.RenderableException;
-import com.oracle.helidon.oci.identity.IdentityContext;
 import com.oracle.helidon.oci.requestid.OciRequestId;
 import com.oracle.pic.identity.authentication.Principal;
 import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
 import com.oracle.pic.sherlock.collector.AuditPayloadAppender;
 import com.oracle.pic.sherlock.collector.AuditRIO;
 import com.oracle.pic.sherlock.collector.OperationSynchronousType;
-
-import static com.oracle.pic.identity.authorization.sdk.AuthContextRequestFilter.PIC_PRINCIPAL;
 
 /**
  * Small reference endpoint that demonstrates request-id, OCI error-code, identity,
@@ -90,8 +87,7 @@ class DataPlaneEndpoint {
     RobotResponse create(@Http.Entity CreateRobotRequest request,
                          ServerRequest serverRequest,
                          ServerResponse response,
-                         IdentityContext identityContext) {
-        Principal principal = principal(identityContext);
+                         Principal principal) {
         if (request == null) {
             return error(response, missingParameter("Request body is required."));
         }
@@ -120,8 +116,7 @@ class DataPlaneEndpoint {
                          @Http.Entity UpdateRobotRequest request,
                          ServerRequest serverRequest,
                          ServerResponse response,
-                         IdentityContext identityContext) {
-        Principal principal = principal(identityContext);
+                         Principal principal) {
         if (request == null) {
             return error(response, missingParameter("Request body is required."));
         }
@@ -148,8 +143,7 @@ class DataPlaneEndpoint {
     RobotResponse delete(@Http.PathParam("id") String id,
                          ServerRequest serverRequest,
                          ServerResponse response,
-                         IdentityContext identityContext) {
-        Principal principal = principal(identityContext);
+                         Principal principal) {
         Optional<Robot> deletedRobot = referenceService.delete(id);
         if (deletedRobot.isEmpty()) {
             return error(response, notFound(id));
@@ -158,10 +152,6 @@ class DataPlaneEndpoint {
         Robot robot = deletedRobot.orElseThrow();
         audit(serverRequest, "DeleteRobot", robot.id(), robot.compartmentId(), principal);
         return success(robot);
-    }
-
-    private static Principal principal(IdentityContext identityContext) {
-        return (Principal) identityContext.get(PIC_PRINCIPAL);
     }
 
     private static void audit(ServerRequest request,

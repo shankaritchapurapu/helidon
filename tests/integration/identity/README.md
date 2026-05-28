@@ -2,7 +2,9 @@
 
 ## Overview
 
-This module contains tests related to integration with OCI Identity service as provided by OCI AuthSDK.
+This module contains tests related to integration with OCI Identity service as provided by OCI AuthSDK. The test
+endpoint uses method-level `@AuthorizationPermission` annotations and direct `Principal` method-parameter injection, matching
+the current identity integration style.
 
 ## Prerequisites
 

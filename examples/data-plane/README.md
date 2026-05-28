@@ -15,9 +15,9 @@ The example combines the OCI Helidon pieces that fit naturally in a single SE ap
   resource-method parameter
 - `helidon-oci-errorcode`: business failures are reported with OCI-style error codes
   and JSON payloads
-- `helidon-oci-identity`: write operations require a signed request via
-  `@AuthorizationPermission`, and the endpoint injects `IdentityContext` directly
-  into secured resource methods to access the authenticated principal
+- `helidon-oci-identity`: write operations require a signed request via method-level
+  `@AuthorizationPermission`, and the endpoint injects `Principal` directly into secured
+  resource methods to access the authenticated principal
 - `helidon-oci-kiev`: robots are stored through Kiev, with the example
   configuration using the `IN_MEMORY` backend so the service stays runnable without
   external infrastructure
@@ -92,9 +92,11 @@ curl -s http://localhost:8080/data-plane/probe
 
 ## Authentication
 
-Write operations are protected by OCI Identity authorization annotations. The test suite
-uses the hard-coded key supplier mode, already used by `examples/identity`, to exercise the
-secured routes without a live OCI environment.
+Write operations are protected by `@AuthorizationPermission` annotations. The generated identity
+interceptor performs authentication, authorizes the declared permission, and makes the
+authenticated `Principal` available as a direct resource-method parameter. The test suite uses
+the hard-coded key supplier mode, already used by `examples/identity`, to exercise the secured
+routes without a live OCI environment.
 
 For a real environment you can switch to the same patterns used by `examples/identity`:
 

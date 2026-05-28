@@ -112,10 +112,10 @@ The sample exposes:
 * `POST /tagging/tag-definitions`
 * `POST /tagging/resources`
 
-The example depends on `helidon-oci-tagging` and demonstrates converting tagged resources to tag slugs and back
-again. It also demonstrates Auth SDK authorization and OCI SDK Identity tag definition calls. The application starts
-through the Helidon service registry, so the endpoint receives the tagging and identity clients from their modules
-rather than constructing them directly.
+The example depends on `helidon-oci-tagging` and demonstrates converting tagged resources to tag slugs and back again.
+It also demonstrates method-level `@AuthorizationPermission`, direct Auth SDK `AuthorizationRequest` injection, and OCI SDK
+Identity tag definition calls. The application starts through the Helidon service registry, so the endpoint receives the
+tagging and identity clients from their modules rather than constructing them directly.
 
 ---
 

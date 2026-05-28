@@ -5,11 +5,12 @@
 This example shows how to use Helidon together with:
 
 * `helidon-oci-tagging` for binary tag slug creation
-* `helidon-oci-identity` for Auth SDK authentication, authorization, and request context
+* `helidon-oci-identity` for Auth SDK authentication, authorization, and request data injection
 * `helidon-oci-identity-client` for the OCI Java SDK Identity client
 
-The example exposes separate paths for creating an OCI Identity tag definition and for creating a tagged resource. The
-resource path converts existing request tags into a tag slug, sends that slug to Authorization Service with
+The example exposes separate paths for creating an OCI Identity tag definition and for creating a tagged resource. Both
+paths are protected with `@AuthorizationPermission`. The resource path also injects the Auth SDK `AuthorizationRequest`
+directly, converts existing request tags into a tag slug, sends that slug to Authorization Service with
 `AuthorizationRequestFactory.setNewTags(...)`, and returns a resource representation containing the authorized tag slug.
 
 Metrics emission is disabled in [`src/main/resources/application.yaml`](./src/main/resources/application.yaml).
@@ -42,8 +43,9 @@ The service starts on `http://localhost:8080/tagging`.
 
 ## Endpoints
 
-Both endpoints are protected by the Auth SDK configuration. The `curl` snippets show the request body shape; live calls
-must use the signed request or development authentication setup for the target environment.
+Both endpoints are intercepted by the identity integration through `@AuthorizationPermission`. The `curl` snippets show the
+request body shape; live calls must use the signed request or development authentication setup for the target
+environment.
 
 Create the OCI Identity tag definition first:
 

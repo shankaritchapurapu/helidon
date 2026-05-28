@@ -10,7 +10,7 @@ The Identity module integrates Helidon with the OCI Auth SDK. It provides config
 * `AuthenticatorClient`
 * `Optional<IAuthorizationClient>`
 * SPLAT-aware Auth SDK request filter factory
-* per-request `IdentityContext`
+* per-request `IdentityContext`, `Principal`, and `AuthorizationRequest` injection
 
 The configuration root is `oci.identity`. Authentication and authorization are configured independently under:
 
@@ -18,7 +18,11 @@ The configuration root is `oci.identity`. Authentication and authorization are c
 * `oci.identity.authorization`
 * `oci.identity.splat-aware`
 
-For request handling, authorization is applied through the Helidon OCI code generation integration. Methods annotated with OCI authorization annotations such as `@AuthorizationPermission` are intercepted automatically. The generated interceptor uses `AuthContextRequestFilterFactory` to run a `SplatAwareAuthContextRequestFilter`, performs authentication and optional authorization, and registers an `IdentityContext` into the Helidon request context. This replaces the older filter-path configuration model and does not require configuring `oci.identity.filters.*`.
+For request handling, authentication and authorization are applied through the Helidon OCI code generation integration.
+Annotated endpoint methods are intercepted automatically. The generated interceptor uses
+`AuthContextRequestFilterFactory` to run a `SplatAwareAuthContextRequestFilter`, performs authentication and optional
+authorization, and registers identity request data into the Helidon request context. This replaces the older filter-path
+configuration model and does not require configuring `oci.identity.filters.*`.
 
 ---
 
@@ -37,20 +41,117 @@ Add the Identity module dependency to your project:
 
 ## Usage
 
-When the Helidon service registry is enabled, the module contributes the Identity services automatically. The generated authorization interceptor obtains `AuthContextRequestFilterFactory` from the registry and applies a SPLAT-aware Auth SDK filter to intercepted endpoints.
+When the Helidon service registry is enabled, the module contributes the Identity services automatically. The generated
+authorization interceptor obtains `AuthContextRequestFilterFactory` from the registry and applies a SPLAT-aware Auth SDK
+filter to intercepted endpoints.
 
-The recommended way to access authenticated request data in a REST endpoint method is to declare an `IdentityContext` parameter directly. The generated handler resolves it from `request.context()` for each request.
+### Interception Annotations
+
+Use Auth SDK authorization annotations on methods that require a permission check:
+
+```java
+import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
+
+@AuthorizationPermission("IDENTITY_ONCE")
+String once() {
+    return "ok";
+}
+```
+
+Use `@AuthorizationPermissions` for methods that need more than one permission:
+
+```java
+import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
+import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermissions;
+
+@AuthorizationPermissions({
+        @AuthorizationPermission("IDENTITY_READ"),
+        @AuthorizationPermission("IDENTITY_UPDATE")
+})
+String update() {
+    return "ok";
+}
+```
+
+Use `@Identity.Authenticated` when the method needs an authenticated request but does not need service-side
+authorization:
+
+```java
+import com.oracle.helidon.oci.identity.Identity;
+import com.oracle.pic.identity.authentication.Principal;
+
+@Identity.Authenticated
+String currentUser(Principal principal) {
+    return principal.getSubjectId();
+}
+```
+
+`@Identity.Authenticated` can also be applied to an endpoint class. In that form, all endpoint methods in the class are
+intercepted for authentication. Method-level Auth SDK authorization annotations still use the authorization path:
+
+```java
+import io.helidon.http.Http;
+import io.helidon.webserver.http.RestServer;
+
+import com.oracle.helidon.oci.identity.Identity;
+import com.oracle.pic.identity.authentication.Principal;
+import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
+
+@RestServer.Endpoint
+@Http.Path("/identity")
+@Identity.Authenticated
+class IdentityEndpoint {
+
+    @Http.GET
+    @Http.Path("/me")
+    String me(Principal principal) {
+        return principal.getSubjectId();
+    }
+
+    @Http.POST
+    @Http.Path("/admin")
+    @AuthorizationPermission("IDENTITY_ADMIN")
+    String admin() {
+        return "ok";
+    }
+}
+```
+
+The code generator recognizes Auth SDK annotations in
+`com.oracle.pic.identity.authorization.permissions.annotations` and triggers the same generated interceptor:
+
+* `@AuthorizationPermission`
+* `@AuthorizationPermissions`
+* `@AuthorizeAssociate`
+* `@AuthorizeCreate`
+* `@AuthorizeDelete`
+* `@AuthorizeReadOnly`
+* `@AuthorizeUpdate`
+* `@BodyVerification`
+* `@NetworkBasedAccessControl`
+* `@RejectCrossTenancyRequest`
+* `@ResourceAssociationReviewed`
+* `@VariableOperationName`
+* `@VariableString`
+* `@VariableStrings`
+* `@ZprBasedAccessControl`
+
+Most Auth SDK annotations use the authorization path. `@BodyVerification` by itself only requires authentication, while
+authorization wins when it appears together with a permission or action annotation.
+
+### Request Data Injection
+
+The recommended way to access authenticated request data in a REST endpoint method is to declare a `Principal`,
+`AuthorizationRequest`, or `IdentityContext` parameter directly. The generated handler resolves the values from
+`request.context()` for each request.
 
 ```java
 import io.helidon.http.Http;
 import io.helidon.service.registry.Service;
 import io.helidon.webserver.http.RestServer;
 
-import com.oracle.helidon.oci.identity.IdentityContext;
 import com.oracle.pic.identity.authentication.Principal;
 import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
-
-import static com.oracle.pic.identity.authorization.sdk.AuthContextRequestFilter.PIC_PRINCIPAL;
 
 @RestServer.Endpoint
 @Http.Path("/identity")
@@ -60,12 +161,24 @@ class IdentityEndpoint {
     @Http.POST
     @Http.Path("once")
     @AuthorizationPermission("IDENTITY_ONCE")
-    String once(@Http.Entity String message, IdentityContext identityContext) {
-        Principal principal = (Principal) identityContext.get(PIC_PRINCIPAL);
+    String once(@Http.Entity String message, Principal principal) {
         return principal.getSubjectId() + ": " + message;
     }
 }
 ```
+
+`AuthorizationRequest` can also be injected directly when the endpoint needs to inspect or copy the request prepared by
+the Auth SDK:
+
+```java
+import com.oracle.pic.identity.authorization.sdk.AuthorizationRequest;
+
+String create(@Http.Entity CreateRequest request, AuthorizationRequest authorizationRequest) {
+    // customize or copy the prepared authorization request
+}
+```
+
+`AuthorizationRequest` injection requires an intercepted endpoint for which the Auth SDK created an authorization request.
 
 If you need request-scoped access from an injected singleton field or constructor dependency, inject `Supplier<IdentityContext>` instead:
 
@@ -87,9 +200,13 @@ class AuditService {
 }
 ```
 
-If `oci.identity.authorization.enabled=false`, the authorization client is not created. Authentication still remains available through `ServiceAuthenticationClient` and `AuthenticatorClient`.
+If `oci.identity.authorization.enabled=false`, the authorization client is not created. Authentication still remains
+available through `ServiceAuthenticationClient` and `AuthenticatorClient`. Endpoints that use authenticated-only
+interception continue to work without the authorization client.
 
-The request filter is `SplatAwareAuthContextRequestFilter`. For requests that arrive on the configured SPLAT mTLS port, it treats the request as already authenticated by SPLAT and hydrates Auth SDK request properties from SPLAT principal headers. For other requests, it falls back to normal direct Identity authentication behavior.
+The request filter is `SplatAwareAuthContextRequestFilter`. For requests that arrive on the configured SPLAT mTLS port,
+it treats the request as already authenticated by SPLAT and hydrates Auth SDK request properties from SPLAT principal
+headers. For other requests, it falls back to normal direct Identity authentication behavior.
 
 ---
 
@@ -262,7 +379,10 @@ If `region` is omitted, the filter factory resolves the region from `oci.identit
 
 ### Request Context
 
-`IdentityContext` is registered into `request.context()` only for intercepted endpoints. In practice, that means the endpoint must participate in the authorization integration, typically by using an OCI authorization annotation such as `@AuthorizationPermission`. Direct `IdentityContext` parameter injection depends on that context entry being present.
+`IdentityContext` is registered into `request.context()` only for intercepted endpoints. In practice, that means the
+endpoint must participate in the identity integration by using `@Identity.Authenticated` or a supported Auth SDK
+authorization annotation. Direct `IdentityContext`, `Principal`, and `AuthorizationRequest` parameter
+injection depends on that context entry being present.
 
 The context is a read-only map of Auth SDK request properties. A common example is the authenticated principal under `AuthContextRequestFilter.PIC_PRINCIPAL`.
 

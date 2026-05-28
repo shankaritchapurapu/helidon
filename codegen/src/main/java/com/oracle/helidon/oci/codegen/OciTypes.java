@@ -13,8 +13,41 @@ final class OciTypes {
     static final TypeName SERVER_REQUEST = TypeName.create("io.helidon.webserver.http.ServerRequest");
     static final TypeName SERVER_RESPONSE = TypeName.create("io.helidon.webserver.http.ServerResponse");
 
-    static final TypeName AUTHORIZATION_PERMISSION =
+    static final TypeName IDENTITY_AUTHENTICATED =
+            TypeName.create("com.oracle.helidon.oci.identity.Identity.Authenticated");
+
+    static final TypeName AUTH_SDK_AUTHORIZATION_PERMISSION =
             TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission");
+    static final TypeName AUTH_SDK_AUTHORIZATION_PERMISSIONS =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermissions");
+    static final TypeName AUTH_SDK_AUTHORIZE_ASSOCIATE =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.AuthorizeAssociate");
+    static final TypeName AUTH_SDK_AUTHORIZE_CREATE =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.AuthorizeCreate");
+    static final TypeName AUTH_SDK_AUTHORIZE_DELETE =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.AuthorizeDelete");
+    static final TypeName AUTH_SDK_AUTHORIZE_READ_ONLY =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.AuthorizeReadOnly");
+    static final TypeName AUTH_SDK_AUTHORIZE_UPDATE =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.AuthorizeUpdate");
+    static final TypeName AUTH_SDK_BODY_VERIFICATION =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.BodyVerification");
+    static final TypeName AUTH_SDK_NETWORK_BASED_ACCESS_CONTROL =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.NetworkBasedAccessControl");
+    static final TypeName AUTH_SDK_REJECT_CROSS_TENANCY_REQUEST =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.RejectCrossTenancyRequest");
+    static final TypeName AUTH_SDK_RESOURCE_ASSOCIATION_REVIEWED =
+            TypeName.create(
+                    "com.oracle.pic.identity.authorization.permissions.annotations.ResourceAssociationReviewed");
+    static final TypeName AUTH_SDK_VARIABLE_OPERATION_NAME =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.VariableOperationName");
+    static final TypeName AUTH_SDK_VARIABLE_STRING =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.VariableString");
+    static final TypeName AUTH_SDK_VARIABLE_STRINGS =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.VariableStrings");
+    static final TypeName AUTH_SDK_ZPR_BASED_ACCESS_CONTROL =
+            TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.ZprBasedAccessControl");
+
     static final TypeName KIEV_TRANSACTION =
             TypeName.create("com.oracle.helidon.oci.kiev.KievTransaction");
     static final TypeName KIEV_TRANSACTION_METHOD =

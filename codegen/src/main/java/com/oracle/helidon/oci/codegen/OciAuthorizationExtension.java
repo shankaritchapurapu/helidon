@@ -15,6 +15,7 @@ import io.helidon.codegen.classmodel.Field;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Annotations;
+import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
@@ -25,11 +26,9 @@ import io.helidon.service.codegen.ServiceCodegenTypes;
 import io.helidon.service.codegen.spi.RegistryCodegenExtension;
 
 class OciAuthorizationExtension implements RegistryCodegenExtension {
-
-    private static final String PACKAGE_NAME_PREFIX = "com.oracle.pic.identity.authorization.permissions.annotations";
-
     private final RegistryCodegenContext ctx;
-    private final Map<String, Set<String>> methods = new HashMap<>();
+    private final Map<String, Set<String>> authenticatedMethods = new HashMap<>();
+    private final Map<String, Set<String>> authorizedMethods = new HashMap<>();
 
     OciAuthorizationExtension(RegistryCodegenContext ctx) {
         this.ctx = ctx;
@@ -38,14 +37,23 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
     @Override
     public void process(RegistryRoundContext roundContext) {
         // init processing
-        methods.clear();
+        authenticatedMethods.clear();
+        authorizedMethods.clear();
 
         // collect all methods and group them by package
         for (TypeInfo typeInfo : roundContext.types()) {
+            boolean classLevelAuthenticated = hasAnnotation(typeInfo.allAnnotations(), OciTypes.IDENTITY_AUTHENTICATED);
             for (TypedElementInfo elementInfo : typeInfo.elementInfo()) {
+                if (elementInfo.kind() != ElementKind.METHOD) {
+                    continue;
+                }
                 List<Annotation> annotations = elementInfo.allAnnotations();
-                if (!annotations.isEmpty() && needsInterception(annotations)) {
+                MethodIdentityMode mode = identityMode(annotations, classLevelAuthenticated);
+                if (mode != null) {
                     String packageName = typeInfo.typeName().packageName();
+                    Map<String, Set<String>> methods = mode == MethodIdentityMode.AUTHORIZED
+                            ? authorizedMethods
+                            : authenticatedMethods;
                     Set<String> set = methods.computeIfAbsent(packageName, k -> new HashSet<>());
                     set.add(typeInfo.typeName().toString() + "::" + elementInfo.signature().toString());
                 }
@@ -53,19 +61,37 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
         }
 
         // generate an interceptor per package
-        for (Map.Entry<String, Set<String>> entry : methods.entrySet()) {
-            Set<String> methodElements = entry.getValue();
+        Set<String> packages = new HashSet<>();
+        packages.addAll(authenticatedMethods.keySet());
+        packages.addAll(authorizedMethods.keySet());
+        for (String packageName : packages) {
+            Set<String> authenticatedMethodElements = authenticatedMethods.getOrDefault(packageName, Set.of());
+            Set<String> authorizedMethodElements = authorizedMethods.getOrDefault(packageName, Set.of());
             TypeName generatedType = TypeName.builder()
-                    .packageName(entry.getKey())
+                    .packageName(packageName)
                     .className("Authorization_interceptor")
                     .build();
-            generateInterceptor(roundContext, generatedType, methodElements);
+            generateInterceptor(roundContext, generatedType, authenticatedMethodElements, authorizedMethodElements);
         }
     }
 
-    private boolean needsInterception(List<Annotation> annotations) {
+    private MethodIdentityMode identityMode(List<Annotation> annotations, boolean classLevelAuthenticated) {
+        MethodIdentityMode result = classLevelAuthenticated ? MethodIdentityMode.AUTHENTICATED : null;
         for (Annotation annotation : annotations) {
-            if (annotation.typeName().toString().startsWith(PACKAGE_NAME_PREFIX)) {
+            TypeName typeName = annotation.typeName();
+            if (OciAuthorizationAnnotations.AUTHORIZED.contains(typeName)) {
+                return MethodIdentityMode.AUTHORIZED;
+            }
+            if (OciAuthorizationAnnotations.AUTHENTICATED.contains(typeName)) {
+                result = MethodIdentityMode.AUTHENTICATED;
+            }
+        }
+        return result;
+    }
+
+    private boolean hasAnnotation(List<Annotation> annotations, TypeName typeName) {
+        for (Annotation annotation : annotations) {
+            if (typeName.equals(annotation.typeName())) {
                 return true;
             }
         }
@@ -74,7 +100,8 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
 
     private void generateInterceptor(RegistryRoundContext roundContext,
                                      TypeName generatedType,
-                                     Set<String> methodElements) {
+                                     Set<String> authenticatedMethodElements,
+                                     Set<String> authorizedMethodElements) {
         ClassModel.Builder builder = ClassModel.builder()
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_SINGLETON))
@@ -105,24 +132,8 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
                 .type("System.Logger")
                 .addContent("System.getLogger(\"" + generatedType.name() + "\")"));
 
-        Field.Builder fieldBuilder = Field.builder();
-        fieldBuilder.name("INTERCEPTED_METHODS")
-                .isStatic(true)
-                .isFinal(true)
-                .accessModifier(AccessModifier.PRIVATE)
-                .type("Set<String>")
-                .addContent("new HashSet(Set.of(\n")
-                .increaseContentPadding();
-        boolean first = true;
-        for (String methodElement : methodElements) {
-            if (!first) {
-                fieldBuilder.addContent(",\n");
-            }
-            first = false;
-            fieldBuilder.addContent("\"" + methodElement + "\"");
-        }
-        fieldBuilder.addContent("))");
-        builder.addField(fieldBuilder.build());
+        addMethodSetField(builder, "AUTHENTICATED_METHODS", authenticatedMethodElements);
+        addMethodSetField(builder, "AUTHORIZED_METHODS", authorizedMethodElements);
 
         builder.addMethod(proceed -> proceed.addAnnotation(Annotations.OVERRIDE)
                 .returnType(TypeNames.PRIMITIVE_VOID)
@@ -142,12 +153,14 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
         String serviceType = interceptionContext.serviceInfo().serviceType().toString();
         String methodSignature = typedElementInfo.signature().toString();
         String method = serviceType + "::" + methodSignature;
+        boolean authorized = AUTHORIZED_METHODS.contains(method);
 
-        if (INTERCEPTED_METHODS.contains(method)) {
+        if (authorized || AUTHENTICATED_METHODS.contains(method)) {
             LOGGER.log(System.Logger.Level.DEBUG, "Intercepting call '" + typedElementInfo.signature() + "'");
 
             // create and initialize filter
-            AuthContextRequestFilter filter = Services.get(AuthContextRequestFilterFactory.class).create();
+            AuthContextRequestFilterFactory filterFactory = Services.get(AuthContextRequestFilterFactory.class);
+            AuthContextRequestFilter filter = authorized ? filterFactory.create() : filterFactory.createAuthenticatedOnly();
             HelidonResourceInfo resourceInfo = new HelidonResourceInfo(serviceType, methodSignature);
             HelidonContainerRequestContext context = new HelidonContainerRequestContext(request, resourceInfo);
             HelidonContextInjector.inject(filter, context);
@@ -186,5 +199,37 @@ class OciAuthorizationExtension implements RegistryCodegenExtension {
         roundContext.addGeneratedType(generatedType,
                                       builder,
                                       generatedType);
+    }
+
+    private void addMethodSetField(ClassModel.Builder builder, String name, Set<String> methodElements) {
+        Field.Builder fieldBuilder = Field.builder();
+        fieldBuilder.name(name)
+                .isStatic(true)
+                .isFinal(true)
+                .accessModifier(AccessModifier.PRIVATE)
+                .type("Set<String>");
+        if (methodElements.isEmpty()) {
+            fieldBuilder.addContent("new HashSet<>()");
+            builder.addField(fieldBuilder.build());
+            return;
+        }
+
+        fieldBuilder.addContent("new HashSet<>(Set.of(\n")
+                .increaseContentPadding();
+        boolean first = true;
+        for (String methodElement : methodElements) {
+            if (!first) {
+                fieldBuilder.addContent(",\n");
+            }
+            first = false;
+            fieldBuilder.addContent("\"" + methodElement + "\"");
+        }
+        fieldBuilder.addContent("))");
+        builder.addField(fieldBuilder.build());
+    }
+
+    private enum MethodIdentityMode {
+        AUTHENTICATED,
+        AUTHORIZED
     }
 }

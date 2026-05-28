@@ -15,30 +15,26 @@ import io.helidon.service.registry.Service;
 import io.helidon.validation.Validation;
 import io.helidon.webserver.http.RestServer;
 
-import com.oracle.bmc.identity.Identity;
 import com.oracle.bmc.identity.model.CreateTagDetails;
 import com.oracle.bmc.identity.model.Tag;
 import com.oracle.bmc.identity.requests.CreateTagRequest;
 import com.oracle.bmc.identity.responses.CreateTagResponse;
 import com.oracle.bmc.model.BmcException;
-import com.oracle.helidon.oci.identity.IdentityContext;
 import com.oracle.pic.identity.authentication.error.AuthServerUnavailableException;
 import com.oracle.pic.identity.authorization.permissions.ActionKind;
 import com.oracle.pic.identity.authorization.permissions.OptionalVariableFactory;
+import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
 import com.oracle.pic.identity.authorization.sdk.AuthorizationRequest;
 import com.oracle.pic.identity.authorization.sdk.AuthorizationRequestFactory;
 import com.oracle.pic.identity.authorization.sdk.AuthorizationResponse;
 import com.oracle.pic.identity.authorization.sdk.IAuthorizationClient;
 import com.oracle.pic.identity.authorization.sdk.response.AuthorizationResponseResult.AuthorizationResponseErrorCategory;
-import com.oracle.pic.identity.authorization.permissions.annotations.AuthorizationPermission;
 import com.oracle.pic.tagging.client.entities.TaggingClient;
 import com.oracle.pic.tagging.client.tag.TagSet;
 import com.oracle.pic.tagging.common.exception.BaseTagException;
 import com.oracle.pic.tagging.common.tagset.tagslice.DefinedTags;
 import com.oracle.pic.tagging.common.tagset.tagslice.FreeformTags;
 import com.oracle.pic.tagging.common.tagset.tagslice.SystemTags;
-
-import static com.oracle.pic.identity.authorization.sdk.AuthContextRequestFilter.PIC_AUTHORIZATION_REQUEST;
 
 /**
  * HTTP endpoint that demonstrates tag slug authorization and OCI Identity tag creation.
@@ -53,12 +49,12 @@ class TaggingEndpoint {
 
     private final TaggingClient taggingClient;
     private final IAuthorizationClient authorizationClient;
-    private final Identity identity;
+    private final com.oracle.bmc.identity.Identity identity;
 
     @Service.Inject
     TaggingEndpoint(TaggingClient taggingClient,
                     IAuthorizationClient authorizationClient,
-                    Identity identity) {
+                    com.oracle.bmc.identity.Identity identity) {
         this.taggingClient = taggingClient;
         this.authorizationClient = authorizationClient;
         this.identity = identity;
@@ -72,11 +68,11 @@ class TaggingEndpoint {
     TaggedResourceView createTaggedResource(@Validation.NotNull
                                             @Validation.Valid
                                             @Http.Entity CreateTaggedResourceRequest request,
-                                            IdentityContext identityContext) {
+                                            AuthorizationRequest authorizationRequest) {
         try {
             ResourceTags tags = request.tags();
             byte[] requestedTagSlug = taggingClient.toByteArray(toTagSet(tags));
-            byte[] authorizedTagSlug = authorizeTags(identityContext, request.compartmentId(), requestedTagSlug);
+            byte[] authorizedTagSlug = authorizeTags(authorizationRequest, request.compartmentId(), requestedTagSlug);
             ResourceTags authorizedTags = toResourceTags(taggingClient.extractTagSet(authorizedTagSlug));
 
             return new TaggedResourceView(request.resourceId(),
@@ -108,10 +104,10 @@ class TaggingEndpoint {
         }
     }
 
-    private byte[] authorizeTags(IdentityContext identityContext,
+    private byte[] authorizeTags(AuthorizationRequest authorizationRequest,
                                  String compartmentId,
                                  byte[] requestedTagSlug) throws AuthServerUnavailableException {
-        AuthorizationRequest request = AuthorizationRequestFactory.copyOf(authorizationRequest(identityContext));
+        AuthorizationRequest request = AuthorizationRequestFactory.copyOf(authorizationRequest);
         request.setActionKind(ActionKind.CREATE);
         request.addCompartmentId(compartmentId);
         request.addVariable(OptionalVariableFactory.resourceKind(RESOURCE_KIND));
@@ -123,15 +119,6 @@ class TaggingEndpoint {
         return response.getTagSlug()
                 .orElseThrow(() -> new HttpException("Authorization response did not include a tag slug",
                                                      Status.INTERNAL_SERVER_ERROR_500));
-    }
-
-    private static AuthorizationRequest authorizationRequest(IdentityContext identityContext) {
-        Object value = identityContext.get(PIC_AUTHORIZATION_REQUEST);
-        if (value instanceof AuthorizationRequest authorizationRequest) {
-            return authorizationRequest;
-        }
-        throw new HttpException("Identity authorization request is not available",
-                                Status.INTERNAL_SERVER_ERROR_500);
     }
 
     private static void requireAuthorized(AuthorizationResponse response) {
