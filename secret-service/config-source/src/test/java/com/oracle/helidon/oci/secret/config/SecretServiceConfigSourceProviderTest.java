@@ -47,6 +47,19 @@ class SecretServiceConfigSourceProviderTest {
     }
 
     @Test
+    void providerPathUsesClasspathOciConfigForMissingProperties() {
+        Config metaConfig = Config.just(ConfigSources.create(Map.ofEntries(
+                entry("type", SecretServiceConfigSource.TYPE))));
+
+        ConfigSource source = metaConfig.as(MetaConfig::configSource).get().getFirst();
+
+        assertThat(source, instanceOf(SecretServiceConfigSource.class));
+        // The classpath oci-config.yaml fills missing provider settings.
+        // Its prefix becomes the source UID.
+        assertThat(((SecretServiceConfigSource) source).uid(), is("oci.file.ssv2"));
+    }
+
+    @Test
     void providerSourceResolvesDefaultEndpointFromLiveOciEnvSource() {
         registryManager = ServiceRegistryManager.create();
         GlobalServiceRegistry.registry(registryManager.registry());

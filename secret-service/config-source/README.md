@@ -123,8 +123,9 @@ domain, and bootstrap behavior.
 
 The same SSv2 keys are used on both configuration paths. `oci-config.yaml` uses
 `helidon.oci-secret-service`; explicit `meta-config.*` uses `sources[].properties`.
-Explicit meta-config takes bootstrap precedence, so `oci-config.yaml` is not consulted for
-SSv2 source settings when an `oci-secret-service` meta-config source is present.
+When both inputs are present for an explicit `oci-secret-service` source,
+`sources[].properties` overrides `helidon.oci-secret-service` from `oci-config.yaml` per key.
+Values from `oci-config.yaml` fill only keys missing from provider properties.
 
 ## Runtime Model
 

@@ -19,6 +19,7 @@ import io.helidon.config.ConfigSources;
 import io.helidon.config.spi.ConfigSource;
 import org.junit.jupiter.api.Test;
 
+import static java.util.Map.entry;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -59,6 +60,50 @@ class SecretServiceConfigSourceFactoryTest {
     }
 
     @Test
+    void providerConfigUsesClasspathOciConfigForMissingProperties() {
+        // Empty provider properties exercise the fallback to helidon.oci-secret-service in oci-config.yaml.
+        SecretServiceConfigSourceBuilder builder = SecretServiceConfigSourceFactory.builder(
+                SecretServiceConfigSourceFactory.providerConfig(Config.empty()),
+                Optional::empty);
+
+        SecretServiceConfigSourceConfig sourceConfig = builder.sourceConfig();
+
+        assertThat(sourceConfig.prefix(), is("oci.file.ssv2"));
+        assertThat(sourceConfig.cacheTtl(), is(Duration.ofMinutes(5)));
+        assertThat(sourceConfig.pollInterval().orElseThrow(), is(Duration.ofSeconds(15)));
+        assertThat(builder.clientConfig().enabled(), is(false));
+        assertThat(builder.clientConfig().endpoint(),
+                   is("https://secret-service-ce.${oci.env.iaas-domain-name}/v1"));
+        assertThat(builder.clientConfig().tlsConfig().caBundle(),
+                   is("/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"));
+    }
+
+    @Test
+    void providerConfigOverridesOciConfigPerKey() {
+        // Provider properties are first in the merged config, so they override oci-config.yaml per key.
+        Config metaConfig = Config.just(ConfigSources.create(Map.ofEntries(
+                entry("prefix", "oci.provider.ssv2"),
+                entry("client.enabled", "true"),
+                entry("client.endpoint", "https://provider.example.com/v1"),
+                entry("client.retry-config.max-retries", "7"))));
+
+        SecretServiceConfigSourceBuilder builder = SecretServiceConfigSourceFactory.builder(
+                SecretServiceConfigSourceFactory.providerConfig(metaConfig),
+                Optional::empty);
+
+        SecretServiceConfigSourceConfig sourceConfig = builder.sourceConfig();
+
+        assertThat(sourceConfig.prefix(), is("oci.provider.ssv2"));
+        assertThat(sourceConfig.cacheTtl(), is(Duration.ofMinutes(5)));
+        assertThat(sourceConfig.pollInterval().orElseThrow(), is(Duration.ofSeconds(15)));
+        assertThat(builder.clientConfig().enabled(), is(true));
+        assertThat(builder.clientConfig().endpoint(), is("https://provider.example.com/v1"));
+        assertThat(builder.clientConfig().tlsConfig().caBundle(),
+                   is("/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"));
+        assertThat(builder.clientConfig().retryConfig().maxRetries(), is(7));
+    }
+
+    @Test
     void systemPropertyEndpointReferenceIsResolvedByClientConfig() {
         withSystemProperties(Map.of(
                 "helidon.oci-secret-service.client.enabled", "true",
@@ -89,6 +134,27 @@ class SecretServiceConfigSourceFactoryTest {
             SecretServiceConfigSourceBuilder builder = new SecretServiceConfigSourceFactory(Optional.empty(),
                                                                                             Optional::empty)
                     .builder();
+
+            assertThat(builder.sourceConfig().prefix(), is("oci.ssv2"));
+            assertThat(builder.sourceConfig().cacheTtl(), is(Duration.ofMinutes(5)));
+            assertThat(builder.sourceConfig().effectivePollInterval(), is(Duration.ofMinutes(30)));
+            assertThat(builder.clientConfig().endpoint(), is(DefaultSsv2Client.DEFAULT_ENDPOINT));
+            assertThat(builder.clientConfig().tlsConfig().caBundle(), is(DefaultSsv2Client.DEFAULT_CA_BUNDLE));
+            assertThat(builder.clientConfig().retryConfig().maxRetries(), is(DefaultSsv2Client.DEFAULT_MAX_RETRIES));
+        } finally {
+            thread.setContextClassLoader(original);
+        }
+    }
+
+    @Test
+    void providerConfigUsesDefaultsWhenProviderAndOciConfigMissingProperties() {
+        Thread thread = Thread.currentThread();
+        ClassLoader original = thread.getContextClassLoader();
+        thread.setContextClassLoader(new ResourceFilteringClassLoader(original, Set.of("oci-config.")));
+        try {
+            SecretServiceConfigSourceBuilder builder = SecretServiceConfigSourceFactory.builder(
+                    SecretServiceConfigSourceFactory.providerConfig(Config.empty()),
+                    Optional::empty);
 
             assertThat(builder.sourceConfig().prefix(), is("oci.ssv2"));
             assertThat(builder.sourceConfig().cacheTtl(), is(Duration.ofMinutes(5)));

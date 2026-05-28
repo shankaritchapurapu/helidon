@@ -31,7 +31,7 @@ public final class SecretServiceConfigSourceProvider implements ConfigSourceProv
     public AbstractConfigSource create(String type, Config metaConfig) {
         return SecretServiceConfigSource.builder()
                 .ociEnvConfigSource(SecretServiceConfigSourceProvider::ociEnvConfigSource)
-                .config(metaConfig)
+                .config(SecretServiceConfigSourceFactory.providerConfig(metaConfig))
                 .build();
     }
 

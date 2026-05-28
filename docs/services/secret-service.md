@@ -169,8 +169,10 @@ If `cache-ttl` is not configured, the direct-read secret-value cache defaults to
 The SSv2 source uses the same keys in `oci-config.yaml` and `meta-config.*`; only the
 parent path differs. `oci-config.yaml` uses `helidon.oci-secret-service`, while
 `meta-config.*` uses the `properties` block of a source entry with
-`type: "oci-secret-service"`. Explicit `meta-config.*` has higher bootstrap precedence, so
-`oci-config.yaml` is not consulted for SSv2 source settings on that path.
+`type: "oci-secret-service"`. When both inputs are present for an explicit
+`oci-secret-service` source, provider properties override `helidon.oci-secret-service` from
+`oci-config.yaml` per key. Values from `oci-config.yaml` fill only keys missing from provider
+properties.
 
 Runtime behavior:
 * Reads are lazy and each requested key becomes tracked on first access.

@@ -68,10 +68,25 @@ class SecretServiceConfigSourceFactory {
     static Config config(Optional<MetaConfig> metaConfig) {
         return Config.just(
                 ConfigSources.create(overrides()),
-                ConfigSources.create(metaConfig.map(MetaConfig::metaConfiguration)
-                                             .orElseGet(SecretServiceConfigSourceFactory::ociConfig)),
+                ConfigSources.create(serviceConfig(metaConfig)),
                 ConfigSources.create(Map.of("client.endpoint", DEFAULT_ENDPOINT))
         );
+    }
+
+    /**
+     * Builds provider-path config with provider/meta-config properties first
+     * and {@code oci-config.yaml} second.
+     * <p>
+     * Helidon uses the first source that contains a requested key, so provider values override per key
+     * and the file-backed config fills gaps.
+     *
+     * @param metaConfig provider/meta-config properties
+     * @return merged provider-path config
+     */
+    static Config providerConfig(Config metaConfig) {
+        Objects.requireNonNull(metaConfig, "metaConfig");
+        return Config.just(ConfigSources.create(metaConfig),
+                           ConfigSources.create(ociConfig()));
     }
 
     private static Config overrides() {
@@ -79,6 +94,14 @@ class SecretServiceConfigSourceFactory {
                         ConfigSources.environmentVariables(),
                         ConfigSources.systemProperties())
                 .get("helidon.oci-secret-service");
+    }
+
+    private static Config serviceConfig(Optional<MetaConfig> metaConfig) {
+        // Named provider config takes the overlay path so explicit provider keys win per key;
+        // without it, the source reads helidon.oci-secret-service from oci-config.yaml directly.
+        return metaConfig.map(MetaConfig::metaConfiguration)
+                .map(SecretServiceConfigSourceFactory::providerConfig)
+                .orElseGet(SecretServiceConfigSourceFactory::ociConfig);
     }
 
     private static Config ociConfig() {
