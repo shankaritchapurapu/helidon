@@ -26,6 +26,9 @@ import com.oracle.bmc.io.internal.KeepOpenInputStream;
 import com.oracle.bmc.retrier.Retriers;
 import com.oracle.bmc.util.StreamUtils;
 import com.oracle.jipher.provider.JipherJCE;
+import com.oracle.pic.identity.authentication.Principal;
+import com.oracle.pic.identity.authentication.PrincipalImpl;
+import com.oracle.pic.identity.authentication.PrincipalSerializerFactory;
 import org.apache.http.entity.ContentType;
 import org.junit.jupiter.api.BeforeAll;
 
@@ -93,12 +96,41 @@ abstract class IdentityEndpointBase {
         }
     }
 
+    void testSplatCall(int status, String body, String path) throws Exception {
+        URI uri = URI.create(this.baseUri + path);
+        // Test-only SPLAT simulation: in production these headers are supplied
+        // only by trusted SPLAT/mTLS infrastructure after validation. Direct
+        // clients must not inject or rely on these authorization-related headers.
+        HttpRequest.Builder request = HttpRequest.newBuilder(uri)
+                .header(HeaderNames.CONTENT_TYPE.defaultCase(), ContentType.TEXT_PLAIN.toString())
+                .header(HeaderNames.ACCEPT.defaultCase(), ContentType.TEXT_PLAIN.toString())
+                .header(Principal.OPC_HEADER, serializedSplatPrincipal())
+                .header("oci-skip-authorization-for-splat", "true")
+                .POST(HttpRequest.BodyPublishers.ofString("Hello World"));
+
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpResponse<String> response = client.send(request.build(), HttpResponse.BodyHandlers.ofString());
+            assertThat(response.statusCode(), is(status));
+            if (status == Status.OK_200.code() && body != null) {
+                assertThat(response.body(), is(body));
+            }
+        }
+    }
+
     void testOnceSuccess(int status, String body) throws Exception {
         testCall(status, body, "/identity/once");
     }
 
     void testTwiceSuccess(int status, String body) throws Exception {
         testCall(status, body, "/identity/twice");
+    }
+
+    void testSplatOnceSuccess(int status, String body) throws Exception {
+        testSplatCall(status, body, "/identity/once");
+    }
+
+    void testSplatTwiceSuccess(int status, String body) throws Exception {
+        testSplatCall(status, body, "/identity/twice");
     }
 
     static byte[] readBodyBytes(Object body) throws IOException {
@@ -137,5 +169,15 @@ abstract class IdentityEndpointBase {
             }
         }
         return sb.toString();
+    }
+
+    private static String serializedSplatPrincipal() {
+        // Test-only fake OCIDs. Do not copy these values into production code;
+        // replace them with appropriate test principals if local test identity
+        // conventions change.
+        Principal principal = new PrincipalImpl(
+                "ocid1.tenancy.oc1..aaaaaaaaojp4splattenant",
+                "ocid1.user.oc1..aaaaaaaasplatforwardeduser");
+        return PrincipalSerializerFactory.create().serialize(principal).orElseThrow();
     }
 }

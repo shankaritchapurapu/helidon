@@ -26,7 +26,6 @@
         <dependency>
             <groupId>com.oracle.helidon.oci</groupId>
             <artifactId>helidon-oci-splat</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.helidon.webserver</groupId>

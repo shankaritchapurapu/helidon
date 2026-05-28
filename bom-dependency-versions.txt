@@ -3,6 +3,6 @@ The following version properties are referencing the newest available version:
   ${oracle-internal-commons-request-id-version} ................ 1.1.55
 The following version property updates are available:
   ${oracle-internal-limits-version} ....................... 1.9 -> 1.32
-  ${oracle-internal-tagging-version} .................. 4.3.5 -> 4.3.13
-  ${sherlock-version} ................................ 3.0.13 -> 3.0.16
+  ${oracle-internal-tagging-version} .................. 4.3.5 -> 4.3.15
+  ${sherlock-version} ................................ 3.0.13 -> 3.0.17
 

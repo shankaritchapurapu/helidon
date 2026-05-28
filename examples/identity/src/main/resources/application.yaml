@@ -8,6 +8,26 @@ server:
   features:
     request-scope:
       enabled: true
+  # Configure a dedicated listener for SPLAT traffic. This listener should be
+  # mTLS-only so Helidon exposes the SPLAT client certificate chain to the Auth
+  # SDK SPLAT-aware filter.
+  #
+  # sockets:
+  #   splat:
+  #     port: 8443
+  #     tls:
+  #       client-auth: "REQUIRED"
+  #       endpoint-identification-algorithm: "NONE"
+  #       trust:
+  #         pem:
+  #           cert-chain:
+  #             resource.path: /path/to/trusted-client-ca.pem
+  #       private-key:
+  #         pem:
+  #           key:
+  #             resource.path: /path/to/server-key.pem
+  #           cert-chain:
+  #             resource.path: /path/to/server-cert-chain.pem
 
 declarative:
   ignore-incubating: true
@@ -27,3 +47,12 @@ oci:
       service-name: my-service
       physical-ad: AD-1
       root-cert-path: /etc/oci-pki/ca-bundle.pem
+    splat-aware:
+      # This should match the dedicated mTLS SPLAT listener above.
+      splat-request-port: 8443
+      additional-splat-request-ports: []
+      skip-authorization-for-splat: true
+      validate-splat-cert: true
+      disable-tag-only-request-check: true
+      reject-x-region-calls: false
+      region: us-ashburn-1
