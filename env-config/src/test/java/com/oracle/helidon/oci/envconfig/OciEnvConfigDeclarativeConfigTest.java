@@ -52,11 +52,14 @@ class OciEnvConfigDeclarativeConfigTest {
         registryManager = ServiceRegistryManager.create();
         GlobalServiceRegistry.registry(registryManager.registry());
 
-        assertThat(Services.get(Config.class)
-                           .get("oci.env.iaas-domain-name")
-                           .asString()
-                           .orElseThrow(),
-                   is("us-ashburn-1.oracleiaas.com"));
+        Config config = Services.get(Config.class);
+
+        // meta-config.yaml supplies the location while classpath oci-config.yaml supplies the prefix.
+        assertThat(config.get("oci.file.region").asString().orElseThrow(), is("eu-frankfurt-1"));
+        assertThat(config.get("oci.file.availability-domain").asString().orElseThrow(), is("eu-frankfurt-1-ad-1"));
+        assertThat(config.get("oci.file.fault-domain").asString().orElseThrow(), is("2"));
+        assertThat(config.get("oci.file.iaas-domain-name").asString().orElseThrow(),
+                   is("eu-frankfurt-1.oracleiaas.com"));
     }
 
     @Test
@@ -69,6 +72,7 @@ class OciEnvConfigDeclarativeConfigTest {
             ConfigSource ociEnvSource = Services.firstNamed(ConfigSource.class, OciEnvConfigSourceProvider.TYPE)
                     .orElseThrow();
 
+            // With meta-config filtered out, every configured value comes from classpath oci-config.yaml.
             assertThat(Services.firstNamed(ConfigSource.class, OciEnvConfigSourceProvider.TYPE).orElseThrow(),
                        sameInstance(ociEnvSource));
             assertThat(Services.all(ConfigSource.class)

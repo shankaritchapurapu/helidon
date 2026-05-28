@@ -83,8 +83,8 @@ itself does not activate `oci-env` for direct builder usage.
     `meta-config.yaml`.
   * When present, it controls whether `oci-env` is enabled at all.
 * `oci-config.yaml`
-  * This is `oci-env` convenience input used only when the source is running without explicit
-    meta-config properties.
+  * This is `oci-env` convenience input used by both the automatic source path and the explicit
+    provider path.
   * This fallback path is loaded through Helidon's default `Config.create(...)` source ordering, so
     environment variables and system properties are also consulted before the YAML files.
   * `oci-env` looks for a filesystem file named `oci-config.yaml` first and then for a classpath
@@ -95,8 +95,8 @@ Precedence:
 
 1. Explicit `meta-config.*` has higher priority for `oci-env` bootstrap.
 2. If `meta-config.*` contains a source entry with `type: "oci-env"`, `oci-env` reads its
-   configuration only from that entry's `properties` block. In this path, `oci-config.yaml` is
-   not consulted for `oci-env`.
+   explicit configuration from that entry's `properties` block and then fills missing keys from
+   `helidon.oci-env` in `oci-config.yaml`. Provider properties win per key.
 3. If explicit `meta-config.*` exists but does not list `oci-env`, the source is not auto-added,
    so `oci-config.yaml` does not activate it.
 4. When no explicit `meta-config.*` was found and `oci-env` is instantiated without explicit
@@ -261,15 +261,20 @@ realms.
 
 Choose one declarative configuration path:
 
-* If you already manage Helidon bootstrap explicitly, put `oci-env` settings in `meta-config.*`
-  under the `properties` block of a source entry with `type: "oci-env"`.
+* If you already manage Helidon bootstrap explicitly, enable `oci-env` from `meta-config.*` with
+  a source entry of `type: "oci-env"`. Put the settings that must be explicit in that entry's
+  `properties` block; missing keys can still come from `helidon.oci-env` in `oci-config.yaml`.
 * If you are using the default `Services.get(Config.class)` bootstrap path with no explicit
   `meta-config.*`, put `oci-env` settings in `oci-config.yaml` under `helidon.oci-env`.
 
-The keys are the same on both paths. The only difference is the parent path:
+The keys are the same on both paths. The parent path differs:
 
 * `oci-config.yaml` uses `helidon.oci-env`
 * `meta-config.*` uses `sources[].properties`
+
+When both inputs are present for an explicit `oci-env` source, `sources[].properties` overrides
+`helidon.oci-env` from `oci-config.yaml` per key. Values from `oci-config.yaml` fill only keys
+missing from provider properties.
 
 Primary `oci-config.yaml` example:
 

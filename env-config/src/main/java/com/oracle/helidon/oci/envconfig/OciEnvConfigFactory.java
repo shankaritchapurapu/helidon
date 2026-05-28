@@ -52,7 +52,7 @@ class OciEnvConfigFactory {
     @Service.Inject
     OciEnvConfigFactory(@Service.Named(OciEnvConfigSourceProvider.TYPE) Optional<MetaConfig> metaConfig,
                         Supplier<Optional<ImdsInstanceInfo>> imdsInstanceInfo) {
-        this(metaConfig.map(MetaConfig::metaConfiguration).orElseGet(OciEnvConfigFactory::ociConfig),
+        this(serviceConfig(metaConfig),
              imdsInstanceInfo);
     }
 
@@ -496,6 +496,19 @@ class OciEnvConfigFactory {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    static Config providerConfig(Config metaConfig) {
+        Objects.requireNonNull(metaConfig);
+        // Provider/meta-config properties are first so they win per key; oci-config.yaml fills gaps.
+        return Config.just(ConfigSources.create(metaConfig),
+                           ConfigSources.create(ociConfig()));
+    }
+
+    private static Config serviceConfig(Optional<MetaConfig> metaConfig) {
+        return metaConfig.map(MetaConfig::metaConfiguration)
+                .map(OciEnvConfigFactory::providerConfig)
+                .orElseGet(OciEnvConfigFactory::ociConfig);
     }
 
     private static Config ociConfig() {

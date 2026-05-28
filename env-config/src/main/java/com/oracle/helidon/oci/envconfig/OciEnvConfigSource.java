@@ -39,7 +39,7 @@ final class OciEnvConfigSource implements ConfigSource, LazyConfigSource {
     }
 
     OciEnvConfigSource(Config metaConfig) {
-        this(new OciEnvConfigFactory(metaConfig));
+        this(new OciEnvConfigFactory(OciEnvConfigFactory.providerConfig(metaConfig)));
     }
 
     OciEnvConfigSource(String prefix, Supplier<OciEnvConfigFactory.ConfigNodes> nodesSupplier) {

@@ -10,9 +10,9 @@
  * enabled explicitly from
  * {@link io.helidon.config.MetaConfig meta-config} with {@code type: "oci-env"} or, for
  * declarative {@code Services.get(Config.class)} bootstrap, it is auto-registered when Helidon
- * is using its default bootstrap and no explicit {@code meta-config.*} is present. In that
- * declarative path it can also read configuration from {@code helidon.oci-env} in
- * {@code oci-config.yaml}.
+ * is using its default bootstrap and no explicit {@code meta-config.*} is present. Explicit
+ * source properties are merged with {@code helidon.oci-env} from {@code oci-config.yaml}, with
+ * source properties taking precedence per key.
  *
  * <p>Module features:
  * <ul>
@@ -38,7 +38,7 @@
  * PIC commons/core region type directly.</li>
  * </ul>
  *
- * <p>See {@code docs/environment-config.md} for usage examples and full key/configuration
+ * <p>See {@code docs/utilities/environment-config.md} for usage examples and full key/configuration
  * details.
  */
 package com.oracle.helidon.oci.envconfig;

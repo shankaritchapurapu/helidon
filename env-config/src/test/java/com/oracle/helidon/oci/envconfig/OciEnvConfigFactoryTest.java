@@ -230,6 +230,50 @@ class OciEnvConfigFactoryTest {
         assertThat(values.get("oci.env.fault-domain").asString().orElseThrow(), is("7"));
     }
 
+    @Test
+    void providerConfigUsesOciConfigWhenMetaConfigHasNoProperties() {
+        Config config = OciEnvConfigFactory.providerConfig(Config.empty());
+
+        // Empty provider properties means classpath oci-config.yaml supplies every configured key.
+        assertThat(config.get("prefix").asString().orElseThrow(), is("oci.file"));
+        assertThat(config.get("location-override.region").asString().orElseThrow(), is("us-ashburn-1"));
+        assertThat(config.get("location-override.availability-domain").asString().orElseThrow(), is("iad-ad-1"));
+        assertThat(config.get("location-override.fault-domain").asInt().orElseThrow(), is(5));
+    }
+
+    @Test
+    void providerConfigUsesOciConfigForMissingKeys() {
+        Config providerProperties = Config.just(ConfigSources.create(Map.ofEntries(
+                entry("prefix", "provider.env"),
+                entry("location-override.fault-domain", "2"))));
+
+        Config config = OciEnvConfigFactory.providerConfig(providerProperties);
+
+        // Provider prefix and fault-domain win; region and AD fall back to classpath oci-config.yaml.
+        assertThat(config.get("prefix").asString().orElseThrow(), is("provider.env"));
+        assertThat(config.get("location-override.region").asString().orElseThrow(), is("us-ashburn-1"));
+        assertThat(config.get("location-override.availability-domain").asString().orElseThrow(), is("iad-ad-1"));
+        assertThat(config.get("location-override.fault-domain").asString().orElseThrow(), is("2"));
+    }
+
+    @Test
+    void providerConfigUsesProviderValuesWhenAllKeysArePresent() {
+        Config providerProperties = Config.just(ConfigSources.create(Map.ofEntries(
+                entry("prefix", "provider.only"),
+                entry("location-override.region", "eu-frankfurt-1"),
+                entry("location-override.availability-domain", "eu-frankfurt-1-ad-1"),
+                entry("location-override.fault-domain", "3"))));
+
+        Config config = OciEnvConfigFactory.providerConfig(providerProperties);
+
+        // Every overlapping key is present in provider properties, so fallback values are ignored.
+        assertThat(config.get("prefix").asString().orElseThrow(), is("provider.only"));
+        assertThat(config.get("location-override.region").asString().orElseThrow(), is("eu-frankfurt-1"));
+        assertThat(config.get("location-override.availability-domain").asString().orElseThrow(),
+                   is("eu-frankfurt-1-ad-1"));
+        assertThat(config.get("location-override.fault-domain").asString().orElseThrow(), is("3"));
+    }
+
     private static Config config(OciEnvConfigFactory factory) {
         return Config.builder(ConfigSources.create(factory.create()))
                 .disableEnvironmentVariablesSource()

@@ -8,6 +8,6 @@ sources:
       dynamic-core-regions:
         enabled: false
       location-override:
-        region: "us-ashburn-1"
-        availability-domain: "iad-ad-1"
+        region: "eu-frankfurt-1"
+        availability-domain: "eu-frankfurt-1-ad-1"
         fault-domain: 2
