@@ -29,11 +29,8 @@ class IdentityClientFactory implements Supplier<Identity> {
 
     @Override
     public Identity get() {
-        ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-                .maxAsyncThreads(config.maxAsyncThreads())
-                .connectionTimeoutMillis((int) config.connectionTimeout().toMillis())
-                .readTimeoutMillis((int) config.readTimeout().toMillis())
-                .build();
+        ClientConfiguration clientConfiguration = config.client()
+                .orElseGet(() -> ClientConfiguration.builder().build());
 
         IdentityClient.Builder builder = IdentityClient.builder()
                 .configuration(clientConfiguration);

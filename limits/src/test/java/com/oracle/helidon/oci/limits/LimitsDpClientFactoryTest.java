@@ -5,6 +5,7 @@
 package com.oracle.helidon.oci.limits;
 
 import com.oracle.bmc.ConfigFileReader.ConfigFile;
+import com.oracle.bmc.ClientConfiguration;
 import com.oracle.oci.limits.LimitsDPClient;
 import io.helidon.service.registry.Services;
 
@@ -25,9 +26,21 @@ class LimitsDpClientFactoryTest {
     void config() {
         LimitsConfig config = Services.get(LimitsConfig.class);
         assertNotNull(config, "LimitsConfig instance should not be null");
-        assertEquals(5000L, config.connectionTimeout().toMillis(), "Connection timeout should match");
-        assertEquals(30000L, config.readTimeout().toMillis(), "Read timeout should match");
-        assertEquals(20, config.maxAsyncThreads(), "Max async threads should match");
+        ClientConfiguration client = config.client().orElseThrow();
+        assertEquals(5000, client.getConnectionTimeoutMillis(), "Connection timeout should match");
+        assertEquals(30000, client.getReadTimeoutMillis(), "Read timeout should match");
+        assertEquals(20, client.getMaxAsyncThreads(), "Max async threads should match");
+    }
+
+    @Test
+    void defaultClientConfigurationMatchesPreviousLimitsDefaults() {
+        LimitsConfig config = LimitsConfig.builder().build();
+        ClientConfiguration client = config.client()
+                .orElseGet(() -> ClientConfiguration.builder().build());
+
+        assertEquals(10000, client.getConnectionTimeoutMillis(), "Connection timeout should match");
+        assertEquals(60000, client.getReadTimeoutMillis(), "Read timeout should match");
+        assertEquals(50, client.getMaxAsyncThreads(), "Max async threads should match");
     }
 
     @Test

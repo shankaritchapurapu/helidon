@@ -38,21 +38,23 @@ Make sure to configure the `oci.limits` properties in your YAML configuration fi
 
 ## Configuration
 
-The `oci.limits` configuration can be customized using YAML configuration. The following properties are supported:
+The `oci.limits` configuration can be customized using YAML configuration. OCI SDK client configuration settings are
+grouped under `oci.limits.client`. The following properties are supported:
 
-* `connection-timeout`: The connection timeout duration. Default is PT10S (10 seconds).
-* `read-timeout`: The read timeout duration. Default is PT1M (one minute).
-* `max-async-threads`: The maximum number of asynchronous threads. Default is 50.
-* `endpoint`: Optional explicit OCI Limits endpoint override.
+* `client.connection-timeout`: The OCI SDK connection timeout duration. Default is PT10S (10 seconds).
+* `client.read-timeout`: The OCI SDK read timeout duration. Default is PT1M (one minute).
+* `client.max-async-threads`: The maximum number of asynchronous threads. Default is 50.
+* `endpoint`: Optional explicit OCI Limits endpoint override, directly under `oci.limits`.
 
 Example configuration in `application.yaml`:
 
 ```yaml
 oci:
   limits:
-    connection-timeout: PT5S
-    read-timeout: PT30S
-    max-async-threads: 20
+    client:
+      connection-timeout: PT5S
+      read-timeout: PT30S
+      max-async-threads: 20
     endpoint: https://limits.example.oraclecloud.com
 ```
 

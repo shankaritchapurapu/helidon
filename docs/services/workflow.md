@@ -98,12 +98,16 @@ WFaaS client properties:
 * `domain-id`: Workflow domain identifier. Default is `localhost`.
 * `endpoint-details.server-endpoint`: WFaaS endpoint. Default is `http://localhost:39000`.
 * `endpoint-details.connect-timeout`: Socket connect timeout. Default is `PT30S`.
+  `endpoint-details.connection-timeout` is also accepted as an alias.
 * `endpoint-details.worker-read-timeout`: Worker read timeout. Default is `PT30S`.
 * `endpoint-details.poller-read-timeout`: Poller read timeout. Default is `PT30S`.
 * `worker-identifier`: Optional override for the worker identity. When omitted, the runtime MXBean name is used.
 * `retry-policy.max-retry-count`: Optional WFaaS retry policy max retry count.
 * `retry-policy.delay-between-retry`: Optional WFaaS retry delay. Use a `Duration` value such as `PT0.25S`.
 * `retry-policy.jitter-factor`: Optional WFaaS retry jitter factor.
+
+Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
+in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
 
 For compatibility with earlier releases, optional dynamic SSL context settings can still be provided under
 `oci.dynamic-ssl-context-provider`, including `root-cert-path`.

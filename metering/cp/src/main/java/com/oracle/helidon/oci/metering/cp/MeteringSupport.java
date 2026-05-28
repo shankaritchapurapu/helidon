@@ -19,7 +19,6 @@ import io.helidon.service.registry.Interception;
 import io.helidon.service.registry.InterceptionContext;
 import io.helidon.service.registry.Service;
 
-import com.oracle.helidon.oci.metering.common.Tags;
 import com.oracle.pic.bling.emit.MeteringLogStores;
 import com.oracle.pic.bling.emit.store.MeteringLogStore;
 import com.oracle.pic.kiev.Transaction;

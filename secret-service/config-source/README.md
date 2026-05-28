@@ -104,6 +104,10 @@ sources:
           max-retries: 3
 ```
 
+`client.retry` is also accepted as an alias for `client.retry-config`. Aliases are provided for user convenience,
+either to align with native OCI parameter names or with similar settings in other Helidon OCI modules. Specify at
+most one name for an aliased setting, not both.
+
 The default endpoint is `https://secret-service-ce.${oci.env.iaas-domain-name}/v1`.
 `helidon-oci-secret-service-config-source` brings `helidon-oci-envconfig` at runtime,
 and `oci-env` publishes `oci.env.iaas-domain-name` from the resolved runtime region and

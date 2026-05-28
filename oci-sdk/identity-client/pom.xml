@@ -23,6 +23,10 @@
             <artifactId>helidon-oci-sdk-oci</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-sdk-common</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.oci.sdk</groupId>
             <artifactId>oci-java-sdk-identity</artifactId>
         </dependency>

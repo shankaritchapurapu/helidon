@@ -46,16 +46,20 @@ method module to the application, for example instance principals:
 
 ## Configuration
 
-Client settings live under `oci.identity-client`:
+Client settings live under `oci.identity-client`. OCI SDK client configuration settings are grouped under
+`oci.identity-client.client`:
 
 | Key | Default Value | Description |
 |-----|---------------|-------------|
-| `oci.identity-client.connection-timeout` | `PT10S` | OCI SDK connection timeout. |
-| `oci.identity-client.read-timeout` | `PT1M` | OCI SDK read timeout. |
-| `oci.identity-client.max-async-threads` | `50` | Maximum async worker threads used by OCI SDK asynchronous helpers and waiters. Synchronous Identity calls do not use this pool. |
+| `oci.identity-client.client.connection-timeout` | `PT10S` | OCI SDK connection timeout. |
+| `oci.identity-client.client.read-timeout` | `PT1M` | OCI SDK read timeout. |
+| `oci.identity-client.client.max-async-threads` | `50` | Maximum async worker threads used by OCI SDK asynchronous helpers and waiters. Synchronous Identity calls do not use this pool. |
 | `oci.identity-client.endpoint` | unset | Explicit Identity endpoint. When set, this overrides `region` and realm-specific endpoint templates. |
 | `oci.identity-client.region` | unset | OCI region used to derive the Identity endpoint when `endpoint` is not set. |
 | `oci.identity-client.realm-specific-endpoint-template-enabled` | `false` | Enables OCI SDK realm-specific endpoint templates when `endpoint` is not set. |
+
+If `client` is absent, the module uses `ClientConfiguration.builder().build()` from the OCI SDK. That provides the
+OCI SDK defaults: 10 seconds connection timeout, 60 seconds read timeout, and 50 max async threads.
 
 The module registers the synchronous OCI SDK `Identity` client. Synchronous OCI SDK
 calls execute on the thread that calls the client. In Helidon applications that means
@@ -72,8 +76,10 @@ helidon:
 oci:
   identity-client:
     region: us-ashburn-1
-    connection-timeout: PT10S
-    read-timeout: PT1M
+    client:
+      connection-timeout: PT10S
+      read-timeout: PT1M
+      max-async-threads: 50
 ```
 
 Use `endpoint` instead of `region` for tests or explicit endpoint routing:

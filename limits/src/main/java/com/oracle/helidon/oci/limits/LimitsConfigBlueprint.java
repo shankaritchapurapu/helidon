@@ -4,50 +4,29 @@
 
 package com.oracle.helidon.oci.limits;
 
-import java.time.Duration;
 import java.util.Optional;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
+
+import com.oracle.bmc.ClientConfiguration;
+import com.oracle.helidon.oci.sdk.common.ConfigSupport;
 
 /**
  * OCI limits configuration.
  */
 @Prototype.Blueprint
 @Prototype.Configured
+@Prototype.CustomMethods(ConfigSupport.ClientConfigurationOptionSupport.class)
 interface LimitsConfigBlueprint {
 
     /**
-     * Default maximum number of asynchronous threads.
-     */
-    int DEFAULT_MAX_ASYNC_THREADS = 50;
-
-    /**
-     * Connection timeout.
+     * OCI SDK client configuration.
      *
-     * @return the connection timeout
+     * @return client configuration
      */
     @Option.Configured
-    @Option.Default("PT10S")
-    Duration connectionTimeout();
-
-    /**
-     * Read timeout.
-     *
-     * @return the read timeout
-     */
-    @Option.Configured
-    @Option.Default("PT1M")
-    Duration readTimeout();
-
-    /**
-     * Maximum number of asynchronous threads.
-     *
-     * @return the max asynchronous threads
-     */
-    @Option.Configured
-    @Option.DefaultInt(DEFAULT_MAX_ASYNC_THREADS)
-    int maxAsyncThreads();
+    Optional<ClientConfiguration> client();
 
     /**
      * Client target endpoint.

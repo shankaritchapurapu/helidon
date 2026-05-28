@@ -4,51 +4,29 @@
 
 package io.helidon.integrations.oci.identity.client;
 
-import java.time.Duration;
 import java.util.Optional;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
+
+import com.oracle.bmc.ClientConfiguration;
+import com.oracle.helidon.oci.sdk.common.ConfigSupport;
 
 /**
  * OCI Java SDK Identity client configuration.
  */
 @Prototype.Blueprint
 @Prototype.Configured(IdentityClientConfigFactory.OCI_IDENTITY_CLIENT)
+@Prototype.CustomMethods(ConfigSupport.ClientConfigurationOptionSupport.class)
 interface IdentityClientConfigBlueprint {
 
     /**
-     * Default maximum number of asynchronous threads.
-     */
-    int DEFAULT_MAX_ASYNC_THREADS = 50;
-
-    /**
-     * Connection timeout.
+     * OCI SDK client configuration.
      *
-     * @return connection timeout
+     * @return client configuration
      */
     @Option.Configured
-    @Option.Default("PT10S")
-    Duration connectionTimeout();
-
-    /**
-     * Read timeout.
-     *
-     * @return read timeout
-     */
-    @Option.Configured
-    @Option.Default("PT1M")
-    Duration readTimeout();
-
-    /**
-     * Maximum number of asynchronous threads for OCI SDK asynchronous helpers and waiters.
-     * Synchronous Identity calls execute on the calling thread.
-     *
-     * @return max asynchronous helper threads
-     */
-    @Option.Configured
-    @Option.DefaultInt(DEFAULT_MAX_ASYNC_THREADS)
-    int maxAsyncThreads();
+    Optional<ClientConfiguration> client();
 
     /**
      * Explicit Identity endpoint. When configured, this takes precedence over {@link #region()} and

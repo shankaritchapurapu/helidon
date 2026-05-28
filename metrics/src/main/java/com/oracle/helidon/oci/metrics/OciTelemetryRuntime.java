@@ -202,11 +202,11 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
     }
 
     private static Region region(OciMetricsPublisherConfig config) {
-        return config.regionId()
+        return config.region()
                 .map(Region::fromPublicRegionName)
                 .orElseGet(() -> Services.first(Region.class)
                         .orElseThrow(() -> new IllegalStateException("Helidon OCI metrics publishing requires a region. "
-                                                                             + "Set metrics.publishers.region-id or provide "
+                                                                             + "Set metrics.publishers.region or provide "
                                                                              + "a Region service.")));
 
     }

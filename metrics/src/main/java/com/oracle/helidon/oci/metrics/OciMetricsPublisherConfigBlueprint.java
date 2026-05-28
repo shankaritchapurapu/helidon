@@ -17,13 +17,14 @@ import io.helidon.metrics.spi.MetricsPublisherProvider;
 
 import com.oracle.bmc.ClientConfiguration;
 import com.oracle.bmc.monitoring.Monitoring;
+import com.oracle.helidon.oci.sdk.common.ConfigSupport;
 
 /**
  * OCI metrics publisher configuration.
  */
-@Prototype.Blueprint
+@Prototype.Blueprint(decorator = OciMetricsPublisherConfigSupport.class)
 @Prototype.Configured(value = OciMetricsPublisher.TYPE, root = false)
-@Prototype.CustomMethods(ConfigSupport.OciMetricsPublisherConfigSupport.class)
+@Prototype.CustomMethods(ConfigSupport.ClientConfigurationOptionSupport.class)
 @Prototype.Provides(MetricsPublisherProvider.class)
 interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Prototype.Factory<OciMetricsPublisher> {
 
@@ -58,7 +59,7 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
      * @return optional client configuration
      */
     @Option.Configured
-    Optional<ClientConfiguration> clientConfiguration();
+    Optional<ClientConfiguration> client();
 
     /**
      * Optional monitoring service endpoint override.
@@ -100,6 +101,14 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
     Optional<String> hostname();
 
     /**
+     * Alias for {@link #hostname()} using the common config name.
+     *
+     * @return optional host name alias
+     */
+    @Option.Configured
+    Optional<String> hostName();
+
+    /**
      * Availability domain override for emitted dimensions.
      *
      * @return optional availability domain
@@ -118,10 +127,10 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
     /**
      * Region override for monitoring client setup and dimensions.
      *
-     * @return optional region ID
+     * @return optional region
      */
     @Option.Configured
-    Optional<String> regionId();
+    Optional<String> region();
 
     /**
      * Whether OCI metric keys should be overridden.

@@ -321,6 +321,7 @@ Required when `backend=SERVICE`.
 |--------------------------------------------|---------------|-------------|
 | `oci.kiev.data-stores[].service.auth.auth-endpoint`      |               | Optional auth endpoint override. |
 | `oci.kiev.data-stores[].service.auth.tls.root-cert-pem-path` |            | Root certificate PEM path. |
+| `oci.kiev.data-stores[].service.auth.tls.root-cert-path` |               | Alias for `root-cert-pem-path`; configure only one of the two keys. |
 | `oci.kiev.data-stores[].service.auth.tls.cert-reload-duration` |          | Optional certificate reload interval. |
 | `oci.kiev.data-stores[].service.auth.tls.cert-ssl-algorithm` |            | Optional SSL algorithm override. |
 
@@ -330,6 +331,7 @@ Required when `backend=SERVICE`.
 |------------------------------------------------|---------------|-------------|
 | `oci.kiev.data-stores[].service.auth.auth-endpoint`          |               | Identity auth endpoint. |
 | `oci.kiev.data-stores[].service.auth.tls.root-cert-pem-path` |              | Root certificate PEM path. |
+| `oci.kiev.data-stores[].service.auth.tls.root-cert-path`     |              | Alias for `root-cert-pem-path`; configure only one of the two keys. |
 | `oci.kiev.data-stores[].service.auth.tls.cert-reload-duration` |            | Optional certificate reload interval. |
 | `oci.kiev.data-stores[].service.auth.tls.cert-ssl-algorithm` |              | Optional SSL algorithm override. |
 | `oci.kiev.data-stores[].service.auth.s2s.tenant-id`          |              | Tenant OCID. |
@@ -341,6 +343,9 @@ Required when `backend=SERVICE`.
 `OVERRIDDEN` auth requires a `BasicAuthenticationDetailsProvider` to be available from the Helidon service registry,
 such as one created by the public OCI SDK integration under `helidon.oci.*`. It can also use the same
 `oci.kiev.data-stores[].service.auth.tls.*` settings when Kiev-specific TLS handling is still needed.
+
+Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
+in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
 
 `KIAB_LOCAL` auth is intended for local KIAB KaaS testing and does not require extra auth properties.
 

@@ -49,11 +49,8 @@ class LimitsDpClientFactory implements Supplier<LimitsDPClient> {
      */
     @Override
     public LimitsDPClient get() {
-        ClientConfiguration config = ClientConfiguration.builder()
-                .maxAsyncThreads(limitsConfig.maxAsyncThreads())
-                .connectionTimeoutMillis((int) limitsConfig.connectionTimeout().toMillis())
-                .readTimeoutMillis((int) limitsConfig.readTimeout().toMillis())
-                .build();
+        ClientConfiguration config = limitsConfig.client()
+                .orElseGet(() -> ClientConfiguration.builder().build());
         var builder = LimitsDPClient.builder().configuration(config);
         limitsConfig.endpoint().ifPresent(builder::endpoint);
         return builder.build(authProvider);

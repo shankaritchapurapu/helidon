@@ -48,10 +48,10 @@ metrics:
     - type: oci
       project: my-service
       fleet: my-fleet
-      region-id: us-ashburn-1
+      region: us-ashburn-1
 ```
 
-If `region-id` is omitted, the integration attempts to use a `com.oracle.pic.commons.util.Region` from the Helidon
+If `region` is omitted, the integration attempts to use a `com.oracle.pic.commons.util.Region` from the Helidon
 service registry. The `helidon-oci-envconfig` module can supply that region from the OCI environment.
 
 Configure OCI SDK authentication separately. For example, to use instance principal authentication:
@@ -168,7 +168,7 @@ The OCI metrics publisher is configured as an entry under `metrics.publishers` w
 | `metrics.publishers[].enabled` | `true` | Enables or disables OCI metrics publishing. |
 | `metrics.publishers[].project` | | OCI metrics project. Required for publishing. |
 | `metrics.publishers[].fleet` | | OCI metrics fleet. Required for publishing. |
-| `metrics.publishers[].region-id` | | Optional public region name. If set, this takes precedence over a registry-provided PIC `Region`. |
+| `metrics.publishers[].region` | | Optional public region name. If set, this takes precedence over a registry-provided PIC `Region`. |
 | `metrics.publishers[].endpoint` | | Optional monitoring ingestion endpoint override. |
 | `metrics.publishers[].default-dimensions` | `{}` | Default dimensions passed to the OCI metrics library. |
 | `metrics.publishers[].request-headers` | `{}` | Additional headers to send with OCI monitoring requests. |
@@ -178,21 +178,25 @@ The OCI metrics publisher is configured as an entry under `metrics.publishers` w
 | `metrics.publishers[].use-metadata-service` | | Optional flag passed to the OCI telemetry reporter builder. |
 | `metrics.publishers[].override-metric-keys` | | Optional flag passed to the OCI telemetry reporter builder. |
 | `metrics.publishers[].hostname` | | Optional hostname override for emitted dimensions. |
+| `metrics.publishers[].host-name` | | Alias for `hostname`; configure only one of the two keys. |
 | `metrics.publishers[].availability-domain` | | Optional availability-domain override. |
 | `metrics.publishers[].fault-domain` | | Optional fault-domain override. |
 
+Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
+in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
+
 ### Monitoring client configuration
 
-Use `client-configuration` to tune the OCI SDK `MonitoringClient`.
+Use `client` to tune the OCI SDK `MonitoringClient`.
 
 | Key | Default value | Description |
 |-----|---------------|-------------|
-| `metrics.publishers[].client-configuration.connection-timeout` | | Optional OCI SDK connection timeout. |
-| `metrics.publishers[].client-configuration.read-timeout` | | Optional OCI SDK read timeout. |
-| `metrics.publishers[].client-configuration.max-async-threads` | | Optional maximum async thread count. |
-| `metrics.publishers[].client-configuration.disable-data-buffering-on-upload` | | Optional upload buffering flag. |
-| `metrics.publishers[].client-configuration.retry-configuration` | | Optional OCI SDK retry configuration. |
-| `metrics.publishers[].client-configuration.circuit-breaker-configuration` | | Optional OCI SDK circuit-breaker configuration. |
+| `metrics.publishers[].client.connection-timeout` | | Optional OCI SDK connection timeout. |
+| `metrics.publishers[].client.read-timeout` | | Optional OCI SDK read timeout. |
+| `metrics.publishers[].client.max-async-threads` | | Optional maximum async thread count. |
+| `metrics.publishers[].client.disable-data-buffering-on-upload` | | Optional upload buffering flag. |
+| `metrics.publishers[].client.retry` | | Optional OCI SDK retry configuration. |
+| `metrics.publishers[].client.circuit-breaker` | | Optional OCI SDK circuit-breaker configuration. |
 
 Example:
 
@@ -202,7 +206,7 @@ metrics:
     - type: oci
       project: my-service
       fleet: my-fleet
-      client-configuration:
+      client:
         connection-timeout: PT7S
         read-timeout: PT11S
         max-async-threads: 13
@@ -214,14 +218,14 @@ Retry configuration mirrors the OCI SDK retry types.
 
 | Key | Default value | Description |
 |-----|---------------|-------------|
-| `metrics.publishers[].client-configuration.retry-configuration.termination-strategy.type` | | `max-attempts` or `max-time`. |
-| `metrics.publishers[].client-configuration.retry-configuration.termination-strategy.max-attempts` | | Maximum attempts for `max-attempts`. |
-| `metrics.publishers[].client-configuration.retry-configuration.termination-strategy.max-time` | | Maximum duration for `max-time`. |
-| `metrics.publishers[].client-configuration.retry-configuration.delay-strategy.type` | | `fixed`, `exponential`, or `exponential-with-jitter`. |
-| `metrics.publishers[].client-configuration.retry-configuration.delay-strategy.delay` | | Fixed delay for `fixed`. |
-| `metrics.publishers[].client-configuration.retry-configuration.delay-strategy.max-delay` | | Maximum delay for exponential strategies. |
-| `metrics.publishers[].client-configuration.retry-configuration.retry-condition.type` | | `default` or `retry-on-open-circuit-breaker`. |
-| `metrics.publishers[].client-configuration.retry-configuration.retry-options.mark-read-limit` | | Optional mark-read limit. |
+| `metrics.publishers[].client.retry.termination-strategy.type` | | `max-attempts` or `max-time`. |
+| `metrics.publishers[].client.retry.termination-strategy.max-attempts` | | Maximum attempts for `max-attempts`. |
+| `metrics.publishers[].client.retry.termination-strategy.max-time` | | Maximum duration for `max-time`. |
+| `metrics.publishers[].client.retry.delay-strategy.type` | | `fixed`, `exponential`, or `exponential-with-jitter`. |
+| `metrics.publishers[].client.retry.delay-strategy.delay` | | Fixed delay for `fixed`. |
+| `metrics.publishers[].client.retry.delay-strategy.max-delay` | | Maximum delay for exponential strategies. |
+| `metrics.publishers[].client.retry.retry-condition.type` | | `default` or `retry-on-open-circuit-breaker`. |
+| `metrics.publishers[].client.retry.retry-options.mark-read-limit` | | Optional mark-read limit. |
 
 Example:
 
@@ -231,8 +235,8 @@ metrics:
     - type: oci
       project: my-service
       fleet: my-fleet
-      client-configuration:
-        retry-configuration:
+      client:
+        retry:
           termination-strategy:
             type: max-attempts
             max-attempts: 5
@@ -249,14 +253,14 @@ metrics:
 
 | Key | Default value | Description |
 |-----|---------------|-------------|
-| `metrics.publishers[].client-configuration.circuit-breaker-configuration.failure-rate-threshold` | | Failure-rate threshold. |
-| `metrics.publishers[].client-configuration.circuit-breaker-configuration.slow-call-rate-threshold` | | Slow-call-rate threshold. |
-| `metrics.publishers[].client-configuration.circuit-breaker-configuration.wait-duration-in-open-state` | | Time to remain open before half-open. |
-| `metrics.publishers[].client-configuration.circuit-breaker-configuration.permitted-number-of-calls-in-half-open-state` | | Permitted half-open calls. |
-| `metrics.publishers[].client-configuration.circuit-breaker-configuration.minimum-number-of-calls` | | Minimum calls before calculating state. |
-| `metrics.publishers[].client-configuration.circuit-breaker-configuration.sliding-window-size` | | Sliding window size. |
-| `metrics.publishers[].client-configuration.circuit-breaker-configuration.slow-call-duration-threshold` | | Duration threshold for slow calls. |
-| `metrics.publishers[].client-configuration.circuit-breaker-configuration.writable-stack-trace-enabled` | | Optional writable stack trace flag. |
+| `metrics.publishers[].client.circuit-breaker.failure-rate-threshold` | | Failure-rate threshold. |
+| `metrics.publishers[].client.circuit-breaker.slow-call-rate-threshold` | | Slow-call-rate threshold. |
+| `metrics.publishers[].client.circuit-breaker.wait-duration-in-open-state` | | Time to remain open before half-open. |
+| `metrics.publishers[].client.circuit-breaker.permitted-number-of-calls-in-half-open-state` | | Permitted half-open calls. |
+| `metrics.publishers[].client.circuit-breaker.minimum-number-of-calls` | | Minimum calls before calculating state. |
+| `metrics.publishers[].client.circuit-breaker.sliding-window-size` | | Sliding window size. |
+| `metrics.publishers[].client.circuit-breaker.slow-call-duration-threshold` | | Duration threshold for slow calls. |
+| `metrics.publishers[].client.circuit-breaker.writable-stack-trace-enabled` | | Optional writable stack trace flag. |
 
 ### JVM meter configuration
 

@@ -129,6 +129,10 @@ sources:
           min-retry-delay-in-ms: 100
 ```
 
+The SSv2 client also accepts `client.retry` as an alias for `client.retry-config`. Aliases are provided for user
+convenience, either to align with native OCI parameter names or with similar settings in other Helidon OCI modules.
+Specify at most one name for an aliased setting, not both.
+
 Endpoint region and domain resolution is delegated to
 [Environment Configuration](../utilities/environment-config.md). The config-source module brings
 `helidon-oci-envconfig` at runtime, and the default SSv2 endpoint uses

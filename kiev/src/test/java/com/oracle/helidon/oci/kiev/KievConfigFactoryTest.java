@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class KievConfigFactoryTest {
@@ -112,6 +113,43 @@ class KievConfigFactoryTest {
         assertEquals(KievAuthType.INSTANCE, authConfig.type());
         assertEquals("/tmp/root.pem", tlsConfig.rootCertPemPath().orElseThrow());
         assertFalse(authConfig.authEndpoint().isPresent());
+    }
+
+    @Test
+    void testLoadsRootCertPathAlias() {
+        KievConfig config = new KievConfigFactory(config(Map.of(
+                "oci.kiev.data-stores.0.backend", "SERVICE",
+                "oci.kiev.data-stores.0.store-name", "kaaspdb",
+                "oci.kiev.data-stores.0.app-name", "StoreApp",
+                "oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.data-stores.0.service.frontend-endpoint", "http://localhost:16666",
+                "oci.kiev.data-stores.0.service.auth.tls.root-cert-path", "/tmp/root.pem"
+        ))).get();
+
+        KievServiceTlsConfig tlsConfig = config.dataStores()
+                .get(0)
+                .service()
+                .orElseThrow()
+                .auth()
+                .orElseThrow()
+                .tls()
+                .orElseThrow();
+        assertEquals("/tmp/root.pem", tlsConfig.rootCertPemPath().orElseThrow());
+    }
+
+    @Test
+    void failWhenRootCertPemPathAndRootCertPathAreConfigured() {
+        Config config = config(Map.of(
+                "oci.kiev.data-stores.0.backend", "SERVICE",
+                "oci.kiev.data-stores.0.store-name", "kaaspdb",
+                "oci.kiev.data-stores.0.app-name", "StoreApp",
+                "oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.data-stores.0.service.frontend-endpoint", "http://localhost:16666",
+                "oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem",
+                "oci.kiev.data-stores.0.service.auth.tls.root-cert-path", "/tmp/root-alias.pem"
+        ));
+
+        assertThrows(IllegalArgumentException.class, () -> new KievConfigFactory(config).get());
     }
 
     @Test

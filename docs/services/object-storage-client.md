@@ -61,8 +61,8 @@ setting both is rejected as invalid configuration.
 | `oci.object-storage-client.client.read-timeout` | unset | OCI SDK read timeout. |
 | `oci.object-storage-client.client.max-async-threads` | unset | Maximum async worker threads used by OCI SDK asynchronous helpers and waiters. |
 | `oci.object-storage-client.client.disable-data-buffering-on-upload` | unset | Whether upload buffering should be disabled. |
-| `oci.object-storage-client.client.retry-configuration` | unset | OCI SDK retry configuration. |
-| `oci.object-storage-client.client.circuit-breaker-configuration` | unset | OCI SDK circuit breaker configuration. |
+| `oci.object-storage-client.client.retry` | unset | OCI SDK retry configuration. |
+| `oci.object-storage-client.client.circuit-breaker` | unset | OCI SDK circuit breaker configuration. |
 
 When `endpoint` is unset, the module resolves the region from `region` or its
 `region-id` alias; if neither is set, it uses the injected region supplier.

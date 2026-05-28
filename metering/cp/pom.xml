@@ -20,10 +20,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.oracle.helidon.oci.metering</groupId>
-            <artifactId>helidon-oci-metering-common</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.oracle.pic.bling</groupId>
             <artifactId>metering-agent</artifactId>
             <exclusions>
@@ -138,6 +134,10 @@
         <dependency>
             <groupId>io.helidon.service</groupId>
             <artifactId>helidon-service-registry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.json</groupId>
+            <artifactId>helidon-json</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

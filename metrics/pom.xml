@@ -18,10 +18,6 @@
 
     <name>Helidon OCI Metrics Integration</name>
 
-    <properties>
-        <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>io.helidon.metrics</groupId>
@@ -72,12 +68,12 @@
             <artifactId>oci-java-sdk-monitoring</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-circuitbreaker</artifactId>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-sdk-oci</artifactId>
         </dependency>
         <dependency>
             <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-sdk-oci</artifactId>
+            <artifactId>helidon-oci-sdk-common</artifactId>
         </dependency>
         <dependency>
             <groupId>com.oracle.helidon.oci.envconfig</groupId>

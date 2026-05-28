@@ -13,7 +13,7 @@ import io.helidon.builder.api.Prototype;
 /**
  * TLS settings for Kiev service authentication.
  */
-@Prototype.Blueprint
+@Prototype.Blueprint(decorator = KievServiceTlsConfigSupport.class)
 @Prototype.Configured
 interface KievServiceTlsConfigBlueprint {
 
@@ -24,6 +24,14 @@ interface KievServiceTlsConfigBlueprint {
      */
     @Option.Configured
     Optional<String> rootCertPemPath();
+
+    /**
+     * Alias for {@link #rootCertPemPath()} using the common config name.
+     *
+     * @return optional root certificate path alias
+     */
+    @Option.Configured
+    Optional<String> rootCertPath();
 
     /**
      * Certificate reload interval.

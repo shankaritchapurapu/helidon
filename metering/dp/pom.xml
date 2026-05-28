@@ -20,10 +20,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.oracle.helidon.oci.metering</groupId>
-            <artifactId>helidon-oci-metering-common</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.oracle.pic.bling</groupId>
             <artifactId>emitter-dp</artifactId>
         </dependency>

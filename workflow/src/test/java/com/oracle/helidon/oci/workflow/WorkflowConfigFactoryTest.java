@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static java.util.Map.entry;
 
 class WorkflowConfigFactoryTest {
@@ -70,5 +71,27 @@ class WorkflowConfigFactoryTest {
                      "Retry policy delay should match");
         assertEquals(0.5d, workflowConfig.retryPolicy().orElseThrow().jitterFactor(),
                      "Retry policy jitter factor should match");
+    }
+
+    @Test
+    void createWorkflowConfigWithConnectionTimeoutAlias() {
+        Config config = Config.just(ConfigSources.create(Map.of(
+                "oci.workflow.endpoint-details.connection-timeout", "PT6S"
+        )));
+
+        WorkflowConfig workflowConfig = new WorkflowConfigFactory(config).get();
+
+        assertEquals(Duration.ofSeconds(6), workflowConfig.endpointDetails().connectTimeout(),
+                     "Connection timeout alias should set connect timeout");
+    }
+
+    @Test
+    void failWhenConnectTimeoutAndConnectionTimeoutAreConfigured() {
+        Config config = Config.just(ConfigSources.create(Map.of(
+                "oci.workflow.endpoint-details.connect-timeout", "PT5S",
+                "oci.workflow.endpoint-details.connection-timeout", "PT6S"
+        )));
+
+        assertThrows(IllegalArgumentException.class, () -> new WorkflowConfigFactory(config).get());
     }
 }

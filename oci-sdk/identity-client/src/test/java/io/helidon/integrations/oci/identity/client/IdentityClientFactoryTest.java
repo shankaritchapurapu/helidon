@@ -15,6 +15,7 @@ import java.util.Map;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 
+import com.oracle.bmc.ClientConfiguration;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.identity.Identity;
 import org.junit.jupiter.api.Test;
@@ -30,9 +31,9 @@ class IdentityClientFactoryTest {
     void createsIdentityClientWithEndpointOverride() throws Exception {
         IdentityClientConfig config = IdentityClientConfig.builder()
                 .endpoint("http://127.0.0.1:9876")
-                .connectionTimeout(Duration.ofSeconds(2))
-                .readTimeout(Duration.ofSeconds(5))
-                .maxAsyncThreads(8)
+                .client(client -> client.connectionTimeout(Duration.ofSeconds(2))
+                        .readTimeout(Duration.ofSeconds(5))
+                        .maxAsyncThreads(8))
                 .build();
 
         Identity identity = new IdentityClientFactory(config, authProvider()).get();
@@ -95,16 +96,29 @@ class IdentityClientFactoryTest {
     void readsConfigFromOciIdentityClientSubtree() {
         Config config = Config.just(ConfigSources.create(
                 Map.of("oci.identity-client.endpoint", "http://identity.example",
-                       "oci.identity-client.connection-timeout", "PT3S",
-                       "oci.identity-client.read-timeout", "PT7S",
-                       "oci.identity-client.max-async-threads", "11")));
+                       "oci.identity-client.client.connection-timeout", "PT3S",
+                       "oci.identity-client.client.read-timeout", "PT7S",
+                       "oci.identity-client.client.max-async-threads", "11")));
 
         IdentityClientConfig identityConfig = new IdentityClientConfigFactory(config).get();
+        ClientConfiguration clientConfiguration = identityConfig.client().orElseThrow();
 
         assertThat(identityConfig.endpoint().orElseThrow(), is("http://identity.example"));
-        assertThat(identityConfig.connectionTimeout(), is(Duration.ofSeconds(3)));
-        assertThat(identityConfig.readTimeout(), is(Duration.ofSeconds(7)));
-        assertThat(identityConfig.maxAsyncThreads(), is(11));
+        assertThat(clientConfiguration.getConnectionTimeoutMillis(), is(3000));
+        assertThat(clientConfiguration.getReadTimeoutMillis(), is(7000));
+        assertThat(clientConfiguration.getMaxAsyncThreads(), is(11));
+    }
+
+    @Test
+    void defaultClientConfigurationMatchesPreviousIdentityDefaults() {
+        IdentityClientConfig identityConfig = IdentityClientConfig.builder()
+                .build();
+        ClientConfiguration clientConfiguration = identityConfig.client()
+                .orElseGet(() -> ClientConfiguration.builder().build());
+
+        assertThat(clientConfiguration.getConnectionTimeoutMillis(), is(10000));
+        assertThat(clientConfiguration.getReadTimeoutMillis(), is(60000));
+        assertThat(clientConfiguration.getMaxAsyncThreads(), is(50));
     }
 
     @Test

@@ -18,7 +18,7 @@ import io.helidon.builder.api.Prototype;
  * configuring the authorization service endpoint, and specifying
  * optional security- and observability-related settings.
  */
-@Prototype.Blueprint
+@Prototype.Blueprint(decorator = AuthorizationConfigSupport.class)
 @Prototype.Configured
 interface AuthorizationConfigBlueprint {
 
@@ -58,6 +58,14 @@ interface AuthorizationConfigBlueprint {
      */
     @Option.Configured
     String serviceName();
+
+    /**
+     * Alias for {@link #serviceName()} using the common config name.
+     *
+     * @return optional service alias
+     */
+    @Option.Configured
+    Optional<String> service();
 
     /**
      * Returns the optional region identifier associated with this authorization configuration.

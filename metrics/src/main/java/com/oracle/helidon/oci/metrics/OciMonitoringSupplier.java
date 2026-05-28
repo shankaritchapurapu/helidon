@@ -44,7 +44,7 @@ class OciMonitoringSupplier implements Supplier<Monitoring> {
                 .findFirst()
                 .orElseGet(() -> OciMetricsPublisher.builder().build());
 
-        var clientConfigurationOpt = ociPublisher.prototype().clientConfiguration();
+        var clientConfigurationOpt = ociPublisher.prototype().client();
 
         var monitoringClient = clientConfigurationOpt.map(clientConfiguration -> new MonitoringClient(
                         authProvider,

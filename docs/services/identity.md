@@ -213,12 +213,16 @@ oci:
 | `oci.identity.authorization.enabled` | `true` | Enables creation of the authorization client. |
 | `oci.identity.authorization.service-uri` | | Optional explicit authorization endpoint. |
 | `oci.identity.authorization.service-name` | | Required service name passed to the authorization client. |
+| `oci.identity.authorization.service` | | Alias for `service-name`; configure only one of the two keys. |
 | `oci.identity.authorization.region` | | Region for non-enclave authorization. |
 | `oci.identity.authorization.physical-ad` | | Physical AD for non-enclave authorization, or the regional AD value for explicit enclave endpoints. |
 | `oci.identity.authorization.availability-domain` | | Availability domain used to derive service-enclave endpoints when `service-enclave=true` and `service-uri` is not set. |
 | `oci.identity.authorization.service-enclave` | `false` | Enables service-enclave authorization mode. |
 | `oci.identity.authorization.root-cert-path` | | Optional CA bundle or root certificate path. |
 | `oci.identity.authorization.metrics-lib` | | Optional Auth SDK metrics library name. |
+
+Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
+in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
 
 Authorization validation rules:
 

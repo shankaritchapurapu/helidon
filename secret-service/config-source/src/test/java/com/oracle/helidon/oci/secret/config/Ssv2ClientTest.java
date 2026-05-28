@@ -133,6 +133,33 @@ class Ssv2ClientTest {
         assertThat(retryConfiguration.getDelayStrategy().nextDelay(waitContext), is(400L));
     }
 
+    @Test
+    void mapsRetryAlias() {
+        DefaultSsv2Client client = new DefaultSsv2Client(clientConfig(Map.of(
+                "retry.max-retries", "7",
+                "retry.min-retry-delay-in-ms", "100",
+                "retry.max-retry-delay-in-ms", "300"
+        )));
+
+        var retryConfiguration = client.clientConfiguration().getRetryConfiguration();
+        var terminationStrategy = (MaxAttemptsTerminationStrategy) retryConfiguration.getTerminationStrategy();
+        WaiterConfiguration.WaitContext waitContext = new WaiterConfiguration.WaitContext(0);
+        waitContext.incrementAttempts();
+        waitContext.incrementAttempts();
+        waitContext.incrementAttempts();
+
+        assertThat(terminationStrategy.getMaxAttempts(), is(7));
+        assertThat(retryConfiguration.getDelayStrategy().nextDelay(waitContext), is(300L));
+    }
+
+    @Test
+    void failsWhenRetryConfigAndRetryAreConfigured() {
+        assertThrows(IllegalArgumentException.class, () -> clientConfig(Map.of(
+                "retry-config.max-retries", "9",
+                "retry.max-retries", "7"
+        )));
+    }
+
     private static Config config(Map<String, String> values) {
         return Config.builder()
                 .disableEnvironmentVariablesSource()

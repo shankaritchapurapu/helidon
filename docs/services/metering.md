@@ -279,7 +279,7 @@ invoke the native metering-agent API directly:
 import java.time.Instant;
 import java.util.Map;
 
-import com.oracle.helidon.oci.metering.common.Tags;
+import com.oracle.helidon.oci.metering.cp.Tags;
 import com.oracle.pic.bling.emit.MeteringLogStores;
 import com.oracle.pic.bling.emit.store.MeteringLogStore;
 import com.oracle.pic.kiev.Transaction;

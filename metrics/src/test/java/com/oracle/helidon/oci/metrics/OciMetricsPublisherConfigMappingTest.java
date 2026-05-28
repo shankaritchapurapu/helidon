@@ -21,6 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class OciMetricsPublisherConfigMappingTest {
 
@@ -32,11 +33,12 @@ class OciMetricsPublisherConfigMappingTest {
                                                enabled: true
                                                project: test-project
                                                fleet: test-fleet
-                                               client-configuration:
+                                               region: us-ashburn-1
+                                               client:
                                                  connection-timeout: PT7S
                                                  read-timeout: PT11S
                                                  max-async-threads: 13
-                                                 retry-configuration:
+                                                 retry:
                                                    termination-strategy:
                                                      type: max-attempts
                                                      max-attempts: 5
@@ -47,7 +49,7 @@ class OciMetricsPublisherConfigMappingTest {
                                                      type: retry-on-open-circuit-breaker
                                                    retry-options:
                                                      mark-read-limit: 4096
-                                                 circuit-breaker-configuration:
+                                                 circuit-breaker:
                                                    failure-rate-threshold: 77
                                                    slow-call-rate-threshold: 66
                                                    wait-duration-in-open-state: PT9S
@@ -61,10 +63,11 @@ class OciMetricsPublisherConfigMappingTest {
     @Test
     void mapsPublisherYamlToTopLevelClientConfiguration() {
         OciMetricsPublisherConfig publisherConfig = publisherConfig();
-        ClientConfiguration clientConfiguration = publisherConfig.clientConfiguration().orElseThrow();
+        ClientConfiguration clientConfiguration = publisherConfig.client().orElseThrow();
 
         assertThat(publisherConfig.project().orElseThrow(), is("test-project"));
         assertThat(publisherConfig.fleet().orElseThrow(), is("test-fleet"));
+        assertThat(publisherConfig.region().orElseThrow(), is("us-ashburn-1"));
         assertThat(clientConfiguration.getConnectionTimeoutMillis(), is(7000));
         assertThat(clientConfiguration.getReadTimeoutMillis(), is(11000));
         assertThat(clientConfiguration.getMaxAsyncThreads(), is(13));
@@ -72,7 +75,7 @@ class OciMetricsPublisherConfigMappingTest {
 
     @Test
     void mapsPublisherYamlToRetryConfiguration() {
-        ClientConfiguration clientConfiguration = publisherConfig().clientConfiguration().orElseThrow();
+        ClientConfiguration clientConfiguration = publisherConfig().client().orElseThrow();
         RetryConfiguration retryConfiguration = clientConfiguration.getRetryConfiguration();
 
         assertThat(retryConfiguration, notNullValue());
@@ -93,7 +96,7 @@ class OciMetricsPublisherConfigMappingTest {
 
     @Test
     void mapsPublisherYamlToCircuitBreakerConfiguration() {
-        ClientConfiguration clientConfiguration = publisherConfig().clientConfiguration().orElseThrow();
+        ClientConfiguration clientConfiguration = publisherConfig().client().orElseThrow();
         CircuitBreakerConfiguration circuitBreakerConfiguration = clientConfiguration.getCircuitBreakerConfiguration();
 
         assertThat(circuitBreakerConfiguration, notNullValue());
@@ -105,6 +108,31 @@ class OciMetricsPublisherConfigMappingTest {
         assertThat(circuitBreakerConfiguration.getSlidingWindowSize(), is(22));
         assertThat(circuitBreakerConfiguration.getSlowCallDurationThreshold(), is(java.time.Duration.ofSeconds(8)));
         assertThat(circuitBreakerConfiguration.isWritableStackTraceEnabled(), is(false));
+    }
+
+    @Test
+    void mapsHostNameAlias() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             host-name: test-host
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
+
+        assertThat(publisherConfig.hostname().orElseThrow(), is("test-host"));
+    }
+
+    @Test
+    void failsWhenHostnameAndHostNameAreConfigured() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             hostname: test-host
+                                             host-name: test-host-alias
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        assertThrows(IllegalArgumentException.class, () -> OciMetricsPublisherConfig.create(config));
     }
 
     private static OciMetricsPublisherConfig publisherConfig() {

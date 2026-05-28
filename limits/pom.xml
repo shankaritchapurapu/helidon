@@ -25,6 +25,10 @@
         </dependency>
         <dependency>
             <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-sdk-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
             <artifactId>helidon-oci-sdk-authentication-instance</artifactId>
         </dependency>
         <dependency>
