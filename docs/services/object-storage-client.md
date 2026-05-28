@@ -45,7 +45,7 @@ method module to the application, for example instance principals:
 
 ## Configuration
 
-Client settings live under `oci.object-storage`:
+Client settings live under `oci.object-storage-client`:
 
 The `region` and `region-id` settings are both available for user convenience:
 `region-id` aligns with the OCI Object Storage API parameter name, while `region`
@@ -54,15 +54,15 @@ setting both is rejected as invalid configuration.
 
 | Key | Default Value | Description |
 |-----|---------------|-------------|
-| `oci.object-storage.endpoint` | unset | Explicit Object Storage endpoint. When set, this overrides `region` and `region-id`. |
-| `oci.object-storage.region` | unset | OCI region used to derive the Object Storage endpoint when `endpoint` is not set. Region values can use public region name, internal name, or airport code. |
-| `oci.object-storage.region-id` | unset | Alias for `region` using the common OCI region ID name. |
-| `oci.object-storage.client-configuration.connection-timeout` | unset | OCI SDK connection timeout. |
-| `oci.object-storage.client-configuration.read-timeout` | unset | OCI SDK read timeout. |
-| `oci.object-storage.client-configuration.max-async-threads` | unset | Maximum async worker threads used by OCI SDK asynchronous helpers and waiters. |
-| `oci.object-storage.client-configuration.disable-data-buffering-on-upload` | unset | Whether upload buffering should be disabled. |
-| `oci.object-storage.client-configuration.retry-configuration` | unset | OCI SDK retry configuration. |
-| `oci.object-storage.client-configuration.circuit-breaker-configuration` | unset | OCI SDK circuit breaker configuration. |
+| `oci.object-storage-client.endpoint` | unset | Explicit Object Storage endpoint. When set, this overrides `region` and `region-id`. |
+| `oci.object-storage-client.region` | unset | OCI region used to derive the Object Storage endpoint when `endpoint` is not set. Region values can use public region name, internal name, or airport code. |
+| `oci.object-storage-client.region-id` | unset | Alias for `region` using the common OCI region ID name. |
+| `oci.object-storage-client.client.connection-timeout` | unset | OCI SDK connection timeout. |
+| `oci.object-storage-client.client.read-timeout` | unset | OCI SDK read timeout. |
+| `oci.object-storage-client.client.max-async-threads` | unset | Maximum async worker threads used by OCI SDK asynchronous helpers and waiters. |
+| `oci.object-storage-client.client.disable-data-buffering-on-upload` | unset | Whether upload buffering should be disabled. |
+| `oci.object-storage-client.client.retry-configuration` | unset | OCI SDK retry configuration. |
+| `oci.object-storage-client.client.circuit-breaker-configuration` | unset | OCI SDK circuit breaker configuration. |
 
 When `endpoint` is unset, the module resolves the region from `region` or its
 `region-id` alias; if neither is set, it uses the injected region supplier.
@@ -75,9 +75,9 @@ helidon:
     authentication-method: instance-principal
 
 oci:
-  object-storage:
+  object-storage-client:
     region-id: us-ashburn-1
-    client-configuration:
+    client:
       connection-timeout: PT10S
       read-timeout: PT1M
       disable-data-buffering-on-upload: true
@@ -87,7 +87,7 @@ Use `endpoint` instead of `region` for tests or explicit endpoint routing:
 
 ```yaml
 oci:
-  object-storage:
+  object-storage-client:
     endpoint: http://localhost:8081
 ```
 

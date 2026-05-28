@@ -24,18 +24,18 @@ class MeteringAgentConfigFactory implements Supplier<com.oracle.pic.bling.config
     @Override
     public com.oracle.pic.bling.config.MeteringAgentConfig get() {
         var builder = com.oracle.pic.bling.config.MeteringAgentConfig.builder()
-                .endpoint(config.endpoint());
+                .endpoint(config.endpoint())
+                .meteringDir(config.meteringDir())
+                .clientId(config.clientId())
+                .service(config.service());
 
         config.meteringPeriod().map(MeteringAgentConfigFactory::seconds).ifPresent(builder::meteringPeriodInSeconds);
         config.archivingDuration().map(MeteringAgentConfigFactory::seconds).ifPresent(builder::archivingDurationInSeconds);
-        config.meteringDir().ifPresent(builder::meteringDir);
-        config.clientId().ifPresent(builder::clientId);
-        config.service().ifPresent(builder::service);
         config.osEnabled().ifPresent(builder::osEnabled);
         config.k8sBasedDeployment().ifPresent(builder::isK8sBasedDeployment);
         config.bucketName().ifPresent(builder::bucketName);
         config.namespace().ifPresent(builder::namespace);
-        config.reportToBlingFrequency().ifPresent(builder::reportToBlingFrequency);
+        config.reportInterval().map(MeteringAgentConfigFactory::seconds).ifPresent(builder::reportToBlingFrequency);
 
         com.oracle.pic.bling.config.MeteringAgentConfig nativeConfig = builder.build();
         nativeConfig.validate();

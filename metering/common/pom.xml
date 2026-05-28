@@ -14,30 +14,18 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>helidon-oci-metering-dp</artifactId>
+    <artifactId>helidon-oci-metering-common</artifactId>
 
-    <name>Helidon OCI Metering Data Plane</name>
+    <name>Helidon OCI Metering Common</name>
+
+    <properties>
+        <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>
+    </properties>
 
     <dependencies>
         <dependency>
-            <groupId>com.oracle.helidon.oci.metering</groupId>
-            <artifactId>helidon-oci-metering-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.pic.bling</groupId>
-            <artifactId>emitter-dp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-sdk-authentication-instance</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-sdk-object-storage</artifactId>
+            <groupId>io.helidon.builder</groupId>
+            <artifactId>helidon-builder-api</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.config</groupId>
@@ -48,23 +36,16 @@
             <artifactId>helidon-config-metadata</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.service</groupId>
-            <artifactId>helidon-service-registry</artifactId>
+            <groupId>io.helidon.json</groupId>
+            <artifactId>helidon-json</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <scope>test</scope>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
+            <groupId>com.oracle.oci.sdk</groupId>
+            <artifactId>oci-java-sdk-circuitbreaker</artifactId>
         </dependency>
     </dependencies>
 
@@ -76,6 +57,11 @@
                 <configuration>
                     <annotationProcessorPaths>
                         <path>
+                            <groupId>io.helidon.config.metadata</groupId>
+                            <artifactId>helidon-config-metadata-codegen</artifactId>
+                            <version>${helidon.version}</version>
+                        </path>
+                        <path>
                             <groupId>io.helidon.codegen</groupId>
                             <artifactId>helidon-codegen-apt</artifactId>
                             <version>${helidon.version}</version>
@@ -83,11 +69,6 @@
                         <path>
                             <groupId>io.helidon.builder</groupId>
                             <artifactId>helidon-builder-codegen</artifactId>
-                            <version>${helidon.version}</version>
-                        </path>
-                        <path>
-                            <groupId>io.helidon.service</groupId>
-                            <artifactId>helidon-service-codegen</artifactId>
                             <version>${helidon.version}</version>
                         </path>
                         <path>
@@ -104,7 +85,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.oracle.helidon.oci.metering.dp</Automatic-Module-Name>
+                            <Automatic-Module-Name>com.oracle.helidon.oci.metering.common</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>

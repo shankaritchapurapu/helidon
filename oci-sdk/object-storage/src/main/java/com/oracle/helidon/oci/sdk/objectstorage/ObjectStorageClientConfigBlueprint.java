@@ -49,5 +49,5 @@ interface ObjectStorageClientConfigBlueprint extends Prototype.Factory<ObjectSto
      * @return client configuration
      */
     @Option.Configured
-    Optional<ClientConfiguration> clientConfiguration();
+    Optional<ClientConfiguration> client();
 }

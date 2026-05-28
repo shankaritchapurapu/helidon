@@ -29,11 +29,7 @@ import io.helidon.service.codegen.ServiceCodegenTypes;
 import io.helidon.service.codegen.spi.RegistryCodegenExtension;
 
 final class OciMeteringExtension implements RegistryCodegenExtension {
-    static final Set<TypeName> ANNOTATIONS = Set.of(OciTypes.METERING_DP_POINT,
-                                                    OciTypes.METERING_DP_TIMED,
-                                                    OciTypes.METERING_DP_START,
-                                                    OciTypes.METERING_DP_END,
-                                                    OciTypes.METERING_CP_POINT,
+    static final Set<TypeName> ANNOTATIONS = Set.of(OciTypes.METERING_CP_POINT,
                                                     OciTypes.METERING_CP_TIMED,
                                                     OciTypes.METERING_CP_START,
                                                     OciTypes.METERING_CP_END);
@@ -90,7 +86,6 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
                           TypedElementInfo element,
                           TypeName annotationType,
                           int counter) {
-        MeteringFlavor flavor = MeteringFlavor.of(annotationType);
         MeteringKind kind = MeteringKind.of(annotationType);
         TypeName serviceType = enclosingType.typeName();
         TypeName generatedType = TypeName.builder()
@@ -102,9 +97,9 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
                 .build();
 
         Annotation annotation = element.annotation(annotationType);
-        ParameterIndexes indexes = parameterIndexes(element, flavor);
-        Map<String, String> staticTags = staticTags(enclosingType, element, flavor);
-        Map<String, Integer> tagIndexes = tagIndexes(element, flavor);
+        ParameterIndexes indexes = parameterIndexes(element);
+        Map<String, String> staticTags = staticTags(enclosingType, element);
+        Map<String, Integer> tagIndexes = tagIndexes(element);
         String methodName = serviceType.fqName() + "." + element.signature().text();
 
         ClassModel.Builder classModel = ClassModel.builder()
@@ -114,24 +109,24 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
                 .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_SINGLETON))
                 .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_NAMED, methodName))
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
-                .superType(kind.superType(flavor))
+                .superType(kind.superType())
                 .addImport(Map.class);
 
         classModel.addField(field -> field
                 .accessModifier(AccessModifier.PRIVATE)
                 .isFinal(true)
-                .type(flavor.supportType())
+                .type(OciTypes.METERING_CP_SUPPORT)
                 .name("meteringSupport"));
 
         classModel.addConstructor(Constructor.builder()
                                           .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_INJECT))
                                           .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                                           .addParameter(param -> param
-                                                  .type(flavor.supportType())
+                                                  .type(OciTypes.METERING_CP_SUPPORT)
                                                   .name("meteringSupport"))
                                           .addContentLine("this.meteringSupport = meteringSupport;"));
 
-        addSupport(classModel, flavor);
+        addSupport(classModel);
         addStringMethod(classModel, "meterName", annotation.stringValue().orElse(""));
         if (kind.hasCommonMeterFields()) {
             addStringMethod(classModel, "compartmentId", annotation.stringValue("compartmentId").orElse(""));
@@ -145,16 +140,17 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
         }
         addTags(classModel, "staticTags", staticTags, TypeNames.STRING);
         addTags(classModel, "tagParameterIndexes", tagIndexes, TypeNames.PRIMITIVE_INT);
+        addBooleanMethod(classModel, "measureOnFailure", annotation.booleanValue("measureOnFailure").orElse(false));
         addToString(classModel, serviceType, element.signature(), kind);
 
         roundContext.addGeneratedType(generatedType, classModel, serviceType, element.originatingElementValue());
     }
 
-    private void addSupport(ClassModel.Builder classModel, MeteringFlavor flavor) {
+    private void addSupport(ClassModel.Builder classModel) {
         classModel.addMethod(method -> method
                 .addAnnotation(Annotations.OVERRIDE)
                 .accessModifier(AccessModifier.PROTECTED)
-                .returnType(flavor.supportType())
+                .returnType(OciTypes.METERING_CP_SUPPORT)
                 .name("support")
                 .addContentLine("return meteringSupport;"));
     }
@@ -184,6 +180,15 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
                 .addAnnotation(Annotations.OVERRIDE)
                 .accessModifier(AccessModifier.PROTECTED)
                 .returnType(TypeNames.PRIMITIVE_INT)
+                .name(name)
+                .addContentLine("return " + value + ";"));
+    }
+
+    private void addBooleanMethod(ClassModel.Builder classModel, String name, boolean value) {
+        classModel.addMethod(method -> method
+                .addAnnotation(Annotations.OVERRIDE)
+                .accessModifier(AccessModifier.PROTECTED)
+                .returnType(TypeNames.PRIMITIVE_BOOLEAN)
                 .name(name)
                 .addContentLine("return " + value + ";"));
     }
@@ -228,15 +233,15 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
         return MAP_STRING_STRING;
     }
 
-    private ParameterIndexes parameterIndexes(TypedElementInfo element, MeteringFlavor flavor) {
+    private ParameterIndexes parameterIndexes(TypedElementInfo element) {
         int compartmentId = -1;
         int resourceId = -1;
         int amount = -1;
         int index = 0;
         for (TypedElementInfo parameter : element.parameterArguments()) {
-            compartmentId = singleIndex(element, parameter, flavor.compartmentIdAnnotation(), compartmentId, index);
-            resourceId = singleIndex(element, parameter, flavor.resourceIdAnnotation(), resourceId, index);
-            amount = singleIndex(element, parameter, flavor.amountAnnotation(), amount, index);
+            compartmentId = singleIndex(element, parameter, OciTypes.METERING_CP_COMPARTMENT_ID, compartmentId, index);
+            resourceId = singleIndex(element, parameter, OciTypes.METERING_CP_RESOURCE_ID, resourceId, index);
+            amount = singleIndex(element, parameter, OciTypes.METERING_CP_AMOUNT, amount, index);
             index++;
         }
         return new ParameterIndexes(compartmentId, resourceId, amount);
@@ -258,12 +263,12 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
         return newIndex;
     }
 
-    private Map<String, Integer> tagIndexes(TypedElementInfo element, MeteringFlavor flavor) {
+    private Map<String, Integer> tagIndexes(TypedElementInfo element) {
         Map<String, Integer> result = new LinkedHashMap<>();
         int index = 0;
         for (TypedElementInfo parameter : element.parameterArguments()) {
             int parameterIndex = index;
-            parameter.findAnnotation(flavor.tagValueAnnotation())
+            parameter.findAnnotation(OciTypes.METERING_CP_TAG_VALUE)
                     .flatMap(Annotation::stringValue)
                     .ifPresent(tagName -> result.put(tagName, parameterIndex));
             index++;
@@ -272,20 +277,19 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
     }
 
     private Map<String, String> staticTags(TypeInfo enclosingType,
-                                           TypedElementInfo element,
-                                           MeteringFlavor flavor) {
+                                           TypedElementInfo element) {
         Map<String, String> result = new LinkedHashMap<>();
-        addTags(result, enclosingType.annotations(), flavor);
-        addTags(result, element.annotations(), flavor);
-        element.findAnnotation(annotationForTags(element, flavor))
+        addTags(result, enclosingType.annotations());
+        addTags(result, element.annotations());
+        element.findAnnotation(annotationForTags(element))
                 .flatMap(annotation -> annotation.annotationValues("tags"))
-                .ifPresent(tags -> addTags(result, tags, flavor));
+                .ifPresent(tags -> addTags(result, tags));
         return Map.copyOf(result);
     }
 
-    private TypeName annotationForTags(TypedElementInfo element, MeteringFlavor flavor) {
+    private TypeName annotationForTags(TypedElementInfo element) {
         for (TypeName annotation : ANNOTATIONS) {
-            if (flavor.owns(annotation) && element.hasAnnotation(annotation)) {
+            if (element.hasAnnotation(annotation)) {
                 return annotation;
             }
         }
@@ -293,13 +297,13 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
                                    element.originatingElementValue());
     }
 
-    private void addTags(Map<String, String> result, List<Annotation> annotations, MeteringFlavor flavor) {
+    private void addTags(Map<String, String> result, List<Annotation> annotations) {
         for (Annotation annotation : annotations) {
-            if (flavor.tagAnnotation().equals(annotation.typeName())) {
+            if (OciTypes.METERING_CP_TAG.equals(annotation.typeName())) {
                 putTag(result, annotation);
-            } else if (flavor.tagsAnnotation().equals(annotation.typeName())) {
+            } else if (OciTypes.METERING_CP_TAGS.equals(annotation.typeName())) {
                 annotation.annotationValues()
-                        .ifPresent(tags -> addTags(result, tags, flavor));
+                        .ifPresent(tags -> addTags(result, tags));
             }
         }
     }
@@ -341,13 +345,13 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
         }
 
         static MeteringKind of(TypeName annotation) {
-            if (OciTypes.METERING_DP_POINT.equals(annotation) || OciTypes.METERING_CP_POINT.equals(annotation)) {
+            if (OciTypes.METERING_CP_POINT.equals(annotation)) {
                 return POINT;
             }
-            if (OciTypes.METERING_DP_TIMED.equals(annotation) || OciTypes.METERING_CP_TIMED.equals(annotation)) {
+            if (OciTypes.METERING_CP_TIMED.equals(annotation)) {
                 return TIMED;
             }
-            if (OciTypes.METERING_DP_START.equals(annotation) || OciTypes.METERING_CP_START.equals(annotation)) {
+            if (OciTypes.METERING_CP_START.equals(annotation)) {
                 return START;
             }
             return END;
@@ -357,74 +361,17 @@ final class OciMeteringExtension implements RegistryCodegenExtension {
             return classNameSuffix;
         }
 
-        TypeName superType(MeteringFlavor flavor) {
+        TypeName superType() {
             return switch (this) {
-                case POINT -> flavor.pointMethod();
-                case TIMED -> flavor.timedMethod();
-                case START -> flavor.startMethod();
-                case END -> flavor.endMethod();
+                case POINT -> OciTypes.METERING_CP_POINT_METHOD;
+                case TIMED -> OciTypes.METERING_CP_TIMED_METHOD;
+                case START -> OciTypes.METERING_CP_START_METHOD;
+                case END -> OciTypes.METERING_CP_END_METHOD;
             };
         }
 
         boolean hasCommonMeterFields() {
             return this != END;
-        }
-    }
-
-    private enum MeteringFlavor {
-        DP,
-        CP;
-
-        static MeteringFlavor of(TypeName annotation) {
-            return annotation.fqName().contains(".metering.dp.") ? DP : CP;
-        }
-
-        boolean owns(TypeName annotation) {
-            return of(annotation) == this;
-        }
-
-        TypeName supportType() {
-            return this == DP ? OciTypes.METERING_DP_SUPPORT : OciTypes.METERING_CP_SUPPORT;
-        }
-
-        TypeName pointMethod() {
-            return this == DP ? OciTypes.METERING_DP_POINT_METHOD : OciTypes.METERING_CP_POINT_METHOD;
-        }
-
-        TypeName timedMethod() {
-            return this == DP ? OciTypes.METERING_DP_TIMED_METHOD : OciTypes.METERING_CP_TIMED_METHOD;
-        }
-
-        TypeName startMethod() {
-            return this == DP ? OciTypes.METERING_DP_START_METHOD : OciTypes.METERING_CP_START_METHOD;
-        }
-
-        TypeName endMethod() {
-            return this == DP ? OciTypes.METERING_DP_END_METHOD : OciTypes.METERING_CP_END_METHOD;
-        }
-
-        TypeName tagAnnotation() {
-            return this == DP ? OciTypes.METERING_DP_TAG : OciTypes.METERING_CP_TAG;
-        }
-
-        TypeName tagsAnnotation() {
-            return this == DP ? OciTypes.METERING_DP_TAGS : OciTypes.METERING_CP_TAGS;
-        }
-
-        TypeName compartmentIdAnnotation() {
-            return this == DP ? OciTypes.METERING_DP_COMPARTMENT_ID : OciTypes.METERING_CP_COMPARTMENT_ID;
-        }
-
-        TypeName resourceIdAnnotation() {
-            return this == DP ? OciTypes.METERING_DP_RESOURCE_ID : OciTypes.METERING_CP_RESOURCE_ID;
-        }
-
-        TypeName amountAnnotation() {
-            return this == DP ? OciTypes.METERING_DP_AMOUNT : OciTypes.METERING_CP_AMOUNT;
-        }
-
-        TypeName tagValueAnnotation() {
-            return this == DP ? OciTypes.METERING_DP_TAG_VALUE : OciTypes.METERING_CP_TAG_VALUE;
         }
     }
 

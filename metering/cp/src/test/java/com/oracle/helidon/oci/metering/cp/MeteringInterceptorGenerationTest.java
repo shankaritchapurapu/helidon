@@ -14,6 +14,7 @@ import io.helidon.service.registry.InterceptionContext;
 import io.helidon.service.registry.ServiceRegistryManager;
 import io.helidon.service.registry.Services;
 
+import com.oracle.pic.bling.emit.MeteringLogStores;
 import com.oracle.pic.bling.emit.store.MeteringLogStore;
 import com.oracle.pic.kiev.Transaction;
 import org.junit.jupiter.api.AfterEach;
@@ -30,7 +31,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class AgentMeteringInterceptorGenerationTest {
+class MeteringInterceptorGenerationTest {
     private ServiceRegistryManager registryManager;
 
     @BeforeEach
@@ -45,13 +46,13 @@ class AgentMeteringInterceptorGenerationTest {
     }
 
     @Test
-    void generatedPointInterceptorAddsMeterWithAgentRecorder() throws Exception {
-        AgentMeteringRecorder.MeteringLogStoreLookup logStores = mock(AgentMeteringRecorder.MeteringLogStoreLookup.class);
+    void generatedPointInterceptorAddsMeter() throws Exception {
+        MeteringLogStores logStores = mock(MeteringLogStores.class);
         MeteringLogStore logStore = mock(MeteringLogStore.class);
         Transaction transaction = mock(Transaction.class);
         Context context = Context.create();
-        when(logStores.getByMeterName("agent-requests")).thenReturn(logStore);
-        Services.set(MeteringRecorder.class, new AgentMeteringRecorder("agent", logStores));
+        when(logStores.getByMeterName("requests")).thenReturn(logStore);
+        Services.set(MeteringLogStores.class, logStores);
 
         Interception.ElementInterceptor interceptor = generatedInterceptor("Metering Point interceptor");
 
@@ -73,7 +74,7 @@ class AgentMeteringInterceptorGenerationTest {
         ArgumentCaptor<Instant> toCaptor = ArgumentCaptor.captor();
         ArgumentCaptor<Double> amountCaptor = ArgumentCaptor.captor();
         ArgumentCaptor<String> tagsCaptor = ArgumentCaptor.captor();
-        verify(logStores).getByMeterName("agent-requests");
+        verify(logStores).getByMeterName("requests");
         verify(logStore).addMeter(same(transaction),
                                   anyString(),
                                   anyString(),
@@ -84,18 +85,18 @@ class AgentMeteringInterceptorGenerationTest {
 
         assertThat(result, is("ok"));
         assertThat(amountCaptor.getValue(), is(3.5D));
-        assertThat(tagsCaptor.getValue(), containsString("\"source\":\"agent-test\""));
+        assertThat(tagsCaptor.getValue(), containsString("\"source\":\"cp-test\""));
         assertThat(tagsCaptor.getValue(), containsString("\"operation\":\"create\""));
     }
 
     @Test
-    void generatedStartAndEndInterceptorsAddMeterWithAgentRecorder() throws Exception {
-        AgentMeteringRecorder.MeteringLogStoreLookup logStores = mock(AgentMeteringRecorder.MeteringLogStoreLookup.class);
+    void generatedStartAndEndInterceptorsAddMeter() throws Exception {
+        MeteringLogStores logStores = mock(MeteringLogStores.class);
         MeteringLogStore logStore = mock(MeteringLogStore.class);
         Transaction transaction = mock(Transaction.class);
         Context context = Context.create();
-        when(logStores.getByMeterName("agent-duration")).thenReturn(logStore);
-        Services.set(MeteringRecorder.class, new AgentMeteringRecorder("agent", logStores));
+        when(logStores.getByMeterName("duration")).thenReturn(logStore);
+        Services.set(MeteringLogStores.class, logStores);
         Interception.ElementInterceptor start = generatedInterceptor("Metering Start interceptor");
         Interception.ElementInterceptor end = generatedInterceptor("Metering End interceptor");
 
@@ -127,7 +128,7 @@ class AgentMeteringInterceptorGenerationTest {
         ArgumentCaptor<Instant> toCaptor = ArgumentCaptor.captor();
         ArgumentCaptor<Double> amountCaptor = ArgumentCaptor.captor();
         ArgumentCaptor<String> tagsCaptor = ArgumentCaptor.captor();
-        verify(logStores).getByMeterName("agent-duration");
+        verify(logStores).getByMeterName("duration");
         verify(logStore).addMeter(same(transaction),
                                   anyString(),
                                   anyString(),
@@ -154,14 +155,14 @@ class AgentMeteringInterceptorGenerationTest {
     }
 
     static class SampleService {
-        @Metering.Point(value = "agent-requests", tags = @Metering.Tag(key = "source", value = "agent-test"))
+        @Metering.Point(value = "requests", tags = @Metering.Tag(key = "source", value = "cp-test"))
         void create(@Metering.CompartmentId String compartmentId,
                     @Metering.ResourceId String resourceId,
                     @Metering.Amount float amount,
                     @Metering.TagValue("operation") String operation) {
         }
 
-        @Metering.Start(value = "agent-duration")
+        @Metering.Start(value = "duration")
         void begin(@Metering.CompartmentId String compartmentId,
                    @Metering.ResourceId String resourceId,
                    @Metering.TagValue("phase") String phase) {

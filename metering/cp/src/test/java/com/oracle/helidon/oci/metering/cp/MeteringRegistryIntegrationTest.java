@@ -4,131 +4,104 @@
 
 package com.oracle.helidon.oci.metering.cp;
 
-import java.time.Instant;
+import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.helidon.config.Config;
+import io.helidon.config.ConfigSources;
 import io.helidon.service.registry.GlobalServiceRegistry;
+import io.helidon.service.registry.ServiceRegistryConfig;
 import io.helidon.service.registry.ServiceRegistryManager;
 import io.helidon.service.registry.Services;
 
-import com.oracle.pic.bling.clients.ingest.model.Meters;
-import com.oracle.pic.bling.emit.client.MeteringClient;
+import com.oracle.pic.bling.emit.MeteringAgent;
+import com.oracle.pic.bling.emit.MeteringLogStores;
+import com.oracle.pic.commons.util.Region;
+import com.oracle.pic.kiev.DataStore;
+import com.oracle.pic.kiev.mapping.MappedDataStore;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedConstruction;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mockConstruction;
+import static org.mockito.Mockito.when;
 
 class MeteringRegistryIntegrationTest {
     private ServiceRegistryManager registryManager;
 
-    @BeforeEach
-    void setUpRegistry() {
-        registryManager = ServiceRegistryManager.create();
-        GlobalServiceRegistry.registry(registryManager.registry());
-    }
-
     @AfterEach
     void shutdownRegistry() {
-        registryManager.shutdown();
-    }
-
-    @Test
-    void usesMockedMeteringClientFromRegistry() {
-        MeteringClient client = mock(MeteringClient.class);
-        Meters meters = mock(Meters.class);
-
-        Services.set(MeteringClient.class, client);
-
-        MeteringClient resolvedClient = Services.get(MeteringClient.class);
-        resolvedClient.send(meters);
-
-        assertThat(resolvedClient, sameInstance(client));
-        verify(client).send(meters);
-    }
-
-    @Test
-    void meteringRecorderUnwrapsMockedMeteringClient() throws Exception {
-        MeteringClient client = mock(MeteringClient.class);
-
-        Services.set(MeteringRecorder.class, new DirectMeteringRecorder("direct", client));
-
-        MeteringRecorder recorder = Services.get(MeteringRecorder.class);
-        MeteringClient unwrapped = recorder.unwrap(MeteringClient.class);
-        recorder.record(MeteringEvent.builder()
-                                .meterName("requests")
-                                .compartmentId("ocid1.compartment.oc1..example")
-                                .resourceId("resource-1")
-                                .from(Instant.EPOCH)
-                                .to(Instant.EPOCH.plusSeconds(1))
-                                .amount(1.0D)
-                                .tags(Map.of("operation", "create"))
-                                .build());
-
-        assertThat(unwrapped, sameInstance(client));
-        verify(client).send(any(Meters.class));
-    }
-
-    @Test
-    void factorySelectsDirectRecorderProvider() {
-        Services.set(MeteringRecorderProvider.class,
-                     new FakeRecorderProvider("agent"),
-                     new FakeRecorderProvider("direct"));
-
-        MeteringRecorder recorder = new MeteringRecorderFactory(
-                config(Map.ofEntries(
-                        Map.entry("oci.metering.direct.enabled", "true")
-                )))
-                .get();
-
-        assertThat(recorder, instanceOf(FakeRecorder.class));
-        assertThat(recorder.type(), is("direct"));
-        assertThat(recorder.name(), is("direct"));
-    }
-
-    @Test
-    void factorySelectsAgentRecorderProvider() {
-        Services.set(MeteringRecorderProvider.class,
-                     new FakeRecorderProvider("direct"),
-                     new FakeRecorderProvider("agent"));
-
-        MeteringRecorder recorder = new MeteringRecorderFactory(
-                config(Map.ofEntries(
-                        Map.entry("oci.metering.agent.enabled", "true")
-                )))
-                .get();
-
-        assertThat(recorder, instanceOf(FakeRecorder.class));
-        assertThat(recorder.type(), is("agent"));
-        assertThat(recorder.name(), is("agent"));
-    }
-
-    private static io.helidon.config.Config config(Map<String, String> values) {
-        return io.helidon.config.Config.just(io.helidon.config.ConfigSources.create(values));
-    }
-
-    private record FakeRecorderProvider(String configKey) implements MeteringRecorderProvider {
-        @Override
-        public MeteringRecorder create(Config config, String name) {
-            return new FakeRecorder(name);
+        if (registryManager != null) {
+            registryManager.shutdown();
         }
     }
 
-    private record FakeRecorder(String name) implements MeteringRecorder {
-        @Override
-        public String type() {
-            return name;
-        }
+    @Test
+    void canLookUpMeteringLogStoresFromRegistry() {
+        Config config = Config.just(ConfigSources.create(Map.ofEntries(
+                Map.entry("oci.metering.endpoint", "https://bling-cp.example"),
+                Map.entry("oci.metering.client-id", "cp-client"),
+                Map.entry("oci.metering.region", "us-phoenix-1"),
+                Map.entry("oci.metering.enabled", "false"),
+                Map.entry("oci.metering.host-name", "cp-host"),
+                Map.entry("oci.metering.max-workers", "1"),
+                Map.entry("oci.metering.metering-period", "PT60S"),
+                Map.entry("oci.metering.scan-page-size", "101"),
+                Map.entry("oci.metering.retention-period", "PT48H"),
+                Map.entry("oci.metering.bucket-configs.0.bucket-name", "archive-bucket"),
+                Map.entry("oci.metering.bucket-configs.0.service-name", "archive-service"),
+                Map.entry("oci.metering.bucket-configs.0.meter-name", "archive-meter")
+        )));
+        MappedDataStore mappedDataStore = new MappedDataStore(dataStore());
+        MeteringLogStores logStores = mock(MeteringLogStores.class);
+        AtomicReference<List<?>> agentArguments = new AtomicReference<>();
 
-        @Override
-        public void record(MeteringEvent event) {
+        try (MockedConstruction<MeteringAgent> agentConstruction =
+                     mockConstruction(MeteringAgent.class, (agent, context) -> {
+                         agentArguments.set(context.arguments());
+                         when(agent.getMeteringLogStores()).thenReturn(logStores);
+                     })) {
+            registryManager = ServiceRegistryManager.create(ServiceRegistryConfig.builder()
+                                                                     .discoverServices(true)
+                                                                     .putContractInstance(Config.class, config)
+                                                                     .putContractInstance(MappedDataStore.class,
+                                                                                          mappedDataStore)
+                                                                     .putContractInstance(Region.class,
+                                                                                          Region.fromPublicRegionName(
+                                                                                                  "us-ashburn-1"))
+                                                                     .build());
+            GlobalServiceRegistry.registry(registryManager.registry());
+
+            assertThat(Services.get(MeteringLogStores.class), sameInstance(logStores));
+            assertThat(agentConstruction.constructed(), hasSize(1));
+            assertThat(agentArguments.get().get(1), sameInstance(mappedDataStore));
+            assertThat(agentArguments.get().get(2), is("cp-host"));
+            assertThat(agentArguments.get().get(3), is(Region.fromPublicRegionName("us-phoenix-1")));
+
+            var nativeConfig = (com.oracle.pic.bling.emit.config.MeteringAgentConfig) agentArguments.get().getFirst();
+            assertThat(nativeConfig.getEndpoint(), is("https://bling-cp.example"));
+            assertThat(nativeConfig.getClientId(), is("cp-client"));
+            assertThat(nativeConfig.getMaxWorkers(), is(1));
+            assertThat(nativeConfig.getMeteringPeriodInSeconds(), is(60));
+            assertThat(nativeConfig.getScanPageSize(), is(101));
+            assertThat(nativeConfig.getRetentionPeriodDays(), is(2));
+            assertThat(nativeConfig.getBucketConfigs(), hasSize(1));
+            assertThat(nativeConfig.getBucketConfigs().getFirst().getBucketName(), is("archive-bucket"));
+            assertThat(nativeConfig.getBucketConfigs().getFirst().getServiceName(), is("archive-service"));
+            assertThat(nativeConfig.getBucketConfigs().getFirst().getMeterName(), is("archive-meter"));
         }
+    }
+
+    private static DataStore dataStore() {
+        return (DataStore) Proxy.newProxyInstance(DataStore.class.getClassLoader(),
+                                                 new Class<?>[] {DataStore.class},
+                                                 (proxy, method, args) -> null);
     }
 }

@@ -1,1 +1,4 @@
-com.oracle.helidon.oci.metering.cp.MeteringRegionContextPropagationProvider
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+com.oracle.helidon.oci.metering.cp.MeteredSectionContextPropagationProvider

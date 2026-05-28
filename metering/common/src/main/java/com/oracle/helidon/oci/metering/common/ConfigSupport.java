@@ -2,20 +2,16 @@
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
 
-package com.oracle.helidon.oci.sdk.objectstorage;
+package com.oracle.helidon.oci.metering.common;
 
 import java.util.function.Function;
 
 import io.helidon.builder.api.Prototype;
 import io.helidon.config.Config;
-import io.helidon.config.ConfigException;
 import io.helidon.config.EnumMapperProvider;
-import io.helidon.service.registry.Services;
 
 import com.oracle.bmc.ClientConfiguration;
-import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.circuitbreaker.CircuitBreakerConfiguration;
-import com.oracle.bmc.objectstorage.ObjectStorageClient;
 import com.oracle.bmc.retrier.DefaultRetryCondition;
 import com.oracle.bmc.retrier.RetryConfiguration;
 import com.oracle.bmc.retrier.RetryOnOpenCircuitBreakerDefaultRetryCondition;
@@ -27,52 +23,11 @@ import com.oracle.bmc.waiter.MaxAttemptsTerminationStrategy;
 import com.oracle.bmc.waiter.MaxTimeTerminationStrategy;
 
 /**
- * Runtime config helpers for OCI Object Storage client configuration blueprints.
+ * Runtime config helpers for OCI client configuration blueprints.
  */
 final class ConfigSupport {
+
     private ConfigSupport() {
-    }
-
-    static final class ObjectStorageClientSupport
-            implements Prototype.BuilderDecorator<ObjectStorageClientConfig.BuilderBase<?, ?>> {
-        private static final String REGION = "region";
-        private static final String REGION_ID = "region-id";
-
-        ObjectStorageClientSupport() {
-        }
-
-        @Override
-        public void decorate(ObjectStorageClientConfig.BuilderBase<?, ?> builder) {
-            builder.config().ifPresent(config -> applyRegionAlias(config, builder));
-        }
-
-        @Prototype.RuntimeTypeFactoryMethod
-        static ObjectStorageClient createObjectStorageClient(ObjectStorageClientConfig config) {
-            ObjectStorageClient client = config.client()
-                    .map(clientConfig -> new ObjectStorageClient(authProvider(), clientConfig))
-                    .orElseGet(() -> new ObjectStorageClient(authProvider()));
-            config.endpoint().ifPresent(client::setEndpoint);
-            config.region().ifPresent(client::setRegion);
-            return client;
-        }
-
-        @Prototype.ConfigFactoryMethod("client")
-        static ClientConfiguration createClientConfiguration(Config config) {
-            return OciClientConfiguration.create(config).build();
-        }
-
-        private static void applyRegionAlias(io.helidon.common.config.Config config,
-                                             ObjectStorageClientConfig.BuilderBase<?, ?> builder) {
-            boolean canonicalExists = config.get(REGION).exists();
-            boolean aliasExists = config.get(REGION_ID).exists();
-            if (canonicalExists && aliasExists) {
-                throw new ConfigException("Do not configure both " + REGION
-                                                  + " and " + REGION_ID + "; specify only one.");
-            }
-            if (aliasExists) {
-                builder.regionId().ifPresent(builder::region);
-            }
-        }
     }
 
     static final class ClientConfigurationSupport {
@@ -233,9 +188,5 @@ final class ConfigSupport {
         private static Config typeNode(Config config) {
             return config.get("type");
         }
-    }
-
-    private static BasicAuthenticationDetailsProvider authProvider() {
-        return Services.get(BasicAuthenticationDetailsProvider.class);
     }
 }

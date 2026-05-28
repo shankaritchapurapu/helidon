@@ -16,8 +16,9 @@ import io.helidon.service.registry.Service;
  */
 @Service.Singleton
 record MeteringConfigFactory(Config config) implements Supplier<MeteringConfig> {
+
     @Override
     public MeteringConfig get() {
-        return MeteringConfig.create(config.get("oci"));
+        return MeteringConfig.create(config.get("oci.metering"));
     }
 }

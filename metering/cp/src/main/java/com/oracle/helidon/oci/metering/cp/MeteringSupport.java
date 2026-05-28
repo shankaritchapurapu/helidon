@@ -5,7 +5,13 @@
 package com.oracle.helidon.oci.metering.cp;
 
 import java.time.Instant;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import io.helidon.common.context.Context;
 import io.helidon.common.context.Contexts;
@@ -13,6 +19,9 @@ import io.helidon.service.registry.Interception;
 import io.helidon.service.registry.InterceptionContext;
 import io.helidon.service.registry.Service;
 
+import com.oracle.helidon.oci.metering.common.Tags;
+import com.oracle.pic.bling.emit.MeteringLogStores;
+import com.oracle.pic.bling.emit.store.MeteringLogStore;
 import com.oracle.pic.kiev.Transaction;
 
 /**
@@ -20,11 +29,13 @@ import com.oracle.pic.kiev.Transaction;
  */
 @Service.Singleton
 public class MeteringSupport {
-    private final MeteringRecorder recorder;
+    private static final System.Logger LOGGER = System.getLogger(MeteringSupport.class.getName());
+
+    private final MeteringLogStores logStores;
 
     @Service.Inject
-    MeteringSupport(MeteringRecorder recorder) {
-        this.recorder = recorder;
+    MeteringSupport(MeteringLogStores logStores) {
+        this.logStores = logStores;
     }
 
     void recordPoint(String meterName,
@@ -32,8 +43,8 @@ public class MeteringSupport {
                      String resourceId,
                      float amount,
                      Map<String, String> tags) throws Exception {
-        long now = Instant.now().toEpochMilli();
-        record(context(), eventBuilder(meterName, compartmentId, resourceId, now, now, amount, tags));
+        Instant now = Instant.now();
+        record(context(), new MeteringMeasurement(meterName, compartmentId, resourceId, now, now, amount, tags));
     }
 
     void recordTimed(String meterName,
@@ -42,68 +53,56 @@ public class MeteringSupport {
                      long fromMillis,
                      long toMillis,
                      Map<String, String> tags) throws Exception {
-        record(context(),
-               eventBuilder(meterName,
-                            compartmentId,
-                            resourceId,
-                            fromMillis,
-                            toMillis,
-                            elapsedSeconds(fromMillis, toMillis),
-                            tags));
+        record(context(), new MeteringMeasurement(meterName,
+                                                  compartmentId,
+                                                  resourceId,
+                                                  Instant.ofEpochMilli(fromMillis),
+                                                  Instant.ofEpochMilli(toMillis),
+                                                  elapsedSeconds(fromMillis, toMillis),
+                                                  tags));
     }
 
-    void startRegion(Context context,
-                     String meterName,
-                     String compartmentId,
-                     String resourceId,
-                     Map<String, String> tags) {
-        if (context.get(MeteringRegionContext.class).isPresent()) {
-            throw new IllegalStateException("A metering region is already active in the current context");
-        }
-        context.register(new MeteringRegionContext(meterName,
-                                                   compartmentId,
-                                                   resourceId,
-                                                   Instant.now().toEpochMilli(),
-                                                   tags));
+    void startMeteredSection(Context context,
+                             String meterName,
+                             String compartmentId,
+                             String resourceId,
+                             Map<String, String> tags) {
+        MeteredSections sections = meteringSections(context);
+        sections.start(new MeteredSectionContext(meterName,
+                                                 compartmentId,
+                                                 resourceId,
+                                                 Instant.now().toEpochMilli(),
+                                                 tags));
     }
 
-    void endRegion(Context context,
-                   String meterName,
-                   Map<String, String> tags) throws Exception {
-        MeteringRegionContext region = context.get(MeteringRegionContext.class)
-                .orElseThrow(() -> new IllegalStateException("No active metered region in the current context"));
+    void endMeteredSection(Context context,
+                           String meterName,
+                           Map<String, String> tags) throws Exception {
+        MeteredSections sections = context.get(MeteredSections.class)
+                .orElseThrow(MeteringSupport::noActiveSection);
+        MeteredSectionContext sectionContext = sections.end(meterName);
         try {
             long toMillis = Instant.now().toEpochMilli();
-            Map<String, String> effectiveTags = Tags.merge(region.tags(), tags);
-            String effectiveMeterName = meterName == null || meterName.isBlank() ? region.meterName() : meterName;
-            record(context,
-                   eventBuilder(effectiveMeterName,
-                                region.compartmentId(),
-                                region.resourceId(),
-                                region.fromMillis(),
-                                toMillis,
-                                elapsedSeconds(region.fromMillis(), toMillis),
-                                effectiveTags));
+            Map<String, String> effectiveTags = Tags.merge(sectionContext.tags(), tags);
+            String effectiveMeterName = meterName == null || meterName.isBlank() ? sectionContext.meterName() : meterName;
+            record(context, new MeteringMeasurement(effectiveMeterName,
+                                                    sectionContext.compartmentId(),
+                                                    sectionContext.resourceId(),
+                                                    Instant.ofEpochMilli(sectionContext.fromMillis()),
+                                                    Instant.ofEpochMilli(toMillis),
+                                                    elapsedSeconds(sectionContext.fromMillis(), toMillis),
+                                                    effectiveTags));
         } finally {
-            context.unregister(region);
+            unregisterIfEmpty(context, sections);
         }
     }
 
-    private static MeteringEvent.Builder eventBuilder(String meterName,
-                                                      String compartmentId,
-                                                      String resourceId,
-                                                      long fromMillis,
-                                                      long toMillis,
-                                                      float value,
-                                                      Map<String, String> tags) {
-        return MeteringEvent.builder()
-                .meterName(meterName)
-                .compartmentId(compartmentId)
-                .resourceId(resourceId)
-                .from(Instant.ofEpochMilli(fromMillis))
-                .to(Instant.ofEpochMilli(toMillis))
-                .amount(value)
-                .tags(tags);
+    void discardSection(Context context, String meterName) {
+        context.get(MeteredSections.class)
+                .ifPresent(sections -> {
+                    sections.discard(meterName);
+                    unregisterIfEmpty(context, sections);
+                });
     }
 
     private static Context context() {
@@ -132,12 +131,31 @@ public class MeteringSupport {
         return (toMillis - fromMillis) / 1000.0F;
     }
 
-    private void record(Context context, MeteringEvent.Builder eventBuilder) throws Exception {
+    private void record(Context context, MeteringMeasurement measurement) throws Exception {
         Transaction transaction = transaction(context);
-        if (transaction != null) {
-            eventBuilder.transaction(transaction);
+        if (transaction == null) {
+            throw new IllegalStateException("CP metering requires a Kiev transaction");
         }
-        recorder.record(eventBuilder.build());
+        MeteringLogStore logStore = logStores.getByMeterName(measurement.meterName());
+        if (logStore == null) {
+            throw new IllegalStateException("No metering log store configured for meter " + measurement.meterName());
+        }
+        logStore.addMeter(transaction,
+                          measurement.resourceId(),
+                          measurement.compartmentId(),
+                          measurement.from(),
+                          measurement.to(),
+                          measurement.amount(),
+                          Tags.toJson(measurement.tags()));
+    }
+
+    private record MeteringMeasurement(String meterName,
+                                       String compartmentId,
+                                       String resourceId,
+                                       Instant from,
+                                       Instant to,
+                                       double amount,
+                                       Map<String, String> tags) {
     }
 
     /**
@@ -152,13 +170,25 @@ public class MeteringSupport {
 
         @Override
         public <V> V proceed(InterceptionContext ctx, Chain<V> chain, Object... args) throws Exception {
-            V result = chain.proceed(args);
-            support().recordPoint(meterName(),
-                                  stringArg(args, compartmentIdParameterIndex(), compartmentId()),
-                                  stringArg(args, resourceIdParameterIndex(), resourceId()),
-                                  amount(args),
-                                  tags(args));
-            return result;
+            try {
+                V result = chain.proceed(args);
+                record(args);
+                return result;
+            } catch (Exception e) {
+                if (measureOnFailure()) {
+                    record(args);
+                }
+                throw e;
+            }
+        }
+
+        private void record(Object[] args) {
+            recordSafely("point " + meterName(),
+                         () -> support().recordPoint(meterName(),
+                                                     stringArg(args, compartmentIdParameterIndex(), compartmentId()),
+                                                     stringArg(args, resourceIdParameterIndex(), resourceId()),
+                                                     amount(args),
+                                                     tags(args)));
         }
 
         /**
@@ -204,14 +234,26 @@ public class MeteringSupport {
         @Override
         public <V> V proceed(InterceptionContext ctx, Chain<V> chain, Object... args) throws Exception {
             long fromMillis = Instant.now().toEpochMilli();
-            V result = chain.proceed(args);
-            support().recordTimed(meterName(),
-                                  stringArg(args, compartmentIdParameterIndex(), compartmentId()),
-                                  stringArg(args, resourceIdParameterIndex(), resourceId()),
-                                  fromMillis,
-                                  Instant.now().toEpochMilli(),
-                                  tags(args));
-            return result;
+            try {
+                V result = chain.proceed(args);
+                record(args, fromMillis);
+                return result;
+            } catch (Exception e) {
+                if (measureOnFailure()) {
+                    record(args, fromMillis);
+                }
+                throw e;
+            }
+        }
+
+        private void record(Object[] args, long fromMillis) {
+            recordSafely("timed " + meterName(),
+                         () -> support().recordTimed(meterName(),
+                                                     stringArg(args, compartmentIdParameterIndex(), compartmentId()),
+                                                     stringArg(args, resourceIdParameterIndex(), resourceId()),
+                                                     fromMillis,
+                                                     Instant.now().toEpochMilli(),
+                                                     tags(args)));
         }
     }
 
@@ -227,12 +269,25 @@ public class MeteringSupport {
 
         @Override
         public <V> V proceed(InterceptionContext ctx, Chain<V> chain, Object... args) throws Exception {
-            support().startRegion(context(args),
-                                  meterName(),
-                                  stringArg(args, compartmentIdParameterIndex(), compartmentId()),
-                                  stringArg(args, resourceIdParameterIndex(), resourceId()),
-                                  tags(args));
-            return chain.proceed(args);
+            Context context = context(args);
+            start(context, args);
+            try {
+                return chain.proceed(args);
+            } catch (Exception e) {
+                if (!measureOnFailure()) {
+                    support().discardSection(context, meterName());
+                }
+                throw e;
+            }
+        }
+
+        private void start(Context context, Object[] args) {
+            recordSafely("start " + meterName(),
+                         () -> support().startMeteredSection(context,
+                                                             meterName(),
+                                                             stringArg(args, compartmentIdParameterIndex(), compartmentId()),
+                                                             stringArg(args, resourceIdParameterIndex(), resourceId()),
+                                                             tags(args)));
         }
     }
 
@@ -248,9 +303,23 @@ public class MeteringSupport {
 
         @Override
         public <V> V proceed(InterceptionContext ctx, Chain<V> chain, Object... args) throws Exception {
-            V result = chain.proceed(args);
-            support().endRegion(context(args), meterName(), tags(args));
-            return result;
+            Context context = context(args);
+            try {
+                V result = chain.proceed(args);
+                end(context, args);
+                return result;
+            } catch (Exception e) {
+                if (measureOnFailure()) {
+                    end(context, args);
+                } else {
+                    support().discardSection(context, meterName());
+                }
+                throw e;
+            }
+        }
+
+        private void end(Context context, Object[] args) {
+            recordSafely("end " + meterName(), () -> support().endMeteredSection(context, meterName(), tags(args)));
         }
 
         /**
@@ -280,6 +349,13 @@ public class MeteringSupport {
          * @return tag indexes by key
          */
         protected abstract Map<String, Integer> tagParameterIndexes();
+
+        /**
+         * Whether to record this measurement when the metered operation fails.
+         *
+         * @return {@code true} to record failed operations
+         */
+        protected abstract boolean measureOnFailure();
 
         private Map<String, String> tags(Object[] args) {
             return Tags.from(staticTags(), tagParameterIndexes(), args);
@@ -352,12 +428,27 @@ public class MeteringSupport {
          */
         protected abstract Map<String, Integer> tagParameterIndexes();
 
+        /**
+         * Whether to record this measurement when the metered operation fails.
+         *
+         * @return {@code true} to record failed operations
+         */
+        protected abstract boolean measureOnFailure();
+
         Map<String, String> tags(Object[] args) {
             return Tags.from(staticTags(), tagParameterIndexes(), args);
         }
     }
 
     private abstract static class InterceptionBase implements Interception.ElementInterceptor {
+        void recordSafely(String description, RecordingAction action) {
+            try {
+                action.record();
+            } catch (Exception e) {
+                LOGGER.log(System.Logger.Level.WARNING, "Failed to record metered usage for " + description, e);
+            }
+        }
+
         Context context(Object[] args) {
             return Contexts.context().orElseGet(() -> contextArg(args));
         }
@@ -379,14 +470,119 @@ public class MeteringSupport {
                     return context;
                 }
             }
-            throw new IllegalStateException("Metering regions require a current Helidon Context or a Context argument");
+            throw new IllegalStateException("Metering sections require a current Helidon Context or a Context argument");
         }
     }
 
-    record MeteringRegionContext(String meterName,
+    @FunctionalInterface
+    private interface RecordingAction {
+        void record() throws Exception;
+    }
+
+    record MeteredSectionContext(String meterName,
                                  String compartmentId,
                                  String resourceId,
                                  long fromMillis,
                                  Map<String, String> tags) {
+    }
+
+    static MeteredSections meteringSections(Context context) {
+        return context.get(MeteredSections.class)
+                .orElseGet(() -> {
+                    MeteredSections sections = new MeteredSections();
+                    context.register(sections);
+                    return sections;
+                });
+    }
+
+    static void replaceMeteredSections(Context context, MeteredSectionsSnapshot snapshot) {
+        context.get(MeteredSections.class).ifPresent(context::unregister);
+        context.register(MeteredSections.create(snapshot));
+    }
+
+    static void clearMeteredSections(Context context) {
+        context.get(MeteredSections.class).ifPresent(context::unregister);
+    }
+
+    private static void unregisterIfEmpty(Context context, MeteredSections sections) {
+        if (sections.isEmpty()) {
+            context.unregister(sections);
+        }
+    }
+
+    private static IllegalStateException noActiveSection() {
+        return new IllegalStateException("No active metered section in the current context");
+    }
+
+    static final class MeteredSections {
+        private final Deque<MeteredSectionContext> sections = new ArrayDeque<>();
+
+        static MeteredSections create(MeteredSectionsSnapshot snapshot) {
+            MeteredSections sections = new MeteredSections();
+            sections.restore(snapshot);
+            return sections;
+        }
+
+        synchronized void start(MeteredSectionContext section) {
+            sections.push(section);
+        }
+
+        synchronized MeteredSectionContext end(String meterName) {
+            try {
+                if (meterName == null || meterName.isBlank()) {
+                    return sections.pop();
+                }
+                return removeMostRecentMatching(meterName);
+            } catch (NoSuchElementException e) {
+                throw noActiveSection();
+            }
+        }
+
+        synchronized void discard(String meterName) {
+            if (sections.isEmpty()) {
+                return;
+            }
+            if (meterName == null || meterName.isBlank()) {
+                sections.pop();
+                return;
+            }
+            Iterator<MeteredSectionContext> iterator = sections.iterator();
+            while (iterator.hasNext()) {
+                if (meterName.equals(iterator.next().meterName())) {
+                    iterator.remove();
+                    return;
+                }
+            }
+        }
+
+        synchronized MeteredSectionsSnapshot snapshot() {
+            return new MeteredSectionsSnapshot(new ArrayList<>(sections));
+        }
+
+        synchronized boolean isEmpty() {
+            return sections.isEmpty();
+        }
+
+        private void restore(MeteredSectionsSnapshot snapshot) {
+            sections.addAll(snapshot.sections());
+        }
+
+        private MeteredSectionContext removeMostRecentMatching(String meterName) {
+            Iterator<MeteredSectionContext> iterator = sections.iterator();
+            while (iterator.hasNext()) {
+                MeteredSectionContext section = iterator.next();
+                if (meterName.equals(section.meterName())) {
+                    iterator.remove();
+                    return section;
+                }
+            }
+            throw noActiveSection();
+        }
+    }
+
+    record MeteredSectionsSnapshot(List<MeteredSectionContext> sections) {
+        MeteredSectionsSnapshot {
+            sections = List.copyOf(sections);
+        }
     }
 }

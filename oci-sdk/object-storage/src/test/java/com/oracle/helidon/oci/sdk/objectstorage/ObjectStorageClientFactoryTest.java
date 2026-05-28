@@ -69,7 +69,7 @@ class ObjectStorageClientFactoryTest {
     @Test
     void readsRegionIdAliasAsCanonicalRegion() {
         Config config = Config.just(ConfigSources.create(
-                Map.of("oci.object-storage.region-id", "us-ashburn-1")));
+                Map.of("oci.object-storage-client.region-id", "us-ashburn-1")));
 
         ObjectStorageClientConfig objectStorageConfig = new ObjectStorageClientConfigFactory(config).get();
 
@@ -79,8 +79,8 @@ class ObjectStorageClientFactoryTest {
     @Test
     void failsWhenRegionAndRegionIdAreBothConfigured() {
         Config config = Config.just(ConfigSources.create(
-                Map.of("oci.object-storage.region", "us-phoenix-1",
-                       "oci.object-storage.region-id", "us-ashburn-1")));
+                Map.of("oci.object-storage-client.region", "us-phoenix-1",
+                       "oci.object-storage-client.region-id", "us-ashburn-1")));
 
         ConfigException exception = assertThrows(ConfigException.class,
                                                  () -> new ObjectStorageClientConfigFactory(config).get());
@@ -92,14 +92,14 @@ class ObjectStorageClientFactoryTest {
     @Test
     void readsClientConfigurationSubtree() {
         Config config = Config.just(ConfigSources.create(
-                Map.of("oci.object-storage.client-configuration.connection-timeout", "PT3S",
-                       "oci.object-storage.client-configuration.read-timeout", "PT7S",
-                       "oci.object-storage.client-configuration.max-async-threads", "11",
-                       "oci.object-storage.client-configuration.disable-data-buffering-on-upload", "true")));
+                Map.of("oci.object-storage-client.client.connection-timeout", "PT3S",
+                       "oci.object-storage-client.client.read-timeout", "PT7S",
+                       "oci.object-storage-client.client.max-async-threads", "11",
+                       "oci.object-storage-client.client.disable-data-buffering-on-upload", "true")));
 
         ClientConfiguration clientConfiguration = new ObjectStorageClientConfigFactory(config)
                 .get()
-                .clientConfiguration()
+                .client()
                 .orElseThrow();
 
         assertThat(clientConfiguration.getConnectionTimeoutMillis(), is((int) Duration.ofSeconds(3).toMillis()));
@@ -114,7 +114,7 @@ class ObjectStorageClientFactoryTest {
             assertThat(stream, notNullValue());
 
             String metadata = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-            assertThat(metadata.contains("\"prefix\":\"oci.object-storage\""), is(true));
+            assertThat(metadata.contains("\"prefix\":\"oci.object-storage-client\""), is(true));
             assertThat(metadata.contains("\"key\":\"region-id\""), is(true));
         }
     }

@@ -15,7 +15,7 @@ import io.helidon.service.registry.Service;
 @Service.Singleton
 class ObjectStorageClientConfigFactory implements Supplier<ObjectStorageClientConfig> {
 
-    static final String OCI_OBJECT_STORAGE = "oci.object-storage";
+    static final String OCI_OBJECT_STORAGE = "oci.object-storage-client";
     private final Config config;
 
     @Service.Inject

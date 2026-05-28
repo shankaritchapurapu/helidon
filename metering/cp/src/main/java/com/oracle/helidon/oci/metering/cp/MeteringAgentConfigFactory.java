@@ -7,7 +7,6 @@ package com.oracle.helidon.oci.metering.cp;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-import io.helidon.config.Config;
 import io.helidon.service.registry.Service;
 
 /**
@@ -15,36 +14,35 @@ import io.helidon.service.registry.Service;
  */
 @Service.Singleton
 class MeteringAgentConfigFactory implements Supplier<com.oracle.pic.bling.emit.config.MeteringAgentConfig> {
-    private final Config config;
+    private final MeteringConfig meteringConfig;
 
     @Service.Inject
-    MeteringAgentConfigFactory(Config config) {
-        this.config = config;
+    MeteringAgentConfigFactory(MeteringConfig meteringConfig) {
+        this.meteringConfig = meteringConfig;
     }
 
     @Override
     public com.oracle.pic.bling.emit.config.MeteringAgentConfig get() {
-        AgentMeteringConfig agentConfig = AgentMeteringConfig.create(config.get("oci.metering.agent"));
-        var bucketConfigs = agentConfig.bucketConfigs()
+        var bucketConfigs = meteringConfig.bucketConfigs()
                 .stream()
                 .map(MeteringAgentConfigFactory::nativeBucketConfig)
                 .toList();
 
         var builder = com.oracle.pic.bling.emit.config.MeteringAgentConfig.builder()
-                .endpoint(agentConfig.endpoint())
-                .clientId(agentConfig.clientId())
+                .endpoint(meteringConfig.endpoint())
+                .clientId(meteringConfig.clientId())
                 .bucketConfigs(bucketConfigs);
 
-        agentConfig.maxWorkers().ifPresent(builder::maxWorkers);
-        agentConfig.meteringPeriod().map(MeteringAgentConfigFactory::seconds).ifPresent(builder::meteringPeriodInSeconds);
-        agentConfig.canaryDisabled().ifPresent(builder::canaryDisabled);
-        agentConfig.maxArchiveWorkers().ifPresent(builder::maxArchiveWorkers);
-        agentConfig.scanPageSize().ifPresent(builder::scanPageSize);
-        agentConfig.maxWritesPerTransaction().ifPresent(builder::maxWritesPerTransaction);
-        agentConfig.retentionPeriod().map(MeteringAgentConfigFactory::days).ifPresent(builder::retentionPeriodDays);
-        agentConfig.skipArchiveLeaseCheck().ifPresent(builder::skipArchiveLeaseCheck);
-        agentConfig.leaseDaoScanPageSize().ifPresent(builder::leaseDAOScanPageSize);
-        agentConfig.fastCatchupModeEnabled().ifPresent(builder::fastCatchupModeEnabled);
+        meteringConfig.maxWorkers().ifPresent(builder::maxWorkers);
+        meteringConfig.meteringPeriod().map(MeteringAgentConfigFactory::seconds).ifPresent(builder::meteringPeriodInSeconds);
+        meteringConfig.canaryDisabled().ifPresent(builder::canaryDisabled);
+        meteringConfig.maxArchiveWorkers().ifPresent(builder::maxArchiveWorkers);
+        meteringConfig.scanPageSize().ifPresent(builder::scanPageSize);
+        meteringConfig.maxWritesPerTransaction().ifPresent(builder::maxWritesPerTransaction);
+        meteringConfig.retentionPeriod().map(MeteringAgentConfigFactory::days).ifPresent(builder::retentionPeriodDays);
+        meteringConfig.skipArchiveLeaseCheck().ifPresent(builder::skipArchiveLeaseCheck);
+        meteringConfig.leaseDaoScanPageSize().ifPresent(builder::leaseDAOScanPageSize);
+        meteringConfig.fastCatchupModeEnabled().ifPresent(builder::fastCatchupModeEnabled);
 
         com.oracle.pic.bling.emit.config.MeteringAgentConfig nativeConfig = builder.build();
         nativeConfig.validate();

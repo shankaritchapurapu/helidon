@@ -24,37 +24,6 @@ final class OciTypes {
     static final TypeName KIEV_CLIENT_TRANSACTION =
             TypeName.create("com.oracle.pic.kiev.Transaction");
 
-    static final TypeName METERING_DP_POINT =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.Metering.Point");
-    static final TypeName METERING_DP_TIMED =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.Metering.Timed");
-    static final TypeName METERING_DP_START =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.Metering.Start");
-    static final TypeName METERING_DP_END =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.Metering.End");
-    static final TypeName METERING_DP_TAG =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.Metering.Tag");
-    static final TypeName METERING_DP_TAGS =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.Metering.Tags");
-    static final TypeName METERING_DP_COMPARTMENT_ID =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.Metering.CompartmentId");
-    static final TypeName METERING_DP_RESOURCE_ID =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.Metering.ResourceId");
-    static final TypeName METERING_DP_AMOUNT =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.Metering.Amount");
-    static final TypeName METERING_DP_TAG_VALUE =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.Metering.TagValue");
-    static final TypeName METERING_DP_POINT_METHOD =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.MeteringSupport.PointMethod");
-    static final TypeName METERING_DP_TIMED_METHOD =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.MeteringSupport.TimedMethod");
-    static final TypeName METERING_DP_START_METHOD =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.MeteringSupport.StartMethod");
-    static final TypeName METERING_DP_END_METHOD =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.MeteringSupport.EndMethod");
-    static final TypeName METERING_DP_SUPPORT =
-            TypeName.create("com.oracle.helidon.oci.metering.dp.MeteringSupport");
-
     static final TypeName METERING_CP_POINT =
             TypeName.create("com.oracle.helidon.oci.metering.cp.Metering.Point");
     static final TypeName METERING_CP_TIMED =

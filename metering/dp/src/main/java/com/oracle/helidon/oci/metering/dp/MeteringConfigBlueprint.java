@@ -10,15 +10,27 @@ import java.util.Optional;
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 
+import com.oracle.pic.bling.clients.BlingPublisherClient;
+
 /**
  * Data plane metering configuration mapped from {@code oci.metering}.
  * <p>
  * This blueprint adapts Helidon config to the native emitter-dp configuration object. Keep native-backed settings
  * optional here unless Helidon must require them, and let defaults from the native configuration object apply.
  */
-@Prototype.Blueprint
+@Prototype.Blueprint(decorator = ConfigSupport.MeteringConfigSupport.class)
 @Prototype.Configured("oci.metering")
+@Prototype.CustomMethods(ConfigSupport.MeteringConfigSupport.class)
 interface MeteringConfigBlueprint {
+    /**
+     * Whether to start the native reporting agent.
+     *
+     * @return {@code true} to start the agent
+     */
+    @Option.Configured
+    @Option.DefaultBoolean(true)
+    boolean enabled();
+
     /**
      * Bling ingest endpoint.
      *
@@ -49,7 +61,7 @@ interface MeteringConfigBlueprint {
      * @return metering directory
      */
     @Option.Configured
-    Optional<String> meteringDir();
+    String meteringDir();
 
     /**
      * Metering client ID.
@@ -57,7 +69,7 @@ interface MeteringConfigBlueprint {
      * @return client ID
      */
     @Option.Configured
-    Optional<String> clientId();
+    String clientId();
 
     /**
      * Service name reported to Bling.
@@ -65,7 +77,7 @@ interface MeteringConfigBlueprint {
      * @return service name
      */
     @Option.Configured
-    Optional<String> service();
+    String service();
 
     /**
      * Whether Object Storage reporting is enabled.
@@ -100,12 +112,20 @@ interface MeteringConfigBlueprint {
     Optional<String> namespace();
 
     /**
-     * Frequency for reporting archived usage to Bling.
+     * Interval for reporting archived usage to Bling.
      *
-     * @return report frequency
+     * @return report interval
      */
     @Option.Configured
-    Optional<Integer> reportToBlingFrequency();
+    Optional<Duration> reportInterval();
+
+    /**
+     * OCI region used by services that need an explicit region. Defaults to the region from the current environment.
+     *
+     * @return public region name
+     */
+    @Option.Configured
+    Optional<String> region();
 
     /**
      * Host name to report in generated metering payloads.
@@ -114,4 +134,13 @@ interface MeteringConfigBlueprint {
      */
     @Option.Configured
     Optional<String> hostName();
+
+    /**
+     * Bling publisher client to use for reporting archived usage.
+     *
+     * @return publisher client
+     */
+    @Option.Configured
+    BlingPublisherClient blingPublisherClient();
+
 }

@@ -2,17 +2,20 @@
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
 
-package com.oracle.helidon.oci.metering.cp;
+package com.oracle.helidon.oci.metering.dp;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 
+import com.oracle.pic.bling.clients.BlingPublisherClient;
+
 /**
- * Direct control plane metering configuration mapped from {@code oci.metering}.
+ * Configuration used to create the native Bling publisher client.
  */
 @Prototype.Blueprint
 @Prototype.Configured
-interface DirectMeteringConfigBlueprint {
+@Prototype.CustomMethods(ConfigSupport.BlingPublisherClientSupport.class)
+interface BlingPublisherClientConfigBlueprint extends Prototype.Factory<BlingPublisherClient> {
     /**
      * Bling ingest endpoint.
      *

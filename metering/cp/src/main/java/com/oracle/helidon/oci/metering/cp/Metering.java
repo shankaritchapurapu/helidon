@@ -60,6 +60,13 @@ public final class Metering {
          * @return tags
          */
         Tag[] tags() default {};
+
+        /**
+         * Whether to record this measurement when the annotated method fails.
+         *
+         * @return {@code true} to record failed invocations
+         */
+        boolean measureOnFailure() default false;
     }
 
     /**
@@ -96,10 +103,17 @@ public final class Metering {
          * @return tags
          */
         Tag[] tags() default {};
+
+        /**
+         * Whether to record this measurement when the annotated method fails.
+         *
+         * @return {@code true} to record failed invocations
+         */
+        boolean measureOnFailure() default false;
     }
 
     /**
-     * Marks the beginning of an explicitly bounded metered region.
+     * Marks the beginning of an explicitly bounded metered section.
      */
     @Interception.Intercepted
     @Retention(RetentionPolicy.SOURCE)
@@ -132,17 +146,24 @@ public final class Metering {
          * @return tags
          */
         Tag[] tags() default {};
+
+        /**
+         * Whether to preserve the started section when the annotated method fails.
+         *
+         * @return {@code true} to preserve the section after a failed invocation
+         */
+        boolean measureOnFailure() default false;
     }
 
     /**
-     * Marks the end of an explicitly bounded metered region.
+     * Marks the end of an explicitly bounded metered section.
      */
     @Interception.Intercepted
     @Retention(RetentionPolicy.SOURCE)
     @Target(ElementType.METHOD)
     public @interface End {
         /**
-         * Optional meter name override. If empty, the name from the matching {@link Start} region is used.
+         * Optional meter name override. If empty, the name from the matching {@link Start} section is used.
          *
          * @return meter name
          */
@@ -154,6 +175,13 @@ public final class Metering {
          * @return tags
          */
         Tag[] tags() default {};
+
+        /**
+         * Whether to record this measurement when the annotated method fails.
+         *
+         * @return {@code true} to record failed invocations
+         */
+        boolean measureOnFailure() default false;
     }
 
     /**

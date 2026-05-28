@@ -52,6 +52,11 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci.metering</groupId>
+                <artifactId>helidon-oci-metering-common</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.helidon.oci.metering</groupId>
                 <artifactId>helidon-oci-metering-dp</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>

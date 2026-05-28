@@ -1,42 +1,31 @@
 /*
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
-
 package com.oracle.helidon.oci.metering.dp;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.function.Supplier;
 
 import io.helidon.service.registry.Service;
 
+import com.oracle.pic.bling.config.MeteringAgentConfig;
 import com.oracle.pic.bling.usagerecorder.LogFileUsageRecorder;
 
-/**
- * Factory that creates the data plane native log-file usage recorder.
- */
 @Service.Singleton
 class LogFileUsageRecorderFactory implements Supplier<LogFileUsageRecorder> {
-    private final MeteringConfig config;
-    private final com.oracle.pic.bling.config.MeteringAgentConfig nativeConfig;
+
+    private final MeteringConfig meteringConfig;
+    private final MeteringAgentConfig meteringAgentConfig;
 
     @Service.Inject
-    LogFileUsageRecorderFactory(MeteringConfig config,
-                                com.oracle.pic.bling.config.MeteringAgentConfig nativeConfig) {
-        this.config = config;
-        this.nativeConfig = nativeConfig;
+    LogFileUsageRecorderFactory(MeteringConfig meteringConfig, MeteringAgentConfig meteringAgentConfig) {
+        this.meteringConfig = meteringConfig;
+        this.meteringAgentConfig = meteringAgentConfig;
     }
 
     @Override
     public LogFileUsageRecorder get() {
-        return new LogFileUsageRecorder(nativeConfig, config.hostName().orElseGet(LogFileUsageRecorderFactory::hostName));
+        return new LogFileUsageRecorder(meteringAgentConfig,
+                                        meteringConfig.hostName().orElseGet(MeteringRuntime::hostName));
     }
 
-    private static String hostName() {
-        try {
-            return InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            throw new IllegalStateException("Cannot resolve local host name for metering", e);
-        }
-    }
 }

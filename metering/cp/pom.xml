@@ -20,6 +20,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.oracle.helidon.oci.metering</groupId>
+            <artifactId>helidon-oci-metering-common</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.pic.bling</groupId>
             <artifactId>metering-agent</artifactId>
             <exclusions>
@@ -82,10 +86,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-sdk-authentication-instance</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.oracle.pic.kiev</groupId>
             <artifactId>kiev-core</artifactId>
         </dependency>
@@ -120,6 +120,14 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-lifecycle</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.pic.bling</groupId>
+            <artifactId>lease-kiev</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.config</groupId>
             <artifactId>helidon-config</artifactId>
         </dependency>
@@ -144,6 +152,11 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.common.testing</groupId>
+            <artifactId>helidon-common-testing-junit5</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

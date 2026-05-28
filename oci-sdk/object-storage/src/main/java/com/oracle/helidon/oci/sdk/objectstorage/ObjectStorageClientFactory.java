@@ -33,7 +33,7 @@ class ObjectStorageClientFactory implements Supplier<ObjectStorageClient> {
     @Override
     public ObjectStorageClient get() {
         ObjectStorageClient.Builder builder = ObjectStorageClient.builder();
-        config.clientConfiguration().ifPresent(builder::configuration);
+        config.client().ifPresent(builder::configuration);
 
         ObjectStorageClient client = builder.build(authProvider);
         configureEndpoint(config, client);
