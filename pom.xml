@@ -39,7 +39,7 @@
         <dependency-check.skip>false</dependency-check.skip>
         <checkstyle.skip>false</checkstyle.skip>
 
-        <helidon.version>4.5.0-SNAPSHOT</helidon.version>
+        <helidon.version>4.5.0-M1</helidon.version>
         <version.lib.checkstyle>13.3.0</version.lib.checkstyle>
         <version.lib.mockito>5.22.0</version.lib.mockito>
 

@@ -9,7 +9,7 @@
     <parent>
         <groupId>io.helidon.applications</groupId>
         <artifactId>helidon-se</artifactId>
-        <version>4.5.0-SNAPSHOT</version>
+        <version>4.5.0-M1</version>
         <relativePath/>
     </parent>
 
@@ -34,7 +34,7 @@
         <version.lib.logback>1.5.32</version.lib.logback>
         <version.lib.mockito>5.22.0</version.lib.mockito>
         <version.lib.slf4j>2.0.9</version.lib.slf4j>
-        <version.helidon.extensions.openapi-generator>4.0.0-RC1</version.helidon.extensions.openapi-generator>
+        <version.helidon.extensions.openapi-generator>4.0.0-RC2</version.helidon.extensions.openapi-generator>
         <maven.compiler.release>25</maven.compiler.release>
     </properties>
 
