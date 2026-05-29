@@ -31,6 +31,7 @@ class ServiceAuthenticationClientFactoryTest extends BaseAuthenticationClientTes
                 .teamName("team")
                 .applicationName("app")
                 .serviceUri(java.net.URI.create("https://auth.us-phoenix-1.oraclecloud.com"))
+                .rootCertPath(testRootCertPath())
                 .hardCodedKeySupplier(true)
                 .useInstancePrincipal(false)
                 .build();
@@ -47,6 +48,7 @@ class ServiceAuthenticationClientFactoryTest extends BaseAuthenticationClientTes
                 .globalBusinessUnit("gbu")
                 .teamName("team")
                 .applicationName("app")
+                .rootCertPath(testRootCertPath())
                 .hardCodedKeySupplier(true)
                 .useInstancePrincipal(false)
                 .build();

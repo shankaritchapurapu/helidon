@@ -131,7 +131,7 @@
                     <useSystemClassLoader>false</useSystemClassLoader>
                     <runOrder>alphabetical</runOrder>
                     <systemPropertyVariables>
-                        <helidon.oci.hardCodedKeySupplier>true</helidon.oci.hardCodedKeySupplier>
+                        <helidon.config.profile>test</helidon.config.profile>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

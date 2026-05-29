@@ -19,10 +19,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 class DataPlaneEndpointHardCodedTest extends SignedRequestSupport {
     private static final JsonBinding JSON_BINDING = JsonBinding.create();
 
-    static {
-        System.setProperty("helidon.oci.hardCodedKeySupplier", "true");
-    }
-
     DataPlaneEndpointHardCodedTest(WebServer webServer) {
         super(webServer);
     }

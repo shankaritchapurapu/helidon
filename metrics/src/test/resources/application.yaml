@@ -7,6 +7,9 @@ metrics:
       enabled: true
       project: test-project
       fleet: test-fleet
+      region: us-ashburn-1
+      availability-domain: iad-ad-1
+      fault-domain: 1
       default-dimensions: {}
       sample-gauges: true
       gauge-sample-interval: PT1S

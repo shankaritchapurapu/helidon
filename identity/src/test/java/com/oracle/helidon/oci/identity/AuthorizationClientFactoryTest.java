@@ -47,6 +47,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testClientWithEnclaveUri() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceEnclave(true)
                 .serviceUri(java.net.URI.create("https://authservice.svc.ad1.us-phoenix-1"))
                 .build();
@@ -63,6 +64,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testClientWithEnclaveUriAndRegionalPhysicalAd() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceEnclave(true)
                 .serviceUri(java.net.URI.create("https://authservice.svc.ad1.us-phoenix-1"))
                 .physicalAd(Constants.REGIONAL_AD_VALUE)
@@ -80,6 +82,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testClientWithDefaultRegion() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .physicalAd("AD-1")
                 .build();
 
@@ -97,6 +100,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testClientWithDefaultPhysicalAd() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .region("us-ashburn-1")
                 .build();
 
@@ -112,6 +116,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testClientWithDefaultPhysicalAdFromDifferentRegion() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .region("us-phoenix-1")
                 .build();
 
@@ -127,6 +132,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testClientWithExplicitNonEnclaveUriAndDefaultRegion() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceUri(java.net.URI.create("https://auth.us-ashburn-1.oraclecloud.com"))
                 .physicalAd("AD-1")
                 .build();
@@ -145,6 +151,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testClientWithExplicitNonEnclaveUriAndDefaultPhysicalAd() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceUri(java.net.URI.create("https://auth.us-ashburn-1.oraclecloud.com"))
                 .region("us-ashburn-1")
                 .build();
@@ -161,6 +168,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testClientWithExplicitNonEnclaveUriAndDefaultPhysicalAdFromDifferentRegion() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceUri(java.net.URI.create("https://auth.us-phoenix-1.oraclecloud.com"))
                 .region("us-phoenix-1")
                 .build();
@@ -177,6 +185,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testServiceEnclaveClientWithDefaultAvailabilityDomain() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceEnclave(true)
                 .build();
 
@@ -192,6 +201,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testServiceEnclaveClientWithExplicitAvailabilityDomain() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceEnclave(true)
                 .availabilityDomain("iad-ad-2")
                 .build();
@@ -208,6 +218,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testServiceEnclaveClientWithRegionalPhysicalAd() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceEnclave(true)
                 .availabilityDomain("iad-ad-2")
                 .physicalAd(Constants.REGIONAL_AD_VALUE)
@@ -225,6 +236,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testServiceEnclaveClientIgnoresAdSpecificPhysicalAd() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceEnclave(true)
                 .availabilityDomain("iad-ad-2")
                 .physicalAd("iad-ad-2")
@@ -242,6 +254,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testRejectsEnclaveUriWithExplicitAvailabilityDomain() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceEnclave(true)
                 .serviceUri(java.net.URI.create("https://authservice.svc.ad1.us-phoenix-1"))
                 .availabilityDomain("iad-ad-1")
@@ -257,6 +270,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testRejectsEnclaveWithoutAd() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .serviceEnclave(true)
                 .build();
 
@@ -270,6 +284,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testRejectsNonEnclaveWithoutPhysicalAd() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .region("us-phoenix-1")
                 .build();
 
@@ -283,6 +298,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     void testRejectsNonEnclaveWithoutRegionOrDefault() {
         AuthorizationConfig authorizationConfig = AuthorizationConfig.builder()
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .physicalAd("AD-1")
                 .build();
 

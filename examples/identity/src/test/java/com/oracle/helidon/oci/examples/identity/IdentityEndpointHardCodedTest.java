@@ -27,7 +27,7 @@ public class IdentityEndpointHardCodedTest extends IdentityEndpointBase {
 
     static {
         // needs to run in a fresh Java VM
-        System.setProperty("helidon.oci.hardCodedKeySupplier", "true");
+        System.setProperty("helidon.config.profile", "test");
     }
 
     public IdentityEndpointHardCodedTest(WebServer webServer) {

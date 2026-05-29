@@ -3,6 +3,7 @@
  */
 package com.oracle.helidon.oci.identity;
 
+import java.nio.file.Path;
 import java.security.Security;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +31,7 @@ class BaseAuthenticationClientTest {
                 .teamName("team")
                 .applicationName("app")
                 .region("us-phoenix-1")
+                .rootCertPath(testRootCertPath())
                 .hardCodedKeySupplier(hardCodedKeys);
 
         if (hardCodedKeys) {
@@ -51,6 +53,7 @@ class BaseAuthenticationClientTest {
         return AuthorizationConfig.builder()
                 .region("us-phoenix-1")
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .physicalAd("AD-1")
                 .build();
     }
@@ -132,5 +135,9 @@ class BaseAuthenticationClientTest {
         return () -> {
             throw new AssertionError("Default region should not be resolved when an explicit region or endpoint is configured");
         };
+    }
+
+    String testRootCertPath() {
+        return Path.of("src/test/resources/serverCert.pem").toAbsolutePath().toString();
     }
 }

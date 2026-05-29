@@ -4,6 +4,7 @@
 
 package com.oracle.helidon.oci.identity;
 
+import java.nio.file.Path;
 import java.security.Security;
 
 import io.helidon.config.Config;
@@ -80,6 +81,7 @@ class AuthenticationDependencyCompatibilityTest {
                 .teamName("team")
                 .applicationName("app")
                 .region("us-phoenix-1")
+                .rootCertPath(testRootCertPath())
                 .hardCodedKeySupplier(hardCodedKeys);
 
         if (hardCodedKeys) {
@@ -93,7 +95,14 @@ class AuthenticationDependencyCompatibilityTest {
         return AuthorizationConfig.builder()
                 .region("us-phoenix-1")
                 .serviceName("service")
+                .rootCertPath(testRootCertPath())
                 .physicalAd("AD-1")
                 .build();
+    }
+
+    private static String testRootCertPath() {
+        return Path.of("src", "test", "resources", "serverCert.pem")
+                .toAbsolutePath()
+                .toString();
     }
 }

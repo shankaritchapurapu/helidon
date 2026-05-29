@@ -19,11 +19,13 @@ oci:
       team-name: my-team
       application-name: my-application
       region: us-ashburn-1
+      root-cert-path: src/test/resources/serverCert.pem
       hard-coded-key-supplier: true
     authorization:
       region: us-ashburn-1
       service-name: my-service
       physical-ad: AD-1
+      root-cert-path: src/test/resources/serverCert.pem
     splat-aware:
       splat-request-port: 8080
       additional-splat-request-ports: []
