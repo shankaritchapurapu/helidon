@@ -66,6 +66,33 @@ class OciEnvLocationDefaultsTest {
     }
 
     @Test
+    void explicitPhysicalAdWinsOverOciEnvValue() {
+        OciEnvLocationDefaults defaults = new OciEnvLocationDefaults(ociEnvLocationConfig(), Optional::empty);
+
+        assertThat(defaults.physicalAd(Optional.of("PHX-AD-1"),
+                                       Region.fromPublicRegionName("us-ashburn-1")).orElseThrow(),
+                   is("PHX-AD-1"));
+    }
+
+    @Test
+    void usesOciEnvAvailabilityDomainAsPhysicalAdWhenItMatchesRegion() {
+        OciEnvLocationDefaults defaults = new OciEnvLocationDefaults(ociEnvLocationConfig(), Optional::empty);
+
+        assertThat(defaults.physicalAd(Optional.empty(),
+                                       Region.fromPublicRegionName("us-ashburn-1")).orElseThrow(),
+                   is("iad-ad-1"));
+    }
+
+    @Test
+    void usesOciEnvAvailabilityDomainAsPhysicalAdWhenItDoesNotMatchRegion() {
+        OciEnvLocationDefaults defaults = new OciEnvLocationDefaults(ociEnvLocationConfig(), Optional::empty);
+
+        assertThat(defaults.physicalAd(Optional.empty(),
+                                       Region.fromPublicRegionName("us-phoenix-1")).orElseThrow(),
+                   is("iad-ad-1"));
+    }
+
+    @Test
     void rejectsMissingExplicitAndOciEnvAvailabilityDomain() {
         OciEnvLocationDefaults defaults = new OciEnvLocationDefaults(Config.empty(), Optional::empty);
 

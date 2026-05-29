@@ -5,6 +5,7 @@
 package com.oracle.helidon.oci.kiev;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
 import io.helidon.config.Config;
@@ -107,12 +108,49 @@ class KievConfigFactoryTest {
         KievServiceConfig serviceConfig = config.dataStores().get(0).service().orElseThrow();
         KievServiceAuthConfig authConfig = serviceConfig.auth().orElseThrow();
         KievServiceTlsConfig tlsConfig = authConfig.tls().orElseThrow();
-        assertEquals(ClientRegistryLocality.REGIONAL, serviceConfig.locality());
+        assertTrue(serviceConfig.locality().isEmpty());
         assertEquals("ocid1.compartment.oc1..example", serviceConfig.compartmentId());
         assertEquals("http://localhost:16666", serviceConfig.frontendEndpoint());
         assertEquals(KievAuthType.INSTANCE, authConfig.type());
         assertEquals("/tmp/root.pem", tlsConfig.rootCertPemPath().orElseThrow());
         assertFalse(authConfig.authEndpoint().isPresent());
+    }
+
+    @Test
+    void testDefaultsServiceLocalityFromOciEnv() {
+        KievConfig config = new KievConfigFactory(config(Map.of(
+                "oci.env.ad-number", "ad2",
+                "oci.kiev.data-stores.0.backend", "SERVICE",
+                "oci.kiev.data-stores.0.store-name", "kaaspdb",
+                "oci.kiev.data-stores.0.app-name", "StoreApp",
+                "oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.data-stores.0.service.frontend-endpoint", "http://localhost:16666",
+                "oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"
+        ))).get();
+
+        KievServiceConfig serviceConfig = config.dataStores().get(0).service().orElseThrow();
+        assertEquals(ClientRegistryLocality.AD2, serviceConfig.locality().orElseThrow());
+    }
+
+    @Test
+    void testExplicitServiceLocalityBuildsWithoutConfigRoot() {
+        KievServiceConfig configuredService = KievServiceConfig.builder()
+                .compartmentId("ocid1.compartment.oc1..example")
+                .frontendEndpoint("http://localhost:16666")
+                .locality(ClientRegistryLocality.AD1)
+                .buildPrototype();
+        KievStoreConfig configuredStore = KievStoreConfig.builder()
+                .backend(KievBackend.SERVICE)
+                .storeName("kaaspdb")
+                .appName("StoreApp")
+                .service(configuredService)
+                .buildPrototype();
+        KievConfig config = KievConfig.builder()
+                .dataStores(List.of(configuredStore))
+                .buildPrototype();
+
+        KievServiceConfig serviceConfig = config.dataStores().get(0).service().orElseThrow();
+        assertEquals(ClientRegistryLocality.AD1, serviceConfig.locality().orElseThrow());
     }
 
     @Test
@@ -207,7 +245,7 @@ class KievConfigFactoryTest {
         KievServiceAuthConfig authConfig = serviceConfig.auth().orElseThrow();
         KievServiceS2sConfig s2sConfig = authConfig.s2s().orElseThrow();
         KievServiceTlsConfig tlsConfig = authConfig.tls().orElseThrow();
-        assertEquals(ClientRegistryLocality.AD1, serviceConfig.locality());
+        assertEquals(ClientRegistryLocality.AD1, serviceConfig.locality().orElseThrow());
         assertEquals(KievAuthType.S2S, authConfig.type());
         assertEquals("https://auth.example", authConfig.authEndpoint().orElseThrow());
         assertEquals("/tmp/root.pem", tlsConfig.rootCertPemPath().orElseThrow());

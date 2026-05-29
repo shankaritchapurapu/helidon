@@ -42,6 +42,8 @@ is not configured, authentication and non-service-enclave authorization use the 
 For local tests or explicit environment overrides, set `helidon.oci-env.location-override` in `oci-config.yaml`.
 `oci-env` exposes those values as the default `Region` service and resolved `oci.env.*` entries. Identity uses the
 default region service and `oci.env.availability-domain` / `oci.env.fault-domain` as its default location inputs.
+For non-service-enclave authorization, `oci.env.availability-domain` can supply `physical-ad`; if it does not appear
+to belong to the resolved authorization region, Identity logs a warning and still uses the default.
 
 ---
 
@@ -295,7 +297,7 @@ Authentication validation rules:
 
 Authorization config is loaded from `oci.identity.authorization`.
 
-Example using a non-enclave overlay endpoint derived from the `oci-env` region and physical AD:
+Example using a non-enclave overlay endpoint derived from the `oci-env` region with explicit physical AD:
 
 ```yaml
 oci:
@@ -337,7 +339,7 @@ oci:
 | `oci.identity.authorization.service-name` | | Required service name passed to the authorization client. |
 | `oci.identity.authorization.service` | | Alias for `service-name`; configure only one of the two keys. |
 | `oci.identity.authorization.region` | `oci-env` region | Region for non-enclave authorization. |
-| `oci.identity.authorization.physical-ad` | | Physical AD for non-enclave authorization, or the regional AD value for explicit enclave endpoints. |
+| `oci.identity.authorization.physical-ad` | `oci-env` availability domain | Physical AD for non-enclave authorization, or the regional AD value for explicit enclave endpoints. |
 | `oci.identity.authorization.availability-domain` | `oci-env` availability domain | Availability domain used to derive service-enclave endpoints when `service-enclave=true` and `service-uri` is not set. |
 | `oci.identity.authorization.service-enclave` | `false` | Enables service-enclave authorization mode. |
 | `oci.identity.authorization.root-cert-path` | | Optional CA bundle or root certificate path. |
@@ -348,9 +350,9 @@ in other Helidon OCI modules. Specify at most one name for an aliased setting, n
 
 Authorization validation rules:
 
-* If `service-uri` is not configured and `service-enclave=false`, `physical-ad` is required and `region` must be configured or available from `oci-env`.
+* If `service-uri` is not configured and `service-enclave=false`, `region` must be configured or available from `oci-env`; `physical-ad` must be configured or defaultable from `oci.env.availability-domain`.
 * If `service-uri` is not configured and `service-enclave=true`, `region` must not be set and `availability-domain` must be configured or available from `oci-env`.
-* If `service-uri` points to a non-service-enclave endpoint, `service-enclave` must be `false`, `physical-ad` is required, and `region` must be configured or available from `oci-env`.
+* If `service-uri` points to a non-service-enclave endpoint, `service-enclave` must be `false`, `region` must be configured or available from `oci-env`, and `physical-ad` must be configured or defaultable from `oci.env.availability-domain`.
 * If `service-uri` points to a service-enclave endpoint, `region` must not be set, `availability-domain` must not be set, and `physical-ad` must be omitted or set to the regional AD value.
 
 ### SPLAT-Aware Request Filter

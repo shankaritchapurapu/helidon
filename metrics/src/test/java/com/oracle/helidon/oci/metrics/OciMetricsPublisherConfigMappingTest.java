@@ -4,6 +4,8 @@
 
 package com.oracle.helidon.oci.metrics;
 
+import java.util.Map;
+
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
@@ -135,9 +137,80 @@ class OciMetricsPublisherConfigMappingTest {
         assertThrows(IllegalArgumentException.class, () -> OciMetricsPublisherConfig.create(config));
     }
 
+    @Test
+    void defaultsLocationFromOciEnvConfig() {
+        Config rootConfig = Config.just(ConfigSources.create(Map.of(
+                "oci.env.availability-domain", "iad-ad-1",
+                "oci.env.fault-domain", "2",
+                "metrics.publishers.0.type", "oci",
+                "metrics.publishers.0.enabled", "true",
+                "metrics.publishers.0.project", "test-project",
+                "metrics.publishers.0.fleet", "test-fleet")));
+
+        OciMetricsPublisherConfig publisherConfig = publisherConfig(rootConfig);
+
+        assertThat(publisherConfig.availabilityDomain().orElseThrow(), is("iad-ad-1"));
+        assertThat(publisherConfig.faultDomain().orElseThrow(), is("2"));
+    }
+
+    @Test
+    void explicitLocationOverridesOciEnvConfig() {
+        Config rootConfig = Config.just(ConfigSources.create(Map.of(
+                "oci.env.availability-domain", "iad-ad-1",
+                "oci.env.fault-domain", "2",
+                "metrics.publishers.0.type", "oci",
+                "metrics.publishers.0.enabled", "true",
+                "metrics.publishers.0.project", "test-project",
+                "metrics.publishers.0.fleet", "test-fleet",
+                "metrics.publishers.0.availability-domain", "iad-ad-2",
+                "metrics.publishers.0.fault-domain", "3")));
+
+        OciMetricsPublisherConfig publisherConfig = publisherConfig(rootConfig);
+
+        assertThat(publisherConfig.availabilityDomain().orElseThrow(), is("iad-ad-2"));
+        assertThat(publisherConfig.faultDomain().orElseThrow(), is("3"));
+    }
+
+    @Test
+    void defaultsOnlyMissingLocationFromOciEnvConfig() {
+        Config rootConfig = Config.just(ConfigSources.create(Map.of(
+                "oci.env.availability-domain", "iad-ad-1",
+                "oci.env.fault-domain", "2",
+                "metrics.publishers.0.type", "oci",
+                "metrics.publishers.0.enabled", "true",
+                "metrics.publishers.0.project", "test-project",
+                "metrics.publishers.0.fleet", "test-fleet",
+                "metrics.publishers.0.availability-domain", "iad-ad-2")));
+
+        OciMetricsPublisherConfig publisherConfig = publisherConfig(rootConfig);
+
+        assertThat(publisherConfig.availabilityDomain().orElseThrow(), is("iad-ad-2"));
+        assertThat(publisherConfig.faultDomain().orElseThrow(), is("2"));
+    }
+
+    @Test
+    void buildsExplicitLocationWithoutConfigRoot() {
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.builder()
+                .enabled(true)
+                .project("test-project")
+                .fleet("test-fleet")
+                .availabilityDomain("iad-ad-2")
+                .faultDomain("3")
+                .defaultDimensions(Map.of())
+                .requestHeaders(Map.of())
+                .buildPrototype();
+
+        assertThat(publisherConfig.availabilityDomain().orElseThrow(), is("iad-ad-2"));
+        assertThat(publisherConfig.faultDomain().orElseThrow(), is("3"));
+    }
+
     private static OciMetricsPublisherConfig publisherConfig() {
-        return OciMetricsPublisherConfig.create(CONFIG.get("metrics")
-                                                        .get("publishers")
-                                                        .get("0"));
+        return publisherConfig(CONFIG);
+    }
+
+    private static OciMetricsPublisherConfig publisherConfig(Config config) {
+        return OciMetricsPublisherConfig.create(config.get("metrics")
+                                                       .get("publishers")
+                                                       .get("0"));
     }
 }

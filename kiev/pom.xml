@@ -33,6 +33,11 @@
             <artifactId>helidon-config-metadata</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.oracle.helidon.oci.envconfig</groupId>
+            <artifactId>helidon-oci-envconfig</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.pic.kiev</groupId>
             <artifactId>kiev-library</artifactId>
         </dependency>

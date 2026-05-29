@@ -12,7 +12,7 @@ import io.helidon.builder.api.Prototype;
 /**
  * Root configuration for Helidon Kiev integration.
  */
-@Prototype.Blueprint
+@Prototype.Blueprint(decorator = KievConfigSupport.class)
 @Prototype.Configured("oci.kiev")
 interface KievConfigBlueprint {
 

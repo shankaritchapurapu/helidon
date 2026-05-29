@@ -161,6 +161,8 @@ different metrics endpoint.
 ### Publisher configuration
 
 The OCI metrics publisher is configured as an entry under `metrics.publishers` with `type` `oci`.
+When publisher `availability-domain` or `fault-domain` is omitted, the OCI metrics publisher uses
+`oci.env.availability-domain` and `oci.env.fault-domain` when those values are available.
 
 | Key | Default value | Description |
 |-----|---------------|-------------|
@@ -179,8 +181,8 @@ The OCI metrics publisher is configured as an entry under `metrics.publishers` w
 | `metrics.publishers[].override-metric-keys` | | Optional flag passed to the OCI telemetry reporter builder. |
 | `metrics.publishers[].hostname` | | Optional hostname override for emitted dimensions. |
 | `metrics.publishers[].host-name` | | Alias for `hostname`; configure only one of the two keys. |
-| `metrics.publishers[].availability-domain` | | Optional availability-domain override. |
-| `metrics.publishers[].fault-domain` | | Optional fault-domain override. |
+| `metrics.publishers[].availability-domain` | `oci.env.availability-domain` | Optional availability-domain override. |
+| `metrics.publishers[].fault-domain` | `oci.env.fault-domain` | Optional fault-domain override. |
 
 Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
 in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.

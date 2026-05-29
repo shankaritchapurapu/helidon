@@ -35,6 +35,8 @@ import com.oracle.pic.identity.authorization.sdk.IAuthorizationClient;
 @Service.Singleton
 public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizationClient>> {
 
+    private static final System.Logger LOGGER = System.getLogger(AuthorizationClientFactory.class.getName());
+
     private final AuthorizationConfig config;
     private final OciEnvLocationDefaults locationDefaults;
 
@@ -63,7 +65,6 @@ public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizat
 
         // set optional values
         config.rootCertPath().ifPresent(client::rootCertPath);
-        config.physicalAd().ifPresent(client::physicalAD);
         configureEndpoint(client);
 
         return Optional.of(client.build());
@@ -80,6 +81,19 @@ public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizat
                 throw new IllegalStateException(
                         "authorization.region must not be set when authorization.serviceEnclave is true");
             }
+            Optional<String> physicalAd = config.physicalAd();
+            if (physicalAd.isPresent()) {
+                String value = physicalAd.orElseThrow();
+                if (Constants.REGIONAL_AD_VALUE.equalsIgnoreCase(value)) {
+                    client.physicalAD(value);
+                } else {
+                    // Service-enclave endpoints derive placement from availability-domain; warn and ignore AD-specific input.
+                    LOGGER.log(System.Logger.Level.WARNING,
+                               "Ignoring authorization.physicalAd {0} because authorization.serviceEnclave is true "
+                                       + "and no authorization.serviceUri is configured",
+                               value);
+                }
+            }
             client.serviceEnclave();
             client.availabilityDomain(AvailabilityDomain.fromName(locationDefaults.requireAvailabilityDomain(
                     config.availabilityDomain(),
@@ -88,13 +102,16 @@ public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizat
             return;
         }
 
-        if (config.physicalAd().isEmpty()) {
-            throw new IllegalStateException(
-                    "authorization.physicalAd must be configured for non-service-enclave authorization");
-        }
-
-        client.region(resolveRegion(
-                "authorization.region or default region must be available when authorization.serviceUri is not provided"));
+        Region region = locationDefaults.resolveRegion(
+                config.region(),
+                "authorization.region or default region must be available when authorization.serviceUri is not provided");
+        // Resolve region first so a physical AD default can be checked against the same location.
+        client.physicalAD(locationDefaults.requirePhysicalAd(
+                config.physicalAd(),
+                region,
+                "authorization.physicalAd or default physical AD for authorization.region must be available for "
+                        + "non-service-enclave authorization"));
+        client.region(region);
     }
 
     private void configureExplicitEndpoint(AuthorizationClient.Builder client) {
@@ -119,6 +136,7 @@ public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizat
                         "authorization.physicalAd must be omitted or set to the regional AD value when "
                                 + "authorization.serviceUri points to a service-enclave endpoint");
             }
+            config.physicalAd().ifPresent(client::physicalAD);
             if (config.serviceEnclave()) {
                 client.serviceEnclave();
             }
@@ -130,15 +148,17 @@ public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizat
                     "authorization.serviceEnclave must not be set when authorization.serviceUri points "
                             + "to a non-service-enclave endpoint");
         }
-        if (config.physicalAd().isEmpty()) {
-            throw new IllegalStateException(
-                    "authorization.physicalAd must be configured when authorization.serviceUri points to "
-                            + "a non-service-enclave endpoint");
-        }
-
-        client.region(resolveRegion(
+        Region region = locationDefaults.resolveRegion(
+                config.region(),
                 "authorization.region or default region must be available when authorization.serviceUri points to "
-                        + "a non-service-enclave endpoint"));
+                        + "a non-service-enclave endpoint");
+        // Resolve region first so a physical AD default can be checked against the same location.
+        client.physicalAD(locationDefaults.requirePhysicalAd(
+                config.physicalAd(),
+                region,
+                "authorization.physicalAd or default physical AD for authorization.region must be available when "
+                        + "authorization.serviceUri points to a non-service-enclave endpoint"));
+        client.region(region);
     }
 
     private boolean isServiceEnclaveEndpoint(String endpoint) {
@@ -146,7 +166,4 @@ public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizat
         return host != null && host.toLowerCase().startsWith("authservice");
     }
 
-    private Region resolveRegion(String missingMessage) {
-        return locationDefaults.resolveRegion(config.region(), missingMessage);
-    }
 }

@@ -305,12 +305,14 @@ Required when `backend=DIRECT_DB`.
 ### Service configuration
 
 Required when `backend=SERVICE`.
+When `service.locality` is omitted, Kiev maps `oci.env.ad-number` values `ad1`, `ad2`, and `ad3` to the matching
+locality. Unknown `oci.env.ad-number` values are logged as warnings and fall back to `REGIONAL`.
 
 | Key                                  | Default value | Description |
 |--------------------------------------|---------------|-------------|
 | `oci.kiev.data-stores[].service.compartment-id`    |               | Compartment containing the Kiev store. |
 | `oci.kiev.data-stores[].service.frontend-endpoint` |               | Kiev frontend endpoint. |
-| `oci.kiev.data-stores[].service.locality`          | `REGIONAL`    | Store locality such as `REGIONAL`, `AD1`, `AD2`, or `AD3`. |
+| `oci.kiev.data-stores[].service.locality`          | `oci.env.ad-number`, then `REGIONAL` | Store locality such as `REGIONAL`, `AD1`, `AD2`, or `AD3`. |
 | `oci.kiev.data-stores[].service.auth.type`         | `INSTANCE`    | Auth type: `INSTANCE`, `S2S`, `OVERRIDDEN`, or `KIAB_LOCAL`. |
 
 ### Service auth configuration

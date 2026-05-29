@@ -16,6 +16,7 @@ import com.oracle.pic.kiev.KaasStoreConfig;
 import com.oracle.pic.kiev.auth.AuthDetailsConfig;
 import com.oracle.pic.kiev.mapping.InMemoryDataStoreConfig;
 import com.oracle.pic.kiev.registry.config.ClientRegistryConfig;
+import com.oracle.pic.kiev.registry.data.ClientRegistryLocality;
 
 /**
  * Factory for creating Kiev {@link DataStoreConfig} instances from Helidon configuration.
@@ -80,7 +81,7 @@ class KievDataStoreConfigFactory {
         KaasStoreConfig dataStoreConfig = new KaasStoreConfig(store.storeName(), store.appName());
         dataStoreConfig.setCompartmentId(serviceConfig.compartmentId());
         dataStoreConfig.setFrontendEndpoint(serviceConfig.frontendEndpoint());
-        dataStoreConfig.setLocality(serviceConfig.locality());
+        dataStoreConfig.setLocality(serviceConfig.locality().orElse(ClientRegistryLocality.REGIONAL));
         dataStoreConfig.setAuthDetailsConfig(toAuthDetailsConfig(authConfig, store));
         if (authConfig.type() == KievAuthType.KIAB_LOCAL) {
             dataStoreConfig.setRegistryConfig(ClientRegistryConfig.builder()

@@ -122,6 +122,55 @@ class KievDataStoreConfigFactoryTest {
     }
 
     @Test
+    void testDefaultsServiceLocalityFromOciEnv() {
+        DataStoreConfig config = dataStoreConfig(Map.ofEntries(
+                Map.entry("oci.env.ad-number", "ad2"),
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem")
+        ), "remote-store");
+
+        KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
+        assertEquals(ClientRegistryLocality.AD2, dataStoreConfig.getLocality());
+    }
+
+    @Test
+    void testFallsBackToGeneratedLocalityWhenOciEnvAdNumberIsUnknown() {
+        DataStoreConfig config = dataStoreConfig(Map.ofEntries(
+                Map.entry("oci.env.ad-number", "unknown"),
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem")
+        ), "remote-store");
+
+        KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
+        assertEquals(ClientRegistryLocality.REGIONAL, dataStoreConfig.getLocality());
+    }
+
+    @Test
+    void testExplicitServiceLocalityWinsOverOciEnvDefault() {
+        DataStoreConfig config = dataStoreConfig(Map.ofEntries(
+                Map.entry("oci.env.ad-number", "ad2"),
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.locality", "REGIONAL"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem")
+        ), "remote-store");
+
+        KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
+        assertEquals(ClientRegistryLocality.REGIONAL, dataStoreConfig.getLocality());
+    }
+
+    @Test
     void testCreatesS2sService() {
         DataStoreConfig config = dataStoreConfig(Map.ofEntries(
                 Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),

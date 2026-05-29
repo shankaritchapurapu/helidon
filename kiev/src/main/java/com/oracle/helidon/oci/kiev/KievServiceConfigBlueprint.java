@@ -37,11 +37,10 @@ interface KievServiceConfigBlueprint {
     /**
      * Store locality.
      *
-     * @return client registry locality
+     * @return optional client registry locality
      */
     @Option.Configured
-    @Option.Default("REGIONAL")
-    ClientRegistryLocality locality();
+    Optional<ClientRegistryLocality> locality();
 
     /**
      * Authentication settings for the service client.

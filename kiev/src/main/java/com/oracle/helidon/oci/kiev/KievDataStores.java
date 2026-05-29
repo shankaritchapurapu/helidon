@@ -39,7 +39,7 @@ final class KievDataStores {
                    Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider,
                    KievTransactions transactions) {
         Map<String, KievStoreConfig> stores = storeConfigs(config);
-        Map<String, DataStoreConfig> configs = dataStoreConfigs(stores, authProvider);
+        Map<String, DataStoreConfig> configs = dataStoreConfigs(config, authProvider);
 
         this.storeConfigs = Collections.unmodifiableMap(stores);
         this.dataStoreConfigs = Collections.unmodifiableMap(configs);
@@ -166,12 +166,14 @@ final class KievDataStores {
     }
 
     private static Map<String, DataStoreConfig> dataStoreConfigs(
-            Map<String, KievStoreConfig> storeConfigs,
+            KievConfig config,
             Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
         Map<String, DataStoreConfig> configs = new LinkedHashMap<>();
-        storeConfigs.forEach((storeName, storeConfig) -> configs.put(storeName,
-                                                                      KievDataStoreConfigFactory.create(storeConfig,
-                                                                                                        authProvider)));
+        for (KievStoreConfig storeConfig : config.dataStores()) {
+            configs.put(storeConfig.storeName(),
+                        KievDataStoreConfigFactory.create(storeConfig,
+                                                          authProvider));
+        }
         return configs;
     }
 
