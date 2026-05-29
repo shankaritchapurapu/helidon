@@ -26,6 +26,11 @@
         <dependencies>
             <!-- Helidon OCI artifacts -->
             <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-codegen</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.oracle.helidon.oci.envconfig</groupId>
                 <artifactId>helidon-oci-envconfig</artifactId>
                 <version>${helidon.oci.version}</version>
