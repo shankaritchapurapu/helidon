@@ -13,7 +13,7 @@
 
 ## Overview
 
-The `helidon-oci-sdk-object-storage` module contributes the OCI Java SDK
+The `helidon-oci-sdk-object-storage-client` module contributes the OCI Java SDK
 `com.oracle.bmc.objectstorage.ObjectStorage` client to the Helidon service registry.
 
 The module wires the synchronous OCI Java SDK Object Storage client using the shared
@@ -27,7 +27,7 @@ regions, and the shared OCI SDK client configuration options.
 ```xml
 <dependency>
     <groupId>com.oracle.helidon.oci</groupId>
-    <artifactId>helidon-oci-sdk-object-storage</artifactId>
+    <artifactId>helidon-oci-sdk-object-storage-client</artifactId>
 </dependency>
 ```
 

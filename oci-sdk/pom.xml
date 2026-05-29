@@ -18,10 +18,10 @@
     <name>Helidon OCI SDK</name>
 
     <modules>
-        <module>common</module>
+        <module>common-client</module>
         <module>oci</module>
         <module>identity-client</module>
-        <module>object-storage</module>
+        <module>object-storage-client</module>
         <module>authentication</module>
     </modules>
 

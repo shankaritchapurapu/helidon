@@ -1,6 +1,7 @@
-# Helidon OCI SDK Common
+# Helidon OCI SDK Common Client
 
-This module provides shared Helidon blueprint/config support for commonly used OCI SDK runtime configuration types.
+This module, `helidon-oci-sdk-common-client`, provides shared Helidon blueprint/config support for commonly used OCI SDK
+client runtime configuration types.
 
 It owns the `Oci*` helper prototypes for OCI SDK client, retry, retry options, delay strategy, termination strategy, retry condition, and circuit breaker configuration. These helpers are config-friendly Helidon types, but their `build()` methods produce the corresponding OCI SDK runtime objects.
 

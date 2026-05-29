@@ -112,7 +112,7 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-sdk-common</artifactId>
+                <artifactId>helidon-oci-sdk-common-client</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
@@ -147,7 +147,7 @@
             </dependency>
             <dependency>
                 <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-sdk-object-storage</artifactId>
+                <artifactId>helidon-oci-sdk-object-storage-client</artifactId>
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>

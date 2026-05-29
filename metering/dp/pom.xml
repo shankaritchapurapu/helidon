@@ -33,7 +33,7 @@
         </dependency>
         <dependency>
             <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-sdk-object-storage</artifactId>
+            <artifactId>helidon-oci-sdk-object-storage-client</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.config</groupId>

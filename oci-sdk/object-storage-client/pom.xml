@@ -13,17 +13,16 @@
         <version>2.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
+    <artifactId>helidon-oci-sdk-object-storage-client</artifactId>
+    <packaging>jar</packaging>
 
-    <artifactId>helidon-oci-sdk-common</artifactId>
-
-    <name>Helidon OCI SDK Common</name>
-    <description>Common processing for OCI SDK types</description>
-
-    <properties>
-        <spotbugs.exclude>etc/spotbugs/exclude.xml</spotbugs.exclude>
-    </properties>
+    <name>Helidon OCI SDK Object Storage Client</name>
 
     <dependencies>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-sdk-common-client</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.helidon.builder</groupId>
             <artifactId>helidon-builder-api</artifactId>
@@ -37,17 +36,32 @@
             <artifactId>helidon-config-metadata</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.service</groupId>
+            <artifactId>helidon-service-registry</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.oci.sdk</groupId>
             <artifactId>oci-java-sdk-common</artifactId>
         </dependency>
         <dependency>
             <groupId>com.oracle.oci.sdk</groupId>
-            <artifactId>oci-java-sdk-circuitbreaker</artifactId>
+            <artifactId>oci-java-sdk-objectstorage</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.config</groupId>
-            <artifactId>helidon-config-yaml</artifactId>
-            <scope>test</scope>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>core-regions</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-json-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.connectors</groupId>
+            <artifactId>jersey-apache-connector</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -56,7 +70,7 @@
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
+            <artifactId>hamcrest-core</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -84,6 +98,11 @@
                             <version>${helidon.version}</version>
                         </path>
                         <path>
+                            <groupId>io.helidon.service</groupId>
+                            <artifactId>helidon-service-codegen</artifactId>
+                            <version>${helidon.version}</version>
+                        </path>
+                        <path>
                             <groupId>io.helidon.codegen</groupId>
                             <artifactId>helidon-codegen-helidon-copyright</artifactId>
                             <version>${helidon.version}</version>
@@ -97,7 +116,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.oracle.helidon.oci.sdk.common</Automatic-Module-Name>
+                            <Automatic-Module-Name>com.oracle.helidon.oci.sdk.objectstorage</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>
