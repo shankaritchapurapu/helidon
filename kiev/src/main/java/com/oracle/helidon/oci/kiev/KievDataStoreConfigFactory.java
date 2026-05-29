@@ -7,6 +7,8 @@ package com.oracle.helidon.oci.kiev;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import io.helidon.service.registry.ServiceRegistry;
+
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.pic.commons.s2s.util.OfflineAuth;
 import com.oracle.pic.commons.ssl.DynamicSslContextProviderConfig;
@@ -28,7 +30,8 @@ class KievDataStoreConfigFactory {
     }
 
     static DataStoreConfig create(KievStoreConfig storeConfig,
-                                  Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
+                                  Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider,
+                                  ServiceRegistry serviceRegistry) {
         return create(new StoreDefinition(storeConfig.backend(),
                                           storeConfig.storeName(),
                                           storeConfig.appName(),
@@ -36,7 +39,8 @@ class KievDataStoreConfigFactory {
                                           storeConfig.transactionMaxWrites(),
                                           storeConfig.directDb(),
                                           storeConfig.service(),
-                                          authProvider));
+                                          authProvider,
+                                          serviceRegistry));
     }
 
     private static DataStoreConfig create(StoreDefinition store) {
@@ -150,33 +154,48 @@ class KievDataStoreConfigFactory {
     }
 
     private static AuthDetailsConfig.OverriddenAuthDetailsConfig toKiabLocalAuthConfig() {
-        return toOverriddenAuthConfig(OfflineAuth.authProvider(), Optional.empty(), null);
+        AuthDetailsConfig.OverriddenAuthDetailsConfig config = new AuthDetailsConfig.OverriddenAuthDetailsConfig();
+        config.setAuthProviderOverride(OfflineAuth.authProvider());
+        return config;
     }
 
-    private static AuthDetailsConfig.OverriddenAuthDetailsConfig toOverriddenAuthConfig(KievServiceAuthConfig authConfig,
-                                                                                       StoreDefinition store) {
+    private static AuthDetailsConfig.OverriddenAuthDetailsConfig toOverriddenAuthConfig(
+            KievServiceAuthConfig authConfig,
+            StoreDefinition store) {
         BasicAuthenticationDetailsProvider authProvider = store.authProvider().get()
                 .orElseThrow(() -> new IllegalStateException(dataStoreKey("service.auth.type")
                                                                      + "=OVERRIDDEN requires "
                                                                      + "BasicAuthenticationDetailsProvider "
                                                                      + "to be available"
                                                                      + storeContext(store.storeName())));
-        return toOverriddenAuthConfig(authProvider, authConfig.tls(), store.storeName());
+        return toOverriddenAuthConfig(authProvider, authConfig.tls(), store.storeName(), store.serviceRegistry());
     }
 
     private static AuthDetailsConfig.OverriddenAuthDetailsConfig toOverriddenAuthConfig(
             BasicAuthenticationDetailsProvider authProvider,
             Optional<KievServiceTlsConfig> tlsConfig,
-            String storeName) {
+            String storeName,
+            ServiceRegistry serviceRegistry) {
         AuthDetailsConfig.OverriddenAuthDetailsConfig config = new AuthDetailsConfig.OverriddenAuthDetailsConfig();
         config.setAuthProviderOverride(authProvider);
-        tlsConfig.map(it -> toDynamicSslContextProviderConfig(it, storeName))
+        tlsConfig.map(it -> toDynamicSslContextProviderConfig(it, storeName, serviceRegistry))
                 .ifPresent(config::setDynamicSslContextProviderConfig);
         return config;
     }
 
     private static DynamicSslContextProviderConfig toDynamicSslContextProviderConfig(KievServiceTlsConfig tlsConfig,
-                                                                                    String storeName) {
+                                                                                    String storeName,
+                                                                                    ServiceRegistry serviceRegistry) {
+        Optional<String> providerName = tlsConfig.dynamicSslContextProviderName();
+        if (providerName.isPresent()) {
+            String name = providerName.get();
+            if (name.isBlank()) {
+                throw new IllegalStateException(missingConfigMessage(
+                        dataStoreKey("service.auth.tls.dynamic-ssl-context-provider-name"), storeName));
+            }
+            return serviceRegistry.getNamed(DynamicSslContextProviderConfig.class, name);
+        }
+
         DynamicSslContextProviderConfig config = new DynamicSslContextProviderConfig();
         config.setRootCertPath(requiredValue(tlsConfig.rootCertPemPath(),
                                              dataStoreKey("service.auth.tls.root-cert-pem-path"),
@@ -225,6 +244,7 @@ class KievDataStoreConfigFactory {
                                    int transactionMaxWrites,
                                    java.util.Optional<KievDirectDbConfig> directDb,
                                    java.util.Optional<KievServiceConfig> service,
-                                   Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
+                                   Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider,
+                                   ServiceRegistry serviceRegistry) {
     }
 }

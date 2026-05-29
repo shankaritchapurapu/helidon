@@ -35,5 +35,8 @@ interface WorkflowConfigBlueprint {
     Optional<String> workerIdentifier();
 
     @Option.Configured
+    Optional<String> dynamicSslContextProviderName();
+
+    @Option.Configured
     Optional<RetryPolicyConfig> retryPolicy();
 }

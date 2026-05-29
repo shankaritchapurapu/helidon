@@ -34,6 +34,14 @@ interface KievServiceTlsConfigBlueprint {
     Optional<String> rootCertPath();
 
     /**
+     * Name of a reusable dynamic SSL context provider.
+     *
+     * @return optional provider name
+     */
+    @Option.Configured
+    Optional<String> dynamicSslContextProviderName();
+
+    /**
      * Certificate reload interval.
      *
      * @return optional reload duration

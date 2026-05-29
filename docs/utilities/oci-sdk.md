@@ -230,6 +230,9 @@ The following modules already use the shared `BasicAuthenticationDetailsProvider
 
 Kiev's native `service.auth.type: "S2S"` is separate from this OCI SDK provider. Use `OVERRIDDEN`
 when the Kiev client should receive the Helidon-managed `BasicAuthenticationDetailsProvider`.
+Kiev `OVERRIDDEN` auth and Workflow can also reference reusable dynamic SSL context providers configured under
+`oci.dynamic-ssl-context-providers`, or custom named `DynamicSslContextProviderConfig` services supplied by the
+application.
 
 The [Identity](./identity.md) integration does not use the OCI SDK `BasicAuthenticationDetailsProvider`.
 It builds identity authentication and authorization clients through the identity auth SDK, so the

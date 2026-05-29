@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 import io.helidon.config.Config;
 import io.helidon.service.registry.Service;
+import io.helidon.service.registry.ServiceRegistry;
 
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.pic.commons.ssl.DynamicSslContextProviderConfig;
@@ -25,11 +26,13 @@ import com.oracle.pic.workflow.worker.WorkflowEndpointConfiguration;
  */
 @Service.Singleton
 public class WorkflowClientFactory implements Supplier<WorkflowClient> {
-    private static final String DYNAMIC_SSL_CONTEXT_PROVIDER_PREFIX = "oci.dynamic-ssl-context-provider";
+    private static final String LEGACY_DYNAMIC_SSL_CONTEXT_PROVIDER_PREFIX = "oci.dynamic-ssl-context-provider";
+    private static final String DEFAULT_DYNAMIC_SSL_CONTEXT_PROVIDER_NAME = "workflow";
 
     private final Config rootConfig;
     private final WorkflowConfig config;
     private final Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider;
+    private final ServiceRegistry serviceRegistry;
     private final ConnectionPoolStatsReporter poolStatsReporter = new ConnectionPoolStatsReporter();
 
     /**
@@ -38,20 +41,18 @@ public class WorkflowClientFactory implements Supplier<WorkflowClient> {
      * @param rootConfig Helidon root configuration
      * @param config generated workflow configuration
      * @param authProvider lazy optional OCI authentication details provider
+     * @param serviceRegistry Helidon service registry
      */
     @Service.Inject
     public WorkflowClientFactory(Config rootConfig,
                                  WorkflowConfig config,
-                                 Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
+                                 Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider,
+                                 ServiceRegistry serviceRegistry) {
         this.rootConfig = rootConfig;
         this.config = config;
         this.authProvider = authProvider;
+        this.serviceRegistry = serviceRegistry;
         this.poolStatsReporter.start();
-    }
-
-    WorkflowClientFactory(WorkflowConfig config,
-                          BasicAuthenticationDetailsProvider authProvider) {
-        this(Config.empty(), config, () -> Optional.of(authProvider));
     }
 
     @Override
@@ -81,28 +82,57 @@ public class WorkflowClientFactory implements Supplier<WorkflowClient> {
                 .build();
     }
 
-    private Optional<AuthDetailsConfig> authDetailsConfig() {
-        Config dynamicSslConfig = rootConfig.get(DYNAMIC_SSL_CONTEXT_PROVIDER_PREFIX);
-        if (!dynamicSslConfig.exists() || "localhost".equals(config.domainId())) {
+    Optional<AuthDetailsConfig> authDetailsConfig() {
+        if ("localhost".equals(config.domainId())) {
             return Optional.empty();
         }
 
-        DynamicSslCtxProviderConfig sslConfig = DynamicSslCtxProviderConfig.create(dynamicSslConfig);
-        if (sslConfig.rootCertPath().isEmpty()) {
+        Optional<DynamicSslContextProviderConfig> providerConfig = namedDynamicSslProviderConfig()
+                .or(this::legacyDynamicSslProviderConfig);
+        if (providerConfig.isEmpty()) {
             return Optional.empty();
         }
 
-        DynamicSslContextProviderConfig providerConfig = new DynamicSslContextProviderConfig(
-                sslConfig.leafCertPath().orElse(null),
-                sslConfig.leafCertKeyPath().orElse(null),
-                sslConfig.leafCertKeyPassphrase().orElse(null),
-                sslConfig.rootCertPath().orElseThrow());
-        sslConfig.intermediateCertPath().ifPresent(providerConfig::setIntermediateCertPath);
-        sslConfig.duration().ifPresent(providerConfig::setDuration);
         BasicAuthenticationDetailsProvider provider = authProvider.get().orElseThrow(() -> new IllegalStateException(
                 "A BasicAuthenticationDetailsProvider must be available in the service registry when workflow "
                         + "dynamic SSL context provider configuration includes a root certificate path."));
-        return Optional.of(new AuthDetailsConfig(providerConfig, provider));
+        return Optional.of(new AuthDetailsConfig(providerConfig.orElseThrow(), provider));
+    }
+
+    private Optional<DynamicSslContextProviderConfig> namedDynamicSslProviderConfig() {
+        Optional<String> configuredName = config.dynamicSslContextProviderName();
+        if (configuredName.isPresent()) {
+            String name = configuredName.get();
+            if (name.isBlank()) {
+                throw new IllegalStateException("oci.workflow.dynamic-ssl-context-provider-name must not be blank");
+            }
+            return Optional.of(serviceRegistry.getNamed(DynamicSslContextProviderConfig.class, name));
+        }
+
+        return serviceRegistry.firstNamed(DynamicSslContextProviderConfig.class,
+                                          DEFAULT_DYNAMIC_SSL_CONTEXT_PROVIDER_NAME);
+    }
+
+    private Optional<DynamicSslContextProviderConfig> legacyDynamicSslProviderConfig() {
+        Config dynamicSslConfig = rootConfig.get(LEGACY_DYNAMIC_SSL_CONTEXT_PROVIDER_PREFIX);
+        if (!dynamicSslConfig.exists()) {
+            return Optional.empty();
+        }
+
+        Optional<String> rootCertPath = dynamicSslConfig.get("root-cert-path").asString().asOptional();
+        if (rootCertPath.map(String::isBlank).orElse(true)) {
+            return Optional.empty();
+        }
+
+        DynamicSslContextProviderConfig providerConfig = new DynamicSslContextProviderConfig();
+        dynamicSslConfig.get("leaf-cert-path").asString().ifPresent(providerConfig::setLeafCertPath);
+        dynamicSslConfig.get("leaf-cert-key-path").asString().ifPresent(providerConfig::setLeafCertKeyPath);
+        dynamicSslConfig.get("leaf-cert-key-passphrase").asString().ifPresent(providerConfig::setLeafCertKeyPassphrase);
+        dynamicSslConfig.get("intermediate-cert-path").asString().ifPresent(providerConfig::setIntermediateCertPath);
+        providerConfig.setRootCertPath(rootCertPath.orElseThrow());
+        dynamicSslConfig.get("duration").as(java.time.Duration.class).ifPresent(providerConfig::setDuration);
+        dynamicSslConfig.get("ssl-algorithm").asString().ifPresent(providerConfig::setSslAlgorithm);
+        return Optional.of(providerConfig);
     }
 
     private static String defaultWorkerIdentifier() {

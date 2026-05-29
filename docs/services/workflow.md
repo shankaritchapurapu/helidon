@@ -102,6 +102,7 @@ WFaaS client properties:
 * `endpoint-details.worker-read-timeout`: Worker read timeout. Default is `PT30S`.
 * `endpoint-details.poller-read-timeout`: Poller read timeout. Default is `PT30S`.
 * `worker-identifier`: Optional override for the worker identity. When omitted, the runtime MXBean name is used.
+* `dynamic-ssl-context-provider-name`: Optional name of a reusable dynamic SSL context provider.
 * `retry-policy.max-retry-count`: Optional WFaaS retry policy max retry count.
 * `retry-policy.delay-between-retry`: Optional WFaaS retry delay. Use a `Duration` value such as `PT0.25S`.
 * `retry-policy.jitter-factor`: Optional WFaaS retry jitter factor.
@@ -109,15 +110,28 @@ WFaaS client properties:
 Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
 in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
 
-For compatibility with earlier releases, optional dynamic SSL context settings can still be provided under
+Workflow can use a reusable dynamic SSL context provider configured under `oci.dynamic-ssl-context-providers`.
+Those entries are exposed as named `DynamicSslContextProviderConfig` services. Applications can also provide their own
+named `DynamicSslContextProviderConfig` service. Set `oci.workflow.dynamic-ssl-context-provider-name` to select the
+provider. If that property is omitted and a provider named `workflow` exists, Workflow uses it by convention. For
+compatibility with earlier releases, optional dynamic SSL context settings can still be provided under
 `oci.dynamic-ssl-context-provider`, including `root-cert-path`.
 
 Example configuration in `application.yaml`:
 
 ```yaml
 oci:
+  dynamic-ssl-context-providers:
+    - name: workflow
+      leaf-cert-path: /etc/oci-pki/workflow-leaf.pem
+      leaf-cert-key-path: /etc/oci-pki/workflow-leaf.key
+      leaf-cert-key-passphrase: changeit
+      intermediate-cert-path: /etc/oci-pki/workflow-intermediate.pem
+      root-cert-path: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+      duration: PT15M
   workflow:
     domain-id: compute-control-plane
+    dynamic-ssl-context-provider-name: workflow
     endpoint-details:
       server-endpoint: https://wfaas-overlay.${oci.env.ad-number}.${oci.env.iaas-domain-name}
       connect-timeout: PT5S
@@ -128,8 +142,6 @@ oci:
       max-retry-count: 7
       delay-between-retry: PT0.25S
       jitter-factor: 0.5
-  dynamic-ssl-context-provider:
-    root-cert-path: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
 ```
 
 The endpoint example above matches the environment-config pattern documented in `docs/environment-config.md`.

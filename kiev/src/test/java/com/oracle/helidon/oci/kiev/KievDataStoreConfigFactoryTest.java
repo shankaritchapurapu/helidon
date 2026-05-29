@@ -14,17 +14,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
+import io.helidon.common.types.ResolvedType;
+import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
+import io.helidon.service.registry.DependencyContext;
+import io.helidon.service.registry.InterceptionMetadata;
 import io.helidon.service.registry.Lookup;
 import io.helidon.service.registry.Qualifier;
 import io.helidon.service.registry.Service;
+import io.helidon.service.registry.ServiceDescriptor;
+import io.helidon.service.registry.ServiceRegistry;
+import io.helidon.service.registry.ServiceRegistryConfig;
+import io.helidon.service.registry.ServiceRegistryManager;
 
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.http.ClientConfigurator;
 import com.oracle.bmc.http.CompositeClientConfigurator;
+import com.oracle.helidon.oci.sdk.common.core.DynamicSslContextProviderConfigFactory;
+import com.oracle.helidon.oci.sdk.common.core.DynamicSslProvidersConfig;
 import com.oracle.pic.commons.s2s.config.SslTrustStoreConfigurator;
 import com.oracle.pic.commons.ssl.DynamicSslContextProviderConfig;
 import com.oracle.pic.kiev.DataStore;
@@ -315,6 +326,31 @@ class KievDataStoreConfigFactoryTest {
         assertNull(dynamicSslConfig.getLeafCertKeyPath());
         assertEquals(Duration.ofMinutes(5), dynamicSslConfig.getDuration());
         assertEquals("SunX509", dynamicSslConfig.getSslAlgorithm());
+    }
+
+    @Test
+    void testCreatesOverriddenServiceWithNamedDynamicSslProviderBean() {
+        BasicAuthenticationDetailsProvider authProvider = new TestBasicAuthenticationDetailsProvider();
+        DynamicSslContextProviderConfig providerConfig = dynamicSslProviderConfig();
+
+        DataStoreConfig config = dataStoreConfig(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.type", "OVERRIDDEN"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.dynamic-ssl-context-provider-name",
+                          "custom-kiev-service-auth")
+        ), "remote-store", Optional.of(authProvider), serviceRegistry("custom-kiev-service-auth", providerConfig));
+
+        KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
+        AuthDetailsConfig.OverriddenAuthDetailsConfig authConfig =
+                assertInstanceOf(AuthDetailsConfig.OverriddenAuthDetailsConfig.class,
+                                 dataStoreConfig.getAuthDetailsConfig());
+        assertSame(authProvider, authConfig.getAuthProviderOverride());
+        DynamicSslContextProviderConfig dynamicSslConfig = authConfig.getDynamicSslContextProviderConfig();
+        assertSame(providerConfig, dynamicSslConfig);
     }
 
     @Test
@@ -629,6 +665,13 @@ class KievDataStoreConfigFactoryTest {
 
     private static DataStoreConfig dataStoreConfig(Map<String, String> values,
                                                    String storeName,
+                                                   Optional<BasicAuthenticationDetailsProvider> authProvider,
+                                                   ServiceRegistry serviceRegistry) {
+        return dataStores(values, () -> authProvider, serviceRegistry).dataStoreConfig(storeName);
+    }
+
+    private static DataStoreConfig dataStoreConfig(Map<String, String> values,
+                                                   String storeName,
                                                    Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
         return dataStores(values, authProvider).dataStoreConfig(storeName);
     }
@@ -645,8 +688,20 @@ class KievDataStoreConfigFactoryTest {
     private static KievDataStores dataStores(Map<String, String> values,
                                              Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
         Config config = Config.just(ConfigSources.create(values));
+        return dataStores(config, authProvider, serviceRegistry(config));
+    }
+
+    private static KievDataStores dataStores(Map<String, String> values,
+                                             Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider,
+                                             ServiceRegistry serviceRegistry) {
+        return dataStores(Config.just(ConfigSources.create(values)), authProvider, serviceRegistry);
+    }
+
+    private static KievDataStores dataStores(Config config,
+                                             Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider,
+                                             ServiceRegistry serviceRegistry) {
         KievConfig kievConfig = new KievConfigFactory(config).get();
-        return new KievDataStores(kievConfig, authProvider, new KievTransactions());
+        return new KievDataStores(kievConfig, authProvider, new KievTransactions(), serviceRegistry);
     }
 
     private static KievDataStores singleDataStore() {
@@ -735,6 +790,51 @@ class KievDataStoreConfigFactoryTest {
                 .orElseThrow();
     }
 
+    private static ServiceRegistry serviceRegistry(Config config) {
+        DynamicSslContextProviderConfigFactory factory = new DynamicSslContextProviderConfigFactory(
+                DynamicSslProvidersConfig.create(config.get("oci")));
+        ServiceRegistryConfig.Builder builder = serviceRegistryConfig();
+        factory.services()
+                .forEach(provider -> builder.addServiceDescriptor(new DynamicSslContextProviderConfigDescriptor(
+                        providerName(provider),
+                        provider.get())));
+        return ServiceRegistryManager.create(builder.build()).registry();
+    }
+
+    private static ServiceRegistry serviceRegistry(String name, DynamicSslContextProviderConfig providerConfig) {
+        ServiceRegistryConfig config = serviceRegistryConfig()
+                .addServiceDescriptor(new DynamicSslContextProviderConfigDescriptor(name, providerConfig))
+                .build();
+        return ServiceRegistryManager.create(config).registry();
+    }
+
+    private static ServiceRegistryConfig.Builder serviceRegistryConfig() {
+        return ServiceRegistryConfig.builder()
+                .discoverServices(false)
+                .discoverServicesFromServiceLoader(false);
+    }
+
+    private static String providerName(Service.QualifiedInstance<?> provider) {
+        return provider.qualifiers()
+                .stream()
+                .filter(qualifier -> Service.Named.TYPE.equals(qualifier.typeName()))
+                .findFirst()
+                .flatMap(Qualifier::value)
+                .orElseThrow();
+    }
+
+    private static DynamicSslContextProviderConfig dynamicSslProviderConfig() {
+        DynamicSslContextProviderConfig providerConfig = new DynamicSslContextProviderConfig();
+        providerConfig.setLeafCertPath("/tmp/leaf.pem");
+        providerConfig.setLeafCertKeyPath("/tmp/leaf.key");
+        providerConfig.setLeafCertKeyPassphrase("secret");
+        providerConfig.setIntermediateCertPath("/tmp/intermediate.pem");
+        providerConfig.setRootCertPath("/tmp/root.pem");
+        providerConfig.setDuration(Duration.ofMinutes(5));
+        providerConfig.setSslAlgorithm("SunX509");
+        return providerConfig;
+    }
+
     private static final class TestBasicAuthenticationDetailsProvider implements BasicAuthenticationDetailsProvider {
         @Override
         public String getKeyId() {
@@ -754,6 +854,40 @@ class KievDataStoreConfigFactoryTest {
         @Override
         public char[] getPassphraseCharacters() {
             return null;
+        }
+    }
+
+    private record DynamicSslContextProviderConfigDescriptor(String name,
+                                                             DynamicSslContextProviderConfig instance)
+            implements ServiceDescriptor<DynamicSslContextProviderConfig> {
+        @Override
+        public TypeName serviceType() {
+            return TypeName.create(DynamicSslContextProviderConfig.class);
+        }
+
+        @Override
+        public TypeName descriptorType() {
+            return TypeName.create(DynamicSslContextProviderConfigDescriptor.class);
+        }
+
+        @Override
+        public Set<ResolvedType> contracts() {
+            return Set.of(ResolvedType.create(DynamicSslContextProviderConfig.class));
+        }
+
+        @Override
+        public Set<Qualifier> qualifiers() {
+            return Set.of(Qualifier.createNamed(name));
+        }
+
+        @Override
+        public TypeName scope() {
+            return Service.Singleton.TYPE;
+        }
+
+        @Override
+        public Object instantiate(DependencyContext ctx, InterceptionMetadata metadata) {
+            return instance;
         }
     }
 }

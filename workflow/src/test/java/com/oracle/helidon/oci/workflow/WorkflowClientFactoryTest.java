@@ -12,20 +12,33 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
+import io.helidon.common.types.ResolvedType;
+import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
+import io.helidon.service.registry.DependencyContext;
+import io.helidon.service.registry.InterceptionMetadata;
+import io.helidon.service.registry.Qualifier;
+import io.helidon.service.registry.Service;
+import io.helidon.service.registry.ServiceDescriptor;
+import io.helidon.service.registry.ServiceRegistry;
+import io.helidon.service.registry.ServiceRegistryConfig;
 import io.helidon.service.registry.ServiceRegistryManager;
 import io.helidon.service.registry.Services;
 
+import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
-import com.oracle.bmc.Region;
+import com.oracle.pic.commons.ssl.DynamicSslContextProviderConfig;
 import com.oracle.pic.workflow.Utils.ClientRole;
-import com.oracle.pic.workflow.module.WorkflowClientModule;
+import com.oracle.pic.workflow.Utils.dynamiccert.AuthDetailsConfig;
 import com.oracle.pic.workflow.client.v1.WFaaSClient;
+import com.oracle.pic.workflow.module.WorkflowClientModule;
 import com.oracle.pic.workflow.worker.ChastWorkflowClient;
 import com.oracle.pic.workflow.worker.RetryPolicy;
 import com.oracle.pic.workflow.worker.WorkflowClient;
@@ -60,7 +73,7 @@ class WorkflowClientFactoryTest {
                 .build();
 
         BasicAuthenticationDetailsProvider authProvider = authProvider();
-        WorkflowClient client = new WorkflowClientFactory(config, authProvider).get();
+        WorkflowClient client = workflowClientFactory(config, authProvider).get();
 
         try {
             assertEquals("localhost", client.getDomainId(), "Workflow domain id should match");
@@ -86,7 +99,7 @@ class WorkflowClientFactoryTest {
                 .build();
 
         BasicAuthenticationDetailsProvider authProvider = authProvider();
-        WorkflowClient client = new WorkflowClientFactory(config, authProvider).get();
+        WorkflowClient client = workflowClientFactory(config, authProvider).get();
 
         try {
             RetryPolicy retryPolicy = retryPolicy((ChastWorkflowClient) client);
@@ -107,7 +120,7 @@ class WorkflowClientFactoryTest {
                 .build();
 
         BasicAuthenticationDetailsProvider authProvider = authProvider();
-        WorkflowClient client = new WorkflowClientFactory(config, authProvider).get();
+        WorkflowClient client = workflowClientFactory(config, authProvider).get();
 
         try {
             assertEquals("localhost", client.getDomainId(), "Default workflow domain id should match");
@@ -129,7 +142,7 @@ class WorkflowClientFactoryTest {
         BasicAuthenticationDetailsProvider authProvider = authProvider();
 
         assertThrows(ArithmeticException.class,
-                     () -> new WorkflowClientFactory(config, authProvider).get(),
+                     () -> workflowClientFactory(config, authProvider).get(),
                      "Timeouts larger than int millis should fail fast");
     }
 
@@ -142,7 +155,7 @@ class WorkflowClientFactoryTest {
         Config rootConfig = Config.just(ConfigSources.create(Map.of(
                 "oci.dynamic-ssl-context-provider.root-cert-path", "/etc/oci-pki/ca-bundle.pem")));
 
-        WorkflowClient client = new WorkflowClientFactory(rootConfig, config, () -> {
+        WorkflowClient client = workflowClientFactory(rootConfig, config, () -> {
             calls.incrementAndGet();
             return Optional.empty();
         }).get();
@@ -164,12 +177,52 @@ class WorkflowClientFactoryTest {
                 "oci.dynamic-ssl-context-provider.root-cert-path", "/etc/oci-pki/ca-bundle.pem")));
 
         IllegalStateException exception = assertThrows(IllegalStateException.class,
-                                                       () -> new WorkflowClientFactory(rootConfig,
-                                                                                       config,
-                                                                                       Optional::empty).get());
+                                                       () -> workflowClientFactory(rootConfig,
+                                                                                   config,
+                                                                                   Optional::empty).get());
 
         assertTrue(exception.getMessage().contains("BasicAuthenticationDetailsProvider"),
                    "Failure should explain the missing auth provider");
+    }
+
+    @Test
+    void createConfiguredChastWorkflowClientUsesNamedDynamicSslProviderBean() {
+        WorkflowConfig config = WorkflowConfig.builder()
+                .domainId("workflow-domain")
+                .dynamicSslContextProviderName("custom-workflow")
+                .build();
+        DynamicSslContextProviderConfig providerConfig = dynamicSslProviderConfig();
+
+        AuthDetailsConfig authDetailsConfig = new WorkflowClientFactory(Config.empty(),
+                                                                        config,
+                                                                        () -> Optional.of(authProvider()),
+                                                                        serviceRegistry("custom-workflow",
+                                                                                        providerConfig))
+                .authDetailsConfig()
+                .orElseThrow();
+
+        assertSame(providerConfig, authDetailsConfig.getDynamicSslContextProviderConfig());
+    }
+
+    @Test
+    void createConfiguredChastWorkflowClientUsesLegacyDynamicSslProvider() {
+        WorkflowConfig config = WorkflowConfig.builder()
+                .domainId("workflow-domain")
+                .build();
+        Config rootConfig = Config.just(ConfigSources.create(Map.of(
+                "oci.dynamic-ssl-context-provider.leaf-cert-path", "/tmp/leaf.pem",
+                "oci.dynamic-ssl-context-provider.leaf-cert-key-path", "/tmp/leaf.key",
+                "oci.dynamic-ssl-context-provider.leaf-cert-key-passphrase", "secret",
+                "oci.dynamic-ssl-context-provider.intermediate-cert-path", "/tmp/intermediate.pem",
+                "oci.dynamic-ssl-context-provider.root-cert-path", "/tmp/root.pem")));
+
+        AuthDetailsConfig authDetailsConfig = workflowClientFactory(rootConfig,
+                                                                    config,
+                                                                    () -> Optional.of(authProvider()))
+                .authDetailsConfig()
+                .orElseThrow();
+
+        assertDynamicSslProviderConfig(authDetailsConfig.getDynamicSslContextProviderConfig());
     }
 
     @Test
@@ -211,7 +264,10 @@ class WorkflowClientFactoryTest {
 
     private static WorkflowClientFactory recordingFactory(AtomicReference<ClientRole> requestedRole,
                                                           WorkflowClient expectedClient) {
-        return new WorkflowClientFactory(WorkflowConfig.builder().build(), authProvider()) {
+        return new WorkflowClientFactory(Config.empty(),
+                                         WorkflowConfig.builder().build(),
+                                         () -> Optional.of(authProvider()),
+                                         emptyRegistry()) {
             @Override
             WorkflowClient createWorkflowClient(ClientRole clientRole) {
                 requestedRole.set(clientRole);
@@ -283,6 +339,53 @@ class WorkflowClientFactoryTest {
         }
     }
 
+    private static void assertDynamicSslProviderConfig(DynamicSslContextProviderConfig config) {
+        assertEquals("/tmp/leaf.pem", config.getLeafCertPath());
+        assertEquals("/tmp/leaf.key", config.getLeafCertKeyPath());
+        assertEquals("secret", config.getLeafCertKeyPassphrase());
+        assertEquals("/tmp/intermediate.pem", config.getIntermediateCertPath());
+        assertEquals("/tmp/root.pem", config.getRootCertPath());
+    }
+
+    private static WorkflowClientFactory workflowClientFactory(WorkflowConfig config,
+                                                               BasicAuthenticationDetailsProvider authProvider) {
+        return workflowClientFactory(Config.empty(), config, () -> Optional.of(authProvider));
+    }
+
+    private static WorkflowClientFactory workflowClientFactory(
+            Config rootConfig,
+            WorkflowConfig config,
+            Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
+        return new WorkflowClientFactory(rootConfig, config, authProvider, emptyRegistry());
+    }
+
+    private static ServiceRegistry emptyRegistry() {
+        return ServiceRegistryManager.create(serviceRegistryConfig().build()).registry();
+    }
+
+    private static ServiceRegistry serviceRegistry(String name, DynamicSslContextProviderConfig providerConfig) {
+        ServiceRegistryConfig config = serviceRegistryConfig()
+                .addServiceDescriptor(new DynamicSslContextProviderConfigDescriptor(name, providerConfig))
+                .build();
+        return ServiceRegistryManager.create(config).registry();
+    }
+
+    private static ServiceRegistryConfig.Builder serviceRegistryConfig() {
+        return ServiceRegistryConfig.builder()
+                .discoverServices(false)
+                .discoverServicesFromServiceLoader(false);
+    }
+
+    private static DynamicSslContextProviderConfig dynamicSslProviderConfig() {
+        DynamicSslContextProviderConfig providerConfig = new DynamicSslContextProviderConfig();
+        providerConfig.setLeafCertPath("/tmp/leaf.pem");
+        providerConfig.setLeafCertKeyPath("/tmp/leaf.key");
+        providerConfig.setLeafCertKeyPassphrase("secret");
+        providerConfig.setIntermediateCertPath("/tmp/intermediate.pem");
+        providerConfig.setRootCertPath("/tmp/root.pem");
+        return providerConfig;
+    }
+
     private static BasicAuthenticationDetailsProvider authProvider() {
         Path keyPath = Path.of("..", "limits", "src", "test", "resources", "key.pem");
         return SimpleAuthenticationDetailsProvider.builder()
@@ -298,5 +401,39 @@ class WorkflowClientFactoryTest {
                     }
                 })
                 .build();
+    }
+
+    private record DynamicSslContextProviderConfigDescriptor(String name,
+                                                             DynamicSslContextProviderConfig instance)
+            implements ServiceDescriptor<DynamicSslContextProviderConfig> {
+        @Override
+        public TypeName serviceType() {
+            return TypeName.create(DynamicSslContextProviderConfig.class);
+        }
+
+        @Override
+        public TypeName descriptorType() {
+            return TypeName.create(DynamicSslContextProviderConfigDescriptor.class);
+        }
+
+        @Override
+        public Set<ResolvedType> contracts() {
+            return Set.of(ResolvedType.create(DynamicSslContextProviderConfig.class));
+        }
+
+        @Override
+        public Set<Qualifier> qualifiers() {
+            return Set.of(Qualifier.createNamed(name));
+        }
+
+        @Override
+        public TypeName scope() {
+            return Service.Singleton.TYPE;
+        }
+
+        @Override
+        public Object instantiate(DependencyContext ctx, InterceptionMetadata metadata) {
+            return instance;
+        }
     }
 }

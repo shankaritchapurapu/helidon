@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
 import io.helidon.service.registry.Service;
+import io.helidon.service.registry.ServiceRegistry;
 
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.pic.kiev.DataStore;
@@ -37,9 +38,10 @@ final class KievDataStores {
     @Service.Inject
     KievDataStores(KievConfig config,
                    Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider,
-                   KievTransactions transactions) {
+                   KievTransactions transactions,
+                   ServiceRegistry serviceRegistry) {
         Map<String, KievStoreConfig> stores = storeConfigs(config);
-        Map<String, DataStoreConfig> configs = dataStoreConfigs(config, authProvider);
+        Map<String, DataStoreConfig> configs = dataStoreConfigs(stores, authProvider, serviceRegistry);
 
         this.storeConfigs = Collections.unmodifiableMap(stores);
         this.dataStoreConfigs = Collections.unmodifiableMap(configs);
@@ -166,14 +168,16 @@ final class KievDataStores {
     }
 
     private static Map<String, DataStoreConfig> dataStoreConfigs(
-            KievConfig config,
-            Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
+            Map<String, KievStoreConfig> storeConfigs,
+            Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider,
+            ServiceRegistry serviceRegistry) {
         Map<String, DataStoreConfig> configs = new LinkedHashMap<>();
-        for (KievStoreConfig storeConfig : config.dataStores()) {
-            configs.put(storeConfig.storeName(),
-                        KievDataStoreConfigFactory.create(storeConfig,
-                                                          authProvider));
-        }
+        storeConfigs.forEach((storeName, storeConfig) -> {
+            DataStoreConfig dataStoreConfig = KievDataStoreConfigFactory.create(storeConfig,
+                                                                                authProvider,
+                                                                                serviceRegistry);
+            configs.put(storeName, dataStoreConfig);
+        });
         return configs;
     }
 

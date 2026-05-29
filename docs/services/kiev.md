@@ -114,12 +114,21 @@ oci:
 
 For Kiev as a service with a shared OCI SDK auth provider and Kiev-managed TLS:
 
+`dynamic-ssl-context-provider-name` resolves a named `DynamicSslContextProviderConfig` service. The service can be
+created from `oci.dynamic-ssl-context-providers` or supplied by the application.
+
 ```yaml
 helidon:
   oci:
     authentication-method: instance-principal
 
 oci:
+  dynamic-ssl-context-providers:
+    - name: kiev-service-auth
+      root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+      cert-reload-duration: PT5M
+      cert-ssl-algorithm: SunX509
+
   kiev:
     data-stores:
       - backend: "SERVICE"
@@ -132,9 +141,7 @@ oci:
           auth:
             type: "OVERRIDDEN"
             tls:
-              root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
-              cert-reload-duration: PT5M
-              cert-ssl-algorithm: SunX509
+              dynamic-ssl-context-provider-name: kiev-service-auth
 ```
 
 For local KIAB KaaS testing:
@@ -344,7 +351,17 @@ locality. Unknown `oci.env.ad-number` values are logged as warnings and fall bac
 
 `OVERRIDDEN` auth requires a `BasicAuthenticationDetailsProvider` to be available from the Helidon service registry,
 such as one created by the public OCI SDK integration under `helidon.oci.*`. It can also use the same
-`oci.kiev.data-stores[].service.auth.tls.*` settings when Kiev-specific TLS handling is still needed.
+`oci.kiev.data-stores[].service.auth.tls.*` settings when Kiev-specific TLS handling is still needed, or it can reference
+a reusable dynamic SSL context provider by name. The named provider is resolved from the Helidon service registry, so
+applications can supply custom named `DynamicSslContextProviderConfig` services.
+
+| Key                                            | Default value | Description |
+|------------------------------------------------|---------------|-------------|
+| `oci.kiev.data-stores[].service.auth.tls.dynamic-ssl-context-provider-name` | | Reusable dynamic SSL context provider name. |
+| `oci.kiev.data-stores[].service.auth.tls.root-cert-pem-path` |       | Inline root certificate PEM path when no provider name is configured. |
+| `oci.kiev.data-stores[].service.auth.tls.root-cert-path`     |       | Alias for `root-cert-pem-path`; configure only one of the two keys. |
+| `oci.kiev.data-stores[].service.auth.tls.cert-reload-duration` |     | Optional inline certificate reload interval. |
+| `oci.kiev.data-stores[].service.auth.tls.cert-ssl-algorithm` |       | Optional inline SSL algorithm override. |
 
 Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
 in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.

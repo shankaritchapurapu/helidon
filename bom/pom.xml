@@ -101,6 +101,11 @@
                 <version>${helidon.oci.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-sdk-common-core</artifactId>
+                <version>${helidon.oci.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.oracle.helidon.oci.kiev</groupId>
                 <artifactId>helidon-oci-kiev</artifactId>
                 <version>${helidon.oci.version}</version>
