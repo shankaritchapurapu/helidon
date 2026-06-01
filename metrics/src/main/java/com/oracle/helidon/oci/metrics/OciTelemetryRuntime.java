@@ -118,10 +118,13 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                 LOGGER.log(System.Logger.Level.TRACE, "Shutting down OCI Metrics");
                 Metrics.shutdown();
             }
-            try {
-                monitoring.close();
-            } catch (Exception e) {
-                LOGGER.log(System.Logger.Level.WARNING, "Error closing Monitoring client", e);
+            Monitoring monitoringClient = monitoring;
+            if (monitoringClient != null) {
+                try {
+                    monitoringClient.close();
+                } catch (Exception e) {
+                    LOGGER.log(System.Logger.Level.WARNING, "Error closing Monitoring client", e);
+                }
             }
         } finally {
             lifecycleLock.unlock();
