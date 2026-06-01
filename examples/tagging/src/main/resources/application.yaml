@@ -15,14 +15,11 @@ oci:
       global-business-unit: my-business-unit
       team-name: my-team
       application-name: helidon-tagging-example
-      region: us-ashburn-1
       instance-principal-uri: http://localhost:8000
       root-cert-path: /etc/oci-pki/ca-bundle.pem
       hard-coded-key-supplier: ${helidon.oci.hardCodedKeySupplier}
     authorization:
-      region: us-ashburn-1
       service-name: helidon-tagging-example
-      physical-ad: AD-1
       root-cert-path: /etc/oci-pki/ca-bundle.pem
   identity-client:
     region: us-ashburn-1

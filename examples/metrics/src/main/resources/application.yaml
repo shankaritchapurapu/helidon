@@ -14,7 +14,6 @@ metrics:
       enabled: true
       project: helidon-metrics-test-project
       fleet: helidon-metrics-test-fleet
-      region: us-ashburn-1
       default-dimensions: { }
       sample-gauges: true
       gauge-sample-interval: PT1S

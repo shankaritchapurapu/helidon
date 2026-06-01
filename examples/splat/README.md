@@ -20,6 +20,9 @@ This example is meant to run on an mTLS listener. That means you should expose t
 - server certificate and key material for the listener itself
 
 The sample `application.yaml` includes a commented listener block showing where that server-side TLS configuration lives.
+The SPLAT region override is omitted from `oci.splat`; the SPLAT integration
+defaults it from `oci-env`. The example's `oci-config.yaml` provides a local
+`helidon.oci-env.location-override` for deterministic local runs.
 
 ## Build
 

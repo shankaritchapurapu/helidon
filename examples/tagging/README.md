@@ -106,9 +106,14 @@ oci:
     region: us-ashburn-1
 ```
 
-The Auth SDK configuration is under `oci.identity`. Replace the placeholder values in
-[`src/main/resources/application.yaml`](./src/main/resources/application.yaml) with the service name, region, physical
-AD, and trust material for the target environment.
+The Auth SDK configuration is under `oci.identity`. Region and physical AD are
+omitted there because the identity integration defaults them from `oci-env`.
+The example's [`oci-config.yaml`](./src/main/resources/oci-config.yaml) supplies
+a local `helidon.oci-env.location-override` for deterministic local runs; replace
+or remove that override in deployments that should use OCI runtime location
+files. Keep `oci.identity-client.region` explicit unless the OCI SDK client is
+configured another way, such as with an explicit endpoint or region-bearing
+authentication provider.
 
 ## Test
 

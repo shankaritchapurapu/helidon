@@ -38,14 +38,11 @@ oci:
       global-business-unit: my-business-unit
       team-name: my-team
       application-name: my-application
-      region: us-ashburn-1
       instance-principal-uri: http://localhost:8000
       root-cert-path: /etc/oci-pki/ca-bundle.pem
       hard-coded-key-supplier: ${helidon.oci.hardCodedKeySupplier}
     authorization:
-      region: us-ashburn-1
       service-name: my-service
-      physical-ad: AD-1
       root-cert-path: /etc/oci-pki/ca-bundle.pem
     splat-aware:
       # This should match the dedicated mTLS SPLAT listener above.
@@ -55,4 +52,3 @@ oci:
       validate-splat-cert: true
       disable-tag-only-request-check: true
       reject-x-region-calls: false
-      region: us-ashburn-1

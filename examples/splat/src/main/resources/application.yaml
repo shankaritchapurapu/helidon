@@ -30,4 +30,3 @@ oci:
     enabled: true
     skip-authz-validation-check: false
     reject-x-region-calls: false
-    region: us-ashburn-1

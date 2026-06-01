@@ -3,11 +3,6 @@
 #
 
 helidon:
-  oci:
-    authentication-method: instance-principal
-    imds-base-uri: http://169.254.169.254:80/opc/v2/
-    imds-timeout: PT3S
-    imds-detect-retries: 1
   oci-env:
     dynamic-core-regions:
       enabled: false

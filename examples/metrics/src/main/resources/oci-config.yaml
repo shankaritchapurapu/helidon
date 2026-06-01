@@ -8,3 +8,10 @@ helidon:
 #    imds-base-uri: "http://169.254.169.254/opc/v2/"
     imds-base-uri: http://localhost:8000/opc/v2/ # Choose this setting when running locally with the tunnel established.
     imds-detect-retries: 1 # only try once, no need to try again if not available (unless you have bad connection)
+  oci-env:
+    dynamic-core-regions:
+      enabled: false
+    location-override:
+      region: us-ashburn-1
+      availability-domain: iad-ad-1
+      fault-domain: 1

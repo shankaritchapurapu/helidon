@@ -25,11 +25,16 @@ Edit the `oci-config.yaml` file to choose the local tunnel address.
    ```
 3. Switch to a new window and run the example using 
    ```
-   java -Dhelidon.oci-env.location-override-dev=true -jar target/helidon-oci-examples-metrics.jar
+   java -jar target/helidon-oci-examples-metrics.jar
    ```
    
 4. Access the app: `curl http://localhost:8080/hello/Joe` or `curl http://localhost:8080/hello` several times.
 5. View the OCI metrics console and search for project `helidon-metrics-test-project`.
+
+The publisher region, availability domain, and fault domain are omitted from
+`application.yaml`. The metrics integration defaults them from `oci-env`; this
+example's `oci-config.yaml` provides a local `helidon.oci-env.location-override`
+for deterministic local runs.
 
 The OCI metrics library sends data to the back end every minute (more frequently if its internal data buffers fill before that), so expect to wait a moment for the metrics console to show observations.
 

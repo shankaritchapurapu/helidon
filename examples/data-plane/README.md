@@ -115,6 +115,13 @@ It enables:
 - audit via `oci.auditv2`
 - identity authn/authz settings via `oci.identity`
 
+Identity region and physical-AD settings are intentionally omitted. The
+identity integration defaults them from `oci-env`; the example's
+[`oci-config.yaml`](src/main/resources/oci-config.yaml) supplies a local
+`helidon.oci-env.location-override` so the app and tests stay deterministic
+outside OCI. Replace or remove that override in deployments that should use OCI
+runtime location files.
+
 The configured Kiev data store uses the `IN_MEMORY` backend, which keeps the example
 self-contained. Switching to `DIRECT_DB` or
 `SERVICE` is a configuration change: update the `oci.kiev.data-stores` entry and

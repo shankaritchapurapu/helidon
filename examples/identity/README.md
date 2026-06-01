@@ -9,6 +9,7 @@ forwarded by SPLAT.
 It demonstrates:
 
 * `helidon-oci-identity` Auth SDK authentication and authorization
+* `helidon-oci-envconfig` environment-derived region and availability domain values
 * method-level `@AuthorizationPermission` permission checks
 * `@Identity.Authenticated` for endpoints that need authentication without authorization
 * direct `Principal` injection into protected resource methods
@@ -125,6 +126,30 @@ The relevant settings are under `oci.identity`:
 The example also enables Helidon request scope because the generated identity
 interceptor registers per-request identity data into the request context.
 
+Region and availability-domain settings are intentionally omitted from the
+identity configuration. The identity integration defaults them from `oci-env`:
+
+```yaml
+oci:
+  identity:
+    authentication:
+      global-business-unit: my-business-unit
+      team-name: my-team
+      application-name: my-application
+    authorization:
+      service-name: my-service
+    splat-aware:
+      splat-request-port: 8443
+```
+
+The example includes
+[`oci-config.yaml`](src/main/resources/oci-config.yaml) with a local
+`helidon.oci-env.location-override` so the app and tests have deterministic
+values outside OCI. In a deployed OCI environment, `oci-env` can resolve the
+same values from runtime files such as `/etc/region` and
+`/etc/availability-domain`; replace or remove the local override for that
+deployment shape.
+
 ## SPLAT-Aware Configuration
 
 The runtime configuration includes a commented production-shape mTLS listener and
@@ -160,7 +185,6 @@ oci:
       validate-splat-cert: true
       disable-tag-only-request-check: true
       reject-x-region-calls: false
-      region: us-ashburn-1
 ```
 
 In a deployed service, `splat-request-port` should be the mTLS-only listener

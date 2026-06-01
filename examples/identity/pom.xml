@@ -32,6 +32,10 @@
             <artifactId>helidon-oci-identity</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.oracle.helidon.oci.envconfig</groupId>
+            <artifactId>helidon-oci-envconfig</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.webserver</groupId>
             <artifactId>helidon-webserver</artifactId>
         </dependency>
