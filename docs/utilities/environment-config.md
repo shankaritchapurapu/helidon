@@ -4,9 +4,11 @@
 
 ## Overview
 
-The `env-config` module provides the lazy `oci-env` Helidon config source and companion
-declarative region providers for public OCI SDK `com.oracle.bmc.Region` and PIC commons
-`com.oracle.pic.commons.util.Region`. It mirrors the OCI environment semantics used by
+The Environment Configuration integration provides OCI-aware configuration values and region providers for
+Helidon applications. It includes the lazy `oci-env` Helidon config source and declarative providers for
+public OCI SDK `com.oracle.bmc.Region` and PIC commons `com.oracle.pic.commons.util.Region`.
+
+When `helidon-oci-envconfig` is on the classpath, the integration mirrors the OCI environment semantics used by
 [EnvironmentTypeSafeReader](https://internal-docs.oraclecorp.com/en-us/iaas/internalcontent/tools/shepherd/shepherd-tips-and-tricks/reducing-configuration-files-for-dropwizard-services.htm?Highlight=EnvironmentTypeSafe#using-environmenttypesafereader),
 publishes derived `oci.env.*` values into Helidon configuration, and can import dynamic
 core-regions metadata before resolving location-dependent values.
@@ -24,10 +26,10 @@ Add the module to your application:
 </dependency>
 ```
 
-`helidon-oci-envconfig` uses the OCI SDK support from this repository, and that stack still expects
-a JAX-RS client implementation at runtime. In the simple case, the single dependency above is
-enough because this module already declares the runtime JAX-RS API and Jersey client dependencies
-it needs.
+`helidon-oci-envconfig` uses the shared OCI SDK integration, which expects a JAX-RS client
+implementation at runtime. In the simple case, the single dependency above is enough because
+`helidon-oci-envconfig` already declares the runtime JAX-RS API and Jersey client dependencies it
+needs.
 
 Additional client dependencies may still be needed if your application:
 
@@ -61,56 +63,78 @@ provider-specific dependencies instead of Jersey.
 
 ## Config Source
 
-The `oci-env` source is exposed in two ways:
+Choose the activation method that matches how your application builds Helidon config.
 
-* For explicit Helidon bootstrap, enable it from `meta-config.*` with `type: "oci-env"`.
-* For `Services.get(Config.class)` and other declarative bootstrap paths that use Helidon's
-  default bootstrap, it is registered automatically from the service registry when
-  `helidon-oci-envconfig` is on the classpath and no explicit `meta-config.*` was found.
+### Default Service-Registry Bootstrap
 
-If you build config directly with `Config.create()` or `Config.builder()`, add the `oci-env`
-source explicitly through meta-config or by wiring the source yourself. `oci-config.yaml` by
-itself does not activate `oci-env` for direct builder usage.
+Use this method when your application gets config from `Services.get(Config.class)` or another
+declarative bootstrap path that uses Helidon's default service-registry bootstrap.
 
-### Bootstrap Files and Precedence
+When `helidon-oci-envconfig` is on the classpath and no explicit `meta-config.*` file is present,
+`oci-env` is registered automatically. Put `oci-env` settings in `oci-config.yaml` under
+`helidon.oci-env`.
 
-`oci-env` interacts with two different bootstrap files:
+```yaml
+helidon:
+  oci-env:
+    prefix: "oci.env"
+    use-physical-availability-domain: false
+    location-override-dev: false
+    location-override:
+      region: "us-ashburn-1"
+      availability-domain: "iad-ad-1"
+      fault-domain: 5
+    dynamic-core-regions:
+      enabled: true
+      import-path: "/etc/rbcp_core_regions_artifacts/rbcp_core_regions_metadata.json"
+      import-override-path: "/etc/rbcp_core_regions_artifacts/rbcp_core_regions_metadata_override.json"
+      validation-region: "me-dcc-doha-1"
+      validate-import: true
+```
 
-* `meta-config.*`
-  * This is Helidon bootstrap input, not an `oci-env`-specific file.
-  * Helidon looks for `meta-config.*` in the current working directory first and then on the
-    classpath. The suffix depends on the parsers on the classpath, for example
-    `meta-config.yaml`.
-  * When present, it controls whether `oci-env` is enabled at all.
-* `oci-config.yaml`
-  * This is `oci-env` convenience input used by both the automatic source path and the explicit
-    provider path.
-  * This fallback path is loaded through Helidon's default `Config.create(...)` source ordering, so
-    environment variables and system properties are also consulted before the YAML files.
-  * `oci-env` looks for a filesystem file named `oci-config.yaml` first and then for a classpath
-    resource with the same name.
-  * Only the `helidon.oci-env` subtree is read from this file.
+In this method, the `helidon.oci-env` subtree is loaded through Helidon's default
+`Config.create(...)` source ordering: environment variables, then system properties, then
+filesystem `oci-config.yaml`, and finally classpath `oci-config.yaml`.
 
-Precedence:
+### Explicit Helidon Bootstrap
 
-1. Explicit `meta-config.*` has higher priority for `oci-env` bootstrap.
-2. If `meta-config.*` contains a source entry with `type: "oci-env"`, `oci-env` reads its
-   explicit configuration from that entry's `properties` block and then fills missing keys from
-   `helidon.oci-env` in `oci-config.yaml`. Provider properties win per key.
-3. If explicit `meta-config.*` exists but does not list `oci-env`, the source is not auto-added,
-   so `oci-config.yaml` does not activate it.
-4. When no explicit `meta-config.*` was found and `oci-env` is instantiated without explicit
-   meta-config properties, such as the default `Services.get(Config.class)` bootstrap path, it
-   reads `helidon.oci-env` through `Config.create(...)`.
-5. In that fallback path, environment variables have the highest priority, then system properties,
-   then filesystem `oci-config.yaml`, and finally classpath `oci-config.yaml`.
-6. If none of those sources provides `helidon.oci-env`, the source still works with its defaults
-   and resolves location from runtime files such as `/etc/region`. On the default service-registry
-   bootstrap path, it can fall back to IMDS metadata when runtime files are not available.
+Use this method when your application already manages Helidon bootstrap with `meta-config.*`.
+Helidon looks for `meta-config.*` in the current working directory first and then on the classpath.
+The suffix depends on the parsers on the classpath, for example `meta-config.yaml`.
 
-The source stays lazy on both paths. It does not read `/etc/*` files, request IMDS metadata,
-or import dynamic core-regions metadata until Helidon requests a key under the configured prefix.
-Placeholder resolution in other config sources can trigger that lazy lookup during `Config.build()`.
+Add an `oci-env` source entry and put source-specific settings in that entry's `properties` block:
+
+```yaml
+sources:
+  - type: "oci-env"
+    properties:
+      prefix: "oci.env"
+      location-override:
+        region: "us-ashburn-1"
+```
+
+When an explicit `oci-env` source is configured, `sources[].properties` wins per key. Missing keys
+can still be filled from `helidon.oci-env` in `oci-config.yaml`.
+
+If a `meta-config.*` file is present but does not include an `oci-env` source, `oci-config.yaml`
+does not activate `oci-env` by itself.
+
+### Direct Config Builders
+
+Use this method when code builds config directly with `Config.create()` or `Config.builder()`.
+`oci-config.yaml` alone does not activate `oci-env` for direct builder usage. Add the `oci-env`
+source explicitly through meta-config or wire the source programmatically.
+
+### Common Behavior
+
+If no configured source provides `oci-env` settings, the source still works with its defaults and
+resolves location from runtime files such as `/etc/region`. On the default service-registry
+bootstrap path, it can fall back to IMDS metadata when runtime files are not available.
+
+The source stays lazy for all activation methods. It does not read `/etc/*` files, request IMDS
+metadata, or import dynamic core-regions metadata until Helidon requests a key under the configured
+prefix. Placeholder resolution in other config sources can trigger that lazy lookup during
+`Config.build()`.
 
 Example placeholder usage:
 
@@ -227,7 +251,7 @@ directly first, and a region provider may be the first consumer that triggers th
 
 ## Region Providers
 
-In addition to the config source, the module also contributes declarative service-registry region
+In addition to the config source, the module also registers declarative service-registry region
 providers backed by the same lazy environment resolution:
 
 * A higher-priority `io.helidon.integrations.oci.spi.OciRegion` provider for public OCI SDK
@@ -259,53 +283,10 @@ realms.
 
 ## Configuration
 
-Choose one declarative configuration path:
-
-* If you already manage Helidon bootstrap explicitly, enable `oci-env` from `meta-config.*` with
-  a source entry of `type: "oci-env"`. Put the settings that must be explicit in that entry's
-  `properties` block; missing keys can still come from `helidon.oci-env` in `oci-config.yaml`.
-* If you are using the default `Services.get(Config.class)` bootstrap path with no explicit
-  `meta-config.*`, put `oci-env` settings in `oci-config.yaml` under `helidon.oci-env`.
-
-The keys are the same on both paths. The parent path differs:
+The same keys configure all activation methods. The parent path differs by method:
 
 * `oci-config.yaml` uses `helidon.oci-env`
 * `meta-config.*` uses `sources[].properties`
-
-When both inputs are present for an explicit `oci-env` source, `sources[].properties` overrides
-`helidon.oci-env` from `oci-config.yaml` per key. Values from `oci-config.yaml` fill only keys
-missing from provider properties.
-
-Primary `oci-config.yaml` example:
-
-```yaml
-helidon:
-  oci-env:
-    prefix: "oci.env"
-    use-physical-availability-domain: false
-    location-override-dev: false
-    location-override:
-      region: "us-ashburn-1"
-      availability-domain: "iad-ad-1"
-      fault-domain: 5
-    dynamic-core-regions:
-      enabled: true
-      import-path: "/etc/rbcp_core_regions_artifacts/rbcp_core_regions_metadata.json"
-      import-override-path: "/etc/rbcp_core_regions_artifacts/rbcp_core_regions_metadata_override.json"
-      validation-region: "me-dcc-doha-1"
-      validate-import: true
-```
-
-Meta-config variant:
-
-```yaml
-sources:
-  - type: "oci-env"
-    properties:
-      prefix: "oci.env"
-      location-override:
-        region: "us-ashburn-1"
-```
 
 Configuration keys:
 

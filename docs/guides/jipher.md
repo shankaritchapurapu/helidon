@@ -3,7 +3,15 @@
 ---
 
 ## Overview
-This document aims to provide guidance on how to integrate [Jipher](https://confluence.oraclecorp.com/confluence/display/OCICRYPTO/Jipher) with Helidon utilizing the Pegasus [com.oracle.pic.commons:core](https://devops.oci.oraclecorp.com/devops-coderepository/repositories/ocid1.devopsrepository.oc1.phx.amaaaaaaw4vcxbyaqldtoy4kbrhjcwazanam6ea2qjcbxyntwm5dn2hnzulq?_ctx=us-phoenix-1%2Cdevops_scm_central) library. Jipher is a JCE Security Provider developed by Oracle used for achieving FIPS (Federal Information Processing Standards) compliance.
+
+Oracle Jipher provides a JCE security provider used by OCI services that need FIPS-compatible cryptography.
+Helidon OCI applications can enable Jipher by loading the Pegasus `com.oracle.pic.commons:core` support early in
+application startup, before TLS, authentication, or other cryptographic subsystems are used.
+
+This guide shows how to add the dependency when needed, register Jipher as the primary JCE provider, and configure
+the required Java runtime options.
+
+---
 
 ## Maven Coordinates
 Integration with  [Splat](../services/splat.md), [Secret Service](../services/secret-service.md) and

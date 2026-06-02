@@ -16,6 +16,5 @@ The APM configuration is documented in the public Helidon OpenTelemetry guide:
 
 ## Notes
 
-This repository does not provide a separate OCI APM module. Configure APM using the standard
+There is no separate OCI APM module. Configure APM using the standard
 Helidon OpenTelemetry dependencies and `telemetry` configuration described in the Helidon docs.
-

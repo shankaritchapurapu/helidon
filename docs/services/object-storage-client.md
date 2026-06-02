@@ -13,8 +13,8 @@
 
 ## Overview
 
-The `helidon-oci-sdk-object-storage-client` module contributes the OCI Java SDK
-`com.oracle.bmc.objectstorage.ObjectStorage` client to the Helidon service registry.
+The Object Storage Client integration registers the OCI Java SDK
+`com.oracle.bmc.objectstorage.ObjectStorage` client with the Helidon service registry.
 
 The module wires the synchronous OCI Java SDK Object Storage client using the shared
 OCI SDK authentication provider. It supports explicit endpoint routing, configured
@@ -83,13 +83,15 @@ oci:
       disable-data-buffering-on-upload: true
 ```
 
-Use `endpoint` instead of `region` for tests or explicit endpoint routing:
+Use `endpoint` instead of `region` for explicit endpoint routing:
 
 ```yaml
 oci:
   object-storage-client:
-    endpoint: http://localhost:8081
+    endpoint: https://objectstorage.us-ashburn-1.oraclecloud.com
 ```
+
+For local tests, point `endpoint` at the test service, for example `http://localhost:8081`.
 
 ---
 

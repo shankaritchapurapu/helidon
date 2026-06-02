@@ -4,19 +4,17 @@
 
 ## Overview
 
-OCI services that onboard to Splat/RQS still need a Splat-facing Swagger 2 API
-specification with the required `x-obmcs-splat` and RQS metadata. That
-specification should be validated by the Splat-owned Maven plugin:
-`com.oracle.pic.platform.splat:splat-swagger-maven-plugin`.
+The OCI OpenAPI generation guide documents the supported build-time flow for OCI services that need both
+Splat/RQS API specification validation and generated Helidon resources. It composes the Splat-owned
+`com.oracle.pic.platform.splat:splat-swagger-maven-plugin` with the Helidon Extensions OpenAPI generator through
+`openapi-generator-maven-plugin` and `generatorName` `helidon-declarative`.
 
-Helidon resources can be generated from the same Swagger 2 file by using the
-Helidon Extensions OpenAPI generator through `openapi-generator-maven-plugin`
-and `generatorName` `helidon-declarative`. OpenAPI Generator parses the Swagger
-2 source into the OpenAPI model used by the Helidon generator.
+OCI services that onboard to Splat/RQS still need a Splat-facing Swagger 2 API specification with the required
+`x-obmcs-splat` and RQS metadata. The same Swagger 2 file can be used as the source for Helidon resource generation;
+OpenAPI Generator parses the Swagger 2 source into the OpenAPI model used by the Helidon generator.
 
-This repository does not provide a custom OCI OpenAPI generator module for this
-flow. It only provides an example showing how to compose the Splat validation
-plugin with the Helidon Extensions generator.
+There is no separate custom OCI OpenAPI generator module for this path, and this page does not describe a runtime
+Helidon OCI service integration.
 
 ---
 

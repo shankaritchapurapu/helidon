@@ -4,18 +4,20 @@
 
 ## Overview
 
-The metering integrations provide Helidon-friendly configuration, service registry bindings, and declarative
-annotations for Helidon OCI applications that need to report OCI metering.
+The Metering integrations register native OCI metering runtime support with the Helidon service
+registry. When the selected metering module is on the classpath and the service registry starts,
+Helidon creates the native metering agent from `oci.metering` configuration and starts or stops it
+with the application lifecycle.
 
-There are two metering modules. Applications should use one of them, based on the OCI service style they are building:
+There are two metering modules. Applications should use one of them, based on the OCI service style
+they are building:
 
 1. `helidon-oci-metering-dp` for data plane services using emitter-dp.
 2. `helidon-oci-metering-cp` for control plane services using emitter-cp.
 
-Both modules use the same application configuration root, `oci.metering`. 
+Both modules use the same application configuration root, `oci.metering`.
 
-Further, the CP module provides a `Metering` class
-with annotations for:
+The CP module also registers the support needed by the `Metering` annotations for:
 
 * recording a single metering point
 * timing one method invocation
@@ -103,7 +105,7 @@ The DP config blueprint requires the native emitter-dp values that the native bu
 oci:
   metering:
     enabled: true
-    endpoint: "https://bling.example.internal"
+    endpoint: https://bling.example.internal
     metering-dir: "/var/opt/oracle/metering"
     client-id: "orders-dp"
     service: "orders"
@@ -126,10 +128,10 @@ from `oci.object-storage-client` configuration. See the
 oci:
   metering:
     bling-publisher-client:
-      endpoint: "https://bling.example.internal"
+      endpoint: https://bling.example.internal
       client-id: "orders-dp"
   object-storage-client:
-    endpoint: "https://objectstorage.us-phoenix-1.oraclecloud.com"
+    endpoint: https://objectstorage.us-phoenix-1.oraclecloud.com
     region: "us-phoenix-1"
 ```
 
@@ -145,7 +147,7 @@ A fuller DP configuration can provide the values needed by emitter-dp:
 oci:
   metering:
     enabled: true
-    endpoint: "https://bling.example.internal"
+    endpoint: https://bling.example.internal
     metering-period: "PT1M"
     archiving-duration: "PT1H"
     metering-dir: "/var/opt/oracle/metering"
@@ -154,13 +156,13 @@ oci:
     region: "us-phoenix-1"
     report-interval: "PT5M"
     bling-publisher-client:
-      endpoint: "https://bling.example.internal"
+      endpoint: https://bling.example.internal
       client-id: "orders-dp"
     os-enabled: false
     k8s-based-deployment: false
     host-name: "orders-host-1"
   object-storage-client:
-    endpoint: "https://objectstorage.us-phoenix-1.oraclecloud.com"
+    endpoint: https://objectstorage.us-phoenix-1.oraclecloud.com
     region: "us-phoenix-1"
 ```
 
@@ -173,7 +175,7 @@ a Kiev transaction when recording through this style.
 oci:
   metering:
     enabled: true
-    endpoint: "https://bling.example.internal"
+    endpoint: https://bling.example.internal
     client-id: "orders-cp"
     region: "us-phoenix-1"
     metering-period: "PT1M"
@@ -321,6 +323,10 @@ Services can also retrieve the `MappedDataStore` if they want to work directly w
 When a Helidon blueprint maps to a native emitter configuration object, the metering modules avoid duplicating native
 defaults. Required values are enforced by Helidon only when the integration itself must require them; optional values
 are passed to the native builder only when present.
+
+In the tables below, `native default` means Helidon does not set that value when the property is
+omitted. The default comes from the underlying emitter library: emitter-dp for DP configuration
+and metering-agent for CP configuration.
 
 ### DP configuration
 

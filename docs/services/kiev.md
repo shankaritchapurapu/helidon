@@ -4,20 +4,24 @@
 
 ## Overview
 
-The Kiev integration provides Helidon-friendly configuration and service registry bindings for the Kiev client libraries.
-It supports three backends:
+The Kiev integration registers configured Kiev data stores with the Helidon service registry and provides
+declarative transaction support for Helidon OCI applications that use Kiev.
+
+The configuration root is `oci.kiev`. Each configured data store uses one of three backends:
 
 1. `IN_MEMORY` for local development and unit tests
 2. `DIRECT_DB` for a Kiev store reached through a direct Oracle database connection
 3. `SERVICE` for Kiev as a service
 
-When this module is on the classpath, Helidon creates configured Kiev data stores and exposes named access to:
+When this module is on the classpath, Helidon creates one Kiev data store per `oci.kiev.data-stores` entry and
+registers named access to:
 
 * `com.oracle.pic.kiev.DataStore`
 * `com.oracle.pic.kiev.mapping.MappedDataStore`
 * `com.oracle.helidon.oci.kiev.KievTransactionSupport`
 
-The module also provides the `@KievTransaction` annotation for declarative transaction handling on service methods.
+Applications can inject the named services directly or use the `@KievTransaction` annotation for declarative
+transaction handling on service methods.
 
 ---
 
@@ -277,6 +281,10 @@ String value = transactionSupport.execute("reporting-read", true, tx -> bucket.g
 ---
 
 ## Configuration
+
+The enum values shown in these examples use the Java enum constant names, such as `IN_MEMORY`, `DIRECT_DB`,
+`REGIONAL`, and `KIAB_LOCAL`. Helidon 4 also accepts case-insensitive enum values and treats hyphens as underscores,
+so `in-memory` maps to the same backend as `IN_MEMORY`.
 
 ### Root configuration
 

@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "docs:serve": "node etc/docs-server.mjs docs 3000"
+  }
+}

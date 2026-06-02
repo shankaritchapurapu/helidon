@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<!--
+    Copyright (c) 2026 Oracle and/or its affiliates.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helidon OCI Documentation</title>
+  <script>
+    (function () {
+      var storedTheme = localStorage.getItem('helidon-oci-docs-theme');
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = storedTheme || (prefersDark ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+    }());
+  </script>
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --docs-bg: #f5fafc;
+      --docs-bg-soft: #eff1fe;
+      --docs-border: #d1ebff;
+      --docs-code-bg: #e4e7fb;
+      --docs-link: #404a84;
+      --docs-muted: #5a6396;
+      --docs-shadow: 0 8px 24px rgb(37 48 71 / 14%);
+      --docs-text: #253047;
+    }
+
+    :root[data-theme='dark'] {
+      color-scheme: dark;
+      --docs-bg: #253047;
+      --docs-bg-soft: #1c2436;
+      --docs-border: #68769b;
+      --docs-code-bg: #1c2436;
+      --docs-link: #d1ebff;
+      --docs-muted: #a8cff0;
+      --docs-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+      --docs-text: #eff1fe;
+    }
+
+    body,
+    .content,
+    .markdown-section {
+      background: var(--docs-bg);
+      color: var(--docs-text);
+    }
+
+    body {
+      font-size: 20px;
+    }
+
+    .markdown-section {
+      font-size: 20px;
+      line-height: 1.72;
+      max-width: 980px;
+    }
+
+    .markdown-section code,
+    .markdown-section pre {
+      font-size: 16px !important;
+    }
+
+    .markdown-section pre > code {
+      font-size: 16px !important;
+    }
+
+    .markdown-section table {
+      font-size: 17px;
+    }
+
+    .sidebar {
+      font-size: 18px;
+    }
+
+    .sidebar ul li ul,
+    .sidebar .app-sub-sidebar {
+      font-size: 16px;
+    }
+
+    .sidebar ul li a,
+    .sidebar-nav > ul > li > a,
+    .sidebar-nav > ul > li > p {
+      font-size: 18px;
+    }
+
+    .sidebar ul li ul a,
+    .sidebar .app-sub-sidebar a {
+      font-size: 16px;
+    }
+
+    .sidebar,
+    .search input {
+      background: var(--docs-bg-soft);
+      color: var(--docs-text);
+    }
+
+    .sidebar,
+    .sidebar-toggle,
+    .search,
+    .search input,
+    .markdown-section table,
+    .markdown-section td,
+    .markdown-section th {
+      border-color: var(--docs-border);
+    }
+
+    .sidebar ul li a,
+    .sidebar-nav > ul > li > a,
+    .sidebar-nav > ul > li > p,
+    .markdown-section,
+    .markdown-section p,
+    .markdown-section li,
+    .markdown-section td,
+    .markdown-section th {
+      color: var(--docs-text);
+    }
+
+    .markdown-section a,
+    .sidebar ul li.active > a,
+    .sidebar ul li a:hover {
+      color: var(--docs-link);
+    }
+
+    :root[data-theme='dark'] .markdown-section a,
+    :root[data-theme='dark'] .sidebar ul li.active > a,
+    :root[data-theme='dark'] .sidebar ul li a:hover {
+      color: #fb8c00;
+    }
+
+    :root[data-theme='dark'] .markdown-section h1,
+    :root[data-theme='dark'] .markdown-section h2,
+    :root[data-theme='dark'] .markdown-section h3,
+    :root[data-theme='dark'] .markdown-section h4,
+    :root[data-theme='dark'] .markdown-section h5,
+    :root[data-theme='dark'] .markdown-section h6,
+    :root[data-theme='dark'] .markdown-section h1 a,
+    :root[data-theme='dark'] .markdown-section h2 a,
+    :root[data-theme='dark'] .markdown-section h3 a,
+    :root[data-theme='dark'] .markdown-section h4 a,
+    :root[data-theme='dark'] .markdown-section h5 a,
+    :root[data-theme='dark'] .markdown-section h6 a,
+    :root[data-theme='dark'] .markdown-section h1 span,
+    :root[data-theme='dark'] .markdown-section h2 span,
+    :root[data-theme='dark'] .markdown-section h3 span,
+    :root[data-theme='dark'] .markdown-section h4 span,
+    :root[data-theme='dark'] .markdown-section h5 span,
+    :root[data-theme='dark'] .markdown-section h6 span {
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+
+    :root[data-theme='dark'] .sidebar-nav > ul > li > p,
+    :root[data-theme='dark'] .sidebar-nav > ul > li > strong,
+    :root[data-theme='dark'] .sidebar-nav > ul > li > a {
+      color: #eff1fe !important;
+    }
+
+    .markdown-section blockquote,
+    .markdown-section em,
+    .markdown-section strong,
+    .search .matching-post p,
+    .search .search-keyword {
+      color: var(--docs-muted);
+    }
+
+    .markdown-section code,
+    .markdown-section pre,
+    .markdown-section pre > code,
+    .markdown-section table tr:nth-child(2n) {
+      background: var(--docs-code-bg);
+      color: var(--docs-text);
+    }
+
+    :root[data-theme='dark'] .markdown-section pre,
+    :root[data-theme='dark'] .markdown-section pre > code {
+      background: #1c2436;
+      color: #d4ecff;
+    }
+
+    :root[data-theme='dark'] .markdown-section pre {
+      border: 1px solid #68769b;
+      box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
+    }
+
+    :root[data-theme='dark'] .markdown-section code {
+      color: #d4ecff;
+    }
+
+    :root[data-theme='dark'] .markdown-section .token.tag,
+    :root[data-theme='dark'] .markdown-section .token.property {
+      color: #00a3ff;
+    }
+
+    :root[data-theme='dark'] .markdown-section .token.attr-name,
+    :root[data-theme='dark'] .markdown-section .token.namespace {
+      color: #d1ebff;
+    }
+
+    :root[data-theme='dark'] .markdown-section .token.attr-value,
+    :root[data-theme='dark'] .markdown-section .token.string {
+      color: #eff1fe;
+    }
+
+    :root[data-theme='dark'] .markdown-section .token.punctuation,
+    :root[data-theme='dark'] .markdown-section .token.operator {
+      color: #a8cff0;
+    }
+
+    :root[data-theme='dark'] .markdown-section .token.keyword,
+    :root[data-theme='dark'] .markdown-section .token.boolean,
+    :root[data-theme='dark'] .markdown-section .token.number {
+      color: #eb2f5b;
+    }
+
+    .markdown-section hr {
+      border-color: var(--docs-border);
+    }
+
+    .docs-theme-toggle {
+      align-items: center;
+      background: var(--docs-bg-soft);
+      border: 1px solid var(--docs-border);
+      border-radius: 6px;
+      box-shadow: var(--docs-shadow);
+      color: var(--docs-text);
+      cursor: pointer;
+      display: flex;
+      font: 13px/1.2 system-ui, sans-serif;
+      gap: 6px;
+      min-height: 34px;
+      padding: 8px 10px;
+      position: fixed;
+      right: 18px;
+      top: 14px;
+      z-index: 50;
+    }
+
+    .docs-theme-toggle:hover {
+      border-color: var(--docs-link);
+      color: var(--docs-link);
+    }
+
+    @media (max-width: 768px) {
+      .docs-theme-toggle {
+        right: 56px;
+        top: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="docs-theme-toggle" type="button" aria-label="Switch color theme">Theme</button>
+  <div id="app">Loading Helidon OCI documentation...</div>
+  <script>
+    window.$docsify = {
+      name: 'Helidon OCI',
+      repo: '',
+      loadSidebar: true,
+      subMaxLevel: 3,
+      auto2top: true,
+      search: {
+        depth: 4,
+        placeholder: 'Search docs',
+        noData: 'No results'
+      },
+      mermaidConfig: {
+        querySelector: '.mermaid'
+      }
+    };
+  </script>
+  <script src="//cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-mermaid@2/dist/docsify-mermaid.js"></script>
+  <script>
+    function docsTheme() {
+      return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+    }
+
+    function updateThemeToggle() {
+      var button = document.querySelector('.docs-theme-toggle');
+      if (button) {
+        button.textContent = docsTheme() === 'dark' ? 'Light' : 'Dark';
+      }
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      localStorage.setItem('helidon-oci-docs-theme', theme);
+      mermaid.initialize({ startOnLoad: false, theme: theme === 'dark' ? 'dark' : 'default' });
+      updateThemeToggle();
+    }
+
+    mermaid.initialize({ startOnLoad: false, theme: docsTheme() === 'dark' ? 'dark' : 'default' });
+    updateThemeToggle();
+
+    document.querySelector('.docs-theme-toggle').addEventListener('click', function () {
+      applyTheme(docsTheme() === 'dark' ? 'light' : 'dark');
+    });
+  </script>
+</body>
+</html>

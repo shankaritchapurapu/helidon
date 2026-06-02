@@ -4,14 +4,20 @@
 
 ## Overview
 
-The Splat module integrates the upstream SPLAT JAX-RS mTLS filter into generated Helidon `@RestServer.Endpoint`
-request handling. It delegates certificate and authorization validation to the upstream `SplatMtlsFilter` implementation directly.
+The Splat integration wires upstream Splat mTLS validation into generated Helidon
+`@RestServer.Endpoint` request handling. When the module is on the classpath, Helidon discovers
+the endpoint interceptor through the service registry and runs the upstream `SplatMtlsFilter`
+before protected endpoint methods are invoked.
+
+The integration delegates certificate and authorization validation to upstream Splat and uses
+`oci.splat` configuration for validation behavior such as region selection, cross-region rejection,
+and authorization validation checks.
 
 ---
 
 ## Maven Coordinates
 
-To enable SPLAT mTLS validation, add the following dependency to your project’s pom.xml:
+To enable Splat mTLS validation, add the following dependency to your project’s pom.xml:
 
 ```xml
 
@@ -26,40 +32,40 @@ To enable SPLAT mTLS validation, add the following dependency to your project’
 
 ## Usage
 
-When the Helidon service registry is enabled, this module enables discovery of the SPLAT endpoint interceptor and SPLAT filter
-factory automatically. This sets request flow as:
-
-- [SplatMtlsEndpointInterceptor](../../splat/src/main/java/com/oracle/helidon/oci/splat/SplatMtlsEndpointInterceptor.java) is a
-  SPLAT-owned `HttpEntryPoint.Interceptor`
-  that runs for generated `@RestServer.Endpoint` handlers, which Helidon wires through `HttpEntryPoint.EntryPoints.handler(...)`.
-- [SplatMtlsRequestHandler](../../splat/src/main/java/com/oracle/helidon/oci/splat/SplatMtlsRequestHandler.java) creates the
-  upstream SPLAT JAX-RS filter and bridges Helidon request/response objects to JAX-RS filter execution.
+When the Helidon service registry is enabled, this module discovers and wires the Splat endpoint interceptor automatically.
+Applications do not call the Splat integration classes directly. For generated `@RestServer.Endpoint` handlers, Helidon runs
+`SplatMtlsEndpointInterceptor`, and that interceptor delegates to `SplatMtlsRequestHandler`, which creates the upstream
+Splat JAX-RS filter and adapts the Helidon request and response objects for Splat validation.
 
 ### Listener And Certificate Requirements
 
 It is important to note that mTLS must be configured on the Helidon WebServer listener itself with the appropriate trust material
-and client-certificate requirements. The upstream SPLAT filter reads peer certificates from the request context. In practice that
+and client-certificate requirements. The upstream Splat filter reads peer certificates from the request context. In practice that
 means:
 
 - the Helidon listener must terminate TLS and require client certificates
-- the listener trust configuration must validate the client certificate chain before SPLAT runs
-- SPLAT does not choose which socket to attach; the generated endpoint interceptor runs wherever that endpoint is exposed
+- the listener trust configuration must validate the client certificate chain before Splat runs
+- Splat does not choose which socket to attach; the generated endpoint interceptor runs wherever that endpoint is exposed
 
-If the same generated endpoint is reachable on a non-mTLS listener, SPLAT still executes there, but the request will not carry the
-peer-certificate chain that upstream SPLAT expects. The recommended deployment shape is therefore to expose SPLAT-protected
+If the same generated endpoint is reachable on a non-mTLS listener, Splat still executes there, but the request will not carry the
+peer-certificate chain that upstream Splat expects. The recommended deployment shape is therefore to expose Splat-protected
 generated endpoints only on listeners where mTLS is already required.
 
 ---
 
 ## Configuration
 
-Configure SPLAT validation behavior using the `application.yaml` file.
+Configure Splat validation behavior using the `application.yaml` file.
+
+The `skip-authz-validation-check` name intentionally mirrors the upstream Splat mTLS filter setting
+`skipAuthzValidationCheck`. Keeping the Helidon key aligned with the upstream setting makes it easier to compare
+configuration with Splat guidance and generated metadata.
 
 | Config Key                            | Default Value | Description                                                                                    | Notes                                                                                                                                                                                                                  |
 |---------------------------------------|---------------|------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| oci.splat.enabled                     | true          | Whether to enable SPLAT mTLS validation.                                                       |                                                                                                                                                                                                                        |
-| oci.splat.skip-authz-validation-check | false         | Whether to bypass SPLAT authorization validation.                                              | [3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=PLAT&title=2.+Splat+Onboarding#id-2.SplatOnboarding-3.IntroduceaSplat-onlyportprotectedbymTLS) |
-| oci.splat.reject-x-region-calls       | false         | Whether upstream SPLAT validation should reject cross-region client certificates.              | [3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=PLAT&title=2.+Splat+Onboarding#id-2.SplatOnboarding-3.IntroduceaSplat-onlyportprotectedbymTLS) |
+| oci.splat.enabled                     | true          | Whether to enable Splat mTLS validation.                                                       |                                                                                                                                                                                                                        |
+| oci.splat.skip-authz-validation-check | false         | Whether to bypass Splat authorization validation.                                              | [3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=PLAT&title=2.+Splat+Onboarding#id-2.SplatOnboarding-3.IntroduceaSplat-onlyportprotectedbymTLS) |
+| oci.splat.reject-x-region-calls       | false         | Whether upstream Splat validation should reject cross-region client certificates.              | [3. Introduce a Splat-only port protected by mTLS](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=PLAT&title=2.+Splat+Onboarding#id-2.SplatOnboarding-3.IntroduceaSplat-onlyportprotectedbymTLS) |
 | oci.splat.region                      | none          | The OCI region name. If not specified, the value is resolved from the OCI runtime environment. |                                                                                                                                                                                                                        |
 
 ---

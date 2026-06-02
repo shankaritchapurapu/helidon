@@ -4,14 +4,14 @@
 
 ## Overview
 
-The internal tagging onboarding flow is centered on the OCI internal
-`com.oracle.pic.tagging.client.entities.TaggingClient`, which converts between:
+The Tagging integration registers the OCI internal
+`com.oracle.pic.tagging.client.entities.TaggingClient` with the Helidon service registry. The
+client converts between:
 
 * a `TagSet` composed of `freeformTags`, `definedTags`, and optional `systemTags`
 * the binary tag slug persisted with the resource or passed to downstream authorization flows
 
-This repository provides a reusable `helidon-oci-tagging` module that contributes that client to the Helidon
-service registry. A Helidon example is available under [`examples/tagging`](../../examples/tagging/README.md).
+A runnable Helidon example is available under [`examples/tagging`](../../examples/tagging/).
 
 ---
 
@@ -30,7 +30,7 @@ To enable tagging support, add the following dependency to your project’s pom.
 
 ## Usage
 
-The tagging module contributes the internal tagging client to the Helidon service registry. You can obtain a
+The tagging module registers the internal tagging client with the Helidon service registry. You can obtain a
 `TaggingClient` instance using the `Services` class:
 
 ```java
@@ -83,6 +83,11 @@ slug that should be stored.
 ## Configuration
 
 Optional client settings live under `oci.tagging`:
+
+The tagging integration has a small configuration surface because it creates a local tag slug client.
+It does not call the Tagging service directly and therefore does not configure an endpoint, region,
+authentication provider, retry policy, or TLS settings. Those settings belong to the Identity and
+Auth SDK integrations used by applications that validate or authorize tag slugs.
 
 | Key | Default Value | Description |
 |-----|---------------|-------------|

@@ -4,14 +4,19 @@
 
 ## Overview
 
-The OCI SDK module provides the shared Helidon service registry integration for OCI SDK authentication.
-It exposes the selected OCI SDK `BasicAuthenticationDetailsProvider` as an injectable service so other
-modules can build OCI SDK clients without each module implementing its own authentication selection logic.
+The OCI SDK integration provides shared OCI SDK authentication support for Helidon applications.
+
+When `helidon-oci-sdk-oci` and a matching authentication module are on the classpath, the integration exposes the
+selected OCI SDK `BasicAuthenticationDetailsProvider` as an injectable service. Other modules can then build OCI SDK
+clients without implementing their own authentication selection logic.
+
 The Identity integration is an exception; it uses the identity auth SDK directly and does not build clients
 from the shared OCI SDK authentication provider.
 
 Authentication is configured under `helidon.oci`. Applications choose an authentication method by
 configuration and add the matching authentication module to the classpath.
+
+---
 
 ## Maven Coordinates
 
@@ -221,12 +226,12 @@ only the methods they need.
 The following modules already use the shared `BasicAuthenticationDetailsProvider`, so they can use
 `service-principal` by adding the authentication module and setting `helidon.oci.authentication-method`:
 
-* [Kiev](./kiev.md), when the Kiev service backend uses `service.auth.type: "OVERRIDDEN"`
-* [Limits](./limits.md)
-* [Metrics](./metrics.md)
-* [Secret Service V2 config source](./secret-service.md)
-* [Workflow](./workflow.md), when workflow auth details are enabled
-* [Metering control plane direct mode](./metering.md)
+* [Kiev](../services/kiev.md), when the Kiev service backend uses `service.auth.type: "OVERRIDDEN"`
+* [Limits](../services/limits.md)
+* [Metrics](../services/metrics.md)
+* [Secret Service V2 config source](../services/secret-service.md)
+* [Workflow](../services/workflow.md), when workflow auth details are enabled
+* [Metering control plane direct mode](../services/metering.md)
 
 Kiev's native `service.auth.type: "S2S"` is separate from this OCI SDK provider. Use `OVERRIDDEN`
 when the Kiev client should receive the Helidon-managed `BasicAuthenticationDetailsProvider`.
@@ -234,9 +239,9 @@ Kiev `OVERRIDDEN` auth and Workflow can also reference reusable dynamic SSL cont
 `oci.dynamic-ssl-context-providers`, or custom named `DynamicSslContextProviderConfig` services supplied by the
 application.
 
-The [Identity](./identity.md) integration does not use the OCI SDK `BasicAuthenticationDetailsProvider`.
+The [Identity](../services/identity.md) integration does not use the OCI SDK `BasicAuthenticationDetailsProvider`.
 It builds identity authentication and authorization clients through the identity auth SDK, so the
 service-principal authentication method described here does not change identity client construction.
 
-The [Tagging](./tagging.md) integration and metering data plane log-file recorder do not currently use
+The [Tagging](../services/tagging.md) integration and metering data plane log-file recorder do not currently use
 OCI SDK authentication providers.

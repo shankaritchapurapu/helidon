@@ -1,4 +1,4 @@
-# OCI Identity Client
+# Identity Client
 
 ---
 
@@ -13,12 +13,12 @@
 
 ## Overview
 
-The `helidon-oci-identity-client` module contributes the OCI Java SDK
-`com.oracle.bmc.identity.Identity` client to the Helidon service registry.
+The Identity Client integration registers the OCI Java SDK `com.oracle.bmc.identity.Identity`
+client with the Helidon service registry.
 
 This module is separate from [`helidon-oci-identity`](./identity.md). The existing
 `helidon-oci-identity` module wires the internal Auth SDK for request authentication,
-authorization, and request data such as `IdentityContext`, `Principal`, and
+authorization, and request identity values such as `IdentityContext`, `Principal`, and
 `AuthorizationRequest`; this module wires the public OCI Java SDK Identity client used for
 Identity APIs such as `createTag`, `createTagNamespace`, and tag defaults.
 

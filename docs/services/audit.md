@@ -4,9 +4,9 @@
 
 ## Overview
 
-The audit module provides support for OCI `AuditV2Filter` integration. The filter automatically captures and logs
-HTTP requests and responses according to configurable audit rules so relevant user and resource activity can be
-recorded for compliance, security, and troubleshooting.
+The Audit integration registers OCI `AuditV2Filter` support with Helidon WebServer. The filter
+captures and logs HTTP requests and responses according to configurable audit rules so relevant
+user and resource activity can be recorded for compliance, security, and troubleshooting.
 
 ---
 
@@ -25,15 +25,14 @@ To enable audit support, add the following dependency to your project’s `pom.x
 
 ## Usage
 
-`AuditV2Filter` is registered on the WebServer using
-[AuditV2Feature](../../audit/src/main/java/com/oracle/helidon/oci/audit/AuditV2Feature.java), which is a
+`AuditV2Filter` is registered on the WebServer using `AuditV2Feature`, which is a
 [Helidon Server Feature](https://helidon.io/docs/v4/se/webserver/webserver#_server_features). When the
 [Service Registry](https://helidon.io/docs/v4/se/injection/injection#generate-binding) is started on an
 application as shown below:
 ```java
 ServiceRegistryManager.start(ApplicationBinding.create());
 ```
-the audit feature is configured into the WebServer automatically. Otherwise, you can register it explicitly:
+the Audit feature is configured into the WebServer automatically. Otherwise, you can register it explicitly:
 
 ```java
 WebServer.builder()
@@ -49,7 +48,7 @@ response will include `oci-splat-audit-event-summary`. If `respect-splat-audited
 
 ## Example Application
 
-The repository includes a runnable audit example in `examples/audit`.
+The repository includes a runnable [audit example](../../examples/audit/README.md).
 
 The example provides:
 
@@ -82,6 +81,7 @@ Each rule should have the following fields:
 - `values`: String for matching parameter/header names
 
 **Example configuration:**
+
 ```yaml
 oci:
   auditv2:
@@ -92,15 +92,27 @@ oci:
       - resources: "/orders"
         actions: "POST"
         values: "orderId"
+      - resources: "/orders/{orderId}"
+        actions: "GET"
+        values: "includeDetails"
     request-header-rules:
       - resources: "/admin"
         actions: "GET"
         values: "Authorization"
+      - resources: "/orders"
+        actions: "POST"
+        values: "opc-request-id"
     response-header-rules:
       - resources: "/public"
         actions: "GET"
         values: "Content-Type"
+      - resources: "/orders"
+        actions: "POST"
+        values: "etag"
 ```
+
+For a complete runnable configuration, see the
+[audit example configuration](../../examples/audit/src/main/resources/application.yaml).
 
 ---
 

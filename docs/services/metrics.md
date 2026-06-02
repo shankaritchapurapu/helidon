@@ -4,19 +4,22 @@
 
 ## Overview
 
-The Helidon OCI metrics integration component sends updates of Helidon neutral metrics--registered and updated both imperatively and declaratively (annotations)--to the OCI metrics backend. It layers on top of any
-standard Helidon metrics provider (currently Micrometer), so services continue to use the normal Helidon metrics APIs while the
-OCI integration publishes metric updates to the backend.
+The Metrics integration publishes Helidon application metrics to the OCI metrics backend while
+services continue to use normal Helidon metrics APIs. It layers on top of the configured Helidon
+metrics provider, currently Micrometer, and supports metrics updated imperatively or through
+annotations.
 
-When this module is on the classpath, Helidon can:
+When `helidon-oci-metrics` is on the classpath and an OCI metrics publisher is configured, the
+integration can:
 
 * publish `Counter`, `Timer`, and `DistributionSummary` updates to OCI metrics
 * periodically sample and publish gauges and functional counters
 * register HTTP request counters and timers tagged with the matching path, HTTP method, and HTTP response status family
 * register optional JVM gauges for memory usage, thread state, file descriptors, and garbage collection
-* create the required OCI `Monitoring` client and make it available to services and libraries via the Helidon service registry
+* create the required OCI `Monitoring` client and make it available through the Helidon service registry
 
-Configuration of the metrics integration is via a Helidon metrics publisher of type `oci` as illustrated in the [example below](#configure-oci-metrics-publishing)
+Configuration is provided through a Helidon metrics publisher of type `oci`, as shown in
+[Configure OCI metrics publishing](#configure-oci-metrics-publishing).
 
 ---
 
@@ -73,10 +76,12 @@ helidon:
     imds-detect-retries: 1
 ```
 
-### Use Helidon neutral metrics API
+### Use Helidon Metrics API
 
-Services can use the normal Helidon metrics API. The OCI integration wraps the Micrometer-backed meters and publishes
-updates to OCI metrics after successful meter updates.
+Services should continue to use the normal Helidon metrics API for application metrics. The purpose of this integration
+is to publish those same Helidon meters to OCI metrics without requiring application code to call the OCI Monitoring
+client or a T2-specific API directly. The OCI integration wraps the Micrometer-backed meters and publishes updates to
+OCI metrics after successful meter updates.
 
 The following example shows imperative use of the Helidon metrics API in a hypothetical utility class `WorkService` that counts and times the invocations of the work. (Note that each timer includes a counter, so production code would rarely measure the same code using both; this is just an example to show the imperative API for both timers and counters.)
 
@@ -106,7 +111,8 @@ class WorkService {
 
 ### Use Helidon metric annotations
 
-Helidon metric annotations also work because Helidon's handling of the metrics annotations use the Helidon neutral metrics API. Thanks to this library, _all_ uses of the Helidon metrics API update OCI metrics as well.
+Helidon metric annotations also work because Helidon's handling of the metrics annotations uses the Helidon metrics API.
+Thanks to this library, all uses of the Helidon metrics API update OCI metrics as well.
 
 ```java
 @Http.GET
@@ -294,5 +300,5 @@ metrics:
 
 ## References
 
-* [Metrics example](../../examples/metrics/README.md)
+* [Metrics example](../../examples/metrics/)
 * [Helidon metrics API](https://helidon.io/docs/latest/se/metrics/metrics)

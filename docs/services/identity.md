@@ -4,13 +4,15 @@
 
 ## Overview
 
-The Identity module integrates Helidon with the OCI Auth SDK. It provides configured service-registry factories for:
+The Identity integration registers OCI Auth SDK authentication and authorization support with
+generated Helidon endpoint handling. The generated interceptor runs the Splat-aware Auth SDK
+request filter for annotated endpoints, authenticates the caller, performs optional authorization,
+and makes per-request `IdentityContext`, `Principal`, and `AuthorizationRequest` values available
+through the Helidon request context.
 
-* `ServiceAuthenticationClient`
-* `AuthenticatorClient`
-* `Optional<IAuthorizationClient>`
-* SPLAT-aware Auth SDK request filter factory
-* per-request `IdentityContext`, `Principal`, and `AuthorizationRequest` injection
+The module registers the supporting Auth SDK services with the Helidon service registry, including
+`ServiceAuthenticationClient`, `AuthenticatorClient`, `Optional<IAuthorizationClient>`, and the
+Splat-aware Auth SDK request filter factory.
 
 The configuration root is `oci.identity`. Authentication and authorization are configured independently under:
 
@@ -19,10 +21,8 @@ The configuration root is `oci.identity`. Authentication and authorization are c
 * `oci.identity.splat-aware`
 
 For request handling, authentication and authorization are applied through the Helidon OCI code generation integration.
-Annotated endpoint methods are intercepted automatically. The generated interceptor uses
-`AuthContextRequestFilterFactory` to run a `SplatAwareAuthContextRequestFilter`, performs authentication and optional
-authorization, and registers identity request data into the Helidon request context. This replaces the older filter-path
-configuration model and does not require configuring `oci.identity.filters.*`.
+Annotated endpoint methods are intercepted automatically. This replaces the older filter-path configuration model and
+does not require configuring `oci.identity.filters.*`.
 
 ---
 
@@ -49,8 +49,8 @@ to belong to the resolved authorization region, Identity logs a warning and stil
 
 ## Usage
 
-When the Helidon service registry is enabled, the module contributes the Identity services automatically. The generated
-authorization interceptor obtains `AuthContextRequestFilterFactory` from the registry and applies a SPLAT-aware Auth SDK
+When the Helidon service registry is enabled, the module registers the Identity services automatically. The generated
+authorization interceptor obtains `AuthContextRequestFilterFactory` from the registry and applies a Splat-aware Auth SDK
 filter to intercepted endpoints.
 
 ### Interception Annotations
@@ -147,9 +147,9 @@ The code generator recognizes Auth SDK annotations in
 Most Auth SDK annotations use the authorization path. `@BodyVerification` by itself only requires authentication, while
 authorization wins when it appears together with a permission or action annotation.
 
-### Request Data Injection
+### Identity Request Injection
 
-The recommended way to access authenticated request data in a REST endpoint method is to declare a `Principal`,
+The recommended way to access authenticated identity values in a REST endpoint method is to declare a `Principal`,
 `AuthorizationRequest`, or `IdentityContext` parameter directly. The generated handler resolves the values from
 `request.context()` for each request.
 
@@ -212,8 +212,8 @@ If `oci.identity.authorization.enabled=false`, the authorization client is not c
 available through `ServiceAuthenticationClient` and `AuthenticatorClient`. Endpoints that use authenticated-only
 interception continue to work without the authorization client.
 
-The request filter is `SplatAwareAuthContextRequestFilter`. For requests that arrive on the configured SPLAT mTLS port,
-it treats the request as already authenticated by SPLAT and hydrates Auth SDK request properties from SPLAT principal
+The request filter is `SplatAwareAuthContextRequestFilter`. For requests that arrive on the configured Splat mTLS port,
+it treats the request as already authenticated by Splat and hydrates Auth SDK request properties from Splat principal
 headers. For other requests, it falls back to normal direct Identity authentication behavior.
 
 ---
@@ -355,9 +355,9 @@ Authorization validation rules:
 * If `service-uri` points to a non-service-enclave endpoint, `service-enclave` must be `false`, `region` must be configured or available from `oci-env`, and `physical-ad` must be configured or defaultable from `oci.env.availability-domain`.
 * If `service-uri` points to a service-enclave endpoint, `region` must not be set, `availability-domain` must not be set, and `physical-ad` must be omitted or set to the regional AD value.
 
-### SPLAT-Aware Request Filter
+### Splat-Aware Request Filter
 
-SPLAT-aware filter config is loaded from `oci.identity.splat-aware`.
+Splat-aware filter config is loaded from `oci.identity.splat-aware`.
 
 ```yaml
 oci:
@@ -374,13 +374,13 @@ oci:
 
 | Key | Default Value | Description |
 |-----|---------------|-------------|
-| `oci.identity.splat-aware.splat-request-port` | `0` | Port where SPLAT requests are expected to arrive. |
-| `oci.identity.splat-aware.additional-splat-request-ports` | `[]` | Additional mTLS-enabled SPLAT request ports. |
-| `oci.identity.splat-aware.skip-authorization-for-splat` | `false` | Allows service-side AuthZ to be skipped when SPLAT sends the skip-authorization header. |
-| `oci.identity.splat-aware.validate-splat-cert` | `true` | Validates the SPLAT client certificate common name when identifying SPLAT requests. |
-| `oci.identity.splat-aware.disable-tag-only-request-check` | `false` | Disables tag-only request detection for SPLAT requests. |
-| `oci.identity.splat-aware.reject-x-region-calls` | `false` | Rejects cross-region SPLAT client certificates. |
-| `oci.identity.splat-aware.region` | | Optional OCI region override used for SPLAT certificate validation. |
+| `oci.identity.splat-aware.splat-request-port` | `0` | Port where Splat requests are expected to arrive. |
+| `oci.identity.splat-aware.additional-splat-request-ports` | `[]` | Additional mTLS-enabled Splat request ports. |
+| `oci.identity.splat-aware.skip-authorization-for-splat` | `false` | Allows service-side AuthZ to be skipped when Splat sends the skip-authorization header. |
+| `oci.identity.splat-aware.validate-splat-cert` | `true` | Validates the Splat client certificate common name when identifying Splat requests. |
+| `oci.identity.splat-aware.disable-tag-only-request-check` | `false` | Disables tag-only request detection for Splat requests. |
+| `oci.identity.splat-aware.reject-x-region-calls` | `false` | Rejects cross-region Splat client certificates. |
+| `oci.identity.splat-aware.region` | | Optional OCI region override used for Splat certificate validation. |
 
 If `region` is omitted, the filter factory resolves the region from `oci.identity.authentication.region`, then `oci.identity.authorization.region`, then the runtime `Region` service.
 
@@ -397,14 +397,4 @@ The context is a read-only map of Auth SDK request properties. A common example 
 
 ## References
 
-* [IdentityConfigBlueprint](../../identity/src/main/java/com/oracle/helidon/oci/identity/IdentityConfigBlueprint.java)
-* [AuthenticationConfigBlueprint](../../identity/src/main/java/com/oracle/helidon/oci/identity/AuthenticationConfigBlueprint.java)
-* [AuthorizationConfigBlueprint](../../identity/src/main/java/com/oracle/helidon/oci/identity/AuthorizationConfigBlueprint.java)
-* [SplatAwareConfigBlueprint](../../identity/src/main/java/com/oracle/helidon/oci/identity/SplatAwareConfigBlueprint.java)
-* [AuthContextRequestFilterFactory](../../identity/src/main/java/com/oracle/helidon/oci/identity/AuthContextRequestFilterFactory.java)
-* [ServiceAuthenticationClientFactory](../../identity/src/main/java/com/oracle/helidon/oci/identity/ServiceAuthenticationClientFactory.java)
-* [AuthenticatorClientFactory](../../identity/src/main/java/com/oracle/helidon/oci/identity/AuthenticatorClientFactory.java)
-* [AuthorizationClientFactory](../../identity/src/main/java/com/oracle/helidon/oci/identity/AuthorizationClientFactory.java)
-* [IdentityContext](../../identity/src/main/java/com/oracle/helidon/oci/identity/IdentityContext.java)
-* [OciAuthorizationExtension](../../codegen/src/main/java/com/oracle/helidon/oci/codegen/OciAuthorizationExtension.java)
-* [Identity example](../../examples/identity/src/main/java/com/oracle/helidon/oci/examples/identity/IdentityEndpoint.java)
+* [Identity example](../../examples/identity/)

@@ -4,9 +4,9 @@
 
 ## Overview
 
-The request-id integration provides OCI `opc-request-id` handling for Helidon SE applications.
+The Request ID integration provides OCI `opc-request-id` handling for Helidon applications.
 
-When the webserver module is present, the request filter:
+When `helidon-oci-request-id-webserver` is on the classpath, the request filter:
 
 * reads an incoming `opc-request-id` header when the client sends one
 * generates a new request ID when the header is absent
@@ -161,8 +161,5 @@ span=D7D339B1429A3E27AA189FA6E8262321
 
 ## References
 
-* [OciRequestId](../../request-id/request-id/src/main/java/com/oracle/helidon/oci/requestid/OciRequestId.java)
-* [RequestIdServerFilter](../../request-id/webserver/src/main/java/com/oracle/helidon/oci/requestid/webserver/RequestIdServerFilter.java)
-* [OciRequestIdFactory](../../request-id/webserver/src/main/java/com/oracle/helidon/oci/requestid/webserver/OciRequestIdFactory.java)
 * [Request ID example](../../examples/request-id/src/main/java/com/oracle/helidon/oci/examples/requestid/RequestIdEndpoint.java)
 * [Request IDs](https://confluence.oci.oraclecorp.com/pages/viewpage.action?spaceKey=DEX&title=Request+IDs)

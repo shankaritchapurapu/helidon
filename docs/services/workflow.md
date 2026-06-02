@@ -4,8 +4,10 @@
 
 ## Overview
 
-The workflow module provides generated configuration and service registry bindings for OCI Workflow-as-a-Service
-(WFaaS) integration in Helidon applications.
+The Workflow integration registers configured OCI Workflow-as-a-Service (WFaaS) clients with the
+Helidon service registry. Applications can inject the default worker client or named worker and
+poller clients, while configuration under `oci.workflow` controls endpoints, timeouts, retry
+policy, and TLS settings.
 
 ---
 
@@ -85,7 +87,7 @@ The example provides:
 * HTTP tests using a driver-style simulated workflow client
 * an opt-in integration test path for a configured WFaaS environment
 
-The example README includes build, run, and integration-test commands.
+See the [Workflow example](../../examples/workflow/README.md) for build, run, and integration-test commands.
 
 ---
 
@@ -95,17 +97,18 @@ The `oci.workflow` configuration can be customized using YAML configuration.
 
 WFaaS client properties:
 
-* `domain-id`: Workflow domain identifier. Default is `localhost`.
-* `endpoint-details.server-endpoint`: WFaaS endpoint. Default is `http://localhost:39000`.
-* `endpoint-details.connect-timeout`: Socket connect timeout. Default is `PT30S`.
-  `endpoint-details.connection-timeout` is also accepted as an alias.
-* `endpoint-details.worker-read-timeout`: Worker read timeout. Default is `PT30S`.
-* `endpoint-details.poller-read-timeout`: Poller read timeout. Default is `PT30S`.
-* `worker-identifier`: Optional override for the worker identity. When omitted, the runtime MXBean name is used.
-* `dynamic-ssl-context-provider-name`: Optional name of a reusable dynamic SSL context provider.
-* `retry-policy.max-retry-count`: Optional WFaaS retry policy max retry count.
-* `retry-policy.delay-between-retry`: Optional WFaaS retry delay. Use a `Duration` value such as `PT0.25S`.
-* `retry-policy.jitter-factor`: Optional WFaaS retry jitter factor.
+| Config Key | Default Value | Description |
+|------------|---------------|-------------|
+| `domain-id` | `localhost` | Workflow domain identifier. |
+| `endpoint-details.server-endpoint` | `http://localhost:39000` | WFaaS endpoint. |
+| `endpoint-details.connect-timeout` | `PT30S` | Socket connect timeout. `endpoint-details.connection-timeout` is also accepted as an alias. |
+| `endpoint-details.worker-read-timeout` | `PT30S` | Worker read timeout. |
+| `endpoint-details.poller-read-timeout` | `PT30S` | Poller read timeout. |
+| `worker-identifier` | Runtime MXBean name | Optional override for the worker identity. |
+| `dynamic-ssl-context-provider-name` | | Optional name of a reusable dynamic SSL context provider. |
+| `retry-policy.max-retry-count` | | Optional WFaaS retry policy max retry count. |
+| `retry-policy.delay-between-retry` | | Optional WFaaS retry delay. Use a `Duration` value such as `PT0.25S`. |
+| `retry-policy.jitter-factor` | | Optional WFaaS retry jitter factor. |
 
 Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
 in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
@@ -144,13 +147,14 @@ oci:
       jitter-factor: 0.5
 ```
 
-The endpoint example above matches the environment-config pattern documented in `docs/environment-config.md`.
+The endpoint example above matches the pattern documented in
+[Environment Configuration](../utilities/environment-config.md).
 
 ---
 
-## Migration
+## Upgrade
 
-If you are migrating from the Helidon OCI 1.3 `workflow-java-client` module, most WFaaS client
+If you are upgrading from the Helidon OCI 1.3 `workflow-java-client` module, most WFaaS client
 configuration can be carried forward with only a few changes.
 
 What you can keep:
@@ -170,7 +174,7 @@ What is intentionally different:
 * `worker-identifier` can now be configured explicitly. If you do not set it, the previous runtime-default behavior is preserved.
 * `retry-policy.*` can now be configured explicitly if you need to override the WFaaS retry behavior.
 
-Example migration:
+Example upgrade:
 
 Helidon OCI 1.3 style configuration:
 
@@ -207,7 +211,7 @@ oci:
     root-cert-path: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
 ```
 
-If your application only used the old worker and poller clients directly, the main migration work is to
+If your application only used the old worker and poller clients directly, the main upgrade work is to
 rename the timeout properties to the new `Duration` form and, if needed, update retry delay to the new
 `Duration` property. The additional properties are only needed if you want a custom `worker-identifier` or
 want to override retry behavior.
@@ -218,12 +222,18 @@ want to override retry behavior.
 
 An application integrating WFaaS typically follows this flow:
 
-1. Accept a domain request, such as `POST /instances`.
-2. Translate the domain request into a workflow payload.
-3. Create `LaunchWorkflowArguments`.
-4. Submit those arguments through `WorkflowClient.launchWorkflow(...)`.
-5. Read the returned `WorkflowInstance`.
-6. Call `WorkflowClient.getWorkflowInstance(workflowInstanceId)` to retrieve the latest workflow state.
+```mermaid
+flowchart TD
+    request["Accept domain request, such as POST /instances"]
+    payload["Translate request into workflow payload"]
+    launchArgs["Create LaunchWorkflowArguments"]
+    launch["Call WorkflowClient.launchWorkflow(...)"]
+    instance["Read returned WorkflowInstance"]
+    status["Call WorkflowClient.getWorkflowInstance(workflowInstanceId)"]
+    state["Return latest workflow state"]
+
+    request --> payload --> launchArgs --> launch --> instance --> status --> state
+```
 
 Example service code:
 

@@ -4,9 +4,11 @@
 
 ## Overview
 
-The Secret Service V2 (SSv2) integration provides the following features:
-1. Secret Service Config Source - SSv2 secrets retrieval over Helidon Config
-2. Secret Service TLS Manager - Server and Client mTls rotation
+The Secret Service V2 (SSv2) integration provides Helidon configuration and TLS support for SSv2.
+It includes:
+
+* Secret Service Config Source for SSv2 secret retrieval through Helidon Config
+* Secret Service TLS Manager for server and client mTLS rotation
 
 ---
 
@@ -221,11 +223,9 @@ server:
 
 ### Client mTLS rotation
 
-Following clients can use `oci-ssv2` Tls manager in Helidon:
+The following clients can use `oci-ssv2` Tls manager in Helidon:
 
-* [MicroProfile REST Client](https://helidon.io/docs/v4/mp/restclient)
-* [JAX-RS Client](https://helidon.io/docs/v4/mp/jaxrs/jaxrs-client)
-* [Helidon WebClient](https://helidon.io/docs/v4/mp/jaxrs/jaxrs-client)
+* Helidon WebClient
 * Any client able to use `javax.net.ssl.SSLContext` produced by `oci-ssv2` Tls manager
 
 Consider following example:
