@@ -105,13 +105,6 @@
                 <groupId>io.helidon.service</groupId>
                 <artifactId>helidon-service-maven-plugin</artifactId>
                 <version>${helidon.version}</version>
-                <dependencies>
-                    <dependency>
-                        <groupId>io.github.classgraph</groupId>
-                        <artifactId>classgraph</artifactId>
-                        <version>${version.lib.classgraph}</version>
-                    </dependency>
-                </dependencies>
                 <executions>
                     <execution>
                         <id>create-application</id>

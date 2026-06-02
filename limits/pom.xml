@@ -14,9 +14,23 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>helidon-oci-limits</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
 
     <name>Helidon OCI Limits</name>
+
+    <properties>
+        <oracle-internal-metrics-reporter-version>0.0.48</oracle-internal-metrics-reporter-version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- limits-dp-java-client:1.9 brings metrics-reporter:0.0.43; helidon-oci-limits requires 0.0.48. -->
+            <dependency>
+                <groupId>com.oracle.pic.telemetry.commons</groupId>
+                <artifactId>metrics-reporter</artifactId>
+                <version>${oracle-internal-metrics-reporter-version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -34,6 +48,11 @@
         <dependency>
             <groupId>com.oracle.oci.limits</groupId>
             <artifactId>limits-dp-java-client</artifactId>
+        </dependency>
+        <!-- Declare directly so helidon-oci-examples-limits also receives this local override. -->
+        <dependency>
+            <groupId>com.oracle.pic.telemetry.commons</groupId>
+            <artifactId>metrics-reporter</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.config</groupId>

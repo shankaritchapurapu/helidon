@@ -2,7 +2,7 @@
 
 ## Overview
 
-A release is performed by pusing to a release branch. The release build will publish artifacts and create a source tag. 
+A release is performed by pushing to a release branch. The release build will publish artifacts and create a source tag. 
 
 ## Steps to do a release
 

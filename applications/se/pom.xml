@@ -7,79 +7,46 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.helidon.applications</groupId>
-        <artifactId>helidon-se</artifactId>
-        <version>4.5.0-M1</version>
-        <relativePath/>
+        <groupId>com.oracle.helidon.oci</groupId>
+        <artifactId>helidon-oci-dependencies</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+        <relativePath>../../dependencies/pom.xml</relativePath>
     </parent>
 
-    <groupId>com.oracle.helidon.oci</groupId>
     <artifactId>helidon-oci-se</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Helidon OCI SE Applications</name>
     <description>Helidon OCI SE applications</description>
 
     <properties>
-        <helidon.oci.version>2.0.0-SNAPSHOT</helidon.oci.version>
+        <helidon.test.config.profile>test</helidon.test.config.profile>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
+        <maven.compiler.release>25</maven.compiler.release>
+
+        <version.lib.google-protobuf>4.31.1</version.lib.google-protobuf>
+        <version.lib.grpc>1.73.0</version.lib.grpc>
+
         <version.plugin.compiler>3.14.1</version.plugin.compiler>
+        <version.plugin.dependency>3.6.0</version.plugin.dependency>
+        <version.plugin.exec>3.1.0</version.plugin.exec>
         <version.plugin.failsafe>3.5.5</version.plugin.failsafe>
+        <version.plugin.helidon>4.0.26</version.plugin.helidon>
+        <version.plugin.helidon-cli>4.0.26</version.plugin.helidon-cli>
+        <version.plugin.jar>3.3.0</version.plugin.jar>
         <version.plugin.maven-build-helper-plugin>3.4.0</version.plugin.maven-build-helper-plugin>
         <version.plugin.openapi-generator-maven-plugin>7.11.0</version.plugin.openapi-generator-maven-plugin>
+        <version.plugin.os>1.5.0.Final</version.plugin.os>
+        <version.plugin.protobuf>0.6.1</version.plugin.protobuf>
+        <version.plugin.resources>3.3.1</version.plugin.resources>
         <version.plugin.splat-swagger-maven-plugin>0.3.9</version.plugin.splat-swagger-maven-plugin>
         <version.plugin.surefire>3.5.5</version.plugin.surefire>
-        <version.lib.classgraph>4.8.184</version.lib.classgraph>
-        <jersey-lib-version>2.47</jersey-lib-version>
-        <version.lib.logback>1.5.32</version.lib.logback>
-        <version.lib.mockito>5.22.0</version.lib.mockito>
-        <version.lib.slf4j>2.0.9</version.lib.slf4j>
         <version.helidon.extensions.openapi-generator>4.0.0-RC2</version.helidon.extensions.openapi-generator>
-        <maven.compiler.release>25</maven.compiler.release>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.oracle.helidon.oci</groupId>
-                <artifactId>helidon-oci-dependencies</artifactId>
-                <version>${helidon.oci.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <!-- The following override versions in parent pom -->
-            <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-client</artifactId>
-                <version>${jersey-lib-version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.inject</groupId>
-                <artifactId>jersey-hk2</artifactId>
-                <version>${jersey-lib-version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${version.lib.slf4j}</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>${version.lib.logback}</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${version.lib.logback}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>${version.lib.mockito}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <repositories>
         <repository>
@@ -176,16 +143,137 @@
     </pluginRepositories>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>${version.plugin.os}</version>
+            </extension>
+        </extensions>
         <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${version.plugin.compiler}</version>
                     <configuration>
                         <compilerArgs>
                             <arg>-Ahelidon.api.preview=ignore</arg>
                         </compilerArgs>
+                        <proc>full</proc>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${version.plugin.surefire}</version>
+                    <configuration>
+                        <systemPropertyVariables>
+                            <helidon.config.profile>${helidon.test.config.profile}</helidon.config.profile>
+                            <java.util.logging.config.file>${project.build.outputDirectory}/logging.properties</java.util.logging.config.file>
+                        </systemPropertyVariables>
+                        <useModulePath>false</useModulePath>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${version.plugin.failsafe}</version>
+                    <configuration>
+                        <useModulePath>false</useModulePath>
+                        <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                        <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>${version.plugin.dependency}</version>
+                    <executions>
+                        <execution>
+                            <id>copy-libs</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                                <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                                <overWriteReleases>false</overWriteReleases>
+                                <overWriteSnapshots>false</overWriteSnapshots>
+                                <overWriteIfNewer>true</overWriteIfNewer>
+                                <overWriteIfNewer>true</overWriteIfNewer>
+                                <includeScope>runtime</includeScope>
+                                <excludeArtifactIds>okio</excludeArtifactIds>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>${version.plugin.resources}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${version.plugin.jar}</version>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <addClasspath>true</addClasspath>
+                                <classpathPrefix>libs</classpathPrefix>
+                                <mainClass>${mainClass}</mainClass>
+                                <useUniqueVersions>false</useUniqueVersions>
+                            </manifest>
+                        </archive>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>${version.plugin.exec}</version>
+                    <configuration>
+                        <executable>java</executable>
+                        <longClasspath>true</longClasspath>
+                        <arguments>
+                            <argument>-classpath</argument>
+                            <classpath/>
+                            <argument>${mainClass}</argument>
+                        </arguments>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>io.helidon.build-tools</groupId>
+                    <artifactId>helidon-maven-plugin</artifactId>
+                    <version>${version.plugin.helidon}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>io.helidon.licensing</groupId>
+                            <artifactId>helidon-licensing</artifactId>
+                            <version>${helidon.version}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>io.helidon.build-tools</groupId>
+                    <artifactId>helidon-cli-maven-plugin</artifactId>
+                    <version>${version.plugin.helidon-cli}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.xolstice.maven.plugins</groupId>
+                    <artifactId>protobuf-maven-plugin</artifactId>
+                    <version>${version.plugin.protobuf}</version>
+                    <configuration>
+                        <protocArtifact>com.google.protobuf:protoc:${version.lib.google-protobuf}:exe:${os.detected.classifier}</protocArtifact>
+                        <pluginId>grpc-java</pluginId>
+                        <pluginArtifact>io.grpc:protoc-gen-grpc-java:${version.lib.grpc}:exe:${os.detected.classifier}</pluginArtifact>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>io.helidon.service</groupId>
+                    <artifactId>helidon-service-project</artifactId>
+                    <version>${helidon.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>io.helidon.service</groupId>
@@ -206,6 +294,13 @@
                     <groupId>org.openapitools</groupId>
                     <artifactId>openapi-generator-maven-plugin</artifactId>
                     <version>${version.plugin.openapi-generator-maven-plugin}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>io.helidon.extensions.openapi-generator</groupId>
+                            <artifactId>helidon-extensions-openapi-generator</artifactId>
+                            <version>${version.helidon.extensions.openapi-generator}</version>
+                        </dependency>
+                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>com.oracle.pic.platform.splat</groupId>
@@ -215,5 +310,27 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>jlink-image</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.helidon.build-tools</groupId>
+                        <artifactId>helidon-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jlink-image</id>
+                                <goals>
+                                    <goal>jlink-image</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

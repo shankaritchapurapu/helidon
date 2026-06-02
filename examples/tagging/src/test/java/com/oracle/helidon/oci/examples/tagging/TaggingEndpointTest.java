@@ -36,20 +36,10 @@ import com.oracle.pic.tagging.common.tagset.tagslice.FreeformTags;
 import com.oracle.pic.tagging.common.tagset.tagslice.SystemTags;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ServerTest
 class TaggingEndpointTest {
@@ -69,46 +59,24 @@ class TaggingEndpointTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        reset(TaggingEndpointTestServices.AUTHENTICATOR,
-              TaggingEndpointTestServices.AUTHORIZATION,
-              TaggingEndpointTestServices.IDENTITY);
-
+        TaggingEndpointTestServices.reset();
         var principal = new PrincipalImpl("ocid1.tenancy.oc1..example", "ocid1.user.oc1..example");
         var securityContext = SecurityContextImpl.success(principal);
-        when(TaggingEndpointTestServices.AUTHENTICATOR.authenticate(anyString(),
-                                                                    any(URI.class),
-                                                                    anyMap(),
-                                                                    any()))
-                .thenReturn(securityContext);
-        when(TaggingEndpointTestServices.AUTHENTICATOR.authenticate(anyString(),
-                                                                    any(URI.class),
-                                                                    anyMap(),
-                                                                    any(),
-                                                                    anyBoolean()))
-                .thenReturn(securityContext);
+        TaggingEndpointTestServices.AUTHENTICATOR.securityContext(securityContext);
 
         AuthorizationResponse authorizationResponse = authorizationResponse(TAGGING_CLIENT.createEmptyTagSlug());
+        TaggingEndpointTestServices.AUTHORIZATION.authorizationResponse(authorizationResponse);
 
-        when(TaggingEndpointTestServices.AUTHORIZATION.getServiceName()).thenReturn("helidon-tagging-example");
-        when(TaggingEndpointTestServices.AUTHORIZATION.getRegion()).thenReturn("us-ashburn-1");
-        when(TaggingEndpointTestServices.AUTHORIZATION.getPhysicalAD()).thenReturn("AD-1");
-        when(TaggingEndpointTestServices.AUTHORIZATION.preAuthorize(any())).thenReturn(true);
-        when(TaggingEndpointTestServices.AUTHORIZATION.authorizeAll(any())).thenReturn(true);
-        when(TaggingEndpointTestServices.AUTHORIZATION.makeAuthorizationCall(any(AuthorizationRequest.class)))
-                .thenReturn(authorizationResponse);
-        when(TaggingEndpointTestServices.AUTHORIZATION.makeAuthorizationCall(any(AuthorizationRequest.class), anyString()))
-                .thenReturn(authorizationResponse);
-
-        when(TaggingEndpointTestServices.IDENTITY.createTag(any(CreateTagRequest.class)))
-                .thenReturn(CreateTagResponse.builder()
-                                    .tag(Tag.builder()
-                                                 .id("ocid1.tag.oc1..example")
-                                                 .tagNamespaceId(TAG_NAMESPACE_ID)
-                                                 .name("CostCenter")
-                                                 .description("Cost center tag")
-                                                 .lifecycleState(Tag.LifecycleState.Active)
-                                                 .build())
-                                    .build());
+        Tag tag = Tag.builder()
+                .id("ocid1.tag.oc1..example")
+                .tagNamespaceId(TAG_NAMESPACE_ID)
+                .name("CostCenter")
+                .description("Cost center tag")
+                .lifecycleState(Tag.LifecycleState.Active)
+                .build();
+        TaggingEndpointTestServices.IDENTITY.createTagResponse(CreateTagResponse.builder()
+                                                                    .tag(tag)
+                                                                    .build());
     }
 
     @Test
@@ -128,8 +96,7 @@ class TaggingEndpointTest {
                 tags.systemTags());
         byte[] authorizedSlug = tagSlug(authorizedTags);
         AuthorizationResponse authorizationResponse = authorizationResponse(authorizedSlug);
-        when(TaggingEndpointTestServices.AUTHORIZATION.makeAuthorizationCall(any(AuthorizationRequest.class)))
-                .thenReturn(authorizationResponse);
+        TaggingEndpointTestServices.AUTHORIZATION.authorizationResponse(authorizationResponse);
         CreateTaggedResourceRequest payload = new CreateTaggedResourceRequest(RESOURCE_ID,
                                                                               COMPARTMENT_ID,
                                                                               tags);
@@ -147,13 +114,11 @@ class TaggingEndpointTest {
             assertThat(resource.tags(), is(authorizedTags));
         }
 
-        verify(TaggingEndpointTestServices.IDENTITY, never()).createTag(any(CreateTagRequest.class));
+        assertThat(TaggingEndpointTestServices.IDENTITY.createTagRequests().isEmpty(), is(true));
 
-        ArgumentCaptor<AuthorizationRequest> authorizationCaptor = ArgumentCaptor.forClass(AuthorizationRequest.class);
-        verify(TaggingEndpointTestServices.AUTHORIZATION, atLeastOnce())
-                .makeAuthorizationCall(authorizationCaptor.capture());
-        AuthorizationRequest authorizationRequest = authorizationCaptor.getAllValues()
-                .get(authorizationCaptor.getAllValues().size() - 1);
+        List<AuthorizationRequest> authorizationRequests =
+                TaggingEndpointTestServices.AUTHORIZATION.authorizationRequests();
+        AuthorizationRequest authorizationRequest = authorizationRequests.get(authorizationRequests.size() - 1);
         assertThat(authorizationRequest.getTargetCompartmentId().orElseThrow(), is(COMPARTMENT_ID));
         assertThat(authorizationRequest.getPermissions(), hasItem(Permission.get(TaggingEndpoint.CREATE_PERMISSION)));
         assertThat(authorizationRequest.mutable().getTags().getTagActionKind(), is(TagActionKind.TAGS_START));
@@ -175,15 +140,16 @@ class TaggingEndpointTest {
                 .submit(JSON_BINDING.serialize(payload))) {
             assertThat(response.status(), is(Status.OK_200));
 
-            TagDefinitionView tagDefinition = JSON_BINDING.deserialize(response.as(String.class), TagDefinitionView.class);
+            TagDefinitionView tagDefinition = JSON_BINDING.deserialize(response.as(String.class),
+                                                                       TagDefinitionView.class);
             assertThat(tagDefinition.id(), is("ocid1.tag.oc1..example"));
             assertThat(tagDefinition.name(), is("CostCenter"));
             assertThat(tagDefinition.lifecycleState(), is("ACTIVE"));
         }
 
-        ArgumentCaptor<CreateTagRequest> createTagCaptor = ArgumentCaptor.forClass(CreateTagRequest.class);
-        verify(TaggingEndpointTestServices.IDENTITY).createTag(createTagCaptor.capture());
-        CreateTagRequest createTagRequest = createTagCaptor.getValue();
+        List<CreateTagRequest> createTagRequests = TaggingEndpointTestServices.IDENTITY.createTagRequests();
+        assertThat(createTagRequests.size(), is(1));
+        CreateTagRequest createTagRequest = createTagRequests.get(0);
         CreateTagDetails createTagDetails = createTagRequest.getCreateTagDetails();
         assertThat(createTagRequest.getTagNamespaceId(), is(TAG_NAMESPACE_ID));
         assertThat(createTagDetails.getName(), is("CostCenter"));
@@ -191,12 +157,11 @@ class TaggingEndpointTest {
         assertThat(createTagDetails.getFreeformTags().get("owner"), is("platform"));
         assertThat(createTagDetails.getIsCostTracking(), is(false));
 
-        ArgumentCaptor<AuthorizationRequest> authorizationCaptor = ArgumentCaptor.forClass(AuthorizationRequest.class);
-        verify(TaggingEndpointTestServices.AUTHORIZATION, atLeastOnce())
-                .preAuthorize(authorizationCaptor.capture());
-        AuthorizationRequest authorizationRequest = authorizationCaptor.getAllValues()
-                .get(authorizationCaptor.getAllValues().size() - 1);
-        assertThat(authorizationRequest.getPermissions(), hasItem(Permission.get(TaggingEndpoint.CREATE_TAG_PERMISSION)));
+        List<AuthorizationRequest> authorizationRequests =
+                TaggingEndpointTestServices.AUTHORIZATION.preAuthorizeRequests();
+        AuthorizationRequest authorizationRequest = authorizationRequests.get(authorizationRequests.size() - 1);
+        assertThat(authorizationRequest.getPermissions(),
+                   hasItem(Permission.get(TaggingEndpoint.CREATE_TAG_PERMISSION)));
     }
 
     @Test
@@ -213,21 +178,8 @@ class TaggingEndpointTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private static Map<String, List<String>> anyMap() {
-        return any(Map.class);
-    }
-
     private static AuthorizationResponse authorizationResponse(byte[] authorizedSlug) {
-        AuthorizationResponse authorizationResponse = mock(AuthorizationResponse.class);
-        when(authorizationResponse.authorizeAllPermissions()).thenReturn(true);
-        when(authorizationResponse.authorizeTags()).thenReturn(true);
-        when(authorizationResponse.getTagSlug()).thenReturn(Optional.of(authorizedSlug));
-        when(authorizationResponse.getPermissions()).thenReturn(Set.of(Permission.get(TaggingEndpoint.CREATE_PERMISSION)));
-        when(authorizationResponse.getRequestId()).thenReturn("authz-request-1");
-        when(authorizationResponse.getAuthorizationResponseResult())
-                .thenReturn(AuthorizationResponseResult.noErrorResult());
-        return authorizationResponse;
+        return new TestAuthorizationResponse(authorizedSlug);
     }
 
     private static byte[] tagSlug(ResourceTags tags) {
@@ -242,5 +194,52 @@ class TaggingEndpointTest {
             builder.systemTags(SystemTags.builder().tags(tags.systemTags()).build());
         }
         return TAGGING_CLIENT.toByteArray(builder.build());
+    }
+
+    private record TestAuthorizationResponse(byte[] tagSlug) implements AuthorizationResponse {
+        @Override
+        public boolean authorizeAnyPermission() {
+            return true;
+        }
+
+        @Override
+        public boolean authorizeAllPermissions() {
+            return true;
+        }
+
+        @Override
+        public boolean authorizeSetOfPermissions(Set<Permission> permissions) {
+            return true;
+        }
+
+        @Override
+        public boolean authorizeTags() {
+            return true;
+        }
+
+        @Override
+        public Optional<String> getTagErrorMessage() {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<byte[]> getTagSlug() {
+            return Optional.of(tagSlug);
+        }
+
+        @Override
+        public Set<Permission> getPermissions() {
+            return Set.of(Permission.get(TaggingEndpoint.CREATE_PERMISSION));
+        }
+
+        @Override
+        public String getRequestId() {
+            return "authz-request-1";
+        }
+
+        @Override
+        public AuthorizationResponseResult getAuthorizationResponseResult() {
+            return AuthorizationResponseResult.noErrorResult();
+        }
     }
 }

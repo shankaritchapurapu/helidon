@@ -96,13 +96,6 @@
                         </configuration>
                     </execution>
                 </executions>
-                <dependencies>
-                    <dependency>
-                        <groupId>io.helidon.extensions.openapi-generator</groupId>
-                        <artifactId>helidon-extensions-openapi-generator</artifactId>
-                        <version>${version.helidon.extensions.openapi-generator}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

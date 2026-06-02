@@ -16,7 +16,6 @@
 
     <artifactId>helidon-oci-codegen</artifactId>
     <name>Helidon OCI Codegen</name>
-    <version>2.0.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>

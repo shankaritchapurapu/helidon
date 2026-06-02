@@ -19,6 +19,7 @@
     <description>Maven dependency management for Helidon OCI native applications</description>
 
     <properties>
+        <helidon.version>4.5.0-M1</helidon.version>
         <oracle-internal-commons-core-version>5.0.90</oracle-internal-commons-core-version>
         <oracle-internal-commons-core-regions-version>2.1.85</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-exception-mapping-version>4.0.83</oracle-internal-commons-exception-mapping-version>
@@ -36,23 +37,34 @@
         <oracle-internal-metering-lease-kiev-version>1.4.21</oracle-internal-metering-lease-kiev-version>
         <dropwizard-lifecycle-version>3.0.7</dropwizard-lifecycle-version>
         <oracle-internal-splat-sdk-version>0.1.39635</oracle-internal-splat-sdk-version>
-        <oracle-oci-sdk-version>2.88.0</oracle-oci-sdk-version>
         <sherlock-version>3.0.13</sherlock-version>
         <version-lib-joda-time>2.10.14</version-lib-joda-time>
-        <jersey-lib-version>2.47</jersey-lib-version>
         <bc-fips-lib-version>1.0.2.4</bc-fips-lib-version>
         <nimbus-jose-jwt-lib-version>9.10.1</nimbus-jose-jwt-lib-version>
         <bcpkix-fips-lib-version>1.0.6</bcpkix-fips-lib-version>
         <checker-qual-lib-version>3.49.5</checker-qual-lib-version>
-        <jakarta-ws-rs-version>2.1.6</jakarta-ws-rs-version>
         <j2objc-lib-version>3.0.0</j2objc-lib-version>
-        <version.lib.logback>1.3.11</version.lib.logback>
+        <version.lib.httpclient>4.5.13</version.lib.httpclient>
+        <version.lib.httpcore>4.4.13</version.lib.httpcore>
+        <version.lib.jakarta.annotation-api>2.1.1</version.lib.jakarta.annotation-api>
+        <version.lib.jakarta.jaxrs-api>2.1.6</version.lib.jakarta.jaxrs-api>
+        <version.lib.jersey>2.47</version.lib.jersey>
+        <version.lib.logback>1.5.32</version.lib.logback>
+        <version.lib.oci>2.88.0</version.lib.oci>
         <version.lib.slf4j>2.0.9</version.lib.slf4j>
         <pic-vault-user-version>1.0.8</pic-vault-user-version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>io.helidon</groupId>
+                <artifactId>helidon-dependencies</artifactId>
+                <version>${helidon.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Direct entries below either add OCI dependencies or override versions from helidon-dependencies. -->
             <dependency>
                 <groupId>com.oracle.pic.vault</groupId>
                 <artifactId>vault-user-java-client</artifactId>
@@ -520,73 +532,118 @@
                 <artifactId>checker-qual</artifactId>
                 <version>${checker-qual-lib-version}</version>
             </dependency>
+            <!-- For convergence between OCI Java SDK and Jersey Apache connector -->
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${version.lib.httpclient}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>${version.lib.httpcore}</version>
+            </dependency>
 
             <!-- JAX-RS -->
+            <!-- helidon-oci-identity/helidon-oci-jaxrs use this directly; helidon-oci-examples-dataplane pulls older 1.3.x. -->
+            <dependency>
+                <groupId>jakarta.annotation</groupId>
+                <artifactId>jakarta.annotation-api</artifactId>
+                <version>${version.lib.jakarta.annotation-api}</version>
+            </dependency>
             <dependency>
                 <groupId>jakarta.ws.rs</groupId>
                 <artifactId>jakarta.ws.rs-api</artifactId>
-                <version>${jakarta-ws-rs-version}</version>
+                <version>${version.lib.jakarta.jaxrs-api}</version>
             </dependency>
+            <!-- Import Jersey 2.47 so unmanaged Jersey transitives stay aligned with version.lib.jersey. -->
             <dependency>
                 <groupId>org.glassfish.jersey</groupId>
                 <artifactId>jersey-bom</artifactId>
-                <version>${jersey-lib-version}</version>
+                <version>${version.lib.jersey}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.core</groupId>
                 <artifactId>jersey-client</artifactId>
-                <version>${jersey-lib-version}</version>
+                <version>${version.lib.jersey}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.inject</groupId>
                 <artifactId>jersey-hk2</artifactId>
-                <version>${jersey-lib-version}</version>
+                <version>${version.lib.jersey}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.core</groupId>
                 <artifactId>jersey-common</artifactId>
-                <version>${jersey-lib-version}</version>
+                <version>${version.lib.jersey}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.connectors</groupId>
                 <artifactId>jersey-apache-connector</artifactId>
-                <version>${jersey-lib-version}</version>
+                <version>${version.lib.jersey}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.ext</groupId>
                 <artifactId>jersey-entity-filtering</artifactId>
-                <version>${jersey-lib-version}</version>
+                <version>${version.lib.jersey}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.media</groupId>
                 <artifactId>jersey-media-multipart</artifactId>
-                <version>${jersey-lib-version}</version>
+                <version>${version.lib.jersey}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.media</groupId>
                 <artifactId>jersey-media-json-jackson</artifactId>
-                <version>${jersey-lib-version}</version>
+                <version>${version.lib.jersey}</version>
+            </dependency>
+            <!-- helidon-oci-examples-dataplane pulls these via dropwizard-core/service-core; keep them on Jersey 2.47. -->
+            <dependency>
+                <groupId>org.glassfish.jersey.core</groupId>
+                <artifactId>jersey-server</artifactId>
+                <version>${version.lib.jersey}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.containers</groupId>
+                <artifactId>jersey-container-servlet</artifactId>
+                <version>${version.lib.jersey}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.containers</groupId>
+                <artifactId>jersey-container-servlet-core</artifactId>
+                <version>${version.lib.jersey}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext</groupId>
+                <artifactId>jersey-bean-validation</artifactId>
+                <version>${version.lib.jersey}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.ext</groupId>
+                <artifactId>jersey-metainf-services</artifactId>
+                <version>${version.lib.jersey}</version>
             </dependency>
 
             <!-- Oracle SDK -->
+            <!-- Import OCI SDK 2.88.0 for SDK artifacts not explicitly listed below. -->
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-bom</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-addons-internal</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-common</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.glassfish.jersey.core</groupId>
@@ -609,7 +666,7 @@
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-circuitbreaker</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.glassfish.jersey.core</groupId>
@@ -628,62 +685,73 @@
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-addons-apache</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
+            </dependency>
+            <!-- These addons surfaced as lower-version OCI SDK transitives; keep them on version.lib.oci. -->
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-addons-authextensions</artifactId>
+                <version>${version.lib.oci}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.oci.sdk</groupId>
+                <artifactId>oci-java-sdk-addons-s2s</artifactId>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-addons-oke-workload-identity</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-audit</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-objectstorage</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-objectstorage-generated</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-objectstorage-extensions</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-monitoring</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-identitydataplane</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-identity</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-core</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-database</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.oci.sdk</groupId>
                 <artifactId>oci-java-sdk-workrequests</artifactId>
-                <version>${oracle-oci-sdk-version}</version>
+                <version>${version.lib.oci}</version>
             </dependency>
             <dependency>
                 <groupId>com.oracle.pic.sherlock</groupId>
@@ -709,6 +777,11 @@
             <dependency>
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-core</artifactId>
+                <version>${version.lib.logback}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
                 <version>${version.lib.logback}</version>
             </dependency>
             <dependency>

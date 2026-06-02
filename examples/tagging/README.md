@@ -125,5 +125,6 @@ From `examples/tagging`:
 mvn test
 ```
 
-The tests start the example application, mock `IAuthorizationClient` and OCI SDK `Identity` through test-only service
-registry bindings, and exercise the HTTP tag definition and resource creation paths without making real OCI calls.
+The tests start the example application, replace `IAuthorizationClient` and OCI SDK `Identity` with deterministic
+test-only service registry bindings, and exercise the HTTP tag definition and resource creation paths without making
+real OCI calls.

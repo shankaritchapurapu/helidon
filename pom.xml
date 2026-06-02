@@ -15,7 +15,6 @@
     </parent>
 
     <artifactId>helidon-oci-project</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Helidon OCI Project</name>
@@ -39,7 +38,6 @@
         <dependency-check.skip>false</dependency-check.skip>
         <checkstyle.skip>false</checkstyle.skip>
 
-        <helidon.version>4.5.0-M1</helidon.version>
         <version.lib.checkstyle>13.3.0</version.lib.checkstyle>
         <version.lib.mockito>5.22.0</version.lib.mockito>
 
@@ -47,7 +45,7 @@
         <version.plugin.compiler>3.14.1</version.plugin.compiler>
         <version.plugin.extra-enforcer-rules>1.7.0</version.plugin.extra-enforcer-rules>
         <version.plugin.failsafe>3.5.5</version.plugin.failsafe>
-        <version.plugin.helidon-build-tools>4.0.23</version.plugin.helidon-build-tools>
+        <version.plugin.helidon-build-tools>4.0.26</version.plugin.helidon-build-tools>
         <version.plugin.dependency-check>12.2.0</version.plugin.dependency-check>
         <version.plugin.surefire>3.5.5</version.plugin.surefire>
         <version.plugin.spotbugs>4.9.8.1</version.plugin.spotbugs>
@@ -58,7 +56,6 @@
         <version.plugin.maven-exec-plugin>3.1.0</version.plugin.maven-exec-plugin>
         <version.plugin.maven-jar-plugin>3.3.0</version.plugin.maven-jar-plugin>
         <version.plugin.maven-javadoc-plugin>3.12.0</version.plugin.maven-javadoc-plugin>
-        <version.plugin.maven-versions-plugin>2.19.1</version.plugin.maven-versions-plugin>
     </properties>
 
     <modules>
@@ -87,26 +84,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>io.helidon</groupId>
-                <artifactId>helidon-dependencies</artifactId>
-                <version>${helidon.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.oracle.oci.sdk</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>io.helidon.webserver.testing.junit5</groupId>
-                <artifactId>helidon-webserver-testing-junit5</artifactId>
-                <scope>test</scope>
-                <version>${helidon.version}</version>
-            </dependency>
-            <!-- misc. other 3rd party dependencies -->
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
@@ -219,11 +196,6 @@
                     <version>${version.plugin.compiler}</version>
                 </plugin>
                 <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>versions-maven-plugin</artifactId>
-                    <version>${version.plugin.maven-versions-plugin}</version>
-                </plugin>
-                <plugin>
                     <groupId>org.commonjava.maven.plugins</groupId>
                     <artifactId>directory-maven-plugin</artifactId>
                     <version>${version.plugin.maven-directory-plugin}</version>
@@ -257,7 +229,7 @@
                         <dependency>
                             <groupId>com.oracle.oci.sdk</groupId>
                             <artifactId>oci-java-sdk-enforcer-rules</artifactId>
-                            <version>${oracle-oci-sdk-version}</version>
+                            <version>${version.lib.oci}</version>
                             <optional>false</optional>
                         </dependency>
                         <dependency>
@@ -288,10 +260,10 @@
                                     </helidonDependenciesRule -->
                                     <bannedDependencies>
                                         <searchTransitive>true</searchTransitive>
-                                        <message>OCI Java SDK dependencies must resolve to ${oracle-oci-sdk-version}</message>
+                                        <message>OCI Java SDK dependencies must resolve to ${version.lib.oci}</message>
                                         <excludes>
-                                            <exclude>com.oracle.oci.sdk:*:[0,${oracle-oci-sdk-version})</exclude>
-                                            <exclude>com.oracle.oci.sdk:*:(${oracle-oci-sdk-version},)</exclude>
+                                            <exclude>com.oracle.oci.sdk:*:[0,${version.lib.oci})</exclude>
+                                            <exclude>com.oracle.oci.sdk:*:(${version.lib.oci},)</exclude>
                                         </excludes>
                                     </bannedDependencies>
                                     <noMixedOciJavaSdkVersionsRule implementation="com.oracle.bmc.enforcer.rule.NoMixedOciJavaSdkVersionsRule">
