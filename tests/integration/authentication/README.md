@@ -2,7 +2,12 @@
 
 ## Overview
 
-This module contains tests related to integration with various Authentication mechanism provided by OCI SDK.
+This module contains tests related to integration with authentication mechanisms provided by OCI SDK.
+
+## Modules
+
+- `instance-principal`: integration tests for instance-principal authentication details providers.
+- `service-principal`: integration tests for service-principal authentication details providers.
 
 ## Prerequisites
 
@@ -16,7 +21,7 @@ Please see [How to locally test your OCI SDK Integration](../../../README.md) to
    ```shell
    $ ssh -v -L 8000:169.254.169.254:80 oci-reference-service-ad1 -t watch -n 90 date
    ```
-2. Run the unit test using `STTest`profile, where `ST` stands for `SSH Tunneling`.
+2. Run the integration tests using `STTest` profile, where `ST` stands for `SSH Tunneling`.
    ```shell
    $ mvn clean install -PSTTest
    ```
