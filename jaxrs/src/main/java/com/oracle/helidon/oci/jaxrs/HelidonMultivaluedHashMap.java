@@ -125,7 +125,7 @@ public class HelidonMultivaluedHashMap implements MultivaluedMap<String, String>
     public List<String> get(Object key) {
         if (key instanceof String s) {
             HeaderName headerName = HeaderNames.create(s);
-            if (!request.headers().contains(headerName)) {
+            if (request.headers().contains(headerName)) {
                 return request.headers().get(headerName).allValues();
             }
         }
