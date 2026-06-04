@@ -6,7 +6,6 @@ package com.oracle.helidon.oci.envconfig;
 import java.util.Map;
 
 import io.helidon.config.Config;
-import io.helidon.config.ConfigException;
 import io.helidon.config.ConfigSources;
 import io.helidon.config.MetaConfig;
 import io.helidon.config.spi.ConfigSource;
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import static java.util.Map.entry;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class OciEnvConfigSourceProviderTest {
 
@@ -88,7 +86,7 @@ class OciEnvConfigSourceProviderTest {
     }
 
     @Test
-    void keepsProviderPathLazyUntilValueAccess() {
+    void returnsEmptyValuesWhenProviderPathMaterializationFails() {
         Config metaConfig = Config.just(ConfigSources.create(Map.ofEntries(
                 entry("type", OciEnvConfigSourceProvider.TYPE),
                 entry("properties.dynamic-core-regions.enabled", "false"),
@@ -98,10 +96,24 @@ class OciEnvConfigSourceProviderTest {
 
         Config config = providerConfig(metaConfig);
 
-        ConfigException exception = assertThrows(ConfigException.class,
-                                                 () -> config.get("oci.env.region").asString().orElseThrow());
+        assertThat(config.get("oci.env.region").exists(), is(false));
+        assertThat(config.get("oci.env.availability-domain").exists(), is(false));
+    }
 
-        assertThat(exception.getMessage(), is("Configured location override region 'not-a-region' is invalid"));
+    @Test
+    void returnsEmptyValuesWhenProviderPathConfigConversionFails() {
+        Config metaConfig = Config.just(ConfigSources.create(Map.ofEntries(
+                entry("type", OciEnvConfigSourceProvider.TYPE),
+                entry("properties.dynamic-core-regions.enabled", "false"),
+                entry("properties.prefix", "oci.env"),
+                entry("properties.location-override.region", "us-ashburn-1"),
+                entry("properties.location-override.availability-domain", "iad-ad-1"),
+                entry("properties.location-override.fault-domain", "bogus"))));
+
+        Config config = providerConfig(metaConfig);
+
+        assertThat(config.get("oci.env.region").exists(), is(false));
+        assertThat(config.get("oci.env.availability-domain").exists(), is(false));
     }
 
     private static Config providerConfig(Config metaConfig) {

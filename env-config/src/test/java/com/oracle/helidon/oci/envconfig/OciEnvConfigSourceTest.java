@@ -88,8 +88,30 @@ class OciEnvConfigSourceTest {
     }
 
     @Test
+    void returnsEmptyValuesWhenMaterializationFails() {
+        AtomicInteger createCount = new AtomicInteger();
+        OciEnvConfigSource source = new OciEnvConfigSource("test.env", () -> {
+            createCount.incrementAndGet();
+            throw new IllegalStateException("failed to resolve environment");
+        });
+
+        Config config = Config.builder(source)
+                .disableEnvironmentVariablesSource()
+                .disableSystemPropertiesSource()
+                .build();
+
+        assertThat(createCount.get(), is(0));
+
+        assertThat(config.get("test.env.region").exists(), is(false));
+        assertThat(createCount.get(), is(1));
+
+        assertThat(config.get("test.env.availability-domain").exists(), is(false));
+        assertThat(createCount.get(), is(1));
+    }
+
+    @Test
     void loadsConfigFromOciConfigYamlWhenMetaConfigMissing() {
-        OciEnvConfigSource source = new OciEnvConfigSource();
+        OciEnvConfigSource source = new OciEnvConfigSource(Config.empty());
 
         Config config = Config.builder(source)
                 .disableEnvironmentVariablesSource()
@@ -109,7 +131,7 @@ class OciEnvConfigSourceTest {
                 "helidon.oci-env.location-override.availability-domain", "eu-frankfurt-1-ad-1",
                 "helidon.oci-env.location-override.fault-domain", "2"),
                              () -> {
-                                 OciEnvConfigSource source = new OciEnvConfigSource();
+                                 OciEnvConfigSource source = new OciEnvConfigSource(Config.empty());
 
                                  Config config = Config.builder(source)
                                          .disableEnvironmentVariablesSource()

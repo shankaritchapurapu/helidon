@@ -505,7 +505,7 @@ class OciEnvConfigFactory {
                            ConfigSources.create(ociConfig()));
     }
 
-    private static Config serviceConfig(Optional<MetaConfig> metaConfig) {
+    static Config serviceConfig(Optional<MetaConfig> metaConfig) {
         return metaConfig.map(MetaConfig::metaConfiguration)
                 .map(OciEnvConfigFactory::providerConfig)
                 .orElseGet(OciEnvConfigFactory::ociConfig);
