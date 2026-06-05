@@ -54,15 +54,12 @@ class AuthenticationMethodSessionToken implements OciAuthenticationMethod {
                    Supplier<Optional<SessionTokenAuthenticationDetailsProvider>> providerSupplier) {
 
         /*
-        Session tokens provide is available if either of the following is true:
-        - there is authentication.session-token configuration
-        - there is an OCI config file, and it contains security_token_file
+        Explicit authentication.session-token configuration takes precedence and intentionally short-circuits OCI config file lookup. Config file lookup is only for implicit selection through security_token_file.
          */
 
-        Optional<ConfigFileReader.ConfigFile> maybeConfigFile = configFileSupplier.get();
         Optional<SessionTokenMethodConfig> maybeSessionTokenConfig = config.sessionTokenMethodConfig();
 
-        if (hasSecurityToken(maybeConfigFile) || maybeSessionTokenConfig.isPresent()) {
+        if (maybeSessionTokenConfig.isPresent() || hasSecurityToken(configFileSupplier.get())) {
             try {
                 return providerSupplier.get()
                         .map(BasicAuthenticationDetailsProvider.class::cast);
