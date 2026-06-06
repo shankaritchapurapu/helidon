@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import io.helidon.http.Status;
 import io.helidon.metrics.api.Counter;
 import io.helidon.metrics.api.Tag;
 import io.helidon.metrics.api.Timer;
@@ -69,8 +70,7 @@ class OciMetricsSemanticConventions implements AutoHttpMetricsProvider {
 
         private void updateMetrics(RoutingRequest request, RoutingResponse response, long elapsedNanos) {
             HttpRequestMetricKey key = new HttpRequestMetricKey(request.prologue().method().text(),
-                                                                request.matchingPattern()
-                                                                        .orElseGet(() -> request.path().toString()),
+                                                                route(request, response),
                                                                 (response.status().code() / 100) + "xx");
             HttpRequestMeters meters = metersByKey.computeIfAbsent(key, this::createMeters);
             meters.counter().increment();
@@ -87,6 +87,22 @@ class OciMetricsSemanticConventions implements AutoHttpMetricsProvider {
                                                        .addTag(Tag.create("route", key.route()))
                                                        .addTag(Tag.create("status.family", key.statusFamily())));
             return new HttpRequestMeters(counter, timer);
+        }
+
+        private String route(RoutingRequest request, RoutingResponse response) {
+            return request.matchingPattern()
+                    .orElseGet(() -> routeNotFound(response.status())
+                            ? ""
+                            : request.path().path());
+        }
+
+        private boolean routeNotFound(Status status) {
+            /*
+            Helidon routing reports no matched route as 404. Other no-pattern responses can still come from legitimate
+            fixed-path routes or filters, so keep their concrete path instead of treating every unmatched status as
+            high-cardinality.
+             */
+            return status.code() == Status.NOT_FOUND_404.code();
         }
     }
 
