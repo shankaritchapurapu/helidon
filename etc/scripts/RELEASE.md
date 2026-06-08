@@ -27,7 +27,9 @@ export VERSION="1.0.0"
     ```
     git push origin release-${VERSION}
     ```
-5. Verify release
+5. This should start a build on the `release-${VERSION}` branch in our DevopsSCM Repo.
+   1. If you see a failure in building due to missing artifact version, then we have to change build to push artifacts in order. Refer to older release version e.g. [2.0.0-RC1](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon/files/ef1f2b9b782a978280544f601b01916e29a69f4a?filePath=ocibuild.conf&refName=2.0.0-RC1&fileName=ocibuild.conf&_ctx=us-phoenix-1%2Cdevops_scm_central&commitId=4f2053a4118dce3f7bab4945cc84266f925c7074)
+6. Once the build is successful, verify the release:
    1. Check the repo to make sure release tag was created (should match $VERSION)
    2. Check https://artifactory.oci.oraclecorp.com/helidon-oci-release-maven-local/com/oracle/helidon/oci/ and verify artifacts are there
    3. Try building example application using released bits.
