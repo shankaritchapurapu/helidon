@@ -14,7 +14,9 @@ The example combines the OCI Helidon pieces that fit naturally in a single SE ap
   status endpoint exposes the current request id through a direct `OciRequestId`
   resource-method parameter
 - `helidon-oci-errorcode`: business failures are reported with OCI-style error codes
-  and JSON payloads
+  and JSON payloads. The robot endpoints show a service-owned response envelope,
+  and `/data-plane/errors/renderable` shows the automatic WebServer mapper for
+  thrown `RenderableException`.
 - `helidon-oci-identity`: write operations require a signed request via method-level
   `@AuthorizationPermission`, and the endpoint injects `Principal` directly into secured
   resource methods to access the authenticated principal
@@ -71,6 +73,9 @@ Open endpoints:
 - `GET /data-plane/robots/{id}`
   Fetches a robot. Robot lookup and mutation responses use a small envelope with
   `responseStatus`, `payload`, and `error`.
+- `GET /data-plane/errors/renderable`
+  Throws `RenderableException` and lets `helidon-oci-errorcode-webserver` render
+  the default OCI error JSON response.
 
 Signed endpoints:
 
@@ -87,6 +92,7 @@ Example open requests:
 curl -s http://localhost:8080/data-plane | jq
 curl -s http://localhost:8080/data-plane/robots | jq
 curl -s http://localhost:8080/data-plane/robots/robot-1 | jq
+curl -i http://localhost:8080/data-plane/errors/renderable
 curl -s http://localhost:8080/data-plane/probe
 ```
 
@@ -112,6 +118,7 @@ It enables:
 - Kiev persistence through `oci.kiev`
 - direct `OciRequestId` method-parameter injection on the status endpoint
 - request-id support through the dependency
+- automatic `RenderableException` mapping through `server.features.oci-error-code`
 - audit via `oci.auditv2`
 - identity authn/authz settings via `oci.identity`
 
@@ -151,4 +158,5 @@ The tests cover:
 
 - request-id propagation on open routes
 - OCI error JSON on missing resources
+- automatic `RenderableException` mapping through the error-code WebServer module
 - signed create/update/delete flows using the hard-coded key supplier

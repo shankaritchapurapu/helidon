@@ -63,6 +63,14 @@ class DataPlaneEndpoint {
     }
 
     @Http.GET
+    @Http.Path("/errors/renderable")
+    @Http.Produces(MediaTypes.APPLICATION_JSON_VALUE)
+    void renderableError() {
+        throw new RenderableException(ErrorCodes.InvalidParameter,
+                                      "RenderableException mapped by helidon-oci-errorcode-webserver");
+    }
+
+    @Http.GET
     @Http.Path("/robots")
     @Http.Produces(MediaTypes.APPLICATION_JSON_VALUE)
     RobotCollection list(@Http.QueryParam("compartmentId") Optional<String> compartmentId,

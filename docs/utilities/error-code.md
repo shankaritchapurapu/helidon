@@ -52,8 +52,17 @@ The [data-plane reference example](../../examples/data-plane/) demonstrates repo
 ### Helidon WebServer
 
 When `helidon-oci-errorcode-webserver` is on the classpath, the Helidon service loader registers
-the `oci-error-code` server feature. The feature installs an error handler for
-`RenderableException` on the default socket and any configured named sockets.
+the `oci-error-code` server feature and enables it by default. The feature installs an error
+handler for `RenderableException` on the default socket and any configured named sockets.
+
+To disable it, set:
+
+```yaml
+server:
+  features:
+    oci-error-code:
+      enabled: false
+```
 
 To report an OCI-style error, throw a `RenderableException` from endpoint logic:
 
@@ -125,6 +134,10 @@ feature uses. Examples include:
 
 If a service needs an error code that is not in the enum, implement `ErrorCode` and pass that
 implementation to `RenderableException`.
+
+The default mapper serializes the existing `ErrorDetail` model. If a service uses
+its own response envelope, it can still catch `RenderableException` and build that
+custom envelope itself.
 
 ### Helidon WebClient
 

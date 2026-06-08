@@ -67,6 +67,11 @@
             <artifactId>helidon-oci-errorcode</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.oracle.helidon.oci.errorcode</groupId>
+            <artifactId>helidon-oci-errorcode-webserver</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.helidon.oci.identity</groupId>
             <artifactId>helidon-oci-identity</artifactId>
         </dependency>

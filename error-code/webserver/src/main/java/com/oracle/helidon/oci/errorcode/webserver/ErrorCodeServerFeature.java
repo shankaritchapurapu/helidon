@@ -70,7 +70,7 @@ public class ErrorCodeServerFeature implements ServerFeature {
         return TYPE;
     }
 
-    private static class RenderableErrorHandler implements ErrorHandler<RenderableException> {
+    static class RenderableErrorHandler implements ErrorHandler<RenderableException> {
         @Override
         public void handle(ServerRequest req, ServerResponse res, RenderableException e) {
             res.status(e.errorCode().status())

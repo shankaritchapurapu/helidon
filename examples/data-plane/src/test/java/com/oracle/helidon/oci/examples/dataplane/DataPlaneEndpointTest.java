@@ -14,6 +14,9 @@ import io.helidon.webserver.testing.junit5.ServerTest;
 
 import org.junit.jupiter.api.Test;
 
+import com.oracle.helidon.oci.errorcode.ErrorCodes;
+import com.oracle.helidon.oci.errorcode.ErrorDetail;
+
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -86,6 +89,19 @@ class DataPlaneEndpointTest {
             assertThat(robotResponse.error().code(), is("NotAuthorizedOrNotFound"));
             assertThat(robotResponse.error().message(), is("No robot found for id: missing"));
             assertThat(response.headers().first(REQUEST_ID_HEADER).orElseThrow(), is(not(nullValue())));
+        }
+    }
+
+    @Test
+    void testRenderableExceptionUsesAutomaticMapper() {
+        try (Http1ClientResponse response = client.get("/data-plane/errors/renderable")
+                .header(HeaderValues.ACCEPT_JSON)
+                .request()) {
+            assertThat(response.status(), is(Status.BAD_REQUEST_400));
+            ErrorDetail error = JSON_BINDING.deserialize(response.as(String.class), ErrorDetail.class);
+
+            assertThat(error.getErrorCode(), is(ErrorCodes.InvalidParameter.errorCode()));
+            assertThat(error.getMessage(), is("RenderableException mapped by helidon-oci-errorcode-webserver"));
         }
     }
 

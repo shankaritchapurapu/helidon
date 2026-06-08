@@ -6,6 +6,9 @@ package com.oracle.helidon.oci.errorcode;
 import java.util.Map;
 import java.util.Objects;
 
+import io.helidon.common.AccessorStyle;
+import io.helidon.json.binding.Json;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.json.bind.annotation.JsonbCreator;
@@ -20,6 +23,7 @@ import jakarta.json.bind.annotation.JsonbProperty;
  * @see ErrorCode
  * @see ErrorCodes
  */
+@Json.Entity(accessorStyle = AccessorStyle.BEAN)
 public class ErrorDetail {
     /*
     This class uses Java beans style getters, to be supported both by
@@ -37,11 +41,17 @@ public class ErrorDetail {
     private final Map<String, String> messageArguments;
     private final String message;
 
-    private ErrorDetail(String errorCode,
-                        String message,
-                        String originalMessage,
-                        String originalMessageTemplate,
-                        Map<String, String> messageArguments) {
+    @Json.Creator
+    ErrorDetail(@Json.Property(CODE)
+                String errorCode,
+                @Json.Property(ORIGINAL_MESSAGE)
+                String originalMessage,
+                @Json.Property(ORIGINAL_MESSAGE_TEMPLATE)
+                String originalMessageTemplate,
+                @Json.Property(MESSAGE_ARGUMENTS)
+                Map<String, String> messageArguments,
+                @Json.Property(MESSAGE)
+                String message) {
 
         this.errorCode = errorCode;
         this.message = message;
@@ -58,10 +68,10 @@ public class ErrorDetail {
      */
     public static ErrorDetail create(ErrorCode errorCode) {
         return new ErrorDetail(errorCode.errorCode(),
-                               errorCode.errorMessage(),
                                null,
                                null,
-                               null);
+                               null,
+                               errorCode.errorMessage());
     }
 
     /**
@@ -89,12 +99,13 @@ public class ErrorDetail {
                                      @JsonbProperty(ORIGINAL_MESSAGE_TEMPLATE)
                                      @JsonProperty(ORIGINAL_MESSAGE_TEMPLATE)
                                      String originalMessageTemplate,
-                                     @JsonbProperty(MESSAGE_ARGUMENTS) @JsonProperty(MESSAGE_ARGUMENTS)
+                                     @JsonbProperty(MESSAGE_ARGUMENTS)
+                                     @JsonProperty(MESSAGE_ARGUMENTS)
                                      Map<String, String> messageArguments) {
         Objects.requireNonNull(code, "Error code must not be null");
         Objects.requireNonNull(message, "Message must not be null");
 
-        return new ErrorDetail(code, message, originalMessage, originalMessageTemplate, messageArguments);
+        return new ErrorDetail(code, originalMessage, originalMessageTemplate, messageArguments, message);
     }
 
     /**
@@ -105,6 +116,7 @@ public class ErrorDetail {
      */
     @JsonProperty(CODE)
     @JsonbProperty(CODE)
+    @Json.Property(CODE)
     public String getErrorCode() {
         return errorCode;
     }
@@ -117,6 +129,7 @@ public class ErrorDetail {
      */
     @JsonProperty(ORIGINAL_MESSAGE)
     @JsonbProperty(ORIGINAL_MESSAGE)
+    @Json.Property(ORIGINAL_MESSAGE)
     public String getOriginalMessage() {
         return originalMessage;
     }
@@ -129,6 +142,7 @@ public class ErrorDetail {
      */
     @JsonProperty(ORIGINAL_MESSAGE_TEMPLATE)
     @JsonbProperty(ORIGINAL_MESSAGE_TEMPLATE)
+    @Json.Property(ORIGINAL_MESSAGE_TEMPLATE)
     public String getOriginalMessageTemplate() {
         return originalMessageTemplate;
     }
@@ -141,6 +155,7 @@ public class ErrorDetail {
      */
     @JsonProperty(MESSAGE_ARGUMENTS)
     @JsonbProperty(MESSAGE_ARGUMENTS)
+    @Json.Property(MESSAGE_ARGUMENTS)
     public Map<String, String> getMessageArguments() {
         return messageArguments;
     }
@@ -152,6 +167,7 @@ public class ErrorDetail {
      */
     @JsonProperty(MESSAGE)
     @JsonbProperty(MESSAGE)
+    @Json.Property(MESSAGE)
     public String getMessage() {
         return message;
     }
