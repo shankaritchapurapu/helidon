@@ -1,0 +1,15 @@
+flowchart LR
+  A(["Dropwizard App"]) --> B["Heliport"]
+  B --> C(["Helidon App Candidate"])
+  C --> D["Codex"]
+  D --> E(["Helidon App"])
+
+  %% Codex feedback loop is added manually in the generated SVG so the main flow stays aligned.
+
+  classDef input fill:#f5f7fa,stroke:#00688f,stroke-width:2px,color:#1f2933;
+  classDef tool fill:#eef8fb,stroke:#c74634,stroke-width:2px,color:#1f2933;
+  classDef output fill:#f5f7fa,stroke:#207d4c,stroke-width:2px,color:#1f2933;
+
+  class A,C input;
+  class B,D tool;
+  class E output;

@@ -1,0 +1,14 @@
+flowchart LR
+    Sources["Runtime files\nIMDS\nlocation override\ncore-regions metadata"]
+    Env["helidon-oci-envconfig"]
+    Published["Published config keys\noci.env.region-name\noci.env.iaas-domain-name\noci.env.availability-domain"]
+    Region["Region services\nOCI SDK + PIC commons"]
+    Endpoint["Endpoint templates\nSSv2, service clients"]
+    Identity["Identity defaults\nregion, AD, FD"]
+
+    Sources --> Env
+    Env --> Published
+    Env --> Region
+    Published --> Endpoint
+    Published --> Identity
+    Region --> Endpoint

@@ -75,6 +75,7 @@ PutObjectStoreDirHere/
 package-lock.json
 RUNTIMEDB/
 docs/se/config/images
+presentations/preview/
 
 
 /certs/server/
