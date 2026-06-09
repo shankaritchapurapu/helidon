@@ -166,23 +166,23 @@ When publisher `availability-domain` or `fault-domain` is omitted, the OCI metri
 
 | Key | Default value | Description |
 |-----|---------------|-------------|
-| `metrics.publishers[].type` | | Set to `oci` to use this publisher. |
-| `metrics.publishers[].enabled` | `true` | Enables or disables OCI metrics publishing. |
-| `metrics.publishers[].project` | | OCI metrics project. Required for publishing. |
-| `metrics.publishers[].fleet` | | OCI metrics fleet. Required for publishing. |
-| `metrics.publishers[].region` | | Optional public region name. If set, this takes precedence over a registry-provided PIC `Region`. |
-| `metrics.publishers[].endpoint` | | Optional monitoring ingestion endpoint override. |
-| `metrics.publishers[].default-dimensions` | `{}` | Default dimensions passed to the OCI metrics library. |
-| `metrics.publishers[].request-headers` | `{}` | Additional headers to send with OCI monitoring requests. |
-| `metrics.publishers[].reporting-time-unit` | `milliseconds` | Unit for emitted time values. |
-| `metrics.publishers[].sample-gauges` | `true` | Enables scheduled gauge and functional-counter sampling. |
-| `metrics.publishers[].gauge-sample-interval` | `PT1M` | Interval between scheduled gauge and functional-counter samples. |
-| `metrics.publishers[].use-metadata-service` | | Optional flag passed to the OCI telemetry reporter builder. |
-| `metrics.publishers[].override-metric-keys` | | Optional flag passed to the OCI telemetry reporter builder. |
-| `metrics.publishers[].hostname` | | Optional hostname override for emitted dimensions. |
-| `metrics.publishers[].host-name` | | Alias for `hostname`; configure only one of the two keys. |
-| `metrics.publishers[].availability-domain` | `oci.env.availability-domain` | Optional availability-domain override. |
-| `metrics.publishers[].fault-domain` | `oci.env.fault-domain` | Optional fault-domain override. |
+| `type` | | Set to `oci` to use this publisher. |
+| `enabled` | `true` | Enables or disables OCI metrics publishing. |
+| `project` | | OCI metrics project. Required for publishing. |
+| `fleet` | | OCI metrics fleet. Required for publishing. |
+| `region` | | Optional public region name. If set, this takes precedence over a registry-provided PIC `Region`. |
+| `endpoint` | | Optional monitoring ingestion endpoint override. |
+| `default-dimensions` | `{}` | Default dimensions for OCI `com.oracle.pic.telemetry.commons.metrics.Metrics.init`. |
+| `request-headers` | `{}` | Additional headers to send with OCI monitoring requests. |
+| `reporting-time-unit` | `milliseconds` | Unit for emitted time values. |
+| `sample-gauges` | `true` | Enables scheduled gauge and functional-counter sampling. |
+| `gauge-sample-interval` | `PT1M` | Interval between scheduled gauge and functional-counter samples. |
+| `use-metadata-service` | | Optional flag passed to the OCI telemetry reporter builder. |
+| `override-metric-keys` | | Optional flag passed to the OCI telemetry reporter builder. |
+| `hostname` | | Optional hostname override for emitted dimensions. |
+| `host-name` | | Alias for `hostname`; configure only one of the two keys. |
+| `availability-domain` | `oci.env.availability-domain` | Optional availability-domain override. |
+| `fault-domain` | `oci.env.fault-domain` | Optional fault-domain override. |
 
 Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
 in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
@@ -193,12 +193,12 @@ Use `client` to tune the OCI SDK `MonitoringClient`.
 
 | Key | Default value | Description |
 |-----|---------------|-------------|
-| `metrics.publishers[].client.connection-timeout` | | Optional OCI SDK connection timeout. |
-| `metrics.publishers[].client.read-timeout` | | Optional OCI SDK read timeout. |
-| `metrics.publishers[].client.max-async-threads` | | Optional maximum async thread count. |
-| `metrics.publishers[].client.disable-data-buffering-on-upload` | | Optional upload buffering flag. |
-| `metrics.publishers[].client.retry` | | Optional OCI SDK retry configuration. |
-| `metrics.publishers[].client.circuit-breaker` | | Optional OCI SDK circuit-breaker configuration. |
+| `client.connection-timeout` | | Optional OCI SDK connection timeout. |
+| `client.read-timeout` | | Optional OCI SDK read timeout. |
+| `client.max-async-threads` | | Optional maximum async thread count. |
+| `client.disable-data-buffering-on-upload` | | Optional upload buffering flag. |
+| `client.retry` | | Optional OCI SDK retry configuration. |
+| `client.circuit-breaker` | | Optional OCI SDK circuit-breaker configuration. |
 
 Example:
 
@@ -220,14 +220,14 @@ Retry configuration mirrors the OCI SDK retry types.
 
 | Key | Default value | Description |
 |-----|---------------|-------------|
-| `metrics.publishers[].client.retry.termination-strategy.type` | | `max-attempts` or `max-time`. |
-| `metrics.publishers[].client.retry.termination-strategy.max-attempts` | | Maximum attempts for `max-attempts`. |
-| `metrics.publishers[].client.retry.termination-strategy.max-time` | | Maximum duration for `max-time`. |
-| `metrics.publishers[].client.retry.delay-strategy.type` | | `fixed`, `exponential`, or `exponential-with-jitter`. |
-| `metrics.publishers[].client.retry.delay-strategy.delay` | | Fixed delay for `fixed`. |
-| `metrics.publishers[].client.retry.delay-strategy.max-delay` | | Maximum delay for exponential strategies. |
-| `metrics.publishers[].client.retry.retry-condition.type` | | `default` or `retry-on-open-circuit-breaker`. |
-| `metrics.publishers[].client.retry.retry-options.mark-read-limit` | | Optional mark-read limit. |
+| `client.retry.termination-strategy.type` | | `max-attempts` or `max-time`. |
+| `client.retry.termination-strategy.max-attempts` | | Maximum attempts for `max-attempts`. |
+| `client.retry.termination-strategy.max-time` | | Maximum duration for `max-time`. |
+| `client.retry.delay-strategy.type` | | `fixed`, `exponential`, or `exponential-with-jitter`. |
+| `client.retry.delay-strategy.delay` | | Fixed delay for `fixed`. |
+| `client.retry.delay-strategy.max-delay` | | Maximum delay for exponential strategies. |
+| `client.retry.retry-condition.type` | | `default` or `retry-on-open-circuit-breaker`. |
+| `client.retry.retry-options.mark-read-limit` | | Optional mark-read limit. |
 
 Example:
 
@@ -255,14 +255,14 @@ metrics:
 
 | Key | Default value | Description |
 |-----|---------------|-------------|
-| `metrics.publishers[].client.circuit-breaker.failure-rate-threshold` | | Failure-rate threshold. |
-| `metrics.publishers[].client.circuit-breaker.slow-call-rate-threshold` | | Slow-call-rate threshold. |
-| `metrics.publishers[].client.circuit-breaker.wait-duration-in-open-state` | | Time to remain open before half-open. |
-| `metrics.publishers[].client.circuit-breaker.permitted-number-of-calls-in-half-open-state` | | Permitted half-open calls. |
-| `metrics.publishers[].client.circuit-breaker.minimum-number-of-calls` | | Minimum calls before calculating state. |
-| `metrics.publishers[].client.circuit-breaker.sliding-window-size` | | Sliding window size. |
-| `metrics.publishers[].client.circuit-breaker.slow-call-duration-threshold` | | Duration threshold for slow calls. |
-| `metrics.publishers[].client.circuit-breaker.writable-stack-trace-enabled` | | Optional writable stack trace flag. |
+| `client.circuit-breaker.failure-rate-threshold` | | Failure-rate threshold. |
+| `client.circuit-breaker.slow-call-rate-threshold` | | Slow-call-rate threshold. |
+| `client.circuit-breaker.wait-duration-in-open-state` | | Time to remain open before half-open. |
+| `client.circuit-breaker.permitted-number-of-calls-in-half-open-state` | | Permitted half-open calls. |
+| `client.circuit-breaker.minimum-number-of-calls` | | Minimum calls before calculating state. |
+| `client.circuit-breaker.sliding-window-size` | | Sliding window size. |
+| `client.circuit-breaker.slow-call-duration-threshold` | | Duration threshold for slow calls. |
+| `client.circuit-breaker.writable-stack-trace-enabled` | | Optional writable stack trace flag. |
 
 ### JVM meter configuration
 
@@ -270,10 +270,10 @@ Each JVM meter group is enabled by default.
 
 | Key | Default value | Description |
 |-----|---------------|-------------|
-| `metrics.publishers[].jvm-meters.memory-usage-enabled` | `true` | Enables memory-usage gauges. |
-| `metrics.publishers[].jvm-meters.thread-state-enabled` | `true` | Enables thread-state gauges. |
-| `metrics.publishers[].jvm-meters.file-descriptor-enabled` | `true` | Enables file-descriptor gauges. |
-| `metrics.publishers[].jvm-meters.gc-enabled` | `true` | Enables garbage-collection gauges. |
+| `jvm-meters.memory-usage-enabled` | `true` | Enables memory-usage gauges. |
+| `jvm-meters.thread-state-enabled` | `true` | Enables thread-state gauges. |
+| `jvm-meters.file-descriptor-enabled` | `true` | Enables file-descriptor gauges. |
+| `jvm-meters.gc-enabled` | `true` | Enables garbage-collection gauges. |
 
 Example:
 

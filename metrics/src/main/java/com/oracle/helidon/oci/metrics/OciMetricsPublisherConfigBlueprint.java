@@ -77,7 +77,7 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
     Optional<Monitoring> monitoring();
 
     /**
-     * Default dimensions applied to emitted metrics.
+     * Default dimensions for OCI `com.oracle.pic.telemetry.commons.metrics.Metrics.init`.
      *
      * @return default dimensions
      */
