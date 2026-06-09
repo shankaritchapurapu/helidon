@@ -4,11 +4,14 @@
 
 package io.helidon.integrations.oci.identity.client;
 
+import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.ClientConfiguration;
+import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.identity.Identity;
 import com.oracle.bmc.identity.IdentityClient;
@@ -20,11 +23,15 @@ import com.oracle.bmc.identity.IdentityClient;
 class IdentityClientFactory implements Supplier<Identity> {
     private final IdentityClientConfig config;
     private final BasicAuthenticationDetailsProvider authProvider;
+    private final Supplier<Optional<Region>> defaultRegion;
 
     @Service.Inject
-    IdentityClientFactory(IdentityClientConfig config, BasicAuthenticationDetailsProvider authProvider) {
+    IdentityClientFactory(IdentityClientConfig config,
+                          BasicAuthenticationDetailsProvider authProvider,
+                          Supplier<Optional<Region>> defaultRegion) {
         this.config = config;
         this.authProvider = authProvider;
+        this.defaultRegion = defaultRegion;
     }
 
     @Override
@@ -44,7 +51,11 @@ class IdentityClientFactory implements Supplier<Identity> {
 
     private void configureEndpoint(Identity client) {
         config.endpoint().ifPresentOrElse(client::setEndpoint, () -> {
-            config.region().ifPresent(client::setRegion);
+            config.region()
+                    .map(it -> it.toLowerCase(Locale.ENGLISH))
+                    .map(Region::fromRegionId)
+                    .or(defaultRegion)
+                    .ifPresent(client::setRegion);
             if (config.realmSpecificEndpointTemplateEnabled()) {
                 client.useRealmSpecificEndpointTemplate(true);
             }

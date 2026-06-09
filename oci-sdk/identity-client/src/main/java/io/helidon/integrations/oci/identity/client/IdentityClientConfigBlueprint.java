@@ -38,7 +38,8 @@ interface IdentityClientConfigBlueprint {
     Optional<String> endpoint();
 
     /**
-     * OCI region used to derive the Identity endpoint when no explicit endpoint is configured.
+     * OCI region used to derive the Identity endpoint when no explicit endpoint is configured. If omitted, the
+     * configured OCI SDK region provider is used.
      *
      * @return region
      */

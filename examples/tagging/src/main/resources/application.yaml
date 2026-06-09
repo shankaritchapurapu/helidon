@@ -21,8 +21,6 @@ oci:
     authorization:
       service-name: helidon-tagging-example
       root-cert-path: /etc/oci-pki/ca-bundle.pem
-  identity-client:
-    region: us-ashburn-1
   tagging:
     emit-metrics: false
 

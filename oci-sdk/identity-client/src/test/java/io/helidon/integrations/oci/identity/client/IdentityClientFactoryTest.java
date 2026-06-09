@@ -11,11 +11,14 @@ import java.security.KeyPairGenerator;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 
 import com.oracle.bmc.ClientConfiguration;
+import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.bmc.identity.Identity;
 import org.junit.jupiter.api.Test;
@@ -36,7 +39,7 @@ class IdentityClientFactoryTest {
                         .maxAsyncThreads(8))
                 .build();
 
-        Identity identity = new IdentityClientFactory(config, authProvider()).get();
+        Identity identity = factory(config, failingDefaultRegion()).get();
 
         assertThat(identity, notNullValue());
         assertThat(identity.getEndpoint(), is("http://127.0.0.1:9876"));
@@ -48,7 +51,30 @@ class IdentityClientFactoryTest {
                 .region("us-ashburn-1")
                 .build();
 
-        Identity identity = new IdentityClientFactory(config, authProvider()).get();
+        Identity identity = factory(config, failingDefaultRegion()).get();
+
+        assertThat(identity, notNullValue());
+        assertThat(identity.getEndpoint(), is("https://identity.us-ashburn-1.oci.oraclecloud.com"));
+    }
+
+    @Test
+    void createsIdentityClientWithMixedCaseRegionId() throws Exception {
+        IdentityClientConfig config = IdentityClientConfig.builder()
+                .region("US-ASHBURN-1")
+                .build();
+
+        Identity identity = factory(config, failingDefaultRegion()).get();
+
+        assertThat(identity, notNullValue());
+        assertThat(identity.getEndpoint(), is("https://identity.us-ashburn-1.oci.oraclecloud.com"));
+    }
+
+    @Test
+    void createsIdentityClientWithRegionProviderFallback() throws Exception {
+        IdentityClientConfig config = IdentityClientConfig.builder()
+                .build();
+
+        Identity identity = factory(config).get();
 
         assertThat(identity, notNullValue());
         assertThat(identity.getEndpoint(), is("https://identity.us-ashburn-1.oci.oraclecloud.com"));
@@ -62,7 +88,7 @@ class IdentityClientFactoryTest {
                 .realmSpecificEndpointTemplateEnabled(true)
                 .build();
 
-        Identity identity = new IdentityClientFactory(config, authProvider()).get();
+        Identity identity = factory(config).get();
 
         assertThat(identity, notNullValue());
         assertThat(identity.getEndpoint(), is("http://127.0.0.1:9876"));
@@ -75,18 +101,18 @@ class IdentityClientFactoryTest {
                 .realmSpecificEndpointTemplateEnabled(true)
                 .build();
 
-        Identity identity = new IdentityClientFactory(config, authProvider()).get();
+        Identity identity = factory(config).get();
 
         assertThat(identity, notNullValue());
         assertThat(identity.getEndpoint(), is("https://identity.us-ashburn-1.oci.oraclecloud.com"));
     }
 
     @Test
-    void failsWhenEndpointAndRegionAreAbsentAndAuthenticationProviderHasNoRegion() {
+    void failsWhenEndpointAndRegionsAreAbsent() {
         IdentityClientConfig config = IdentityClientConfig.builder()
                 .build();
         NullPointerException exception = assertThrows(NullPointerException.class,
-                                                      () -> new IdentityClientFactory(config, authProvider()).get());
+                                                      () -> factory(config, Optional.empty()).get());
 
         assertThat(exception.getMessage(),
                    is("No endpoint has been configured"));
@@ -130,6 +156,26 @@ class IdentityClientFactoryTest {
             String metadata = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
             assertThat(metadata.contains("\"prefix\":\"oci.identity-client\""), is(true));
         }
+    }
+
+    private static IdentityClientFactory factory(IdentityClientConfig config) throws Exception {
+        return factory(config, Optional.of(Region.US_ASHBURN_1));
+    }
+
+    private static IdentityClientFactory factory(IdentityClientConfig config,
+                                                 Optional<Region> region) throws Exception {
+        return factory(config, () -> region);
+    }
+
+    private static IdentityClientFactory factory(IdentityClientConfig config,
+                                                 Supplier<Optional<Region>> defaultRegion) throws Exception {
+        return new IdentityClientFactory(config, authProvider(), defaultRegion);
+    }
+
+    private static Supplier<Optional<Region>> failingDefaultRegion() {
+        return () -> {
+            throw new AssertionError("Default region should not be resolved when endpoint or region is configured");
+        };
     }
 
     private static BasicAuthenticationDetailsProvider authProvider() throws Exception {

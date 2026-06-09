@@ -43,6 +43,17 @@ method module to the application, for example instance principals:
 </dependency>
 ```
 
+If `oci.identity-client.endpoint` and `oci.identity-client.region` are omitted
+and the client should use the `oci-env` region, add `helidon-oci-envconfig` as
+well:
+
+```xml
+<dependency>
+    <groupId>com.oracle.helidon.oci.envconfig</groupId>
+    <artifactId>helidon-oci-envconfig</artifactId>
+</dependency>
+```
+
 ---
 
 ## Configuration
@@ -56,7 +67,7 @@ Client settings live under `oci.identity-client`. OCI SDK client configuration s
 | `oci.identity-client.client.read-timeout` | `PT1M` | OCI SDK read timeout. |
 | `oci.identity-client.client.max-async-threads` | `50` | Maximum async worker threads used by OCI SDK asynchronous helpers and waiters. Synchronous Identity calls do not use this pool. |
 | `oci.identity-client.endpoint` | unset | Explicit Identity endpoint. When set, this overrides `region` and realm-specific endpoint templates. |
-| `oci.identity-client.region` | unset | OCI region used to derive the Identity endpoint when `endpoint` is not set. |
+| `oci.identity-client.region` | unset | OCI region used to derive the Identity endpoint when `endpoint` is not set. If omitted, the configured OCI SDK region provider is used. |
 | `oci.identity-client.realm-specific-endpoint-template-enabled` | `false` | Enables OCI SDK realm-specific endpoint templates when `endpoint` is not set. |
 
 If `client` is absent, the module uses `ClientConfiguration.builder().build()` from the OCI SDK. That provides the
@@ -67,7 +78,11 @@ calls execute on the thread that calls the client. In Helidon applications that 
 the usual request-flow code can call the synchronous API directly and let Helidon's
 virtual threads handle blocking I/O.
 
-Example:
+When `endpoint` and `region` are both omitted, the module uses the OCI SDK region
+from the Helidon service registry. The `helidon-oci-envconfig` module can supply
+that region from the OCI runtime environment.
+
+Example with an explicit region:
 
 ```yaml
 helidon:
@@ -77,6 +92,21 @@ helidon:
 oci:
   identity-client:
     region: us-ashburn-1
+    client:
+      connection-timeout: PT10S
+      read-timeout: PT1M
+      max-async-threads: 50
+```
+
+Example using `helidon-oci-envconfig` for the region:
+
+```yaml
+helidon:
+  oci:
+    authentication-method: instance-principal
+
+oci:
+  identity-client:
     client:
       connection-timeout: PT10S
       read-timeout: PT1M

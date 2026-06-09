@@ -100,20 +100,18 @@ The example uses instance principal authentication for the OCI Java SDK Identity
 helidon:
   oci:
     authentication-method: instance-principal
-
-oci:
-  identity-client:
-    region: us-ashburn-1
 ```
 
 The Auth SDK configuration is under `oci.identity`. Region and physical AD are
 omitted there because the identity integration defaults them from `oci-env`.
+The OCI SDK Identity client also defaults its region from the same `oci-env`
+region when `oci.identity-client.endpoint` and `oci.identity-client.region` are
+omitted.
 The example's [`oci-config.yaml`](./src/main/resources/oci-config.yaml) supplies
 a local `helidon.oci-env.location-override` for deterministic local runs; replace
 or remove that override in deployments that should use OCI runtime location
-files. Keep `oci.identity-client.region` explicit unless the OCI SDK client is
-configured another way, such as with an explicit endpoint or region-bearing
-authentication provider.
+files. Configure `oci.identity-client.endpoint` or `oci.identity-client.region`
+only when the Identity client should target a different location than `oci-env`.
 
 ## Test
 
