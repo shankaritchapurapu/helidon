@@ -4,6 +4,7 @@
 
 package com.oracle.helidon.oci.kiev;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import io.helidon.common.context.Context;
@@ -17,6 +18,12 @@ import com.oracle.pic.kiev.Transaction;
  * Utility service used by generated and service-level interceptors to manage Kiev transactions.
  */
 public class KievTransactionSupport {
+    private static final int KIEV_TRANSACTION_NAME_LIMIT = 80;
+    private static final int RUNTIME_TRANSACTION_SUFFIX_MAX_LENGTH = 1 + Long.toString(Long.MIN_VALUE).length();
+    static final int TRANSACTION_BASE_NAME_MAX_LENGTH = KIEV_TRANSACTION_NAME_LIMIT
+            - RUNTIME_TRANSACTION_SUFFIX_MAX_LENGTH
+            - 1;
+
     private final String storeName;
     private final DataStore dataStore;
     private final KievTransactions transactions;
@@ -31,7 +38,7 @@ public class KievTransactionSupport {
      * Execute callback within a Kiev transaction.
      *
      * @param transactionName transaction base name; a unique runtime suffix is appended before opening
-     *        the transaction
+     *        the transaction, so the base name must be at most 58 characters
      * @param readOnly whether to create a read only transaction
      * @param callback callback to execute
      * @param <T> callback result type
@@ -39,6 +46,13 @@ public class KievTransactionSupport {
      * @throws Exception when callback or transaction lifecycle fails
      */
     public <T> T execute(String transactionName, boolean readOnly, KievTransactionCallback<T> callback) throws Exception {
+        Objects.requireNonNull(transactionName, "Kiev transaction name must not be null");
+        if (transactionName.length() > TRANSACTION_BASE_NAME_MAX_LENGTH) {
+            throw new IllegalArgumentException("""
+                Kiev transaction name must be at most %d characters because Helidon appends a runtime suffix \
+                and Kiev requires the final transaction name to be below %d characters; got %d characters\
+                """.formatted(TRANSACTION_BASE_NAME_MAX_LENGTH, KIEV_TRANSACTION_NAME_LIMIT, transactionName.length()));
+        }
         String effectiveTransactionName = transactionName + "-" + System.nanoTime();
         Transaction transaction = readOnly
                 ? dataStore.beginReadOnlyTransaction(effectiveTransactionName, DataStore.TIMESTAMP_NOW)

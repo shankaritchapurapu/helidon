@@ -249,11 +249,12 @@ Each transaction annotation value must use the configured `store-name`. Use `nam
 used for diagnostics; otherwise Helidon generates one from the intercepted method.
 
 Helidon appends a `-<System.nanoTime()>` suffix to the base name before opening the Kiev transaction. Generated
-transaction base names use the form `kt-<class-name>-<method-name>-<hash>`, where non-alphanumeric characters are
-replaced with `-`, long readable portions are truncated, and the hash is derived from the fully qualified method
-signature so overloaded methods still get distinct names. Generated base names are capped at 58 characters to leave
-room for the runtime suffix and keep the final name below Kiev's 80-character transaction-name limit. Explicit `name`
-values are used as provided, so keep custom names short enough for the final suffixed Kiev transaction name.
+transaction base names use the form `kt-<method-name>-<hash>`, where non-alphanumeric characters are replaced with
+`-`, long readable portions are truncated, and the hash is derived from the fully qualified method signature so
+overloaded methods still get distinct names. Transaction base names are capped at 58 characters to leave room for the
+runtime suffix and keep the final name below Kiev's 80-character transaction-name limit. Explicit `name` values longer
+than 58 characters are rejected during code generation, and programmatic `KievTransactionSupport.execute` calls reject
+longer base names before opening a transaction.
 
 ```java
 @KievTransaction(value = DATA_STORE_NAME, name = "store-put")

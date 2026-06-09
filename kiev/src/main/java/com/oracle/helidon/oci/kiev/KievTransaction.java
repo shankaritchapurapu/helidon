@@ -28,7 +28,8 @@ public @interface KievTransaction {
     String value();
 
     /**
-     * Transaction base name used for diagnostics.
+     * Transaction base name used for diagnostics. Helidon appends a runtime suffix before opening the Kiev transaction,
+     * so explicit names must be at most 58 characters.
      *
      * @return transaction base name, or empty string to use a generated unique default with room for the runtime suffix
      */

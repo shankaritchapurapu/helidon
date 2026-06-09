@@ -31,7 +31,11 @@ import io.helidon.service.codegen.spi.RegistryCodegenExtension;
 
 final class OciKievTransactionExtension implements RegistryCodegenExtension {
     private static final String GENERATED_TRANSACTION_NAME_PREFIX = "kt-";
-    private static final int GENERATED_TRANSACTION_NAME_MAX_LENGTH = 58;
+    private static final int KIEV_TRANSACTION_NAME_LIMIT = 80;
+    private static final int RUNTIME_TRANSACTION_SUFFIX_MAX_LENGTH = 1 + Long.toString(Long.MIN_VALUE).length();
+    static final int TRANSACTION_BASE_NAME_MAX_LENGTH = KIEV_TRANSACTION_NAME_LIMIT
+            - RUNTIME_TRANSACTION_SUFFIX_MAX_LENGTH
+            - 1;
     private static final int GENERATED_TRANSACTION_NAME_HASH_BYTES = 8;
     private static final TypeName GENERATOR = TypeName.create(OciKievTransactionExtension.class);
     private static final HexFormat HEX_FORMAT = HexFormat.of();
@@ -81,8 +85,8 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
         Annotation annotation = element.annotation(OciTypes.KIEV_TRANSACTION);
         String transactionName = annotation.stringValue("name")
                 .filter(it -> !it.isBlank())
+                .map(it -> explicitTransactionName(it, element))
                 .orElseGet(() -> defaultTransactionName(methodName,
-                                                        serviceType.classNameWithEnclosingNames(),
                                                         element.elementName()));
         String dataStoreName = annotation.stringValue("value")
                 .filter(it -> !it.isBlank())
@@ -153,10 +157,10 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
         roundContext.addGeneratedType(generatedType, classModel, serviceType, element.originatingElementValue());
     }
 
-    static String defaultTransactionName(String methodName, String className, String elementName) {
+    static String defaultTransactionName(String methodName, String elementName) {
         String hash = hash(methodName);
-        String readableName = sanitizeNamePart(className) + "-" + sanitizeNamePart(elementName);
-        int readableNameMaxLength = GENERATED_TRANSACTION_NAME_MAX_LENGTH
+        String readableName = sanitizeNamePart(elementName);
+        int readableNameMaxLength = TRANSACTION_BASE_NAME_MAX_LENGTH
                 - GENERATED_TRANSACTION_NAME_PREFIX.length()
                 - hash.length()
                 - 1;
@@ -164,6 +168,35 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
             readableName = readableName.substring(0, readableNameMaxLength);
         }
         return GENERATED_TRANSACTION_NAME_PREFIX + readableName + "-" + hash;
+    }
+
+    static String explicitTransactionName(String transactionName, String methodSignature) {
+        return explicitTransactionName(transactionName, methodSignature, new Object[0]);
+    }
+
+    private static String explicitTransactionName(String transactionName, TypedElementInfo element) {
+        return explicitTransactionName(transactionName,
+                                       element.signature().text(),
+                                       element.originatingElementValue());
+    }
+
+    private static String explicitTransactionName(String transactionName,
+                                                  String methodSignature,
+                                                  Object... originatingElements) {
+        if (transactionName.length() <= TRANSACTION_BASE_NAME_MAX_LENGTH) {
+            return transactionName;
+        }
+        throw new CodegenException(tooLongExplicitNameMessage(transactionName, methodSignature), originatingElements);
+    }
+
+    private static String tooLongExplicitNameMessage(String transactionName, String methodSignature) {
+        return """
+                @KievTransaction name on %s must be at most %d characters because Helidon appends a runtime suffix \
+                and Kiev requires the final transaction name to be below %d characters; got %d characters\
+                """.formatted(methodSignature,
+                               TRANSACTION_BASE_NAME_MAX_LENGTH,
+                               KIEV_TRANSACTION_NAME_LIMIT,
+                               transactionName.length());
     }
 
     private static String sanitizeNamePart(String name) {

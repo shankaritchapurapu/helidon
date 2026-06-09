@@ -32,6 +32,7 @@ import com.oracle.pic.kiev.exceptions.SequenceNotFound;
 import com.oracle.pic.kiev.exceptions.UniqueIndexCreationFailedException;
 import org.junit.jupiter.api.Test;
 
+import static com.oracle.helidon.oci.kiev.KievTransactionSupport.TRANSACTION_BASE_NAME_MAX_LENGTH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -60,6 +61,53 @@ class KievTransactionSupportTest {
         assertEquals(1, transaction.commitCalls);
         assertEquals(0, transaction.abortCalls);
         assertEquals(1, transaction.closeCalls);
+        assertFalse(dataStore.readOnlyStarted);
+    }
+
+    @Test
+    void testAcceptsLongestTransactionNameThatLeavesRoomForRuntimeSuffix() throws Exception {
+        FakeTransaction transaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        FakeDataStore dataStore = new FakeDataStore(transaction);
+        KievTransactionSupport support = transactionSupport("store", dataStore);
+        String transactionName = "x".repeat(TRANSACTION_BASE_NAME_MAX_LENGTH);
+
+        support.execute(transactionName, false, current -> "done");
+
+        assertEquals(transactionName, dataStore.beginTransactionBaseName());
+        assertTrue(dataStore.lastWriteTransactionName.length() < 80);
+    }
+
+    @Test
+    void testRejectsNullTransactionNameBeforeOpeningTransaction() {
+        FakeTransaction transaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        FakeDataStore dataStore = new FakeDataStore(transaction);
+        KievTransactionSupport support = transactionSupport("store", dataStore);
+
+        NullPointerException exception = assertThrows(NullPointerException.class,
+                                                      () -> support.execute(null, false, current -> "done"));
+
+        assertEquals("Kiev transaction name must not be null", exception.getMessage());
+        assertEquals(0, dataStore.writeTransactionCalls);
+        assertFalse(dataStore.readOnlyStarted);
+    }
+
+    @Test
+    void testRejectsTooLongTransactionNameBeforeOpeningTransaction() {
+        FakeTransaction transaction = new FakeTransaction(Transaction.State.IN_FLIGHT);
+        FakeDataStore dataStore = new FakeDataStore(transaction);
+        KievTransactionSupport support = transactionSupport("store", dataStore);
+        String transactionName = "x".repeat(TRANSACTION_BASE_NAME_MAX_LENGTH + 1);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                                                          () -> support.execute(transactionName, false, current -> "done"));
+
+        assertEquals("""
+                Kiev transaction name must be at most %d characters because Helidon appends a runtime suffix \
+                and Kiev requires the final transaction name to be below 80 characters; got %d characters\
+                """.formatted(TRANSACTION_BASE_NAME_MAX_LENGTH,
+                               transactionName.length()),
+                     exception.getMessage());
+        assertEquals(0, dataStore.writeTransactionCalls);
         assertFalse(dataStore.readOnlyStarted);
     }
 
