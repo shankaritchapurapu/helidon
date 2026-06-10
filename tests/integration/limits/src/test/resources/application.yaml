@@ -1,0 +1,10 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+oci:
+  limits:
+    client:
+      connection-timeout: PT5S
+      read-timeout: PT30S
+      max-async-threads: 20

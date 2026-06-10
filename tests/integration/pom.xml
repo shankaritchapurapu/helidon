@@ -24,6 +24,7 @@
         <module>identity</module>
         <module>kiev</module>
         <module>secret-service</module>
+        <module>limits</module>
     </modules>
 
     <build>
