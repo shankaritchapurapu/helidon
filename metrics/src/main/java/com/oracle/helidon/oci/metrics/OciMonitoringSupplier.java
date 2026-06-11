@@ -8,6 +8,8 @@ import java.net.URI;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.config.Config;
 import io.helidon.metrics.api.MetricsConfig;
 import io.helidon.service.registry.Service;
@@ -18,8 +20,11 @@ import com.oracle.bmc.monitoring.MonitoringClient;
 
 /**
  * Creates {@link Monitoring} client using injected OCI authentication support and Helidon configuration.
+ * <p>
+ * Reduced weight so service-provided supplier with default weight is used.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 50.0)
 class OciMonitoringSupplier implements Supplier<Monitoring> {
 
     private final BasicAuthenticationDetailsProvider authProvider;
