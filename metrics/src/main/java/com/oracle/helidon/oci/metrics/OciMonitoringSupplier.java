@@ -23,6 +23,7 @@ import com.oracle.bmc.monitoring.MonitoringClient;
  * <p>
  * Reduced weight so service-provided supplier with default weight is used.
  */
+@Weight(Weighted.DEFAULT_WEIGHT - 20.0)
 @Service.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT - 50.0)
 class OciMonitoringSupplier implements Supplier<Monitoring> {

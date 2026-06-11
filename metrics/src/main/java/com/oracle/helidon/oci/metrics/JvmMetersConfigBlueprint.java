@@ -11,6 +11,7 @@ import io.helidon.builder.api.Prototype;
  * Configuration for built-in JVM meters.
  */
 @Prototype.Blueprint
+@Prototype.Configured
 interface JvmMetersConfigBlueprint {
 
     /**

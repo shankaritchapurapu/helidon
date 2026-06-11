@@ -60,6 +60,11 @@ class OciMetricsPublisherConfigMappingTest {
                                                    sliding-window-size: 22
                                                    slow-call-duration-threshold: PT8S
                                                    writable-stack-trace-enabled: false
+                                               jvm-meters:
+                                                 memory-usage-enabled: false
+                                                 thread-state-enabled: true
+                                                 file-descriptor-enabled: false
+                                                 gc-enabled: false
                                          """, MediaTypes.APPLICATION_YAML));
 
     @Test
@@ -110,6 +115,16 @@ class OciMetricsPublisherConfigMappingTest {
         assertThat(circuitBreakerConfiguration.getSlidingWindowSize(), is(22));
         assertThat(circuitBreakerConfiguration.getSlowCallDurationThreshold(), is(java.time.Duration.ofSeconds(8)));
         assertThat(circuitBreakerConfiguration.isWritableStackTraceEnabled(), is(false));
+    }
+
+    @Test
+    void mapsPublisherYamlToJvmMetersConfig() {
+        JvmMetersConfig jvmMetersConfig = publisherConfig().jvmMeters().orElseThrow();
+
+        assertThat(jvmMetersConfig.memoryUsageEnabled(), is(false));
+        assertThat(jvmMetersConfig.threadStateEnabled(), is(true));
+        assertThat(jvmMetersConfig.fileDescriptorEnabled(), is(false));
+        assertThat(jvmMetersConfig.gcEnabled(), is(false));
     }
 
     @Test
