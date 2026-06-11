@@ -4,18 +4,18 @@
 
 ## Overview
 
-The Metrics integration publishes Helidon application metrics to the OCI metrics backend while
-services continue to use normal Helidon metrics APIs. It layers on top of the configured Helidon
-metrics provider, currently Micrometer, and supports metrics updated imperatively or through
-annotations.
-
+The Metrics integration provides several features:
+* Uses `metrics.publishers` configuration to prepare the OCI `metrics-lib` runtime system.
+* Automatically publishes Helidon application metrics to the OCI metrics backend, whether declared and updated imperatively or declaratively through annotations. 
+* Allows services to continue to use `com.oracle.pic.telemetry.commons.metrics.Metrics` directly to report metrics updates.
+ 
 When `helidon-oci-metrics` is on the classpath and an OCI metrics publisher is configured, the
 integration can:
 
-* publish `Counter`, `Timer`, and `DistributionSummary` updates to OCI metrics
-* periodically sample and publish gauges and functional counters
-* register HTTP request counters and timers tagged with the matching path, HTTP method, and HTTP response status family
-* register optional JVM gauges for memory usage, thread state, file descriptors, and garbage collection
+* publish `Counter`, `Timer`, and `DistributionSummary` updates directly to OCI metrics
+* periodically sample and publish gauges and functional counters and report them to OCI metrics
+* register automatic HTTP request counters and timers and update them for each incoming request
+* register optional JVM gauges for measurements such as memory usage, thread state, file descriptors, and garbage collection
 * create the required OCI `Monitoring` client and make it available through the Helidon service registry
 
 Configuration is provided through a Helidon metrics publisher of type `oci`, as shown in
@@ -75,15 +75,18 @@ helidon:
     imds-timeout: PT3S
     imds-detect-retries: 1
 ```
+### Use OCI `metrics-lib` `Metrics` API
+The metrics integration automatically prepares the OCI metrics runtime based on the configuration, invoking `Metrics.init` during start-up and `Metrics.shutdown` as the service stops.
 
-### Use Helidon Metrics API
+While the service is running, the service code can invoke the `com.oracle.pic.telemetry.commons.metrics.Metrics` methods such as `emit`, `sensor`, or `record` as normal.   
 
-Services should continue to use the normal Helidon metrics API for application metrics. The purpose of this integration
-is to publish those same Helidon meters to OCI metrics without requiring application code to call the OCI Monitoring
-client or a T2-specific API directly. The OCI integration wraps the Micrometer-backed meters and publishes updates to
-OCI metrics after successful meter updates.
+### Use Helidon Metrics imperative API
 
-The following example shows imperative use of the Helidon metrics API in a hypothetical utility class `WorkService` that counts and times the invocations of the work. (Note that each timer includes a counter, so production code would rarely measure the same code using both; this is just an example to show the imperative API for both timers and counters.)
+Services can also use the Helidon metrics API to register and update application meters. This integration
+automatically publishes those Helidon meters to OCI metrics without requiring application code to call the OCI Monitoring
+client or a T2-specific API directly.
+
+The following example shows imperative use of the Helidon metrics API in a hypothetical utility class `WorkService` that counts and times the invocations of the work. (Note that each timer includes a counter. Production code would rarely measure the same code using both; this is just an example to show the imperative API for both timers and counters.)
 
 ```java
 @Service.Singleton
@@ -112,7 +115,6 @@ class WorkService {
 ### Use Helidon metric annotations
 
 Helidon metric annotations also work because Helidon's handling of the metrics annotations uses the Helidon metrics API.
-Thanks to this library, all uses of the Helidon metrics API update OCI metrics as well.
 
 ```java
 @Http.GET
