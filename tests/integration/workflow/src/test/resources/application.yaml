@@ -1,0 +1,20 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+oci:
+  dynamic-ssl-context-provider:
+    root-cert-path: /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+
+  workflow:
+    domain-id: helidon-wfaas-instance.wfaas-overlay.ad1.r2.oracleiaas.com
+    endpoint-details:
+      server-endpoint: https://wfaas-overlay.ad1.r2.oracleiaas.com
+      connect-timeout: PT5S
+      worker-read-timeout: PT30S
+      poller-read-timeout: PT90S
+    worker-identifier: helidon-workflow-integration-test
+    retry-policy:
+      max-retry-count: 7
+      delay-between-retry: PT0.25S
+      jitter-factor: 0.5

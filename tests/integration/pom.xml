@@ -25,6 +25,7 @@
         <module>kiev</module>
         <module>secret-service</module>
         <module>limits</module>
+        <module>workflow</module>
     </modules>
 
     <build>
