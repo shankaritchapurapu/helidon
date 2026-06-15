@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 
 import io.helidon.common.Api;
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Qualifier;
 import io.helidon.service.registry.Service;
 
@@ -21,6 +23,7 @@ import com.oracle.pic.commons.ssl.DynamicSslContextProviderConfig;
 @Service.Singleton
 @Service.Named(Service.Named.WILDCARD_NAME)
 @Api.Internal
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 public final class DynamicSslContextProviderConfigFactory
         implements Service.ServicesFactory<DynamicSslContextProviderConfig> {
     private final List<Service.QualifiedInstance<DynamicSslContextProviderConfig>> services;

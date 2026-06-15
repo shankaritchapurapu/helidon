@@ -7,6 +7,8 @@ package io.helidon.integrations.oci.authentication.okeworkload;
 import java.net.URI;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.integrations.oci.OciConfig;
 import io.helidon.service.registry.Service;
 
@@ -18,6 +20,7 @@ import com.oracle.bmc.auth.okeworkloadidentity.OkeWorkloadIdentityAuthentication
  * {@link OkeWorkloadIdentityAuthenticationDetailsProviderBuilder}.
  */
 @Service.Provider
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class OkeWorkloadBuilderProvider implements Supplier<OkeWorkloadIdentityAuthenticationDetailsProviderBuilder> {
     private final OciConfig config;
 

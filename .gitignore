@@ -73,6 +73,7 @@ user.txt
 ObjectStore/
 PutObjectStoreDirHere/
 package-lock.json
+!docs/package-lock.json
 RUNTIMEDB/
 docs/se/config/images
 presentations/preview/

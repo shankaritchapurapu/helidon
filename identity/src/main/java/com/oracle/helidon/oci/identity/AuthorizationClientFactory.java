@@ -6,6 +6,8 @@ package com.oracle.helidon.oci.identity;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 import io.helidon.service.registry.Services;
 
@@ -33,6 +35,7 @@ import com.oracle.pic.identity.authorization.sdk.IAuthorizationClient;
  * client instance.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 public class AuthorizationClientFactory implements Supplier<Optional<IAuthorizationClient>> {
 
     private static final System.Logger LOGGER = System.getLogger(AuthorizationClientFactory.class.getName());

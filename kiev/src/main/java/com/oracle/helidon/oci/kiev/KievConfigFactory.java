@@ -6,6 +6,8 @@ package com.oracle.helidon.oci.kiev;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.config.Config;
 import io.helidon.service.registry.Service;
 
@@ -13,6 +15,7 @@ import io.helidon.service.registry.Service;
  * Factory for creating {@link KievConfig} from application configuration.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class KievConfigFactory implements Supplier<KievConfig> {
 
     private final Config config;

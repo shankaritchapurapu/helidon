@@ -8,6 +8,8 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.ClientConfiguration;
@@ -20,6 +22,7 @@ import com.oracle.bmc.identity.IdentityClient;
  * Factory that creates a configured OCI Java SDK {@link Identity} client.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class IdentityClientFactory implements Supplier<Identity> {
     private final IdentityClientConfig config;
     private final BasicAuthenticationDetailsProvider authProvider;

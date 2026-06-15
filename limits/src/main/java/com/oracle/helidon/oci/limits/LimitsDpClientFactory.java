@@ -6,6 +6,8 @@ package com.oracle.helidon.oci.limits;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.ClientConfiguration;
@@ -16,6 +18,7 @@ import com.oracle.oci.limits.LimitsDPClient;
  * Factory that creates a configured {@link LimitsDPClient} instance.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class LimitsDpClientFactory implements Supplier<LimitsDPClient> {
 
     /**

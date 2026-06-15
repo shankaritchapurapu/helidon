@@ -5,6 +5,8 @@ package com.oracle.helidon.oci.tagging;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 
 import com.oracle.pic.tagging.client.entities.TaggingClient;
@@ -14,6 +16,7 @@ import com.oracle.pic.tagging.client.entities.TaggingClientImpl;
  * Factory that creates configured local tag slug {@link TaggingClient} instances.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class TaggingClientFactory implements Supplier<TaggingClient> {
     private final TaggingClientConfig config;
 

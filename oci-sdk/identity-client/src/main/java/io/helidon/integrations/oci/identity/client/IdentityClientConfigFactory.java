@@ -6,6 +6,8 @@ package io.helidon.integrations.oci.identity.client;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.config.Config;
 import io.helidon.service.registry.Service;
 
@@ -13,6 +15,7 @@ import io.helidon.service.registry.Service;
  * Factory for {@link IdentityClientConfig}.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class IdentityClientConfigFactory implements Supplier<IdentityClientConfig> {
 
     static final String OCI_IDENTITY_CLIENT = "oci.identity-client";

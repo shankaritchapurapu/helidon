@@ -13,6 +13,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.common.config.ConfigException;
 import io.helidon.service.registry.Service;
 
@@ -21,6 +23,7 @@ import com.oracle.bmc.ConfigFileReader.ConfigFile;
 import com.oracle.bmc.auth.SessionTokenAuthenticationDetailsProvider;
 
 @Service.Provider
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class AdpSessionTokenBuilderProvider implements Supplier<Optional<SessionTokenAuthenticationDetailsProvider>> {
     private static final String DEFAULT_PRIVATE_KEY_FILE_PATH = "~/.oci/sessions/DEFAULT/oci_api_key.pem";
 

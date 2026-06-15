@@ -6,12 +6,15 @@ package com.oracle.helidon.oci.audit;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 
 /**
  * A factory to create an instance of {@link AuditV2Feature} based on {@link AuditConfig}.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 record AuditV2FeatureFactory(AuditV2Config config) implements Supplier<AuditV2Feature> {
 
     /**

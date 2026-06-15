@@ -6,6 +6,8 @@ package com.oracle.helidon.oci.sdk.objectstorage;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
@@ -16,6 +18,7 @@ import com.oracle.pic.commons.util.Region;
  * Factory that creates a configured OCI Java SDK {@link ObjectStorageClient}.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class ObjectStorageClientFactory implements Supplier<ObjectStorageClient> {
     private final ObjectStorageClientConfig config;
     private final BasicAuthenticationDetailsProvider authProvider;

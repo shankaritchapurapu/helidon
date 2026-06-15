@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.common.configurable.Resource;
 import io.helidon.common.pki.Keys;
 import io.helidon.service.registry.Service;
@@ -25,6 +27,7 @@ import com.oracle.pic.identity.authentication.supplier.InstancePrincipalCertific
  * {@link com.oracle.pic.identity.authentication.ServiceAuthenticationClient}.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 public class ServiceAuthenticationClientFactory implements Supplier<ServiceAuthenticationClient> {
 
     private final AuthenticationConfig config;

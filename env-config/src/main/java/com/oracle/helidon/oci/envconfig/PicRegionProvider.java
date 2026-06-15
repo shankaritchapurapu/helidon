@@ -8,12 +8,15 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import io.helidon.common.LazyValue;
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 
 import com.oracle.pic.commons.util.Region;
 
 @Service.Singleton
 @Service.ExternalContracts(Region.class)
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class PicRegionProvider implements Supplier<Optional<Region>> {
 
     private final LazyValue<Optional<Region>> region;

@@ -7,6 +7,8 @@ package io.helidon.integrations.oci.authentication.resource;
 import java.net.URI;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.integrations.oci.OciConfig;
 import io.helidon.service.registry.Service;
 
@@ -18,6 +20,7 @@ import com.oracle.bmc.auth.ResourcePrincipalAuthenticationDetailsProvider.Resour
  * {@link ResourcePrincipalAuthenticationDetailsProviderBuilder}.
  */
 @Service.Provider
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class ResourcePrincipalBuilderProvider implements Supplier<ResourcePrincipalAuthenticationDetailsProviderBuilder> {
     private final OciConfig config;
 

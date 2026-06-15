@@ -5,6 +5,8 @@ package com.oracle.helidon.oci.identity;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.config.Config;
 import io.helidon.service.registry.Service;
 
@@ -23,6 +25,7 @@ import io.helidon.service.registry.Service;
  * </p>
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class IdentityConfigFactory implements Supplier<IdentityConfig> {
 
     private final Config config;

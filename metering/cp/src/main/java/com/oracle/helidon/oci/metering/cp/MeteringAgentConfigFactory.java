@@ -7,12 +7,15 @@ package com.oracle.helidon.oci.metering.cp;
 import java.time.Duration;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 
 /**
  * Factory that adapts Helidon control plane metering configuration to the native emitter configuration.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class MeteringAgentConfigFactory implements Supplier<com.oracle.pic.bling.emit.config.MeteringAgentConfig> {
     private final MeteringConfig meteringConfig;
 

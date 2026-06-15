@@ -7,7 +7,7 @@ Index of Helidon OCI documentation.
 To read these Markdown docs in a browser with navigation and search:
 
 ```bash
-npm run docs:serve
+npm --prefix docs run docs:serve
 ```
 
 Then open `http://localhost:3000`.

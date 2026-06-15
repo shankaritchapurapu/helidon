@@ -5,6 +5,8 @@ package com.oracle.helidon.oci.workflow;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 
 import com.oracle.pic.workflow.Utils.ClientRole;
@@ -16,6 +18,7 @@ import com.oracle.pic.workflow.worker.WorkflowClient;
  */
 @Service.Singleton
 @Service.Named(WorkflowClientModule.WORKFLOW_POLLER_CLIENT_NAME)
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 public class PollerClientSupplier implements Supplier<WorkflowClient> {
     private final WorkflowClientFactory workflowClientFactory;
 

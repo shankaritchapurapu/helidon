@@ -6,6 +6,8 @@ package com.oracle.helidon.oci.limits;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.config.Config;
 import io.helidon.service.registry.Service;
 
@@ -15,6 +17,7 @@ import io.helidon.service.registry.Service;
  * @param config Helidon configuration root
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 record LimitsConfigFactory(Config config) implements Supplier<LimitsConfig> {
 
     /**

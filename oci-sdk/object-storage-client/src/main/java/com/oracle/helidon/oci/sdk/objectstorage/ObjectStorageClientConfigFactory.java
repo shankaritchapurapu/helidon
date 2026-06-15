@@ -6,6 +6,8 @@ package com.oracle.helidon.oci.sdk.objectstorage;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.config.Config;
 import io.helidon.service.registry.Service;
 
@@ -13,6 +15,7 @@ import io.helidon.service.registry.Service;
  * Factory for {@link ObjectStorageClientConfig}.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class ObjectStorageClientConfigFactory implements Supplier<ObjectStorageClientConfig> {
 
     static final String OCI_OBJECT_STORAGE = "oci.object-storage-client";

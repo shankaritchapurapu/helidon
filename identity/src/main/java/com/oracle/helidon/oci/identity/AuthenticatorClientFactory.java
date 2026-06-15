@@ -7,6 +7,8 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 import io.helidon.service.registry.Services;
 
@@ -26,6 +28,7 @@ import com.oracle.pic.identity.authentication.metrics.NoopAuthMetricsImpl;
  * provided {@link IdentityConfigFactory}.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 public class AuthenticatorClientFactory implements Supplier<AuthenticatorClient> {
 
     private final AuthenticationConfig config;

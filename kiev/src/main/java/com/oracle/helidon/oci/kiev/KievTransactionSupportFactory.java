@@ -7,6 +7,8 @@ package com.oracle.helidon.oci.kiev;
 import java.util.List;
 import java.util.Optional;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.service.registry.Lookup;
 import io.helidon.service.registry.Qualifier;
 import io.helidon.service.registry.Service;
@@ -16,6 +18,7 @@ import io.helidon.service.registry.Service;
  */
 @Service.Singleton
 @Service.Named(Service.Named.WILDCARD_NAME)
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class KievTransactionSupportFactory implements Service.InjectionPointFactory<KievTransactionSupport> {
     private final KievDataStores dataStores;
 

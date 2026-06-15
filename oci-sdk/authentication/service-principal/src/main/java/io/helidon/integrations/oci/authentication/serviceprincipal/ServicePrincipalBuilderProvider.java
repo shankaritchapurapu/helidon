@@ -7,6 +7,8 @@ package io.helidon.integrations.oci.authentication.serviceprincipal;
 import java.net.URI;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.integrations.oci.OciConfig;
 import io.helidon.service.registry.Service;
 
@@ -16,6 +18,7 @@ import com.oracle.bmc.auth.S2SAuthenticationDetailsProvider.S2SAuthenticationDet
  * Service principal builder provider, uses the {@link S2SAuthenticationDetailsProviderBuilder}.
  */
 @Service.Provider
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 class ServicePrincipalBuilderProvider implements Supplier<S2SAuthenticationDetailsProviderBuilder> {
     private final OciConfig config;
 

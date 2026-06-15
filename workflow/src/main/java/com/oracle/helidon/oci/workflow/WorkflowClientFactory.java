@@ -7,6 +7,8 @@ import java.lang.management.ManagementFactory;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.config.Config;
 import io.helidon.service.registry.Service;
 import io.helidon.service.registry.ServiceRegistry;
@@ -25,6 +27,7 @@ import com.oracle.pic.workflow.worker.WorkflowEndpointConfiguration;
  * Factory for creating configured {@link WorkflowClient} instances from generated workflow configuration.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 public class WorkflowClientFactory implements Supplier<WorkflowClient> {
     private static final String LEGACY_DYNAMIC_SSL_CONTEXT_PROVIDER_PREFIX = "oci.dynamic-ssl-context-provider";
     private static final String DEFAULT_DYNAMIC_SSL_CONTEXT_PROVIDER_NAME = "workflow";

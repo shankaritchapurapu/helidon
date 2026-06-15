@@ -6,6 +6,8 @@ package com.oracle.helidon.oci.splat;
 
 import java.util.function.Supplier;
 
+import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.config.Config;
 import io.helidon.service.registry.Service;
 
@@ -13,6 +15,7 @@ import io.helidon.service.registry.Service;
  * A factory to create an instance of {@link SplatMtlsConfig}.
  */
 @Service.Singleton
+@Weight(Weighted.DEFAULT_WEIGHT - 30)
 record SplatMtlsConfigFactory(Config config) implements Supplier<SplatMtlsConfig> {
 
     /**
