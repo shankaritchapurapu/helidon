@@ -135,6 +135,10 @@ On direct lookup:
 
 - if the tracked value is still inside `cache-ttl`, the cached value is returned
 - otherwise the value is fetched from SSv2 and the cache entry is refreshed
+- if the first resolver call for a key throws, the source returns the key as absent instead of rethrowing that exception
+- that initial failure also starts a one-`cache-ttl` source-level backoff window; later direct source lookups keep returning absent until the TTL expires, then retry SSv2 again
+- Helidon `Config` nodes that already resolved that key as absent do not retry by themselves; use change listeners or rebuild `Config` to observe recovery on the same logical key
+- if a later refresh fails after a value was already cached, the cached value is kept and direct reads again wait one `cache-ttl` before retrying SSv2
 
 On background polling:
 
@@ -142,11 +146,12 @@ On background polling:
 - each tracked key is fetched fresh regardless of its current cache TTL
 - if any tracked key changes, appears, or disappears, the source emits a root snapshot event containing the latest tracked state
 - if a previously unreadable tracked key becomes readable later, the recovered value is also emitted as a change
+- listener-driven polling forces those refreshes even during the source-level backoff window, so recovery can be observed sooner than the next TTL-based direct retry
 
 This gives two useful properties:
 
-- direct reads stay lazy and cacheable
-- external updates can still reach Helidon listeners without waiting for another on-demand read
+- direct reads stay lazy and cacheable, including transient failure backoff
+- external updates and failure recovery can still reach Helidon listeners without waiting for another on-demand read
 
 ## Change Notifications
 
@@ -168,6 +173,8 @@ Because the source is lazy, that root snapshot contains only keys that were alre
 When Helidon change listeners are active, the first successful read of a newly tracked key may also publish an immediate root snapshot even if SSv2 itself did not change. This is intentional. It seeds Helidon's internal source state with the tracked key so a later SSv2 deletion can be emitted as a proper removal diff instead of being lost as `missing -> missing`.
 
 When Helidon change listeners are active, an on-demand read that refreshes an already tracked key to a new value may also publish an immediate root snapshot instead of waiting for the next poll cycle. This keeps change notifications aligned with the source's latest tracked state even if the refreshed value is first observed by a direct lazy read.
+
+When Helidon change listeners are active, the internal forced poll path can also recover a key sooner than the next source-level retry window. This matters after an initial resolver exception: the source treats the key as absent until the current `cache-ttl` window expires, but polling still retries on `poll-interval` and publishes the recovered value as soon as SSv2 becomes readable again. Without listeners, an existing Helidon `Config` node that already resolved as absent remains absent; callers need a new `Config` view or an active change listener to observe the recovered value.
 
 ## Why This Is Not a `PollableSource`
 
@@ -197,4 +204,5 @@ As a result, the only effective secret-value cache for this feature is the confi
 - `load()` and change-event root snapshots include only keys that have already been requested
 - the source does not enumerate SSv2 subtrees
 - secret values are exposed as UTF-8 strings
-- if polling is never started by Helidon change listeners, direct reads still refresh after `cache-ttl`, but there is no background update push
+- an initial resolver exception is surfaced as an absent value for one source-level `cache-ttl` retry window before the next direct source retry
+- if polling is never started by Helidon change listeners, direct source lookups still retry after `cache-ttl`, but existing Helidon `Config` nodes that already resolved as absent need a rebuilt `Config` view to observe recovery

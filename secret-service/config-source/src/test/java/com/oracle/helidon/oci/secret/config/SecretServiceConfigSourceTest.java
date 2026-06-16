@@ -20,12 +20,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.helidon.config.Config;
+import io.helidon.config.ConfigException;
 import io.helidon.config.ConfigSources;
 import io.helidon.config.spi.ConfigNode;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -82,7 +84,24 @@ class SecretServiceConfigSourceTest {
     }
 
     @Test
-    void cachesInitialReadFailuresUntilCacheTtlExpires() {
+    void returnsEmptyNodeForMissingInitialSecret() {
+        AtomicInteger callCount = new AtomicInteger();
+        SecretServiceConfigSource source = SecretServiceConfigSource.builder()
+                .resolver(path -> {
+                    callCount.incrementAndGet();
+                    return Optional.empty();
+                })
+                .build();
+
+        try (source) {
+            assertThat(source.node("oci.ssv2/secret/missing").isPresent(), is(false));
+            assertThat(source.node("oci.ssv2/secret/missing").isPresent(), is(false));
+            assertThat(callCount.get(), is(1));
+        }
+    }
+
+    @Test
+    void backsOffInitialReadFailuresUntilCacheTtlExpires() {
         MutableClock clock = new MutableClock(Instant.parse("2026-03-28T10:00:00Z"));
         AtomicInteger callCount = new AtomicInteger();
         AtomicReference<RuntimeException> failure = new AtomicReference<>(new IllegalStateException("boom"));
@@ -101,8 +120,11 @@ class SecretServiceConfigSourceTest {
                 .build();
 
         try (source) {
-            assertThat(source.node("oci.ssv2/secret/failure").isPresent(), is(false));
-            assertThat(source.node("oci.ssv2/secret/failure").isPresent(), is(false));
+            Optional<ConfigNode> firstFailure = assertDoesNotThrow(() -> source.node("oci.ssv2/secret/failure"));
+            Optional<ConfigNode> secondFailure = assertDoesNotThrow(() -> source.node("oci.ssv2/secret/failure"));
+
+            assertThat(firstFailure.isPresent(), is(false));
+            assertThat(secondFailure.isPresent(), is(false));
             assertThat(callCount.get(), is(1));
 
             failure.set(null);
@@ -111,9 +133,97 @@ class SecretServiceConfigSourceTest {
             assertThat(callCount.get(), is(1));
 
             clock.advance(Duration.ofSeconds(31));
-
             assertThat(value(source.node("oci.ssv2/secret/failure")), is("recovered"));
             assertThat(callCount.get(), is(2));
+        }
+    }
+
+    @Test
+    void initialReadFailureReturnsEmptyWhenConfigValueIsRequested() {
+        AtomicInteger callCount = new AtomicInteger();
+        SecretServiceConfigSource source = SecretServiceConfigSource.builder()
+                .resolver(path -> {
+                    callCount.incrementAndGet();
+                    throw new IllegalStateException("boom");
+                })
+                .build();
+
+        Config config = Config.builder()
+                .disableEnvironmentVariablesSource()
+                .disableSystemPropertiesSource()
+                .addSource(source)
+                .build();
+
+        try (source) {
+            var value = assertDoesNotThrow(() -> config.get("oci.ssv2/secret/db/password").asString());
+
+            assertThat(value.isPresent(), is(false));
+            assertThat(callCount.get(), is(1));
+        }
+    }
+
+    @Test
+    void initialReadFailureDuringKnownKeyMergeReturnsLowerPriorityFallback() {
+        AtomicInteger callCount = new AtomicInteger();
+        SecretServiceConfigSource source = SecretServiceConfigSource.builder()
+                .resolver(path -> {
+                    callCount.incrementAndGet();
+                    throw new ConfigException("boom");
+                })
+                .build();
+
+        try (source) {
+            Config config = assertDoesNotThrow(() -> Config.builder()
+                    .disableEnvironmentVariablesSource()
+                    .disableSystemPropertiesSource()
+                    .addSource(source)
+                    .addSource(ConfigSources.create(Map.of("oci.ssv2/secret/db/password", "fallback")))
+                    .build());
+            assertThat(callCount.get(), is(1));
+
+            String value = assertDoesNotThrow(
+                    () -> config.get("oci.ssv2/secret/db/password").asString().orElseThrow());
+
+            assertThat(value, is("fallback"));
+            assertThat(callCount.get(), is(1));
+        }
+    }
+
+    @Test
+    void keepsCachedValueWhenRefreshFails() {
+        MutableClock clock = new MutableClock(Instant.parse("2026-03-28T10:00:00Z"));
+        AtomicInteger callCount = new AtomicInteger();
+        AtomicReference<String> value = new AtomicReference<>("v1");
+        AtomicReference<RuntimeException> failure = new AtomicReference<>();
+
+        SecretServiceConfigSource source = SecretServiceConfigSource.builder()
+                .clock(clock)
+                .cacheTtl(Duration.ofSeconds(30))
+                .resolver(path -> {
+                    callCount.incrementAndGet();
+                    RuntimeException currentFailure = failure.get();
+                    if (currentFailure != null) {
+                        throw currentFailure;
+                    }
+                    return Optional.of(value.get());
+                })
+                .build();
+
+        try (source) {
+            assertThat(value(source.node("oci.ssv2/secret/refresh-failure")), is("v1"));
+
+            value.set("v2");
+            failure.set(new IllegalStateException("boom"));
+            clock.advance(Duration.ofSeconds(31));
+
+            assertThat(value(source.node("oci.ssv2/secret/refresh-failure")), is("v1"));
+            assertThat(callCount.get(), is(2));
+
+            failure.set(null);
+            clock.advance(Duration.ofSeconds(31));
+
+            assertThat(value(source.node("oci.ssv2/secret/refresh-failure")), is("v2"));
+            assertThat(callCount.get(), is(3));
         }
     }
 

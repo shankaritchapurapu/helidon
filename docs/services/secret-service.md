@@ -179,8 +179,13 @@ properties.
 Runtime behavior:
 * Reads are lazy and each requested key becomes tracked on first access.
 * Tracked values are cached for configurable `cache-ttl`.
+* If the first resolver call for a tracked key throws, the source treats that key as absent instead of exposing the resolver exception.
+* That initial resolver failure starts a one-`cache-ttl` source-level backoff window, so repeated source lookups keep returning absent until the TTL expires and SSv2 is retried.
+* Existing Helidon `Config` nodes that already resolved the key as absent do not retry by themselves; use change listeners or rebuild `Config` to observe recovery on that same logical key.
+* If a refresh fails after a value was already cached, callers keep seeing the cached value and direct reads again wait one `cache-ttl` before retrying SSv2.
 * Background polling starts only when config change listeners are active.
 * Only tracked keys are polled and included in emitted root snapshots.
+* Listener-driven polling forces fresh SSv2 reads regardless of the current source-level cache/backoff window, so a recovered key can be published before the next TTL-based source retry.
 * Direct lazy reads can publish an updated tracked snapshot immediately when they refresh a value while listeners are active.
 * Root snapshot publication is serialized internally to keep poll-driven and on-demand refreshes consistent.
 * The config source uses an internal SSv2 vault client backed by OCI SDK request signing, retry support, and the generated SSv2 response model.

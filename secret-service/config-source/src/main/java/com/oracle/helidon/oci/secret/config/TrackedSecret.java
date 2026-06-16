@@ -68,7 +68,7 @@ final class TrackedSecret {
     private ValueState currentValue(Instant now, boolean force) {
         readLock.lock();
         try {
-            if (!force && initialized && expiresAt.isAfter(now)) {
+            if (!force && expiresAt.isAfter(now)) {
                 return new ValueState(value, false);
             }
         } finally {
@@ -84,7 +84,7 @@ final class TrackedSecret {
     }
 
     private ValueState refreshValueLocked(Instant now, boolean force) {
-        if (!force && initialized && expiresAt.isAfter(now)) {
+        if (!force && expiresAt.isAfter(now)) {
             return new ValueState(value, false);
         }
 
@@ -106,11 +106,9 @@ final class TrackedSecret {
                 return new ValueState(value, false);
             }
 
-            this.value = Optional.empty();
-            this.initialized = true;
             this.expiresAt = now.plus(cacheTtl);
-            LOGGER.log(WARNING, "Failed to read SSv2 path " + path + "; caching empty value until cache TTL expires", e);
-            return new ValueState(value, true);
+            LOGGER.log(WARNING, "Failed to read SSv2 path " + path + "; returning empty value until cache TTL expires", e);
+            return new ValueState(value, false);
         }
     }
 
