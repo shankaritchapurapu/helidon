@@ -4,6 +4,8 @@
 
 package com.oracle.helidon.oci.audit;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import io.helidon.builder.api.RuntimeType;
@@ -89,10 +91,16 @@ public class AuditV2Feature implements ServerFeature, RuntimeType.Api<AuditV2Con
     public void setup(ServerFeatureContext featureContext) {
         if (config.enabled()) {
             AuditV2Filter filter = new AuditV2Filter(config, auditLogger);
-            featureContext.socket(WebServer.DEFAULT_SOCKET_NAME).httpRouting().addFilter(filter);
-            for (String socket : featureContext.sockets()) {
+            for (String socket : socketNames(featureContext)) {
                 featureContext.socket(socket).httpRouting().addFilter(filter);
             }
         }
+    }
+
+    private Set<String> socketNames(ServerFeatureContext featureContext) {
+        Set<String> sockets = new LinkedHashSet<>();
+        sockets.add(WebServer.DEFAULT_SOCKET_NAME);
+        sockets.addAll(featureContext.sockets());
+        return sockets;
     }
 }

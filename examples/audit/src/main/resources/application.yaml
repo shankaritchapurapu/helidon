@@ -13,6 +13,10 @@ oci:
   auditv2:
     enabled: true
     event-source: helidon-audit-example
+    tenant-id: ocid1.tenancy.oc1..aaaaaaaahelidonauditexample
+    compartment-id: ocid1.compartment.oc1..aaaaaaaahelidonauditexample
+    resource-id: audit-example
+    resource-name: Helidon audit example
     respect-splat-audited-flag: true
     request-parameter-rules:
       - resources: "/audit/orders"

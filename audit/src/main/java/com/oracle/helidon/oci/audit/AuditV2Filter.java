@@ -7,14 +7,12 @@ package com.oracle.helidon.oci.audit;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.Instant;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,6 +22,7 @@ import io.helidon.http.Header;
 import io.helidon.http.HeaderName;
 import io.helidon.http.HeaderNames;
 import io.helidon.http.ServerRequestHeaders;
+import io.helidon.json.JsonObject;
 import io.helidon.webserver.http.Filter;
 import io.helidon.webserver.http.FilterChain;
 import io.helidon.webserver.http.RoutingRequest;
@@ -34,6 +33,7 @@ import com.oracle.pic.sherlock.collector.AuditConfig.Whitelist.Rule;
 import com.oracle.pic.sherlock.collector.AuditLogger;
 import com.oracle.pic.sherlock.collector.AuditPayloadAppender;
 import com.oracle.pic.sherlock.collector.AuditRIO;
+import com.oracle.pic.sherlock.collector.OperationSynchronousType;
 import com.oracle.pic.sherlock.collector.Whitelister;
 import com.oracle.pic.sherlock.common.event.AuditEventV2;
 import com.oracle.pic.sherlock.common.event.AuditEventV2.Data;
@@ -83,13 +83,13 @@ class AuditV2Filter implements Filter {
 
     @Override
     public void filter(FilterChain filterChain, RoutingRequest request, RoutingResponse response) {
+        AuditEventV2 event = auditEventV2(UUID.randomUUID().toString(), request);
+        AuditPayloadAppenderImpl appender = new AuditPayloadAppenderImpl(event);
+        // Keep the appender injectable even when emission is skipped.
+        request.context().register(APPENDER_ATTRIBUTE_NAME, appender);
         if (skipAuditDueToSplat(request)) {
             filterChain.proceed();
         } else {
-            AuditEventV2 event = auditEventV2(UUID.randomUUID().toString(), request);
-            AuditPayloadAppenderImpl appender = new AuditPayloadAppenderImpl(event);
-            // Allow subsequent handlers to modify the event via the appender
-            request.context().register(APPENDER_ATTRIBUTE_NAME, appender);
             if (attachSummary(request)) {
                 response.beforeSend(() -> {
                     addResponse(response, event.getData().getRequest(), event.getData().getResponse());
@@ -116,26 +116,11 @@ class AuditV2Filter implements Filter {
         if (events.isEmpty()) {
             return;
         }
-        List<Map.Entry<String, Integer>> summary = new ArrayList<>();
-        for (AuditEventV2 ev : events) {
-            int hash = Objects.hash(ev.getData().getCompartmentId(),
-                ev.getData().getCompartmentName(),
-                ev.getData().getEventName(),
-                ev.getSource(),
-                ev.getEventType(),
-                ev.getData().getIdentity().getPrincipalId(),
-                ev.getData().getRequest().getAction(),
-                ev.getData().getIdentity().getUserAgent(),
-                ev.getData().getRequest().getId(),
-                ev.getData().getResponse().getStatus(),
-                ev.getData().getIdentity().getTenantId());
-            summary.add(new AbstractMap.SimpleEntry<>(ev.getEventId(), hash));
-        }
-        String[] jsonList = summary.stream()
-                .sorted(Map.Entry.comparingByValue())
-                .map(e -> String.format("{\"%s\",\"%s\"}", e.getKey(), e.getValue()))
-                .toArray(String[]::new);
-        response.headers().set(EVENT_SUMMARY_HEADER_NAME, jsonList);
+        String json = events.stream()
+                .map(ev -> new AuditEventSummary(ev.getEventId()))
+                .map(AuditEventSummary::toJson)
+                .collect(Collectors.joining(",", "[", "]"));
+        response.headers().set(EVENT_SUMMARY_HEADER_NAME, json);
     }
 
     private Whitelister whitelister() {
@@ -166,6 +151,9 @@ class AuditV2Filter implements Filter {
 
     private List<AuditEventV2> generateEvents(AuditPayloadAppenderImpl appender,
             RoutingRequest request, RoutingResponse response) {
+        if (appender.getGeneratedEvents() != null) {
+            return appender.getGeneratedEvents();
+        }
         List<AuditEventV2> events = List.of();
         if (appender.isDoNotLog()) {
             // Downstream programmatically wants to skip
@@ -179,6 +167,7 @@ class AuditV2Filter implements Filter {
                 events.addAll(convertAuditRIOs(rios.get(0).getResourceId(), appender, request, response));
             }
         }
+        appender.setGeneratedEvents(events);
         return events;
     }
 
@@ -197,7 +186,8 @@ class AuditV2Filter implements Filter {
          */
         for (int i = 0; i < auditRIOS.size(); i++) {
             AuditRIO rio = auditRIOS.get(i);
-            AuditEventV2 merged = auditEventV2FromAuditRIO(appender.getEvent(), rio);
+            String eventId = i == 0 ? appender.getEventId() : UUID.randomUUID().toString();
+            AuditEventV2 merged = auditEventV2FromAuditRIO(appender.getEvent(), rio, eventId);
             /*
              * The following fields only apply to the primary resource,
              * unless the resourceId is the same (for example move compartment).
@@ -214,7 +204,7 @@ class AuditV2Filter implements Filter {
         return events;
     }
 
-    private AuditEventV2 auditEventV2FromAuditRIO(AuditEventV2 eventToCopy, AuditRIO auditRio) {
+    private AuditEventV2 auditEventV2FromAuditRIO(AuditEventV2 eventToCopy, AuditRIO auditRio, String eventId) {
         Data dataToCopy = eventToCopy.getData();
         Data data = Data.builder()
                 // Reuse some references
@@ -235,7 +225,7 @@ class AuditV2Filter implements Filter {
                 .cloudEventsVersion(eventToCopy.getCloudEventsVersion())
                 .contentType(eventToCopy.getContentType())
                 .data(data)
-                .eventId(eventToCopy.getEventId())
+                .eventId(eventId)
                 .eventTime(eventToCopy.getEventTime())
                 .eventType(eventToCopy.getEventType())
                 .eventTypeVersion(eventToCopy.getEventTypeVersion())
@@ -252,7 +242,9 @@ class AuditV2Filter implements Filter {
                 .data(data)
                 .eventId(eventId)
                 .eventTime(Date.from(Instant.now()))
-                .eventType(EVENT_TYPE)
+                .eventType(generateEventType(auditConfig.eventSource(),
+                                             auditConfig.eventName(),
+                                             OperationSynchronousType.None))
                 .eventTypeVersion(AuditEventV2.EVENT_TYPE_VERSION)
                 .source(auditConfig.eventSource())
                 .build();
@@ -263,7 +255,13 @@ class AuditV2Filter implements Filter {
         Request req = new Request();
         Response resp = new Response();
         Identity identity = new Identity();
+        String path = request.requestedUri().path().path();
+        String action = request.prologue().method().text();
         Data data = Data.builder()
+                .eventName(auditConfig.eventName())
+                .compartmentId(auditConfig.compartmentId())
+                .resourceId(auditConfig.resourceId())
+                .resourceName(auditConfig.resourceName())
                 .identity(identity)
                 .request(req)
                 .response(resp)
@@ -271,6 +269,7 @@ class AuditV2Filter implements Filter {
                 .internalDetails(new InternalDetails())
                 .availabilityDomain(Environment.AVAILABILITY_DOMAIN)
                 .build();
+        identity.setTenantId(auditConfig.tenantId());
         ServerRequestHeaders headers = request.headers();
         // Obtain IP from header or from the request itself
         headers.find(HeaderNames.X_FORWARDED_FOR).ifPresentOrElse(
@@ -283,8 +282,8 @@ class AuditV2Filter implements Filter {
                     }
                 });
         headers.find(HeaderNames.USER_AGENT).ifPresent(header -> identity.setUserAgent(header.get()));
-        req.setPath(request.requestedUri().path().path());
-        req.setAction(request.prologue().method().text());
+        req.setPath(path);
+        req.setAction(action);
         headers.find(REQUEST_ID_HEADER_NAME).ifPresentOrElse(
                 header -> {
                     String id = header.get();
@@ -299,6 +298,35 @@ class AuditV2Filter implements Filter {
         addRequestHeaders(request, req);
         addRequestParameters(request, req);
         return data;
+    }
+
+    static String generateEventType(String serviceName, String eventName, OperationSynchronousType syncType) {
+        if (serviceName == null || serviceName.isBlank() || eventName == null || eventName.isBlank()) {
+            return EVENT_TYPE;
+        }
+        String suffix = "";
+        if (syncType == OperationSynchronousType.AsyncBegin) {
+            suffix = ".begin";
+        } else if (syncType == OperationSynchronousType.AsyncEnd) {
+            suffix = ".end";
+        }
+        return String.format(EVENT_TYPE + ".%s.%s%s", serviceName, eventName, suffix);
+    }
+
+    private record AuditEventSummary(String eventId) {
+        String toJson() {
+            JsonObject.Builder builder = JsonObject.builder();
+            setJsonString(builder, "eventId", eventId);
+            return builder.build().toString();
+        }
+
+        private static void setJsonString(JsonObject.Builder builder, String key, String value) {
+            if (value == null) {
+                builder.setNull(key);
+            } else {
+                builder.set(key, value);
+            }
+        }
     }
 
     private void addRequestHeaders(RoutingRequest request, Request req) {

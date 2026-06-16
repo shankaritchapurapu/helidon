@@ -43,6 +43,10 @@
             <artifactId>helidon-config-metadata</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.json</groupId>
+            <artifactId>helidon-json</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.service</groupId>
             <artifactId>helidon-service-registry</artifactId>
         </dependency>

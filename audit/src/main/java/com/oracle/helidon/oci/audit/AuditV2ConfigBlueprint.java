@@ -31,6 +31,41 @@ interface AuditV2ConfigBlueprint extends Prototype.Factory<AuditV2Feature> {
     String eventSource();
 
     /**
+     * Event name to use when application code does not set a more specific audit event name.
+     */
+    @Option.Configured
+    @Option.Default("HttpRequest")
+    String eventName();
+
+    /**
+     * Tenant OCID to use when application code or identity integration does not set the principal tenant.
+     */
+    @Option.Configured
+    @Option.Default("")
+    String tenantId();
+
+    /**
+     * Compartment OCID to use when application code does not set a target compartment.
+     */
+    @Option.Configured
+    @Option.Default("")
+    String compartmentId();
+
+    /**
+     * Resource identifier to use when application code does not set the audited resource id.
+     */
+    @Option.Configured
+    @Option.Default("")
+    String resourceId();
+
+    /**
+     * Resource name to use when application code does not set the audited resource name.
+     */
+    @Option.Configured
+    @Option.Default("")
+    String resourceName();
+
+    /**
      * Whether the 'oci-splat-audited' flag in the request headers should be respected.
      */
     @Option.Configured

@@ -2,6 +2,7 @@
  * Copyright (c) 2026 Oracle and/or its affiliates.
  */
 
+import com.oracle.helidon.oci.codegen.AuditPayloadAppenderParameterCodegenProvider;
 import com.oracle.helidon.oci.codegen.IdentityContextParameterCodegenProvider;
 import com.oracle.helidon.oci.codegen.OciAuthorizationExtensionProvider;
 import com.oracle.helidon.oci.codegen.OciHttpMetricsExtensionProvider;
@@ -34,5 +35,6 @@ module io.helidon.examples.oci.poc.codegen {
 
     provides io.helidon.declarative.codegen.http.webserver.spi.HttpParameterCodegenProvider
             with OciRequestIdParameterCodegenProvider,
+                    AuditPayloadAppenderParameterCodegenProvider,
                     IdentityContextParameterCodegenProvider;
 }

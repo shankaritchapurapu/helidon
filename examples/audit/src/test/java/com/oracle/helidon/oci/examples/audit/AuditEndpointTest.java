@@ -14,7 +14,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
 
 @ServerTest
 class AuditEndpointTest {
@@ -24,6 +26,7 @@ class AuditEndpointTest {
     private static final HeaderName TENANT_HEADER = HeaderNames.create("x-audit-example-tenant");
     private static final HeaderName VERIFY_AUDIT_HEADER = HeaderNames.create("oci-splat-audit-verify");
     private static final HeaderName VERSION_HEADER = HeaderNames.create("x-audit-example-version");
+    private static final String TENANT_ID = "ocid1.tenancy.oc1..aaaaaaaahelidonauditexample";
 
     private final Http1Client client;
 
@@ -38,11 +41,11 @@ class AuditEndpointTest {
                 .header(HeaderValues.CONTENT_TYPE_TEXT_PLAIN)
                 .header(HeaderValues.ACCEPT_JSON)
                 .header(OPC_REQUEST_ID_HEADER, "customer-123/trace-456")
-                .header(TENANT_HEADER, "tenant-a")
+                .header(TENANT_HEADER, TENANT_ID)
                 .header(VERIFY_AUDIT_HEADER, "true")
                 .submit("alice")) {
             assertThat(response.status(), is(Status.OK_200));
-            assertThat(response.headers().first(AUDIT_SUMMARY_HEADER).isPresent(), is(true));
+            assertSummary(response.headers().first(AUDIT_SUMMARY_HEADER).orElseThrow());
             assertThat(response.headers().first(VERSION_HEADER).orElseThrow(), is("v1"));
 
             String body = response.as(String.class);
@@ -82,11 +85,11 @@ class AuditEndpointTest {
                 .queryParam("expand", "details")
                 .header(HeaderValues.ACCEPT_JSON)
                 .header(OPC_REQUEST_ID_HEADER, "customer-123/trace-456")
-                .header(TENANT_HEADER, "tenant-a")
+                .header(TENANT_HEADER, TENANT_ID)
                 .header(VERIFY_AUDIT_HEADER, "true")
                 .request()) {
             assertThat(response.status(), is(Status.OK_200));
-            assertThat(response.headers().first(AUDIT_SUMMARY_HEADER).isPresent(), is(true));
+            assertSummary(response.headers().first(AUDIT_SUMMARY_HEADER).orElseThrow());
             assertThat(response.headers().first(VERSION_HEADER).orElseThrow(), is("v1"));
 
             String body = response.as(String.class);
@@ -94,5 +97,10 @@ class AuditEndpointTest {
             assertThat(body, containsString("\"expand\":\"details\""));
             assertThat(body, containsString("\"status\":\"READY_FOR_APPROVAL\""));
         }
+    }
+
+    private static void assertSummary(String summary) {
+        assertThat(summary, startsWith("[{\"eventId\":\""));
+        assertThat(summary, not(containsString("\"eventGroupingId\"")));
     }
 }

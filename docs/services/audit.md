@@ -21,6 +21,31 @@ To enable audit support, add the following dependency to your project’s `pom.x
 </dependency>
 ```
 
+Direct `AuditPayloadAppender` endpoint parameter injection also requires the Helidon OCI codegen processor at
+application compile time. Add `helidon-oci-codegen` to the Maven compiler annotation processor path alongside the
+normal Helidon annotation processors, using the same Helidon OCI version as `helidon-oci-audit`:
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessorPaths>
+            <path>
+                <groupId>io.helidon.bundles</groupId>
+                <artifactId>helidon-bundles-apt</artifactId>
+                <version>${helidon.version}</version>
+            </path>
+            <path>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-codegen</artifactId>
+                <version>${helidon.oci.version}</version>
+            </path>
+        </annotationProcessorPaths>
+    </configuration>
+</plugin>
+```
+
 ---
 
 ## Usage
@@ -41,8 +66,30 @@ WebServer.builder()
 ```
 
 To verify the filter ran during local testing, send the `oci-splat-audit-verify: true` request header. The
-response will include `oci-splat-audit-event-summary`. If `respect-splat-audited-flag` is enabled, sending
-`oci-splat-audited: true` skips audit processing for that request.
+response will include `oci-splat-audit-event-summary` as a JSON array. Each entry contains `eventId`.
+If `respect-splat-audited-flag` is enabled, sending `oci-splat-audited: true`
+skips audit emission and verification summary creation for that request, while leaving the request appender available
+to endpoint code.
+
+The feature is registered on the default WebServer socket and on every configured named socket.
+
+With the codegen processor configured, application code can enrich the current request's event by injecting
+Sherlock's request-scoped `AuditPayloadAppender` into an endpoint method:
+
+```java
+@Http.POST
+@Http.Path("/orders")
+OrderView create(@Http.Entity CreateOrder request, AuditPayloadAppender audit) {
+    audit.setEventName("CreateOrder", OperationSynchronousType.None);
+    audit.overridePrincipalTenantId(request.tenantId());
+    audit.overrideCompartmentId(request.compartmentId());
+    audit.setResourceId(request.orderId());
+    audit.appendToAuditRios(List.of(new AuditRIO(request.compartmentId(), request.orderId())));
+    return service.create(request);
+}
+```
+
+Direct endpoint injection fails fast if the request appender is not present.
 
 ---
 
@@ -69,6 +116,11 @@ Configure `AuditV2Filter` behavior using the `application.yaml` file.
 |----------------------------------------|-----------------------------|-------------------------------------------------------------------------------------------------------|
 | oci.auditv2.enabled                    | true                        | Whether to enable the AuditV2Filter.                                                                  |
 | oci.auditv2.event-source               | EventSourceNotConfigured    | Identifies the event source to be set in audit events.                                                |
+| oci.auditv2.event-name                 | HttpRequest                 | Event name used when application code does not set a more specific event.                             |
+| oci.auditv2.tenant-id                  |                             | Tenant OCID used when application code does not set the principal tenant.                             |
+| oci.auditv2.compartment-id             |                             | Compartment OCID used when application code does not set a target compartment.                        |
+| oci.auditv2.resource-id                |                             | Resource identifier used when application code does not set one.                                      |
+| oci.auditv2.resource-name              |                             | Resource name used when application code does not set one.                                            |
 | oci.auditv2.respect-splat-audited-flag | true                        | Whether to respect the `oci-splat-audited` request header to conditionally disable auditing.          |
 | oci.auditv2.request-parameter-rules    | []                          | List of rules for filtering or auditing HTTP request parameters.                                      |
 | oci.auditv2.request-header-rules       | []                          | List of rules for filtering or auditing HTTP request headers.                                         |
@@ -87,6 +139,11 @@ oci:
   auditv2:
     enabled: true
     event-source: MyService
+    event-name: HttpRequest
+    tenant-id: ocid1.tenancy.oc1..example
+    compartment-id: ocid1.compartment.oc1..example
+    resource-id: my-service
+    resource-name: My Service
     respect-splat-audited-flag: true
     request-parameter-rules:
       - resources: "/orders"

@@ -30,7 +30,11 @@ The service exposes two JSON routes:
 - `GET /audit/orders?orderId=...&expand=...`
 - `POST /audit/orders/approve?orderId=...` with a plain-text approver name in the body
 
-The example config in `src/main/resources/application.yaml` whitelists:
+The example endpoint injects `AuditPayloadAppender` directly into each route method and enriches the current
+request's audit event with an event name, tenant, compartment, resource id, and resource RIO.
+
+The example config in `src/main/resources/application.yaml` sets default tenant, compartment, and resource fields
+for fallback events and whitelists:
 
 - request parameters `orderId` and `expand`
 - request headers `opc-request-id` and `x-audit-example-tenant`
@@ -45,7 +49,7 @@ Example request:
 curl -i 'http://localhost:8080/audit/orders?orderId=order-123&expand=details' \
   -H 'Accept: application/json' \
   -H 'opc-request-id: customer123/trace123' \
-  -H 'x-audit-example-tenant: tenant-a' \
+  -H 'x-audit-example-tenant: ocid1.tenancy.oc1..aaaaaaaahelidonauditexample' \
   -H 'oci-splat-audit-verify: true'
 ```
 
