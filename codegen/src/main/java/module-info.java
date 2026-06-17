@@ -4,6 +4,7 @@
 
 import com.oracle.helidon.oci.codegen.IdentityContextParameterCodegenProvider;
 import com.oracle.helidon.oci.codegen.OciAuthorizationExtensionProvider;
+import com.oracle.helidon.oci.codegen.OciHttpMetricsExtensionProvider;
 import com.oracle.helidon.oci.codegen.OciHttpParameterLoaderExtensionProvider;
 import com.oracle.helidon.oci.codegen.OciKievTransactionExtensionProvider;
 import com.oracle.helidon.oci.codegen.OciMeteringExtensionProvider;
@@ -26,6 +27,7 @@ module io.helidon.examples.oci.poc.codegen {
 
     provides io.helidon.service.codegen.spi.RegistryCodegenExtensionProvider
             with OciAuthorizationExtensionProvider,
+                    OciHttpMetricsExtensionProvider,
                     OciKievTransactionExtensionProvider,
                     OciMeteringExtensionProvider,
                     OciHttpParameterLoaderExtensionProvider;

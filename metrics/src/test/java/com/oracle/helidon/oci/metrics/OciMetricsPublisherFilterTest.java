@@ -31,9 +31,12 @@ class OciMetricsPublisherFilterTest {
     void defaultOciMetricsPublisherConfigPublishesAllMetrics() {
         BiFunction<String, Meter, Boolean> filter = filter(builder -> {
         });
+        OciMetricsPublisher publisher = publisher(builder -> {
+        });
 
         assertThat(filter.apply("test.counter", null), is(true));
         assertThat(filter.apply("test.timer", null), is(true));
+        assertThat(publisher.shouldPublishAttribute(OciMetricsPublisher.VALUE_ATTRIBUTE), is(true));
     }
 
     @Test
@@ -171,6 +174,44 @@ class OciMetricsPublisherFilterTest {
 
         assertThat(publisher.shouldPublish(meter), is(true));
         assertThat(publisher.shouldPublish(new TestMeter("test.counter")), is(false));
+    }
+
+    @Test
+    void attributeIncludesAllowOnlyListedAttributes() {
+        OciMetricsPublisher publisher = publisher(builder -> builder.includesAttributes(
+                Set.of(OciMetricsPublisher.VALUE_ATTRIBUTE)));
+
+        assertThat(publisher.shouldPublishAttribute(OciMetricsPublisher.VALUE_ATTRIBUTE), is(true));
+        assertThat(publisher.shouldPublishAttribute("count"), is(false));
+    }
+
+    @Test
+    void attributeExcludesSuppressListedAttributes() {
+        OciMetricsPublisher publisher = publisher(builder -> builder.excludesAttributes(
+                Set.of(OciMetricsPublisher.VALUE_ATTRIBUTE)));
+
+        assertThat(publisher.shouldPublishAttribute(OciMetricsPublisher.VALUE_ATTRIBUTE), is(false));
+        assertThat(publisher.shouldPublishAttribute("count"), is(true));
+    }
+
+    @Test
+    void attributeExcludesWinOverIncludes() {
+        OciMetricsPublisher publisher = publisher(builder -> builder.includesAttributes(
+                        Set.of(OciMetricsPublisher.VALUE_ATTRIBUTE))
+                .excludesAttributes(Set.of(OciMetricsPublisher.VALUE_ATTRIBUTE)));
+
+        assertThat(publisher.shouldPublishAttribute(OciMetricsPublisher.VALUE_ATTRIBUTE), is(false));
+    }
+
+    @Test
+    void metricNameFilterSuppressesBeforeAttributeFilter() {
+        OciMetricsPublisher publisher = publisher(builder -> builder.includes(Set.of("test.allowed"))
+                .includesAttributes(Set.of(OciMetricsPublisher.VALUE_ATTRIBUTE)));
+
+        assertThat(publisher.shouldPublish(new TestMeter("test.counter"), OciMetricsPublisher.VALUE_ATTRIBUTE),
+                   is(false));
+        assertThat(publisher.shouldPublish(new TestMeter("test.allowed"), OciMetricsPublisher.VALUE_ATTRIBUTE),
+                   is(true));
     }
 
     private static BiFunction<String, Meter, Boolean> filter(Consumer<OciMetricsPublisherConfig.Builder> publisherConsumer) {

@@ -34,6 +34,8 @@ Add the OCI metrics integration dependency to your service:
 </dependency>
 ```
 
+The `@MetricPrefix` and `@SecondaryMetricPrefix` annotations allow API endpoint methods to modify the default names used for automatic HTTP metrics. To use these annotations, add `helidon-oci-codegen` to the annotation processor path.
+
 Services normally also configure OCI SDK authentication using the shared Helidon OCI SDK configuration under
 `helidon.oci.*`.
 
@@ -81,7 +83,7 @@ Service code can use several APIs as described below, within the same service if
 #### Use OCI `metrics-lib` `Metrics` API
 The metrics integration automatically prepares the OCI metrics runtime based on the configuration, invoking `Metrics.init` during start-up and `Metrics.shutdown` as the service stops.
 
-While the service is running, the service code can invoke the `com.oracle.pic.telemetry.commons.metrics.Metrics` methods such as `emit`, `sensor`, or `record` as normal. Service code should not normally invoke `Metrics.init` or `Metrics.shutdown`; the Helidon OCI metrics integration library does so. 
+Once the service has started, service code can invoke the `com.oracle.pic.telemetry.commons.metrics.Metrics` methods such as `emit`, `sensor`, or `record` as normal. Service code should not normally invoke `Metrics.init` or `Metrics.shutdown`; the Helidon OCI metrics integration library does so. 
 
 #### Use Helidon Metrics imperative API
 
@@ -130,12 +132,32 @@ String personalizedGreeting(@Http.PathParam("name") String name) {
 
 ### Automatic HTTP request metrics
 
-The integration registers and updates:
+For annotated endpoint API methods, the integration registers automatic HTTP metrics using the `service-core`
+naming/scope convention. The default scope is `ClassSimpleName.methodName`. 
 
-* `http.requests.count` (counter)
-* `http.request.duration` (timer)
+The integration emits:
 
-Both meters are tagged with the HTTP method, the route matching pattern, and the HTTP status family.
+* `<scope>.Time`
+* `<scope>.ResourceTime`
+* `<scope>.WireReadTime`
+* `<scope>.WireWriteTime`
+* `<scope>.ResponseOut.StatusCode.<statusCode>.Count`
+* `<scope>.ResponseOut.StatusFamily.<n>XX.Count`
+* `<scope>.ResponseOut.Count`
+* `<scope>.SuccessRate`
+
+`Time`, `ResourceTime`, `WireReadTime`, and `WireWriteTime` are detailed timing metrics controlled by
+`enable-detailed-timing-auto-metrics`, which defaults to `true`. `WireReadTime` is emitted only when the request body
+stream is read, and `WireWriteTime` is emitted only when a non-empty response body is written.
+
+`SuccessRate` records `1` for response statuses below `500` and `0` for statuses `500` or higher.
+
+`@MetricPrefix` can be added to an endpoint class to replace the default scope. Set `appendMethodName=true` to append the
+Java method name to the configured prefix. `@SecondaryMetricPrefix` can be added to an endpoint class or method to emit
+the same automatic HTTP metrics under an additional scope.
+
+If a request does not carry generated endpoint metadata, the automatic HTTP metrics use `UnknownMethod`. `ResourceTime`
+is emitted only when generated endpoint metadata captures resource method timing.
 
 ### Automatic JVM gauges
 
@@ -181,32 +203,34 @@ The OCI metrics publisher is configured as an entry under `metrics.publishers` w
 When publisher `availability-domain` or `fault-domain` is omitted, the OCI metrics publisher uses
 `oci.env.availability-domain` and `oci.env.fault-domain` when those values are available.
 
-| Key | Default value | Description |
-|-----|---------------|-------------|
-| `type` | | Set to `oci` to use this publisher. |
-| `enabled` | `true` | Enables or disables OCI metrics publishing. |
-| `project` | | OCI metrics project. Required for publishing. |
-| `fleet` | | OCI metrics fleet. Required for publishing. |
-| `region` | | Optional public region name. If set, this takes precedence over a registry-provided PIC `Region`. |
-| `endpoint` | | Optional monitoring ingestion endpoint override. |
-| `default-dimensions` | `{}` | Default dimensions for OCI `com.oracle.pic.telemetry.commons.metrics.Metrics.init`. |
-| `request-headers` | `{}` | Additional headers to send with OCI monitoring requests. |
-| `sample-gauges` | `true` | Enables scheduled gauge and functional-counter sampling. |
-| `duration-unit` | `milliseconds` | Unit for emitted timer duration values. |
-| `metrics-scope-name` | `service` | Root name segment used as the prefix for built-in JVM metric names. |
-| `includes` | `[]` | Metric names to include. An empty list includes all non-excluded metrics. |
-| `excludes` | `[]` | Metric names to exclude. Excludes take precedence over includes. |
-| `use-regex-filters` | `false` | Treat `includes` and `excludes` entries as regular expressions. Regex matching uses full-pattern semantics. |
-| `use-substring-matching` | `false` | Treat `includes` and `excludes` entries as substrings. Used only when `use-regex-filters` is `false`. |
-| `includes-attributes` | `max`, `mean`, `min`, `stddev`, `p50`, `p75`, `p95`, `p98`, `p99`, `p999`, `count`, `m1_rate`, `m5_rate`, `m15_rate`, `mean_rate` | Metric attribute names to include when reporting derived values. |
-| `excludes-attributes` | `[]` | Metric attribute names to exclude when reporting derived values. |
-| `gauge-sample-interval` | `PT1M` | Interval between scheduled gauge and functional-counter samples. |
-| `use-metadata-service` | | Optional flag passed to the OCI telemetry reporter builder. |
-| `override-metric-keys` | | Optional flag passed to the OCI telemetry reporter builder. |
-| `hostname` | | Optional hostname override for emitted dimensions. |
-| `host-name` | | Alias for `hostname`; configure only one of the two keys. |
-| `availability-domain` | `oci.env.availability-domain` | Optional availability-domain override. |
-| `fault-domain` | `oci.env.fault-domain` | Optional fault-domain override. |
+| Key | Default value | Description                                                                                                                                                      |
+|-----|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `type` | | Set to `oci` to use this publisher.                                                                                                                              |
+| `enabled` | `true` | Enables or disables OCI metrics publishing.                                                                                                                      |
+| `project` | | OCI metrics project. Required for publishing.                                                                                                                    |
+| `fleet` | | OCI metrics fleet. Required for publishing.                                                                                                                      |
+| `region` | | Optional public region name. If set, this takes precedence over a registry-provided PIC `Region`.                                                                |
+| `endpoint` | | Optional monitoring ingestion endpoint override.                                                                                                                 |
+| `default-dimensions` | `{}` | Default dimensions for OCI `com.oracle.pic.telemetry.commons.metrics.Metrics.init`. Added to emitted metrics data that does not have any dimensions already set. |
+| `request-headers` | `{}` | Additional headers to send with OCI monitoring requests.                                                                                                         |
+| `sample-gauges` | `true` | Enables scheduled gauge and functional-counter sampling.                                                                                                         |
+| `enable-detailed-timing-auto-metrics` | `true` | Enables automatic HTTP `Time`, `ResourceTime`, `WireReadTime`, and `WireWriteTime` timers.                                                                       |
+| `resource-package-prefix` | | Optional package-name prefix for generated REST resources included in automatic HTTP metrics.                                                                    |
+| `duration-unit` | `milliseconds` | Unit for emitted timer duration values.                                                                                                                          |
+| `metrics-scope-name` | `service` | Root name segment used as the prefix for built-in JVM metric names.                                                                                              |
+| `includes` | `[]` | Metric names to include. An empty list includes all non-excluded metrics.                                                                                        |
+| `excludes` | `[]` | Metric names to exclude. Excludes take precedence over includes.                                                                                                 |
+| `use-regex-filters` | `false` | Treat `includes` and `excludes` entries as regular expressions. Regex matching uses full-pattern semantics.                                                      |
+| `use-substring-matching` | `false` | Treat `includes` and `excludes` entries as substrings. Used only when `use-regex-filters` is `false`.                                                            |
+| `includes-attributes` | `max`, `mean`, `min`, `stddev`, `p50`, `p75`, `p95`, `p98`, `p99`, `p999`, `count`, `m1_rate`, `m5_rate`, `m15_rate`, `mean_rate` | Metric attribute names to include when reporting derived values.                                                                                                 |
+| `excludes-attributes` | `[]` | Metric attribute names to exclude when reporting derived values.                                                                                                 |
+| `gauge-sample-interval` | `PT1M` | Interval between scheduled gauge and functional-counter samples.                                                                                                 |
+| `use-metadata-service` | | Optional flag passed to the OCI telemetry reporter builder.                                                                                                      |
+| `override-metric-keys` | | Optional flag passed to the OCI telemetry reporter builder.                                                                                                      |
+| `hostname` | | Optional hostname override for emitted dimensions.                                                                                                               |
+| `host-name` | | Alias for `hostname`; configure only one of the two keys.                                                                                                        |
+| `availability-domain` | `oci.env.availability-domain` | Optional availability-domain override.                                                                                                                           |
+| `fault-domain` | `oci.env.fault-domain` | Optional fault-domain override.                                                                                                                                  |
 
 Aliases (such as `hostname` and `host-name`) are provided for user convenience, either to align with native OCI parameter names or with similar settings
 in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.

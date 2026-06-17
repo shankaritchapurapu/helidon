@@ -121,6 +121,11 @@
                             <artifactId>helidon-bundles-apt</artifactId>
                             <version>${helidon.version}</version>
                         </path>
+                        <path>
+                            <groupId>com.oracle.helidon.oci</groupId>
+                            <artifactId>helidon-oci-codegen</artifactId>
+                            <version>${project.version}</version>
+                        </path>
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>

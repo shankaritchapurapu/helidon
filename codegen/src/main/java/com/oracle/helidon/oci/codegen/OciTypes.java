@@ -12,6 +12,27 @@ final class OciTypes {
     static final TypeName INTERCEPTOR_CHAIN = TypeName.create("io.helidon.webserver.http.HttpEntryPoint.Interceptor.Chain");
     static final TypeName SERVER_REQUEST = TypeName.create("io.helidon.webserver.http.ServerRequest");
     static final TypeName SERVER_RESPONSE = TypeName.create("io.helidon.webserver.http.ServerResponse");
+    static final TypeName WEIGHT = TypeName.create("io.helidon.common.Weight");
+
+    static final TypeName REST_SERVER_ENDPOINT =
+            TypeName.create("io.helidon.webserver.http.RestServer.Endpoint");
+    static final TypeName HTTP_DELETE = TypeName.create("io.helidon.http.Http.DELETE");
+    static final TypeName HTTP_GET = TypeName.create("io.helidon.http.Http.GET");
+    static final TypeName HTTP_HEAD = TypeName.create("io.helidon.http.Http.HEAD");
+    static final TypeName HTTP_OPTIONS = TypeName.create("io.helidon.http.Http.OPTIONS");
+    static final TypeName HTTP_PATCH = TypeName.create("io.helidon.http.Http.PATCH");
+    static final TypeName HTTP_POST = TypeName.create("io.helidon.http.Http.POST");
+    static final TypeName HTTP_PUT = TypeName.create("io.helidon.http.Http.PUT");
+    static final TypeName METRICS_HTTP_ENDPOINT_CONTEXT =
+            TypeName.create("com.oracle.helidon.oci.metrics.OciHttpEndpointMetricsContext");
+    static final TypeName METRICS_METRIC_PREFIX =
+            TypeName.create("com.oracle.helidon.oci.metrics.MetricPrefix");
+    static final TypeName METRICS_SECONDARY_METRIC_PREFIX =
+            TypeName.create("com.oracle.helidon.oci.metrics.SecondaryMetricPrefix");
+    static final TypeName SERVICE_CORE_METRIC_PREFIX =
+            TypeName.create("com.oracle.pic.commons.service.metrics.jersey.MetricPrefix");
+    static final TypeName SERVICE_CORE_SECONDARY_METRIC_PREFIX =
+            TypeName.create("com.oracle.pic.commons.service.metrics.jersey.SecondaryMetricPrefix");
 
     static final TypeName IDENTITY_AUTHENTICATED =
             TypeName.create("com.oracle.helidon.oci.identity.Identity.Authenticated");

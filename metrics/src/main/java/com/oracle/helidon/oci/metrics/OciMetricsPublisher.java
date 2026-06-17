@@ -4,6 +4,7 @@
 
 package com.oracle.helidon.oci.metrics;
 
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -27,10 +28,13 @@ final class OciMetricsPublisher implements MetricsPublisher,
                                            RuntimeType.Api<OciMetricsPublisherConfig> {
 
     static final String TYPE = "oci";
+    static final String VALUE_ATTRIBUTE = "value";
     private static final System.Logger LOGGER = System.getLogger(OciMetricsPublisher.class.getName());
 
     private final OciMetricsPublisherConfig prototype;
     private final BiFunction<String, Meter, Boolean> metricFilter;
+    private final Set<String> includedAttributes;
+    private final Set<String> excludedAttributes;
     private final AtomicBoolean acceptingUpdates = new AtomicBoolean(true);
 
     OciMetricsPublisher() {
@@ -40,6 +44,8 @@ final class OciMetricsPublisher implements MetricsPublisher,
     private OciMetricsPublisher(OciMetricsPublisherConfig prototype) {
         this.prototype = prototype;
         this.metricFilter = prototype == null ? ReporterMetricFilter.allowAll() : prototype.filter();
+        this.includedAttributes = prototype == null ? Set.of() : prototype.includesAttributes();
+        this.excludedAttributes = prototype == null ? Set.of() : prototype.excludesAttributes();
     }
 
     static OciMetricsPublisherConfig.Builder builder() {
@@ -90,7 +96,7 @@ final class OciMetricsPublisher implements MetricsPublisher,
             }
             return;
         }
-        if (!shouldPublish(counter)) {
+        if (!shouldPublish(counter, VALUE_ATTRIBUTE)) {
             logFiltered(counter, "counter update");
             return;
         }
@@ -112,7 +118,7 @@ final class OciMetricsPublisher implements MetricsPublisher,
             }
             return;
         }
-        if (!shouldPublish(timer)) {
+        if (!shouldPublish(timer, VALUE_ATTRIBUTE)) {
             logFiltered(timer, "timer update");
             return;
         }
@@ -134,7 +140,7 @@ final class OciMetricsPublisher implements MetricsPublisher,
             }
             return;
         }
-        if (!shouldPublish(summary)) {
+        if (!shouldPublish(summary, VALUE_ATTRIBUTE)) {
             logFiltered(summary, "distribution summary update");
             return;
         }
@@ -156,7 +162,7 @@ final class OciMetricsPublisher implements MetricsPublisher,
             }
             return;
         }
-        if (!shouldPublish(counter)) {
+        if (!shouldPublish(counter, VALUE_ATTRIBUTE)) {
             logFiltered(counter, "functional counter sample");
             return;
         }
@@ -178,7 +184,7 @@ final class OciMetricsPublisher implements MetricsPublisher,
             }
             return;
         }
-        if (!shouldPublish(gauge)) {
+        if (!shouldPublish(gauge, VALUE_ATTRIBUTE)) {
             logFiltered(gauge, "gauge sample");
             return;
         }
@@ -193,6 +199,15 @@ final class OciMetricsPublisher implements MetricsPublisher,
 
     boolean shouldPublish(Meter meter) {
         return Boolean.TRUE.equals(metricFilter.apply(meter.id().name(), meter));
+    }
+
+    boolean shouldPublish(Meter meter, String attribute) {
+        return shouldPublish(meter) && shouldPublishAttribute(attribute);
+    }
+
+    boolean shouldPublishAttribute(String attribute) {
+        return !excludedAttributes.contains(attribute)
+                && (includedAttributes.isEmpty() || includedAttributes.contains(attribute));
     }
 
     private MetricName metricName(Meter meter) {

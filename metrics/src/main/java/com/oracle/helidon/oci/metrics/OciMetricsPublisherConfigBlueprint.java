@@ -227,7 +227,8 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
      */
     @Option.Configured
     @Option.DefaultCode("""
-            new java.util.LinkedHashSet<>(java.util.List.of("max", "mean", "min", "stddev",
+            new java.util.LinkedHashSet<>(java.util.List.of("value",
+                                                            "max", "mean", "min", "stddev",
                                                             "p50", "p75", "p95", "p98", "p99", "p999",
                                                             "count", "m1_rate", "m5_rate",
                                                             "m15_rate", "mean_rate"))
@@ -241,6 +242,23 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
      */
     @Option.Redundant(equality = false, stringValue = true)
     BiFunction<String, Meter, Boolean> filter();
+
+    /**
+     * Whether detailed automatic HTTP timing metrics should be emitted.
+     *
+     * @return detailed automatic HTTP timing flag
+     */
+    @Option.Configured
+    @Option.DefaultBoolean(true)
+    boolean enableDetailedTimingAutoMetrics();
+
+    /**
+     * Optional resource package prefix for automatic HTTP metrics.
+     *
+     * @return optional resource package prefix
+     */
+    @Option.Configured
+    Optional<String> resourcePackagePrefix();
 
     /**
      * Interval between scheduled gauge samples.

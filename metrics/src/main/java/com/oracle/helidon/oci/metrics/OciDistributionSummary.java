@@ -23,6 +23,10 @@ final class OciDistributionSummary extends AbstractOciMeter implements Distribut
         this.delegate = delegate;
     }
 
+    static Builder builder(String name) {
+        return new Builder(name);
+    }
+
     static Builder builder(String name, DistributionStatisticsConfig.Builder configBuilder) {
         Builder builder = new Builder(name);
         builder.distributionStatisticsConfig(configBuilder);

@@ -60,12 +60,17 @@ final class ReporterMetricFilter implements BiFunction<String, Meter, Boolean> {
     }
 
     static ReporterMetricFilter create(OciMetricsPublisherConfig.BuilderBase<?, ?> builder) {
-        Set<String> includes = builder.includes();
-        Set<String> excludes = builder.excludes();
+        return create(builder.includes(), builder.excludes(), builder.useRegexFilters(), builder.useSubstringMatching());
+    }
+
+    private static ReporterMetricFilter create(Set<String> includes,
+                                               Set<String> excludes,
+                                               boolean useRegexFilters,
+                                               boolean useSubstringMatching) {
         if (includes.isEmpty() && excludes.isEmpty()) {
             return ALLOW_ALL;
         }
-        if (builder.useRegexFilters()) {
+        if (useRegexFilters) {
             return new ReporterMetricFilter(Mode.REGEX,
                                             includes,
                                             excludes,
@@ -75,7 +80,7 @@ final class ReporterMetricFilter implements BiFunction<String, Meter, Boolean> {
                                             List.of(),
                                             new ConcurrentHashMap<>());
         }
-        if (builder.useSubstringMatching()) {
+        if (useSubstringMatching) {
             return new ReporterMetricFilter(Mode.SUBSTRING,
                                             includes,
                                             excludes,

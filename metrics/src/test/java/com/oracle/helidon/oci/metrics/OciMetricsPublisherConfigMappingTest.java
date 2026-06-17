@@ -39,6 +39,8 @@ class OciMetricsPublisherConfigMappingTest {
                                                project: test-project
                                                fleet: test-fleet
                                                region: us-ashburn-1
+                                               enable-detailed-timing-auto-metrics: false
+                                               resource-package-prefix: com.example.store
                                                duration-unit: seconds
                                                metrics-scope-name: custom-service
                                                includes:
@@ -87,6 +89,7 @@ class OciMetricsPublisherConfigMappingTest {
         assertThat(publisherConfig.project().orElseThrow(), is("test-project"));
         assertThat(publisherConfig.fleet().orElseThrow(), is("test-fleet"));
         assertThat(publisherConfig.region().orElseThrow(), is("us-ashburn-1"));
+        assertThat(publisherConfig.resourcePackagePrefix().orElseThrow(), is("com.example.store"));
         assertThat(clientConfiguration.getConnectionTimeoutMillis(), is(7000));
         assertThat(clientConfiguration.getReadTimeoutMillis(), is(11000));
         assertThat(clientConfiguration.getMaxAsyncThreads(), is(13));
@@ -189,6 +192,11 @@ class OciMetricsPublisherConfigMappingTest {
         assertThat(publisherConfig.filter(), instanceOf(ReporterMetricFilter.class));
         assertThat(publisherConfig.filter().apply("test.counter", null), is(true));
         assertThat(publisherConfig.filter().apply("test.timer", null), is(false));
+    }
+
+    @Test
+    void mapsDetailedTimingAutoMetricsFlag() {
+        assertThat(publisherConfig().enableDetailedTimingAutoMetrics(), is(false));
     }
 
     @Test

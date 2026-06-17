@@ -41,6 +41,8 @@ The OCI metrics library sends data to the back end every minute (more frequently
 You should see several metrics:
 * some JVM-related ones (such as `jvm.gc.time`)
 * app-specific ones such as `personalized-greeting` and `greeting` (by virtue of the annotations on the REST endpoint methods)
-* per-request metrics `http.request.duration` and `http.requests.count`.
+* per-request metrics such as `HelloService.greeting.Time`, `HelloService.greeting.ResourceTime`,
+  `HelloService.greeting.WireWriteTime`, `HelloService.greeting.ResponseOut.Count`, and
+  `HelloService.greeting.ResponseOut.StatusFamily.2XX.Count`.
 
 ![metrics-display-screenshot.png](metrics-display-screenshot.png)
