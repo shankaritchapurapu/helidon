@@ -89,8 +89,10 @@ public class AuditV2Feature implements ServerFeature, RuntimeType.Api<AuditV2Con
     public void setup(ServerFeatureContext featureContext) {
         if (config.enabled()) {
             AuditV2Filter filter = new AuditV2Filter(config, auditLogger);
-            // Add it to every socket?
             featureContext.socket(WebServer.DEFAULT_SOCKET_NAME).httpRouting().addFilter(filter);
+            for (String socket : featureContext.sockets()) {
+                featureContext.socket(socket).httpRouting().addFilter(filter);
+            }
         }
     }
 }
