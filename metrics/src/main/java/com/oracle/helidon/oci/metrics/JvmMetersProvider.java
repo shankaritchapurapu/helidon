@@ -4,20 +4,29 @@
 
 package com.oracle.helidon.oci.metrics;
 
+import java.lang.management.ClassLoadingMXBean;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryUsage;
+import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
+
+import javax.management.JMException;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 
 import io.helidon.metrics.api.Gauge;
 import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.MetricsFactory;
-import io.helidon.metrics.api.Tag;
 import io.helidon.metrics.spi.MetersProvider;
 import io.helidon.service.registry.Service;
 
@@ -25,112 +34,232 @@ import com.sun.management.UnixOperatingSystemMXBean;
 
 /**
  * Provider for built-in JVM gauges for the OCI metrics provider.
+ * Inspired by dropwizard-metrics/metrics-jvm/src/main/java/com/codahale/metrics/jvm/.
  */
 @Service.Singleton
 public class JvmMetersProvider implements MetersProvider {
 
+    private static final Pattern WHITESPACE = Pattern.compile("[\\s]+");
+    private static final int THREAD_STACK_TRACE_DEPTH = 0;
+
     @Override
     public Collection<Meter.Builder<?, ?>> meterBuilders(MetricsFactory metricsFactory) {
         List<Meter.Builder<?, ?>> result = new ArrayList<>();
-        JvmMetersConfig jvmMetersConfig = jvmMetersConfig(metricsFactory);
-        if (jvmMetersConfig.memoryUsageEnabled()) {
-            addMemoryUsageGauges(metricsFactory, result);
-        }
-        if (jvmMetersConfig.threadStateEnabled()) {
-            addThreadStateGauges(metricsFactory, result);
-        }
-        if (jvmMetersConfig.fileDescriptorEnabled()) {
-            addFileDescriptorGauges(metricsFactory, result);
-        }
-        if (jvmMetersConfig.gcEnabled()) {
-            addGcGauges(metricsFactory, result);
-        }
+        String metricsScopeName = metricsScopeName(metricsFactory);
+        addMemoryUsageGauges(metricsFactory, result, metricsScopeName);
+        addGcGauges(metricsFactory, result, metricsScopeName);
+        addThreadStateGauges(metricsFactory, result, metricsScopeName);
+        addClassLoadingGauges(metricsFactory, result, metricsScopeName);
+        addBufferPoolGauges(metricsFactory, result, metricsScopeName);
+        addFileDescriptorGauge(metricsFactory, result, metricsScopeName);
+        addJvmAttributeGauges(metricsFactory, result, metricsScopeName);
         return List.copyOf(result);
     }
 
-    private static void addMemoryUsageGauges(MetricsFactory metricsFactory, List<Meter.Builder<?, ?>> builders) {
+    private static void addMemoryUsageGauges(MetricsFactory metricsFactory,
+                                             List<Meter.Builder<?, ?>> builders,
+                                             String metricsScopeName) {
         MemoryMXBean memoryMxBean = ManagementFactory.getMemoryMXBean();
-        builders.add(gauge(metricsFactory,
-                           "jvm.memory.used",
-                           () -> memoryMxBean.getHeapMemoryUsage().getUsed(),
-                           Tag.create("area", "heap"),
-                           Tag.create("unit", "bytes")));
-        builders.add(gauge(metricsFactory,
-                           "jvm.memory.used",
-                           () -> memoryMxBean.getNonHeapMemoryUsage().getUsed(),
-                           Tag.create("area", "non-heap"),
-                           Tag.create("unit", "bytes")));
-    }
+        String jvm = name(metricsScopeName, "jvm");
 
-    private static void addThreadStateGauges(MetricsFactory metricsFactory, List<Meter.Builder<?, ?>> builders) {
-        ThreadMXBean threadMxBean = ManagementFactory.getThreadMXBean();
-        for (Thread.State state : Thread.State.values()) {
-            builders.add(gauge(metricsFactory,
-                               "jvm.thread.state",
-                               () -> countThreadsInState(threadMxBean, state),
-                               Tag.create("state", state.name().toLowerCase(Locale.ROOT))));
+        builders.add(longGauge(metricsFactory,
+                               name(jvm, "memory.total.init"),
+                               () -> memoryMxBean.getHeapMemoryUsage().getInit()
+                                       + memoryMxBean.getNonHeapMemoryUsage().getInit()));
+        builders.add(longGauge(metricsFactory,
+                               name(jvm, "memory.total.used"),
+                               () -> memoryMxBean.getHeapMemoryUsage().getUsed()
+                                       + memoryMxBean.getNonHeapMemoryUsage().getUsed()));
+        builders.add(longGauge(metricsFactory,
+                               name(jvm, "memory.total.max"),
+                               () -> combinedMax(memoryMxBean.getHeapMemoryUsage(),
+                                                 memoryMxBean.getNonHeapMemoryUsage())));
+        builders.add(longGauge(metricsFactory,
+                               name(jvm, "memory.total.committed"),
+                               () -> memoryMxBean.getHeapMemoryUsage().getCommitted()
+                                       + memoryMxBean.getNonHeapMemoryUsage().getCommitted()));
+
+        addMemoryUsage(builders, metricsFactory, name(jvm, "memory.heap"), memoryMxBean::getHeapMemoryUsage);
+        addMemoryUsage(builders, metricsFactory, name(jvm, "memory.non-heap"), memoryMxBean::getNonHeapMemoryUsage);
+
+        for (MemoryPoolMXBean pool : ManagementFactory.getMemoryPoolMXBeans()) {
+            String poolName = name(jvm, "memory.pools", normalize(pool.getName()));
+            addMemoryUsage(builders, metricsFactory, poolName, pool::getUsage);
+            if (pool.getCollectionUsage() != null) {
+                builders.add(longGauge(metricsFactory,
+                                       name(poolName, "used-after-gc"),
+                                       () -> pool.getCollectionUsage().getUsed()));
+            }
         }
     }
 
-    private static void addFileDescriptorGauges(MetricsFactory metricsFactory, List<Meter.Builder<?, ?>> builders) {
+    private static void addGcGauges(MetricsFactory metricsFactory,
+                                    List<Meter.Builder<?, ?>> builders,
+                                    String metricsScopeName) {
+        String jvm = name(metricsScopeName, "jvm");
+        for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
+            String gcName = name(jvm, "gc", normalize(gcBean.getName()));
+            builders.add(longGauge(metricsFactory, name(gcName, "count"), gcBean::getCollectionCount));
+            builders.add(longGauge(metricsFactory, name(gcName, "time"), gcBean::getCollectionTime));
+        }
+    }
+
+    private static void addThreadStateGauges(MetricsFactory metricsFactory,
+                                             List<Meter.Builder<?, ?>> builders,
+                                             String metricsScopeName) {
+        ThreadMXBean threadMxBean = ManagementFactory.getThreadMXBean();
+        String jvm = name(metricsScopeName, "jvm");
+        for (Thread.State state : Thread.State.values()) {
+            builders.add(intGauge(metricsFactory,
+                                  name(jvm, "threads", state.toString().toLowerCase(Locale.ROOT), "count"),
+                                  () -> countThreadsInState(threadMxBean, state)));
+        }
+        builders.add(intGauge(metricsFactory, name(jvm, "threads.count"), threadMxBean::getThreadCount));
+        builders.add(intGauge(metricsFactory, name(jvm, "threads.daemon.count"), threadMxBean::getDaemonThreadCount));
+        builders.add(intGauge(metricsFactory, name(jvm, "threads.peak.count"), threadMxBean::getPeakThreadCount));
+        builders.add(longGauge(metricsFactory,
+                               name(jvm, "threads.total_started.count"),
+                               threadMxBean::getTotalStartedThreadCount));
+        builders.add(intGauge(metricsFactory, name(jvm, "threads.deadlock.count"), () -> deadlockCount(threadMxBean)));
+    }
+
+    private static void addClassLoadingGauges(MetricsFactory metricsFactory,
+                                              List<Meter.Builder<?, ?>> builders,
+                                              String metricsScopeName) {
+        ClassLoadingMXBean classLoadingMxBean = ManagementFactory.getClassLoadingMXBean();
+        String jvm = name(metricsScopeName, "jvm");
+        // Dropwizard's ClassLoadingGaugeSet exposes the cumulative loaded class count as "loaded".
+        builders.add(longGauge(metricsFactory, name(jvm, "classes.loaded"), classLoadingMxBean::getTotalLoadedClassCount));
+        builders.add(longGauge(metricsFactory, name(jvm, "classes.unloaded"), classLoadingMxBean::getUnloadedClassCount));
+    }
+
+    private static void addBufferPoolGauges(MetricsFactory metricsFactory,
+                                            List<Meter.Builder<?, ?>> builders,
+                                            String metricsScopeName) {
+        MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+        addBufferPoolGauges(metricsFactory, builders, mBeanServer, metricsScopeName, "direct");
+        addBufferPoolGauges(metricsFactory, builders, mBeanServer, metricsScopeName, "mapped");
+    }
+
+    private static void addBufferPoolGauges(MetricsFactory metricsFactory,
+                                            List<Meter.Builder<?, ?>> builders,
+                                            MBeanServer mBeanServer,
+                                            String metricsScopeName,
+                                            String pool) {
+        try {
+            ObjectName objectName = new ObjectName("java.nio:type=BufferPool,name=" + pool);
+            mBeanServer.getMBeanInfo(objectName);
+            String prefix = name(metricsScopeName, "jvm.buffers", pool);
+            builders.add(longGauge(metricsFactory,
+                                   name(prefix, "count"),
+                                   () -> jmxLongAttribute(mBeanServer, objectName, "Count")));
+            builders.add(longGauge(metricsFactory,
+                                   name(prefix, "used"),
+                                   () -> jmxLongAttribute(mBeanServer, objectName, "MemoryUsed")));
+            builders.add(longGauge(metricsFactory,
+                                   name(prefix, "capacity"),
+                                   () -> jmxLongAttribute(mBeanServer, objectName, "TotalCapacity")));
+        } catch (JMException ignored) {
+            // BufferPool MBeans are not available on every runtime.
+        }
+    }
+
+    private static void addFileDescriptorGauge(MetricsFactory metricsFactory,
+                                               List<Meter.Builder<?, ?>> builders,
+                                               String metricsScopeName) {
         java.lang.management.OperatingSystemMXBean osMxBean = ManagementFactory.getOperatingSystemMXBean();
         if (osMxBean instanceof UnixOperatingSystemMXBean unixMxBean) {
-            builders.add(gauge(metricsFactory,
-                               "jvm.file.descriptor.used",
-                               unixMxBean::getOpenFileDescriptorCount));
-            builders.add(gauge(metricsFactory,
-                               "jvm.file.descriptor.max",
-                               unixMxBean::getMaxFileDescriptorCount));
+            builders.add(doubleGauge(metricsFactory,
+                                     name(metricsScopeName, "jvm.fd.usage"),
+                                     () -> fileDescriptorUsage(unixMxBean)));
         }
     }
 
-    private static void addGcGauges(MetricsFactory metricsFactory, List<Meter.Builder<?, ?>> builders) {
-        for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
-            builders.add(gauge(metricsFactory,
-                               "jvm.gc.count",
-                               () -> Math.max(0L, gcBean.getCollectionCount()),
-                               Tag.create("name", gcBean.getName())));
-            builders.add(gauge(metricsFactory,
-                               "jvm.gc.time",
-                               () -> Math.max(0L, gcBean.getCollectionTime()),
-                               Tag.create("name", gcBean.getName()),
-                               Tag.create("unit", "milliseconds")));
-        }
+    private static void addJvmAttributeGauges(MetricsFactory metricsFactory,
+                                              List<Meter.Builder<?, ?>> builders,
+                                              String metricsScopeName) {
+        RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+        builders.add(longGauge(metricsFactory, name(metricsScopeName, "jvm.attribute.uptime"), runtimeMxBean::getUptime));
     }
 
-    private static Gauge.Builder<Long> gauge(MetricsFactory metricsFactory,
-                                             String name,
-                                             Supplier<Long> supplier,
-                                             Tag... tags) {
-        Gauge.Builder<Long> builder = metricsFactory.gaugeBuilder(name, supplier);
-        for (Tag tag : tags) {
-            builder.addTag(tag);
-        }
-        return builder;
+    private static void addMemoryUsage(List<Meter.Builder<?, ?>> builders,
+                                       MetricsFactory metricsFactory,
+                                       String prefix,
+                                       Supplier<MemoryUsage> supplier) {
+        builders.add(longGauge(metricsFactory, name(prefix, "init"), () -> supplier.get().getInit()));
+        builders.add(longGauge(metricsFactory, name(prefix, "used"), () -> supplier.get().getUsed()));
+        builders.add(longGauge(metricsFactory, name(prefix, "max"), () -> supplier.get().getMax()));
+        builders.add(longGauge(metricsFactory, name(prefix, "committed"), () -> supplier.get().getCommitted()));
+        builders.add(doubleGauge(metricsFactory, name(prefix, "usage"), () -> memoryUsageRatio(supplier.get())));
     }
 
-    private static long countThreadsInState(ThreadMXBean threadMxBean, Thread.State state) {
-        long count = 0L;
-        for (long threadId : threadMxBean.getAllThreadIds()) {
-            Thread.State threadState = threadMxBean.getThreadInfo(threadId) == null
-                    ? null
-                    : threadMxBean.getThreadInfo(threadId).getThreadState();
-            if (threadState == state) {
+    private static Gauge.Builder<Long> longGauge(MetricsFactory metricsFactory, String name, Supplier<Long> supplier) {
+        return metricsFactory.gaugeBuilder(name, supplier);
+    }
+
+    private static Gauge.Builder<Integer> intGauge(MetricsFactory metricsFactory, String name, Supplier<Integer> supplier) {
+        return metricsFactory.gaugeBuilder(name, supplier);
+    }
+
+    private static Gauge.Builder<Double> doubleGauge(MetricsFactory metricsFactory, String name, Supplier<Double> supplier) {
+        return metricsFactory.gaugeBuilder(name, supplier);
+    }
+
+    private static int countThreadsInState(ThreadMXBean threadMxBean, Thread.State state) {
+        int count = 0;
+        ThreadInfo[] threadInfos = threadMxBean.getThreadInfo(threadMxBean.getAllThreadIds(), THREAD_STACK_TRACE_DEPTH);
+        for (ThreadInfo threadInfo : threadInfos) {
+            if (threadInfo != null && threadInfo.getThreadState() == state) {
                 count++;
             }
         }
         return count;
     }
 
-    private static java.util.Optional<OciMetricsPublisherConfig> publisherConfig(MetricsFactory metricsFactory) {
-        return metricsFactory instanceof OciMetricsFactory ociMetricsFactory
-                ? java.util.Optional.of(ociMetricsFactory.publisherConfig())
-                : java.util.Optional.empty();
+    private static int deadlockCount(ThreadMXBean threadMxBean) {
+        long[] deadlockedThreadIds = threadMxBean.findDeadlockedThreads();
+        return deadlockedThreadIds == null ? 0 : deadlockedThreadIds.length;
     }
 
-    private static JvmMetersConfig jvmMetersConfig(MetricsFactory metricsFactory) {
-        return publisherConfig(metricsFactory)
-                .flatMap(OciMetricsPublisherConfig::jvmMeters)
-                .orElseGet(JvmMetersConfig::create);
+    private static double memoryUsageRatio(MemoryUsage usage) {
+        long denominator = usage.getMax() == -1 ? usage.getCommitted() : usage.getMax();
+        return ratio(usage.getUsed(), denominator);
+    }
+
+    static long combinedMax(MemoryUsage heapUsage, MemoryUsage nonHeapUsage) {
+        long heapMax = heapUsage.getMax();
+        long nonHeapMax = nonHeapUsage.getMax();
+        return heapMax == -1 || nonHeapMax == -1 ? -1 : heapMax + nonHeapMax;
+    }
+
+    private static double fileDescriptorUsage(UnixOperatingSystemMXBean osMxBean) {
+        return ratio(osMxBean.getOpenFileDescriptorCount(), osMxBean.getMaxFileDescriptorCount());
+    }
+
+    private static double ratio(long numerator, long denominator) {
+        return denominator <= 0 ? Double.NaN : (double) numerator / denominator;
+    }
+
+    private static long jmxLongAttribute(MBeanServer mBeanServer, ObjectName objectName, String attributeName) {
+        try {
+            return ((Number) mBeanServer.getAttribute(objectName, attributeName)).longValue();
+        } catch (JMException e) {
+            throw new IllegalStateException("Unable to read JMX attribute " + objectName + "#" + attributeName, e);
+        }
+    }
+
+    private static String metricsScopeName(MetricsFactory metricsFactory) {
+        if (metricsFactory instanceof OciMetricsFactory ociMetricsFactory) {
+            return ociMetricsFactory.publisherConfig().metricsScopeName();
+        }
+        return OciMetricsPublisherConfigSupport.DEFAULT_METRICS_SCOPE_NAME;
+    }
+
+    private static String name(String... names) {
+        return String.join(".", names);
+    }
+
+    private static String normalize(String name) {
+        return WHITESPACE.matcher(name).replaceAll("-");
     }
 }

@@ -8,10 +8,13 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
+import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.MetricsPublisherConfig;
 import io.helidon.metrics.spi.MetricsPublisherProvider;
 
@@ -158,6 +161,88 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
     boolean sampleGauges();
 
     /**
+     * Unit to report durations as.
+     *
+     * @return duration unit
+     */
+    @Option.Configured
+    @Option.DefaultCode("java.util.concurrent.TimeUnit.MILLISECONDS")
+    TimeUnit durationUnit();
+
+    /**
+     * Metrics scope name prefix for built-in JVM meters.
+     *
+     * @return metrics scope name
+     */
+    @Option.Configured
+    @Option.Default(OciMetricsPublisherConfigSupport.DEFAULT_METRICS_SCOPE_NAME)
+    String metricsScopeName();
+
+    /**
+     * Metric names to exclude from reporting.
+     *
+     * @return excluded metric names
+     */
+    @Option.Configured
+    Set<String> excludes();
+
+    /**
+     * Metric names to include in reporting.
+     *
+     * @return included metric names
+     */
+    @Option.Configured
+    Set<String> includes();
+
+    /**
+     * Whether include and exclude values are treated as regular expressions.
+     *
+     * @return regex filter flag
+     */
+    @Option.Configured
+    @Option.DefaultBoolean(false)
+    boolean useRegexFilters();
+
+    /**
+     * Whether include and exclude values are treated as substrings.
+     *
+     * @return substring matching flag
+     */
+    @Option.Configured
+    @Option.DefaultBoolean(false)
+    boolean useSubstringMatching();
+
+    /**
+     * Metric attributes to exclude from reporting.
+     *
+     * @return excluded metric attributes
+     */
+    @Option.Configured
+    Set<String> excludesAttributes();
+
+    /**
+     * Metric attributes to include in reporting.
+     *
+     * @return included metric attributes
+     */
+    @Option.Configured
+    @Option.DefaultCode("""
+            new java.util.LinkedHashSet<>(java.util.List.of("max", "mean", "min", "stddev",
+                                                            "p50", "p75", "p95", "p98", "p99", "p999",
+                                                            "count", "m1_rate", "m5_rate",
+                                                            "m15_rate", "mean_rate"))
+            """)
+    Set<String> includesAttributes();
+
+    /**
+     * Programmatic filter for metric updates.
+     *
+     * @return metric update filter
+     */
+    @Option.Redundant(equality = false, stringValue = true)
+    BiFunction<String, Meter, Boolean> filter();
+
+    /**
      * Interval between scheduled gauge samples.
      *
      * @return gauge sample interval
@@ -166,19 +251,4 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
     @Option.Default("PT1M")
     Duration gaugeSampleInterval();
 
-    /**
-     * Units used when reporting time-valued metrics.
-     *
-     * @return optional reporting time unit
-     */
-    @Option.Configured
-    Optional<TimeUnit> reportingTimeUnit();
-
-    /**
-     * Configuration for built-in JVM meters.
-     *
-     * @return optional JVM meter configuration
-     */
-    @Option.Configured
-    Optional<JvmMetersConfig> jvmMeters();
 }

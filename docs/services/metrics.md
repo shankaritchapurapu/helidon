@@ -15,7 +15,7 @@ integration can:
 * publish `Counter`, `Timer`, and `DistributionSummary` updates directly to OCI metrics
 * periodically sample and publish gauges and functional counters and report them to OCI metrics
 * register automatic HTTP request counters and timers and update them for each incoming request
-* register optional JVM gauges for measurements such as memory usage, thread state, file descriptors, and garbage collection
+* register JVM gauges for measurements such as memory usage, thread state, class loading, file descriptors, and garbage collection
 * create the required OCI `Monitoring` client and make it available through the Helidon service registry
 
 Configuration is provided through a Helidon metrics publisher of type `oci`, as shown in
@@ -54,7 +54,7 @@ metrics:
       region: us-ashburn-1
 ```
 
-If `region` is omitted, the integration attempts to use a `com.oracle.pic.commons.util.Region` from the Helidon
+If `region` is omitted, the metrics integration attempts to use a `com.oracle.pic.commons.util.Region` from the Helidon
 service registry. The `helidon-oci-envconfig` module can supply that region from the OCI environment.
 
 Configure OCI SDK authentication separately. For example, to use instance principal authentication:
@@ -75,12 +75,15 @@ helidon:
     imds-timeout: PT3S
     imds-detect-retries: 1
 ```
-### Use OCI `metrics-lib` `Metrics` API
+### Use metrics APIs
+Service code can use several APIs as described below, within the same service if helpful.  
+
+#### Use OCI `metrics-lib` `Metrics` API
 The metrics integration automatically prepares the OCI metrics runtime based on the configuration, invoking `Metrics.init` during start-up and `Metrics.shutdown` as the service stops.
 
-While the service is running, the service code can invoke the `com.oracle.pic.telemetry.commons.metrics.Metrics` methods such as `emit`, `sensor`, or `record` as normal.   
+While the service is running, the service code can invoke the `com.oracle.pic.telemetry.commons.metrics.Metrics` methods such as `emit`, `sensor`, or `record` as normal. Service code should not normally invoke `Metrics.init` or `Metrics.shutdown`; the Helidon OCI metrics integration library does so. 
 
-### Use Helidon Metrics imperative API
+#### Use Helidon Metrics imperative API
 
 Services can also use the Helidon metrics API to register and update application meters. This integration
 automatically publishes those Helidon meters to OCI metrics without requiring application code to call the OCI Monitoring
@@ -112,7 +115,7 @@ class WorkService {
 }
 ```
 
-### Use Helidon metric annotations
+#### Use Helidon metric annotations
 
 Helidon metric annotations also work because Helidon's handling of the metrics annotations uses the Helidon metrics API.
 
@@ -136,14 +139,20 @@ Both meters are tagged with the HTTP method, the route matching pattern, and the
 
 ### Automatic JVM gauges
 
-The integration can register gauges for:
+The integration registers built-in JVM gauges for:
 
 * memory usage
-* thread state
+* thread state and thread counts
+* class loading
+* buffer pools
 * file descriptors
 * garbage collection
+* JVM uptime
 
-Each group is enabled by default and can be disabled individually.
+JVM meter names use `service` as the default root segment, for example
+`service.jvm.memory.heap.used` and `service.jvm.threads.count`. Configure
+`metrics-scope-name` to use a different root segment. To suppress JVM meters from publishing, use the publisher include
+and exclude filters.
 
 ### Override the metrics endpoint
 
@@ -182,8 +191,15 @@ When publisher `availability-domain` or `fault-domain` is omitted, the OCI metri
 | `endpoint` | | Optional monitoring ingestion endpoint override. |
 | `default-dimensions` | `{}` | Default dimensions for OCI `com.oracle.pic.telemetry.commons.metrics.Metrics.init`. |
 | `request-headers` | `{}` | Additional headers to send with OCI monitoring requests. |
-| `reporting-time-unit` | `milliseconds` | Unit for emitted time values. |
 | `sample-gauges` | `true` | Enables scheduled gauge and functional-counter sampling. |
+| `duration-unit` | `milliseconds` | Unit for emitted timer duration values. |
+| `metrics-scope-name` | `service` | Root name segment used as the prefix for built-in JVM metric names. |
+| `includes` | `[]` | Metric names to include. An empty list includes all non-excluded metrics. |
+| `excludes` | `[]` | Metric names to exclude. Excludes take precedence over includes. |
+| `use-regex-filters` | `false` | Treat `includes` and `excludes` entries as regular expressions. Regex matching uses full-pattern semantics. |
+| `use-substring-matching` | `false` | Treat `includes` and `excludes` entries as substrings. Used only when `use-regex-filters` is `false`. |
+| `includes-attributes` | `max`, `mean`, `min`, `stddev`, `p50`, `p75`, `p95`, `p98`, `p99`, `p999`, `count`, `m1_rate`, `m5_rate`, `m15_rate`, `mean_rate` | Metric attribute names to include when reporting derived values. |
+| `excludes-attributes` | `[]` | Metric attribute names to exclude when reporting derived values. |
 | `gauge-sample-interval` | `PT1M` | Interval between scheduled gauge and functional-counter samples. |
 | `use-metadata-service` | | Optional flag passed to the OCI telemetry reporter builder. |
 | `override-metric-keys` | | Optional flag passed to the OCI telemetry reporter builder. |
@@ -192,8 +208,23 @@ When publisher `availability-domain` or `fault-domain` is omitted, the OCI metri
 | `availability-domain` | `oci.env.availability-domain` | Optional availability-domain override. |
 | `fault-domain` | `oci.env.fault-domain` | Optional fault-domain override. |
 
-Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
+Aliases (such as `hostname` and `host-name`) are provided for user convenience, either to align with native OCI parameter names or with similar settings
 in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
+
+Example:
+
+```yaml
+metrics:
+  publishers:
+    - type: oci
+      project: my-service
+      fleet: my-fleet
+      duration-unit: seconds
+      metrics-scope-name: my-service
+      excludes:
+        - "my-service\\.jvm\\..*"
+      use-regex-filters: true
+```
 
 ### Monitoring client configuration
 
@@ -271,32 +302,6 @@ metrics:
 | `client.circuit-breaker.sliding-window-size` | | Sliding window size. |
 | `client.circuit-breaker.slow-call-duration-threshold` | | Duration threshold for slow calls. |
 | `client.circuit-breaker.writable-stack-trace-enabled` | | Optional writable stack trace flag. |
-
-### JVM meter configuration
-
-Each JVM meter group is enabled by default.
-
-| Key | Default value | Description |
-|-----|---------------|-------------|
-| `jvm-meters.memory-usage-enabled` | `true` | Enables memory-usage gauges. |
-| `jvm-meters.thread-state-enabled` | `true` | Enables thread-state gauges. |
-| `jvm-meters.file-descriptor-enabled` | `true` | Enables file-descriptor gauges. |
-| `jvm-meters.gc-enabled` | `true` | Enables garbage-collection gauges. |
-
-Example:
-
-```yaml
-metrics:
-  publishers:
-    - type: oci
-      project: my-service
-      fleet: my-fleet
-      jvm-meters:
-        memory-usage-enabled: true
-        thread-state-enabled: true
-        file-descriptor-enabled: false
-        gc-enabled: true
-```
 
 ---
 

@@ -152,7 +152,7 @@ final class OciMetricsFactory implements MetricsFactory {
                                              MetricsConfig metricsConfig,
                                              Consumer<Meter> onAdd,
                                              Consumer<Meter> onRemove) {
-        TimeUnit reportingTimeUnit = publisherConfig.reportingTimeUnit().orElse(TimeUnit.MILLISECONDS);
+        TimeUnit reportingTimeUnit = publisherConfig.durationUnit();
         LOGGER.log(System.Logger.Level.TRACE,
                    "Creating OCI meter registry; reportingTimeUnit={0}, publisherEnabled={1}, metersProviders={2}",
                    reportingTimeUnit,

@@ -5,6 +5,7 @@
 package com.oracle.helidon.oci.metrics;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import io.helidon.builder.api.RuntimeType;
@@ -29,6 +30,7 @@ final class OciMetricsPublisher implements MetricsPublisher,
     private static final System.Logger LOGGER = System.getLogger(OciMetricsPublisher.class.getName());
 
     private final OciMetricsPublisherConfig prototype;
+    private final BiFunction<String, Meter, Boolean> metricFilter;
     private final AtomicBoolean acceptingUpdates = new AtomicBoolean(true);
 
     OciMetricsPublisher() {
@@ -37,6 +39,7 @@ final class OciMetricsPublisher implements MetricsPublisher,
 
     private OciMetricsPublisher(OciMetricsPublisherConfig prototype) {
         this.prototype = prototype;
+        this.metricFilter = prototype == null ? ReporterMetricFilter.allowAll() : prototype.filter();
     }
 
     static OciMetricsPublisherConfig.Builder builder() {
@@ -87,6 +90,10 @@ final class OciMetricsPublisher implements MetricsPublisher,
             }
             return;
         }
+        if (!shouldPublish(counter)) {
+            logFiltered(counter, "counter update");
+            return;
+        }
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
             LOGGER.log(System.Logger.Level.TRACE,
                        "Publishing counter update; meter={0}, amount={1}",
@@ -103,6 +110,10 @@ final class OciMetricsPublisher implements MetricsPublisher,
                            "Ignoring timer update because publisher is stopped; meter={0}",
                            meterDebug(timer));
             }
+            return;
+        }
+        if (!shouldPublish(timer)) {
+            logFiltered(timer, "timer update");
             return;
         }
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
@@ -123,6 +134,10 @@ final class OciMetricsPublisher implements MetricsPublisher,
             }
             return;
         }
+        if (!shouldPublish(summary)) {
+            logFiltered(summary, "distribution summary update");
+            return;
+        }
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
             LOGGER.log(System.Logger.Level.TRACE,
                        "Publishing distribution summary update; meter={0}, normalizedAmount={1}",
@@ -139,6 +154,10 @@ final class OciMetricsPublisher implements MetricsPublisher,
                            "Ignoring functional counter sample because publisher is stopped; meter={0}",
                            meterDebug(counter));
             }
+            return;
+        }
+        if (!shouldPublish(counter)) {
+            logFiltered(counter, "functional counter sample");
             return;
         }
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
@@ -159,6 +178,10 @@ final class OciMetricsPublisher implements MetricsPublisher,
             }
             return;
         }
+        if (!shouldPublish(gauge)) {
+            logFiltered(gauge, "gauge sample");
+            return;
+        }
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
             LOGGER.log(System.Logger.Level.TRACE,
                        "Publishing gauge sample; meter={0}, value={1}",
@@ -168,11 +191,25 @@ final class OciMetricsPublisher implements MetricsPublisher,
         Metrics.sensor(metricName(gauge)).singleValue(Sensor.AggregationType.Last).record(value);
     }
 
+    boolean shouldPublish(Meter meter) {
+        return Boolean.TRUE.equals(metricFilter.apply(meter.id().name(), meter));
+    }
+
     private MetricName metricName(Meter meter) {
         return OciMetricNames.create(meter);
+    }
+
+    private void logFiltered(Meter meter, String updateDescription) {
+        if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
+            LOGGER.log(System.Logger.Level.TRACE,
+                       "Ignoring {0} because metric is excluded by reporter config; meter={1}",
+                       updateDescription,
+                       meterDebug(meter));
+        }
     }
 
     private static String meterDebug(Meter meter) {
         return meter.id().name() + meter.id().tagsMap() + meter.scope().map(scope -> "/" + scope).orElse("");
     }
+
 }

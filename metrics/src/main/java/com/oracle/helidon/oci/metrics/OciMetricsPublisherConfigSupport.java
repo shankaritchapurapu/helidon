@@ -4,11 +4,17 @@
 
 package com.oracle.helidon.oci.metrics;
 
+import java.util.function.BiFunction;
+
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.config.Config;
+import io.helidon.config.ConfigException;
+import io.helidon.metrics.api.Meter;
 
 final class OciMetricsPublisherConfigSupport
         implements Prototype.BuilderDecorator<OciMetricsPublisherConfig.BuilderBase<?, ?>> {
+    static final String DEFAULT_METRICS_SCOPE_NAME = "service";
+
     private static final String HOSTNAME = "hostname";
     private static final String HOST_NAME = "host-name";
     private static final String OCI_ENV_AVAILABILITY_DOMAIN = "oci.env.availability-domain";
@@ -23,6 +29,8 @@ final class OciMetricsPublisherConfigSupport
             applyHostNameAlias(config, builder);
             applyLocationDefaults(config, builder);
         });
+        validateMetricFilterModes(builder);
+        applyMetricFilter(builder);
     }
 
     private static void applyHostNameAlias(Config config, OciMetricsPublisherConfig.BuilderBase<?, ?> builder) {
@@ -56,6 +64,22 @@ final class OciMetricsPublisherConfigSupport
             rootConfig.get(OCI_ENV_FAULT_DOMAIN)
                     .asString()
                     .ifPresent(builder::faultDomain);
+        }
+    }
+
+    private static void applyMetricFilter(OciMetricsPublisherConfig.BuilderBase<?, ?> builder) {
+        BiFunction<String, Meter, Boolean> filter = builder.filter().orElse(null);
+        // Refresh a copied or previously generated default filter so it reflects the builder's current settings.
+        if (filter == null || filter instanceof ReporterMetricFilter) {
+            builder.filter(ReporterMetricFilter.create(builder));
+        }
+    }
+
+    private static void validateMetricFilterModes(OciMetricsPublisherConfig.BuilderBase<?, ?> builder) {
+        if (builder.useRegexFilters() && builder.useSubstringMatching()) {
+            throw new ConfigException("OCI metrics publisher filter configuration is ambiguous: "
+                                              + "do not enable both use-regex-filters and use-substring-matching; "
+                                              + "choose either regex or substring matching.");
         }
     }
 }

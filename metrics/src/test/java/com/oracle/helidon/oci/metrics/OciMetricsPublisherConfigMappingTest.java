@@ -5,9 +5,12 @@
 package com.oracle.helidon.oci.metrics;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.config.Config;
+import io.helidon.config.ConfigException;
 import io.helidon.config.ConfigSources;
 
 import com.oracle.bmc.ClientConfiguration;
@@ -36,6 +39,20 @@ class OciMetricsPublisherConfigMappingTest {
                                                project: test-project
                                                fleet: test-fleet
                                                region: us-ashburn-1
+                                               duration-unit: seconds
+                                               metrics-scope-name: custom-service
+                                               includes:
+                                                 - test.counter
+                                                 - test.timer
+                                               excludes:
+                                                 - test.excluded
+                                               use-regex-filters: true
+                                               use-substring-matching: false
+                                               includes-attributes:
+                                                 - value
+                                                 - count
+                                               excludes-attributes:
+                                                 - p999
                                                client:
                                                  connection-timeout: PT7S
                                                  read-timeout: PT11S
@@ -60,11 +77,6 @@ class OciMetricsPublisherConfigMappingTest {
                                                    sliding-window-size: 22
                                                    slow-call-duration-threshold: PT8S
                                                    writable-stack-trace-enabled: false
-                                               jvm-meters:
-                                                 memory-usage-enabled: false
-                                                 thread-state-enabled: true
-                                                 file-descriptor-enabled: false
-                                                 gc-enabled: false
                                          """, MediaTypes.APPLICATION_YAML));
 
     @Test
@@ -118,13 +130,65 @@ class OciMetricsPublisherConfigMappingTest {
     }
 
     @Test
-    void mapsPublisherYamlToJvmMetersConfig() {
-        JvmMetersConfig jvmMetersConfig = publisherConfig().jvmMeters().orElseThrow();
+    void mapsPublisherYamlToMetricFilteringConfig() {
+        OciMetricsPublisherConfig publisherConfig = publisherConfig();
 
-        assertThat(jvmMetersConfig.memoryUsageEnabled(), is(false));
-        assertThat(jvmMetersConfig.threadStateEnabled(), is(true));
-        assertThat(jvmMetersConfig.fileDescriptorEnabled(), is(false));
-        assertThat(jvmMetersConfig.gcEnabled(), is(false));
+        assertThat(publisherConfig.durationUnit(), is(TimeUnit.SECONDS));
+        assertThat(publisherConfig.metricsScopeName(), is("custom-service"));
+        assertThat(publisherConfig.includes(), is(Set.of("test.counter", "test.timer")));
+        assertThat(publisherConfig.excludes(), is(Set.of("test.excluded")));
+        assertThat(publisherConfig.useRegexFilters(), is(true));
+        assertThat(publisherConfig.useSubstringMatching(), is(false));
+        assertThat(publisherConfig.includesAttributes(), is(Set.of("value", "count")));
+        assertThat(publisherConfig.excludesAttributes(), is(Set.of("p999")));
+        assertThat(publisherConfig.filter(), instanceOf(ReporterMetricFilter.class));
+    }
+
+    @Test
+    void mapsPublisherYamlToSubstringMatchingConfig() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             use-substring-matching: true
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
+
+        assertThat(publisherConfig.useRegexFilters(), is(false));
+        assertThat(publisherConfig.useSubstringMatching(), is(true));
+    }
+
+    @Test
+    void failsWhenYamlEnablesRegexAndSubstringMatching() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             use-regex-filters: true
+                                             use-substring-matching: true
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        ConfigException exception = assertThrows(ConfigException.class, () -> OciMetricsPublisherConfig.create(config));
+
+        assertThat(exception.getMessage(), is("OCI metrics publisher filter configuration is ambiguous: "
+                                                      + "do not enable both use-regex-filters and use-substring-matching; "
+                                                      + "choose either regex or substring matching."));
+    }
+
+    @Test
+    void doesNotMapFilterFromYaml() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             includes:
+                                               - test.counter
+                                             filter: ignored
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
+
+        assertThat(publisherConfig.filter(), instanceOf(ReporterMetricFilter.class));
+        assertThat(publisherConfig.filter().apply("test.counter", null), is(true));
+        assertThat(publisherConfig.filter().apply("test.timer", null), is(false));
     }
 
     @Test
