@@ -27,6 +27,15 @@
             <artifactId>authentication-client</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.glassfish.jersey.ext</groupId>
+            <artifactId>jersey-entity-filtering</artifactId>
+            <!--
+                Sherlock/Dropwizard brings Jersey server and Jackson runtime classes into audit.
+                Jersey's JacksonFeature calls EntityFilteringFeature during initialization, so audit
+                must provide this dependency instead of forcing applications to add it.
+            -->
+        </dependency>
+        <dependency>
             <groupId>io.helidon.http</groupId>
             <artifactId>helidon-http</artifactId>
         </dependency>
