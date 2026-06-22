@@ -10,8 +10,18 @@ import java.net.URI;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.KeyPairGenerator;
+import java.security.spec.ECGenParameterSpec;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import io.helidon.config.Config;
+import io.helidon.config.ConfigSources;
 import io.helidon.integrations.oci.OciConfig;
 import io.helidon.integrations.oci.spi.OciAuthenticationMethod;
 import io.helidon.service.registry.ServiceRegistryConfig;
@@ -23,9 +33,13 @@ import com.oracle.bmc.auth.S2SAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.S2SAuthenticationDetailsProvider.S2SAuthenticationDetailsProviderBuilder;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static java.util.Map.entry;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -43,7 +57,7 @@ class ServicePrincipalBuilderProviderTest {
                 .build();
         var testBuilder = new TestServicePrincipalS2SAuthenticationDetailsProviderBuilder();
 
-        var builder = new ServicePrincipalBuilderProvider(config) {
+        var builder = new ServicePrincipalBuilderProvider(config, Optional::empty) {
             @Override
             ServicePrincipalS2SAuthenticationDetailsProviderBuilder getBuilder() {
                 return testBuilder;
@@ -55,6 +69,70 @@ class ServicePrincipalBuilderProviderTest {
         assertThat(builder.getMetadataBaseUrl(), is("http://127.0.0.1/opc/v2/"));
         assertThat(builder.getTenancyId(), is("ocid1.tenancy.oc1..testserviceprincipal"));
         assertThat(testBuilder.useInstancePrincipalsCalled, is(true));
+    }
+
+    @Test
+    void getUsesConfiguredServicePrincipalCertificates() {
+        var config = OciConfig.builder()
+                .region(Region.US_ASHBURN_1)
+                .federationEndpoint(URI.create("https://auth.test.oraclecloud.com/v1/x509"))
+                .tenantId("ocid1.tenancy.oc1..testserviceprincipal")
+                .build();
+        var servicePrincipalConfig = ServicePrincipalMethodConfig.builder()
+                .useInstancePrincipal(false)
+                .certificates(List.of(
+                        ServicePrincipalCertificateConfig.builder()
+                                .certificate("serverCert.pem")
+                                .privateKey("serverKey.pem")
+                                .build(),
+                        ServicePrincipalCertificateConfig.builder()
+                                .certificate("serverCert.pem")
+                                .build()))
+                .build();
+        var testBuilder = new TestServicePrincipalS2SAuthenticationDetailsProviderBuilder();
+
+        var builder = new ServicePrincipalBuilderProvider(config, () -> Optional.of(servicePrincipalConfig)) {
+            @Override
+            ServicePrincipalS2SAuthenticationDetailsProviderBuilder getBuilder() {
+                return testBuilder;
+            }
+        }.get();
+
+        var certificateAndKeyPair = builder.getLeafCertificateSupplier().getCertificateAndKeyPair();
+        assertThat(builder.getRegion(), is(Region.US_ASHBURN_1));
+        assertThat(builder.getFederationEndpoint(), is("https://auth.test.oraclecloud.com/v1/x509"));
+        assertThat(builder.getTenancyId(), is("ocid1.tenancy.oc1..testserviceprincipal"));
+        assertThat(certificateAndKeyPair.getCertificate().getSubjectX500Principal().getName(), is("CN=localhost"));
+        assertThat(certificateAndKeyPair.getPrivateKey(), notNullValue());
+        assertThat(testBuilder.intermediateCertificateSupplierCount(), is(1));
+        assertThat(testBuilder.useInstancePrincipalsCalled, is(false));
+        assertThat(testBuilder.servicePrincipalPurposeCalled, is(true));
+    }
+
+    @Test
+    void configBindingIncludesServicePrincipalCertificates() {
+        Config config = Config.just(ConfigSources.create(Map.ofEntries(
+                entry("helidon.oci.authentication-method", "service-principal"),
+                entry("helidon.oci.federation-endpoint", "https://auth.test.oraclecloud.com/v1/x509"),
+                entry("helidon.oci.tenant-id", "ocid1.tenancy.oc1..testserviceprincipal"),
+                entry("helidon.oci.authentication.service-principal.use-instance-principal", "false"),
+                entry("helidon.oci.authentication.service-principal.certificates.0.certificate", "serverCert.pem"),
+                entry("helidon.oci.authentication.service-principal.certificates.0.private-key", "serverKey.pem"),
+                entry("helidon.oci.authentication.service-principal.certificates.0.passphrase", ""),
+                entry("helidon.oci.authentication.service-principal.certificates.1.certificate", "serverCert.pem")
+        )));
+
+        OciConfig ociConfig = OciConfig.create(config.get("helidon.oci"));
+        ServicePrincipalMethodConfig servicePrincipalConfig = ServicePrincipalConfigProvider.create(config).get();
+
+        assertThat(ociConfig.authenticationMethod(), is("service-principal"));
+        assertThat(ociConfig.federationEndpoint().orElseThrow(),
+                   is(URI.create("https://auth.test.oraclecloud.com/v1/x509")));
+        assertThat(ociConfig.tenantId().orElseThrow(), is("ocid1.tenancy.oc1..testserviceprincipal"));
+        assertThat(servicePrincipalConfig.useInstancePrincipal(), is(false));
+        assertThat(servicePrincipalConfig.certificates().size(), is(2));
+        assertThat(servicePrincipalConfig.certificates().getFirst().certificate(), is("serverCert.pem"));
+        assertThat(servicePrincipalConfig.certificates().getFirst().privateKey().orElseThrow(), is("serverKey.pem"));
     }
 
     @Test
@@ -71,6 +149,7 @@ class ServicePrincipalBuilderProviderTest {
 
             var registryConfig = ServiceRegistryConfig.builder()
                     .discoverServices(true)
+                    .putContractInstance(Config.class, Config.empty())
                     .putContractInstance(OciConfig.class, ociConfig)
                     .putContractInstance(S2SAuthenticationDetailsProviderBuilder.class, builder)
                     .build();
@@ -96,14 +175,104 @@ class ServicePrincipalBuilderProviderTest {
         }
     }
 
+    @Test
+    void servicePrincipalAuthenticationDetailsProviderDoesNotRequireImdsForConfiguredCertificates() {
+        var ociConfig = OciConfig.builder()
+                .authenticationMethod("service-principal")
+                .federationEndpoint(URI.create("https://auth.test.oraclecloud.com/v1/x509"))
+                .tenantId("ocid1.tenancy.oc1..testserviceprincipal")
+                .build();
+        var servicePrincipalConfig = ServicePrincipalMethodConfig.builder()
+                .useInstancePrincipal(false)
+                .certificates(List.of(
+                        ServicePrincipalCertificateConfig.builder()
+                                .certificate("serverCert.pem")
+                                .privateKey("serverKey.pem")
+                                .build()))
+                .build();
+
+        var builder = mock(S2SAuthenticationDetailsProviderBuilder.class);
+        var provider = mock(S2SAuthenticationDetailsProvider.class);
+        when(builder.build()).thenReturn(provider);
+
+        var method = new AuthenticationMethodServicePrincipal(ociConfig,
+                                                              () -> Optional.of(servicePrincipalConfig),
+                                                              () -> Optional.of(builder));
+
+        assertThat(method.provider().orElseThrow(), sameInstance(provider));
+    }
+
+    @Test
+    void missingCertificateReportsConfiguredResource() {
+        var config = ServicePrincipalCertificateConfig.builder()
+                .certificate("missing-service-principal-cert.pem")
+                .build();
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                                                  () -> ServicePrincipalBuilderProvider.loadX509Certificate(config));
+
+        assertThat(error.getMessage(), containsString("missing-service-principal-cert.pem"));
+    }
+
+    @Test
+    void missingPrivateKeyReportsConfiguredResource() {
+        var config = ServicePrincipalCertificateConfig.builder()
+                .certificate("serverCert.pem")
+                .privateKey("missing-service-principal-key.pem")
+                .build();
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                                                  () -> ServicePrincipalBuilderProvider.loadRsaPrivateKey(config));
+
+        assertThat(error.getMessage(), containsString("missing-service-principal-key.pem"));
+    }
+
+    @Test
+    void nonRsaPrivateKeyReportsConfiguredResource() throws Exception {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("EC");
+        generator.initialize(new ECGenParameterSpec("secp256r1"));
+        String keyResource = "ec-key.pem";
+        Path keyPath = Path.of(ServicePrincipalBuilderProviderTest.class.getResource("/").toURI())
+                .resolve(keyResource);
+        Files.writeString(keyPath, privateKeyPem(generator.generateKeyPair().getPrivate().getEncoded()),
+                          StandardCharsets.US_ASCII);
+        var config = ServicePrincipalCertificateConfig.builder()
+                .certificate("serverCert.pem")
+                .privateKey(keyResource)
+                .build();
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                                                  () -> ServicePrincipalBuilderProvider.loadRsaPrivateKey(config));
+
+        assertThat(error.getMessage(), containsString(keyResource));
+        assertThat(error.getCause().getMessage(), containsString("RSA private key"));
+    }
+
+    private static String privateKeyPem(byte[] encoded) {
+        return "-----BEGIN PRIVATE KEY-----\n"
+                + Base64.getMimeEncoder(64, "\n".getBytes(StandardCharsets.US_ASCII)).encodeToString(encoded)
+                + "\n-----END PRIVATE KEY-----\n";
+    }
+
     private static final class TestServicePrincipalS2SAuthenticationDetailsProviderBuilder
             extends ServicePrincipalS2SAuthenticationDetailsProviderBuilder {
         private boolean useInstancePrincipalsCalled;
+        private boolean servicePrincipalPurposeCalled;
 
         @Override
         public S2SAuthenticationDetailsProviderBuilder useInstancePrincipals() {
             useInstancePrincipalsCalled = true;
             return this;
+        }
+
+        @Override
+        ServicePrincipalS2SAuthenticationDetailsProviderBuilder servicePrincipalPurpose() {
+            servicePrincipalPurposeCalled = true;
+            return super.servicePrincipalPurpose();
+        }
+
+        private int intermediateCertificateSupplierCount() {
+            return intermediateCertificateSuppliers == null ? 0 : intermediateCertificateSuppliers.size();
         }
     }
 

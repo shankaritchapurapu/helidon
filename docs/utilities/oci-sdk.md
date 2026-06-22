@@ -126,6 +126,24 @@ helidon:
     imds-detect-retries: 1
 ```
 
+For explicit service-principal certificates instead of IMDS:
+
+```yaml
+helidon:
+  oci:
+    authentication-method: service-principal
+    federation-endpoint: https://auth.us-phoenix-1.oraclecloud.com
+    tenant-id: ocid1.tenancy.oc1...
+    authentication:
+      service-principal:
+        use-instance-principal: false
+        certificates:
+          - certificate: /path/to/sp_cert.pem
+            private-key: /path/to/sp_key.pem
+            passphrase: ""
+          - certificate: /path/to/intermediate.pem
+```
+
 Optional service-principal settings:
 
 ```yaml
@@ -138,9 +156,14 @@ helidon:
     tenant-id: ocid1.tenancy.oc1...
 ```
 
-The provider requires an available instance metadata service. If `authentication-method` is set explicitly
-to `service-principal` and IMDS is not available, startup fails because the requested authentication method
-cannot provide an auth provider.
+By default, the provider requires an available instance metadata service. If `authentication-method` is set explicitly
+to `service-principal`, `authentication.service-principal.use-instance-principal` is left at its default of `true`,
+and IMDS is not available, startup fails because the requested authentication method cannot provide an auth provider.
+
+When `authentication.service-principal.use-instance-principal=false`, IMDS is not required. In this mode
+`federation-endpoint`, `tenant-id`, and at least one certificate entry must be configured. The first certificate
+entry is the leaf certificate and must include `private-key`; subsequent entries are treated as intermediate
+certificates.
 
 ---
 
@@ -194,9 +217,14 @@ Common `helidon.oci` authentication keys:
 | `helidon.oci.imds-detect-retries` | | Optional number of IMDS availability detection retries. |
 | `helidon.oci.federation-endpoint` | | Optional federation endpoint override used by providers that support it. |
 | `helidon.oci.tenant-id` | | Optional tenancy OCID used by providers that support it. |
+| `helidon.oci.authentication.service-principal.use-instance-principal` | `true` | Whether service-principal auth loads certificate material from IMDS. |
+| `helidon.oci.authentication.service-principal.certificates` | `[]` | Explicit service-principal certificate chain used when `use-instance-principal=false`. |
+| `helidon.oci.authentication.service-principal.certificates[].certificate` | | Required certificate resource path. The first entry is the leaf certificate. |
+| `helidon.oci.authentication.service-principal.certificates[].private-key` | | Private key resource path. Required on the first certificate entry. |
+| `helidon.oci.authentication.service-principal.certificates[].passphrase` | `""` | Optional private key passphrase. |
 
 Service-principal support uses `region`, `federation-endpoint`, `imds-base-uri`, and `tenant-id` when
-they are configured.
+they are configured. Explicit certificate mode also uses `authentication.service-principal`.
 
 ---
 

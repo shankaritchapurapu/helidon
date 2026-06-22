@@ -33,8 +33,9 @@ class AuthenticationMethodServicePrincipal implements OciAuthenticationMethod {
     private final LazyValue<Optional<BasicAuthenticationDetailsProvider>> provider;
 
     AuthenticationMethodServicePrincipal(OciConfig config,
+                                         Supplier<Optional<ServicePrincipalMethodConfig>> servicePrincipalConfig,
                                          Supplier<Optional<S2SAuthenticationDetailsProviderBuilder>> builder) {
-        provider = createProvider(config, builder);
+        provider = createProvider(config, servicePrincipalConfig, builder);
     }
 
     @Override
@@ -48,17 +49,21 @@ class AuthenticationMethodServicePrincipal implements OciAuthenticationMethod {
     }
 
     private static LazyValue<Optional<BasicAuthenticationDetailsProvider>>
-            createProvider(OciConfig config, Supplier<Optional<S2SAuthenticationDetailsProviderBuilder>> builder) {
+            createProvider(OciConfig config,
+                           Supplier<Optional<ServicePrincipalMethodConfig>> servicePrincipalConfig,
+                           Supplier<Optional<S2SAuthenticationDetailsProviderBuilder>> builder) {
         return LazyValue.create(() -> {
-            if (HelidonOci.imdsAvailable(config)) {
-                return builder.get()
-                        .map(S2SAuthenticationDetailsProviderBuilder::build);
+            if (ServicePrincipalBuilderProvider.useInstancePrincipal(servicePrincipalConfig)) {
+                if (!HelidonOci.imdsAvailable(config)) {
+                    if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
+                        LOGGER.log(System.Logger.Level.TRACE, "OCI Metadata service is not available, "
+                                + "service principal cannot be used.");
+                    }
+                    return Optional.empty();
+                }
             }
-            if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
-                LOGGER.log(System.Logger.Level.TRACE, "OCI Metadata service is not available, "
-                        + "service principal cannot be used.");
-            }
-            return Optional.empty();
+            return builder.get()
+                    .map(S2SAuthenticationDetailsProviderBuilder::build);
         });
     }
 }
