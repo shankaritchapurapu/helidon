@@ -19,7 +19,7 @@
     <description>Maven dependency management for Helidon OCI native applications</description>
 
     <properties>
-        <helidon.version>4.5.0-M1</helidon.version>
+        <helidon.version>4.5.0</helidon.version>
         <oracle-internal-commons-core-version>5.0.90</oracle-internal-commons-core-version>
         <oracle-internal-commons-core-regions-version>2.1.85</oracle-internal-commons-core-regions-version>
         <oracle-internal-commons-exception-mapping-version>4.0.83</oracle-internal-commons-exception-mapping-version>
