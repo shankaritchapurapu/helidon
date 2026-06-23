@@ -65,7 +65,7 @@ class OciMetricsPublisherFilterTest {
 
     @Test
     void regexFiltersUseFullPatternMatch() {
-        BiFunction<String, Meter, Boolean> filter = filter(builder -> builder.useRegexFilters(true)
+        BiFunction<String, Meter, Boolean> filter = filter(builder -> builder.filterMatchingMode(FilterMatchingMode.REGEX)
                 .includes(Set.of("test\\..*")));
 
         assertThat(filter.apply("test.counter", null), is(true));
@@ -74,7 +74,7 @@ class OciMetricsPublisherFilterTest {
 
     @Test
     void substringFiltersUseNameContainment() {
-        BiFunction<String, Meter, Boolean> filter = filter(builder -> builder.useSubstringMatching(true)
+        BiFunction<String, Meter, Boolean> filter = filter(builder -> builder.filterMatchingMode(FilterMatchingMode.SUBSTRING)
                 .includes(Set.of("counter"))
                 .excludes(Set.of("internal")));
 
@@ -84,19 +84,9 @@ class OciMetricsPublisherFilterTest {
     }
 
     @Test
-    void failsWhenRegexAndSubstringFiltersAreBothEnabled() {
-        ConfigException exception = assertThrows(ConfigException.class,
-                                                 () -> publisherConfig(builder -> builder.useRegexFilters(true)
-                                                         .useSubstringMatching(true)));
-
-        assertThat(exception.getMessage(), containsString("do not enable both use-regex-filters and use-substring-matching"));
-        assertThat(exception.getMessage(), containsString("choose either regex or substring matching"));
-    }
-
-    @Test
     void invalidIncludeRegexFailsWithClearMessage() {
         ConfigException exception = assertThrows(ConfigException.class,
-                                                 () -> publisherConfig(builder -> builder.useRegexFilters(true)
+                                                 () -> publisherConfig(builder -> builder.filterMatchingMode(FilterMatchingMode.REGEX)
                                                          .includes(Set.of("test["))));
 
         assertThat(exception.getMessage(), containsString("Invalid OCI metrics publisher regex in includes: 'test['"));
@@ -106,7 +96,7 @@ class OciMetricsPublisherFilterTest {
     @Test
     void invalidExcludeRegexFailsWithClearMessage() {
         ConfigException exception = assertThrows(ConfigException.class,
-                                                 () -> publisherConfig(builder -> builder.useRegexFilters(true)
+                                                 () -> publisherConfig(builder -> builder.filterMatchingMode(FilterMatchingMode.REGEX)
                                                          .excludes(Set.of("test["))));
 
         assertThat(exception.getMessage(), containsString("Invalid OCI metrics publisher regex in excludes: 'test['"));
@@ -117,7 +107,7 @@ class OciMetricsPublisherFilterTest {
     void defaultOciMetricsPublisherConfigFilterReflectsConfiguredSettings() {
         OciMetricsPublisherConfig publisherConfig = publisherConfig(builder -> builder.includes(Set.of("test.counter"))
                 .excludes(Set.of("test.internal"))
-                .useSubstringMatching(true));
+                .filterMatchingMode(FilterMatchingMode.SUBSTRING));
 
         assertThat(publisherConfig.filter(), instanceOf(ReporterMetricFilter.class));
         assertThat(publisherConfig.filter().apply("test.counter", null), is(true));
@@ -149,10 +139,10 @@ class OciMetricsPublisherFilterTest {
     void equivalentDefaultReporterMetricFiltersCompareEqual() {
         OciMetricsPublisherConfig first = publisherConfig(builder -> builder.includes(Set.of("test.counter"))
                 .excludes(Set.of("test.internal"))
-                .useRegexFilters(true));
+                .filterMatchingMode(FilterMatchingMode.REGEX));
         OciMetricsPublisherConfig second = publisherConfig(builder -> builder.includes(Set.of("test.counter"))
                 .excludes(Set.of("test.internal"))
-                .useRegexFilters(true));
+                .filterMatchingMode(FilterMatchingMode.REGEX));
 
         assertThat(first.filter(), equalTo(second.filter()));
         assertThat(first, equalTo(second));
@@ -162,7 +152,7 @@ class OciMetricsPublisherFilterTest {
     void publisherConfigToStringOmitsFilter() {
         OciMetricsPublisherConfig publisherConfig = publisherConfig(builder -> builder.filter((name, meter) -> true));
 
-        assertThat(publisherConfig.toString(), not(containsString("filter")));
+        assertThat(publisherConfig.toString(), not(containsString("filter=")));
     }
 
     @Test

@@ -193,8 +193,7 @@ The OCI metrics publisher now has a nested `reporter` configuration object. It c
 * `metrics-scope-name`: The root name segment used as the prefix for built-in JVM metric names. The default is `service`, so JVM metrics use names such as `service.jvm.memory.heap.used`.
 * `includes`: Metric names to include.
 * `excludes`: Metric names to exclude.
-* `use-regex-filters`: Treat `includes` and `excludes` entries as regular expressions. Matching uses full-pattern semantics.
-* `use-substring-matching`: Treat `includes` and `excludes` entries as substrings. This applies only when `use-regex-filters` is not set.
+* `filter-matching-mode`: How to treat `includes` and `excludes` entries: `exact`, `regex`, or `substring`. The default is `exact`; regex matching uses full-pattern semantics.
 * `includes-attributes`: Metric attribute names to include when reporting derived values.
 * `excludes-attributes`: Metric attribute names to exclude when reporting derived values.
 
@@ -212,14 +211,22 @@ When Heliport migrates service-core `scheduled-metrics-reporter` configuration t
 | `metricsScopeName` | `metrics-scope-name` |
 | `includes` | `includes` |
 | `excludes` | `excludes` |
-| `useRegexFilters` | `use-regex-filters` |
-| `useSubstringMatching` | `use-substring-matching` |
+| legacy regex/substring matching flags | `filter-matching-mode` |
 | `includesAttributes` | `includes-attributes` |
 | `excludesAttributes` | `excludes-attributes` |
 
 Heliport should not map the legacy scheduled reporter interval/frequency setting. Helidon OCI reports metric updates to the OCI metrics layer as those updates occur, except for gauges. Gauge sampling is controlled separately using `sample-gauges` and `gauge-sample-interval`.
 
 Roughly speaking, a DropWizard reporter corresponds to a Helidon metrics publisher. The legacy OCI metrics configuration can specify multiple reporters, but Helidon OCI supports only one set of reporter-style controls in the `oci` metrics publisher. This is intentional: the legacy DropWizard-based approach periodically reported all metrics through each configured reporter, while Helidon OCI records most metric updates immediately as they happen. If a legacy config contains multiple scheduled metrics reporters, Heliport should choose or consolidate to one Helidon OCI publisher configuration and flag any ambiguous cases for review. If future requirements emerge to support multiple DW reporters, we can look at adding additional OCI-related metrics publishers to match.
+
+Once Heliport identifies which `reporter` to migrate, it should map the `useRegExFilters` and `useSubstringMatching` booleans to the corresponding `FilterMatchingMode` enum value:
+
+| Original `useRegexFilters` | Original `useSubstringMatching` | Migrated `FilterMatchingMode` |
+| --- | --- | --- |
+| `false` | `false` | `EXACT` |
+| `true` | `false` | `REGEX` |
+| `false` | `true` | `SUBSTRING` |
+| `true` | `true` | No valid value; flag for manual review |
 
 ## Metrics library choice
 As of OCI Helidon 2.0, metrics integration uses the `metrics-lib` library from the OCI telemetry team.

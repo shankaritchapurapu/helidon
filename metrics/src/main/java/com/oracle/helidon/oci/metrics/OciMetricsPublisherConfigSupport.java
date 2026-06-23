@@ -8,7 +8,6 @@ import java.util.function.BiFunction;
 
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.config.Config;
-import io.helidon.config.ConfigException;
 import io.helidon.metrics.api.Meter;
 
 final class OciMetricsPublisherConfigSupport
@@ -29,7 +28,6 @@ final class OciMetricsPublisherConfigSupport
             applyHostNameAlias(config, builder);
             applyLocationDefaults(config, builder);
         });
-        validateMetricFilterModes(builder);
         applyMetricFilter(builder);
     }
 
@@ -75,11 +73,4 @@ final class OciMetricsPublisherConfigSupport
         }
     }
 
-    private static void validateMetricFilterModes(OciMetricsPublisherConfig.BuilderBase<?, ?> builder) {
-        if (builder.useRegexFilters() && builder.useSubstringMatching()) {
-            throw new ConfigException("OCI metrics publisher filter configuration is ambiguous: "
-                                              + "do not enable both use-regex-filters and use-substring-matching; "
-                                              + "choose either regex or substring matching.");
-        }
-    }
 }

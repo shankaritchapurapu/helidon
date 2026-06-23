@@ -125,7 +125,7 @@ class JvmMetersProviderTest {
     @Test
     void reporterFilterCanSuppressJvmMetersByName() {
         OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.builder()
-                .useRegexFilters(true)
+                .filterMatchingMode(FilterMatchingMode.REGEX)
                 .excludes(Set.of("service\\.jvm\\..*"))
                 .buildPrototype();
         OciMetricsPublisher publisher = OciMetricsPublisher.create(publisherConfig);

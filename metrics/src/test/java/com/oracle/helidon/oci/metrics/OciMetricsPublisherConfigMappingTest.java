@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.config.Config;
-import io.helidon.config.ConfigException;
 import io.helidon.config.ConfigSources;
 
 import com.oracle.bmc.ClientConfiguration;
@@ -48,8 +47,7 @@ class OciMetricsPublisherConfigMappingTest {
                                                  - test.timer
                                                excludes:
                                                  - test.excluded
-                                               use-regex-filters: true
-                                               use-substring-matching: false
+                                               filter-matching-mode: regex
                                                includes-attributes:
                                                  - value
                                                  - count
@@ -140,8 +138,7 @@ class OciMetricsPublisherConfigMappingTest {
         assertThat(publisherConfig.metricsScopeName(), is("custom-service"));
         assertThat(publisherConfig.includes(), is(Set.of("test.counter", "test.timer")));
         assertThat(publisherConfig.excludes(), is(Set.of("test.excluded")));
-        assertThat(publisherConfig.useRegexFilters(), is(true));
-        assertThat(publisherConfig.useSubstringMatching(), is(false));
+        assertThat(publisherConfig.filterMatchingMode(), is(FilterMatchingMode.REGEX));
         assertThat(publisherConfig.includesAttributes(), is(Set.of("value", "count")));
         assertThat(publisherConfig.excludesAttributes(), is(Set.of("p999")));
         assertThat(publisherConfig.filter(), instanceOf(ReporterMetricFilter.class));
@@ -152,29 +149,24 @@ class OciMetricsPublisherConfigMappingTest {
         Config config = Config.just(
                 ConfigSources.create("""
                                              type: oci
-                                             use-substring-matching: true
+                                             filter-matching-mode: substring
                                              """, MediaTypes.APPLICATION_YAML));
 
         OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
 
-        assertThat(publisherConfig.useRegexFilters(), is(false));
-        assertThat(publisherConfig.useSubstringMatching(), is(true));
+        assertThat(publisherConfig.filterMatchingMode(), is(FilterMatchingMode.SUBSTRING));
     }
 
     @Test
-    void failsWhenYamlEnablesRegexAndSubstringMatching() {
+    void defaultsPublisherYamlToExactMatchingConfig() {
         Config config = Config.just(
                 ConfigSources.create("""
                                              type: oci
-                                             use-regex-filters: true
-                                             use-substring-matching: true
                                              """, MediaTypes.APPLICATION_YAML));
 
-        ConfigException exception = assertThrows(ConfigException.class, () -> OciMetricsPublisherConfig.create(config));
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
 
-        assertThat(exception.getMessage(), is("OCI metrics publisher filter configuration is ambiguous: "
-                                                      + "do not enable both use-regex-filters and use-substring-matching; "
-                                                      + "choose either regex or substring matching."));
+        assertThat(publisherConfig.filterMatchingMode(), is(FilterMatchingMode.EXACT));
     }
 
     @Test

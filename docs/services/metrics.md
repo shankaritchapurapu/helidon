@@ -220,8 +220,7 @@ When publisher `availability-domain` or `fault-domain` is omitted, the OCI metri
 | `metrics-scope-name` | `service` | Root name segment used as the prefix for built-in JVM metric names.                                                                                              |
 | `includes` | `[]` | Metric names to include. An empty list includes all non-excluded metrics.                                                                                        |
 | `excludes` | `[]` | Metric names to exclude. Excludes take precedence over includes.                                                                                                 |
-| `use-regex-filters` | `false` | Treat `includes` and `excludes` entries as regular expressions. Regex matching uses full-pattern semantics.                                                      |
-| `use-substring-matching` | `false` | Treat `includes` and `excludes` entries as substrings. Used only when `use-regex-filters` is `false`.                                                            |
+| `filter-matching-mode` | `exact` | How to treat `includes` and `excludes` entries: `exact`, `regex`, or `substring`. Regex matching uses full-pattern semantics.                                    |
 | `includes-attributes` | `max`, `mean`, `min`, `stddev`, `p50`, `p75`, `p95`, `p98`, `p99`, `p999`, `count`, `m1_rate`, `m5_rate`, `m15_rate`, `mean_rate` | Metric attribute names to include when reporting derived values.                                                                                                 |
 | `excludes-attributes` | `[]` | Metric attribute names to exclude when reporting derived values.                                                                                                 |
 | `gauge-sample-interval` | `PT1M` | Interval between scheduled gauge and functional-counter samples.                                                                                                 |
@@ -247,7 +246,7 @@ metrics:
       metrics-scope-name: my-service
       excludes:
         - "my-service\\.jvm\\..*"
-      use-regex-filters: true
+      filter-matching-mode: regex
 ```
 
 ### Monitoring client configuration

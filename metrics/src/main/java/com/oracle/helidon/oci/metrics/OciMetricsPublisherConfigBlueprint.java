@@ -195,22 +195,13 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
     Set<String> includes();
 
     /**
-     * Whether include and exclude values are treated as regular expressions.
+     * Matching mode for include and exclude values.
      *
-     * @return regex filter flag
+     * @return filter matching mode
      */
     @Option.Configured
-    @Option.DefaultBoolean(false)
-    boolean useRegexFilters();
-
-    /**
-     * Whether include and exclude values are treated as substrings.
-     *
-     * @return substring matching flag
-     */
-    @Option.Configured
-    @Option.DefaultBoolean(false)
-    boolean useSubstringMatching();
+    @Option.Default("EXACT")
+    FilterMatchingMode filterMatchingMode();
 
     /**
      * Metric attributes to exclude from reporting.
