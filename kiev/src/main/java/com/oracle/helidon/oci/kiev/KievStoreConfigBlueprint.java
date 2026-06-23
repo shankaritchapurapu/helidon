@@ -74,4 +74,13 @@ interface KievStoreConfigBlueprint {
      */
     @Option.Configured
     Optional<KievServiceConfig> service();
+
+    /**
+     * Whether delete stream records should include deleted column values.
+     *
+     * @return whether deleted column values should be included
+     */
+    @Option.Configured
+    @Option.DefaultBoolean(false)
+    boolean streamDeletedColumnValues();
 }

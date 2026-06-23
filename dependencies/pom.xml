@@ -323,6 +323,11 @@
                 <artifactId>in-memory-library</artifactId>
                 <version>${oracle-internal-kiev-version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.oracle.pic.kiev</groupId>
+                <artifactId>streams-client-library</artifactId>
+                <version>${oracle-internal-kiev-version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>com.oracle.pic.telemetry.overlay.metrics</groupId>

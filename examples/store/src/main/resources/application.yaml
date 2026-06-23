@@ -39,6 +39,7 @@ oci:
 #               root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
 #               cert-reload-duration: PT5M
 #               cert-ssl-algorithm: SunX509
+#         stream-deleted-column-values: true
 #
 # For Kiev as a service with S2S auth:
 # oci:
@@ -64,6 +65,7 @@ oci:
 #               leaf-cert-key-path: /path/to/leaf.key
 #               intermediate-cert-path: /path/to/intermediate.pem
 #               key-passphrase: secret
+#         stream-deleted-column-values: true
 #
 # For local KIAB KaaS, use:
 # oci:
@@ -78,3 +80,4 @@ oci:
 #           locality: "REGIONAL"
 #           auth:
 #             type: "KIAB_LOCAL"
+#         stream-deleted-column-values: true

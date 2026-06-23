@@ -43,6 +43,7 @@ class KievConfigFactoryTest {
         assertEquals(100, storeConfig.transactionMaxWrites());
         assertTrue(storeConfig.directDb().isEmpty());
         assertTrue(storeConfig.service().isEmpty());
+        assertFalse(storeConfig.streamDeletedColumnValues());
     }
 
     @Test
@@ -114,6 +115,21 @@ class KievConfigFactoryTest {
         assertEquals(KievAuthType.INSTANCE, authConfig.type());
         assertEquals("/tmp/root.pem", tlsConfig.rootCertPemPath().orElseThrow());
         assertFalse(authConfig.authEndpoint().isPresent());
+    }
+
+    @Test
+    void testLoadsStreamDeletedColumnValues() {
+        KievConfig config = new KievConfigFactory(config(Map.of(
+                "oci.kiev.data-stores.0.backend", "SERVICE",
+                "oci.kiev.data-stores.0.store-name", "kaaspdb",
+                "oci.kiev.data-stores.0.app-name", "StoreApp",
+                "oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.data-stores.0.service.frontend-endpoint", "http://localhost:16666",
+                "oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem",
+                "oci.kiev.data-stores.0.stream-deleted-column-values", "true"
+        ))).get();
+
+        assertTrue(config.dataStores().get(0).streamDeletedColumnValues());
     }
 
     @Test

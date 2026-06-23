@@ -47,15 +47,19 @@ import com.oracle.pic.kiev.mapping.InMemoryDataStoreConfig;
 import com.oracle.pic.kiev.mapping.MappedDataStore;
 import com.oracle.pic.kiev.registry.config.ClientRegistryConfig;
 import com.oracle.pic.kiev.registry.data.ClientRegistryLocality;
+import com.oracle.pic.kiev.streams.service.client.config.StreamingConfig;
+import com.oracle.pic.kiev.streams.service.client.core.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class KievDataStoreConfigFactoryTest {
     @Test
@@ -130,6 +134,47 @@ class KievDataStoreConfigFactoryTest {
         assertEquals("/tmp/root.pem", authConfig.getRootCertPemPath());
         assertEquals(Duration.ofMinutes(5), authConfig.getCertReloadDuration());
         assertEquals("SunX509", authConfig.getCertSslAlgorithm());
+    }
+
+    @Test
+    void testCreatesInstanceStreamingClient() {
+        StreamingConfig config = streamingConfig(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.stream-deleted-column-values", "true")
+        ), "remote-store");
+
+        assertEquals("remote-store", config.getStoreName());
+        assertEquals("ocid1.compartment.oc1..example", config.getCompartmentId());
+        assertEquals("https://frontend.example", config.getFrontendEndpoint());
+        assertEquals(ClientRegistryLocality.REGIONAL, config.getLocality());
+        assertTrue(config.isIncludeDeleteColumnValues());
+        assertNull(config.getRegistryConfig());
+
+        AuthDetailsConfig.InstanceAuthDetailsConfig authConfig =
+                assertInstanceOf(AuthDetailsConfig.InstanceAuthDetailsConfig.class,
+                                 config.getAuthDetailsConfig());
+        assertEquals("https://auth.example", authConfig.getAuthEndpoint());
+        assertEquals("/tmp/root.pem", authConfig.getRootCertPemPath());
+    }
+
+    @Test
+    void testCreatesStreamingClientWithDefaultOptions() {
+        StreamingConfig config = streamingConfig(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem")
+        ), "remote-store");
+
+        assertFalse(config.isIncludeDeleteColumnValues());
     }
 
     @Test
@@ -220,6 +265,38 @@ class KievDataStoreConfigFactoryTest {
     }
 
     @Test
+    void testCreatesS2sStreamingClient() {
+        StreamingConfig config = streamingConfig(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.locality", "AD1"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.key-passphrase", "secret")
+        ), "remote-store");
+
+        AuthDetailsConfig.S2sAuthDetailsConfig authConfig =
+                assertInstanceOf(AuthDetailsConfig.S2sAuthDetailsConfig.class,
+                                 config.getAuthDetailsConfig());
+        assertEquals(ClientRegistryLocality.AD1, config.getLocality());
+        assertEquals("https://auth.example", authConfig.getAuthEndpoint());
+        assertEquals("/tmp/root.pem", authConfig.getRootCertPemPath());
+        assertEquals("ocid1.tenancy.oc1..example", authConfig.getTenantId());
+        assertEquals("/tmp/leaf.pem", authConfig.getLeafCertPath());
+        assertEquals("/tmp/leaf.key", authConfig.getLeafCertKeyPath());
+        assertEquals("/tmp/intermediate.pem", authConfig.getIntermediateCertPath());
+        assertEquals("secret", authConfig.getKeyPassphrase());
+    }
+
+    @Test
     void testInstanceAuthUsesFactorySslConfigurator(@TempDir Path tempDir) throws IOException {
         String rootCertPemPath = Files.createFile(tempDir.resolve("root.pem")).toString();
         DataStoreConfig config = dataStoreConfig(Map.ofEntries(
@@ -278,6 +355,24 @@ class KievDataStoreConfigFactoryTest {
     }
 
     @Test
+    void testCreatesKiabLocalStreamingClient() {
+        StreamingConfig config = streamingConfig(Map.of(
+                "oci.kiev.data-stores.0.backend", "SERVICE",
+                "oci.kiev.data-stores.0.store-name", "kaaspdb",
+                "oci.kiev.data-stores.0.app-name", "StoreApp",
+                "oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example",
+                "oci.kiev.data-stores.0.service.frontend-endpoint", "http://localhost:16666",
+                "oci.kiev.data-stores.0.service.auth.type", "KIAB_LOCAL"
+        ), "kaaspdb");
+
+        AuthDetailsConfig.OverriddenAuthDetailsConfig authConfig =
+                assertInstanceOf(AuthDetailsConfig.OverriddenAuthDetailsConfig.class,
+                                 config.getAuthDetailsConfig());
+        assertNotNull(authConfig.getAuthProviderOverride());
+        assertRegistryDisabled(config, "http://localhost:16666");
+    }
+
+    @Test
     void testCreatesOverriddenService() {
         BasicAuthenticationDetailsProvider authProvider = new TestBasicAuthenticationDetailsProvider();
 
@@ -329,6 +424,33 @@ class KievDataStoreConfigFactoryTest {
     }
 
     @Test
+    void testCreatesOverriddenStreamingClientWithTls() {
+        BasicAuthenticationDetailsProvider authProvider = new TestBasicAuthenticationDetailsProvider();
+
+        StreamingConfig config = streamingConfig(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.type", "OVERRIDDEN"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.cert-reload-duration", "PT5M"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.cert-ssl-algorithm", "SunX509")
+        ), "remote-store", Optional.of(authProvider));
+
+        AuthDetailsConfig.OverriddenAuthDetailsConfig authConfig =
+                assertInstanceOf(AuthDetailsConfig.OverriddenAuthDetailsConfig.class,
+                                 config.getAuthDetailsConfig());
+        assertSame(authProvider, authConfig.getAuthProviderOverride());
+        DynamicSslContextProviderConfig dynamicSslConfig = authConfig.getDynamicSslContextProviderConfig();
+        assertNotNull(dynamicSslConfig);
+        assertEquals("/tmp/root.pem", dynamicSslConfig.getRootCertPath());
+        assertEquals(Duration.ofMinutes(5), dynamicSslConfig.getDuration());
+        assertEquals("SunX509", dynamicSslConfig.getSslAlgorithm());
+    }
+
+    @Test
     void testCreatesOverriddenServiceWithNamedDynamicSslProviderBean() {
         BasicAuthenticationDetailsProvider authProvider = new TestBasicAuthenticationDetailsProvider();
         DynamicSslContextProviderConfig providerConfig = dynamicSslProviderConfig();
@@ -351,6 +473,29 @@ class KievDataStoreConfigFactoryTest {
         assertSame(authProvider, authConfig.getAuthProviderOverride());
         DynamicSslContextProviderConfig dynamicSslConfig = authConfig.getDynamicSslContextProviderConfig();
         assertSame(providerConfig, dynamicSslConfig);
+    }
+
+    @Test
+    void testCreatesOverriddenStreamingClientWithNamedDynamicSslProviderBean() {
+        BasicAuthenticationDetailsProvider authProvider = new TestBasicAuthenticationDetailsProvider();
+        DynamicSslContextProviderConfig providerConfig = dynamicSslProviderConfig();
+
+        StreamingConfig config = streamingConfig(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.type", "OVERRIDDEN"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.dynamic-ssl-context-provider-name",
+                          "custom-kiev-service-auth")
+        ), "remote-store", Optional.of(authProvider), serviceRegistry("custom-kiev-service-auth", providerConfig));
+
+        AuthDetailsConfig.OverriddenAuthDetailsConfig authConfig =
+                assertInstanceOf(AuthDetailsConfig.OverriddenAuthDetailsConfig.class,
+                                 config.getAuthDetailsConfig());
+        assertSame(authProvider, authConfig.getAuthProviderOverride());
+        assertSame(providerConfig, authConfig.getDynamicSslContextProviderConfig());
     }
 
     @Test
@@ -448,16 +593,33 @@ class KievDataStoreConfigFactoryTest {
                     new KievMappedDataStoreFactory(dataStores).list(namedLookup(Service.Named.WILDCARD_NAME));
             List<Service.QualifiedInstance<KievTransactionSupport>> transactionSupportServices =
                     new KievTransactionSupportFactory(dataStores).list(namedLookup(Service.Named.WILDCARD_NAME));
+            List<Service.QualifiedInstance<Stream>> streamServices =
+                    new KievStreamFactory(dataStores).list(namedLookup(Service.Named.WILDCARD_NAME));
 
             assertEquals(2, dataStoreServices.size());
             assertEquals(2, mappedDataStoreServices.size());
             assertEquals(2, transactionSupportServices.size());
+            assertEquals(0, streamServices.size());
             assertNotNull(namedService(dataStoreServices, "primary-store"));
             assertNotNull(namedService(dataStoreServices, "secondary-store"));
             assertNotNull(namedService(mappedDataStoreServices, "primary-store"));
             assertNotNull(namedService(mappedDataStoreServices, "secondary-store"));
             assertNotNull(namedService(transactionSupportServices, "primary-store"));
             assertNotNull(namedService(transactionSupportServices, "secondary-store"));
+        } finally {
+            dataStores.closeDataStores();
+        }
+    }
+
+    @Test
+    void testNamedStreamServiceReturnsEmptyWhenStoreDoesNotUseServiceBackend() {
+        KievDataStores dataStores = singleDataStore();
+
+        try {
+            KievStreamFactory streamFactory = new KievStreamFactory(dataStores);
+
+            assertTrue(streamFactory.first(namedLookup("primary-store")).isEmpty());
+            assertTrue(streamFactory.list(namedLookup("primary-store")).isEmpty());
         } finally {
             dataStores.closeDataStores();
         }
@@ -534,6 +696,34 @@ class KievDataStoreConfigFactoryTest {
         assertSame(firstFailure, ex.getCause());
         assertEquals(1, ex.getSuppressed().length);
         assertSame(secondFailure, ex.getSuppressed()[0]);
+    }
+
+    @Test
+    void testClosingCachedStreamRemovesItFromCache() {
+        List<String> closed = new ArrayList<>();
+        TestStreamingConfig streamingConfig = new TestStreamingConfig(
+                closeableStream(() -> closed.add("first")),
+                closeableStream(() -> closed.add("second")));
+        KievDataStores dataStores = new KievDataStores(Map.of(),
+                                                       Map.of(),
+                                                       Map.of("primary-store", streamingConfig),
+                                                       new KievTransactions());
+
+        Stream first = dataStores.stream("primary-store");
+        Stream cached = dataStores.stream("primary-store");
+
+        assertSame(first, cached);
+        assertEquals(1, streamingConfig.connectCalls);
+
+        first.close();
+        Stream second = dataStores.stream("primary-store");
+
+        assertEquals(List.of("first"), closed);
+        assertEquals(2, streamingConfig.connectCalls);
+        assertTrue(first != second);
+
+        second.close();
+        assertEquals(List.of("first", "second"), closed);
     }
 
     @Test
@@ -672,8 +862,26 @@ class KievDataStoreConfigFactoryTest {
 
     private static DataStoreConfig dataStoreConfig(Map<String, String> values,
                                                    String storeName,
-                                                   Supplier<Optional<BasicAuthenticationDetailsProvider>> authProvider) {
+                                                   Supplier<Optional<BasicAuthenticationDetailsProvider>>
+                                                           authProvider) {
         return dataStores(values, authProvider).dataStoreConfig(storeName);
+    }
+
+    private static StreamingConfig streamingConfig(Map<String, String> values, String storeName) {
+        return streamingConfig(values, storeName, Optional.empty());
+    }
+
+    private static StreamingConfig streamingConfig(Map<String, String> values,
+                                                   String storeName,
+                                                   Optional<BasicAuthenticationDetailsProvider> authProvider) {
+        return dataStores(values, authProvider).streamingConfig(storeName);
+    }
+
+    private static StreamingConfig streamingConfig(Map<String, String> values,
+                                                   String storeName,
+                                                   Optional<BasicAuthenticationDetailsProvider> authProvider,
+                                                   ServiceRegistry serviceRegistry) {
+        return dataStores(values, () -> authProvider, serviceRegistry).streamingConfig(storeName);
     }
 
     private static KievDataStores dataStores(Map<String, String> values) {
@@ -743,6 +951,19 @@ class KievDataStoreConfigFactoryTest {
                                                   });
     }
 
+    private static Stream closeableStream(Runnable closeAction) {
+        return (Stream) Proxy.newProxyInstance(Stream.class.getClassLoader(),
+                                               new Class<?>[] {Stream.class},
+                                               (proxy, method, args) -> {
+                                                   if ("close".equals(method.getName())
+                                                           && method.getParameterCount() == 0) {
+                                                       closeAction.run();
+                                                       return null;
+                                                   }
+                                                   throw new UnsupportedOperationException(method.getName());
+                                               });
+    }
+
     private static void assertUnqualifiedInjectionFails(KievDataStores dataStores, String registeredNames) {
         IllegalStateException dataStoreFailure =
                 assertThrows(IllegalStateException.class,
@@ -753,6 +974,9 @@ class KievDataStoreConfigFactoryTest {
         IllegalStateException transactionSupportFailure =
                 assertThrows(IllegalStateException.class,
                              () -> new KievTransactionSupportFactory(dataStores).first(unqualifiedLookup()));
+        IllegalStateException streamFailure =
+                assertThrows(IllegalStateException.class,
+                             () -> new KievStreamFactory(dataStores).first(unqualifiedLookup()));
 
         assertEquals("Kiev DataStore injection requires @Service.Named to select a configured data store. "
                              + "Registered store names: " + registeredNames
@@ -766,6 +990,9 @@ class KievDataStoreConfigFactoryTest {
                              + "Registered store names: " + registeredNames
                              + ". Add @Service.Named with one of these names.",
                      transactionSupportFailure.getMessage());
+        assertEquals("Kiev Stream injection requires @Service.Named to select a configured data store. "
+                             + "Registered store names: <none>. Add @Service.Named with one of these names.",
+                     streamFailure.getMessage());
     }
 
     private static void assertUsesFactorySslConfigurator(ClientConfigurator clientConfigurator) {
@@ -776,6 +1003,13 @@ class KievDataStoreConfigFactoryTest {
 
     private static void assertRegistryDisabled(KaasStoreConfig dataStoreConfig, String endpointOverride) {
         ClientRegistryConfig registryConfig = dataStoreConfig.getRegistryConfig();
+        assertNotNull(registryConfig);
+        assertEquals(Boolean.FALSE, registryConfig.getEnabled());
+        assertEquals(endpointOverride, registryConfig.getEndpointOverride());
+    }
+
+    private static void assertRegistryDisabled(StreamingConfig streamingConfig, String endpointOverride) {
+        ClientRegistryConfig registryConfig = streamingConfig.getRegistryConfig();
         assertNotNull(registryConfig);
         assertEquals(Boolean.FALSE, registryConfig.getEnabled());
         assertEquals(endpointOverride, registryConfig.getEndpointOverride());
@@ -888,6 +1122,20 @@ class KievDataStoreConfigFactoryTest {
         @Override
         public Object instantiate(DependencyContext ctx, InterceptionMetadata metadata) {
             return instance;
+        }
+    }
+
+    private static final class TestStreamingConfig extends StreamingConfig {
+        private final List<Stream> streams;
+        private int connectCalls;
+
+        private TestStreamingConfig(Stream... streams) {
+            this.streams = List.of(streams);
+        }
+
+        @Override
+        public Stream connect() {
+            return streams.get(connectCalls++);
         }
     }
 }

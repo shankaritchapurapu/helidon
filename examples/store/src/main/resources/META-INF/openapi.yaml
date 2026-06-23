@@ -8,7 +8,8 @@ info:
   version: "1.0.0"
   description: >
     OpenAPI description for the Helidon OCI Kiev store example. The example
-    exposes plain-text endpoints for storing, retrieving, and listing items.
+    exposes plain-text endpoints for storing, retrieving, and listing items,
+    and JSON endpoints for reading Kiev stream records.
 servers:
   - url: /
 paths:
@@ -186,3 +187,150 @@ paths:
               schema:
                 type: string
               example: "No value found for key: alpha"
+  /store/stream:
+    get:
+      summary: Read Kiev stream records for store items
+      operationId: getStoreStreamRecords
+      parameters:
+        - name: cursor
+          in: query
+          description: Cursor returned by /store/stream/cursors or a previous stream request.
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Number of stream records to return.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        "200":
+          description: Page of Kiev stream records for the store item bucket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreStreamPage"
+        "400":
+          description: Invalid stream request
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: limit must be an integer
+        "404":
+          description: Kiev stream client is not available for the configured backend
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Kiev streams require the store example to use the SERVICE backend
+  /store/stream/cursors:
+    get:
+      summary: Read Kiev stream cursors
+      operationId: getStoreStreamCursors
+      responses:
+        "200":
+          description: Oldest and newest Kiev stream cursors
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreStreamCursors"
+        "404":
+          description: Kiev stream client is not available for the configured backend
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: Kiev streams require the store example to use the SERVICE backend
+components:
+  schemas:
+    StoreStreamCursors:
+      type: object
+      properties:
+        oldest:
+          type: string
+          description: Oldest available stream cursor.
+        newest:
+          type: string
+          description: Newest available stream cursor.
+      required:
+        - oldest
+        - newest
+    StoreStreamPage:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/StoreStreamRecord"
+        nextCursor:
+          type: string
+          description: Cursor to request the next page.
+        secondsFromTip:
+          type: integer
+          format: int64
+          description: Stream lag in seconds.
+      required:
+        - records
+        - nextCursor
+        - secondsFromTip
+    StoreStreamRecord:
+      type: object
+      properties:
+        recordType:
+          type: string
+          description: Kiev stream record type.
+          enum:
+            - TX_COMMIT
+            - SCHEMA_UPDATE
+        beginTxId:
+          type: integer
+          format: int64
+          description: Begin transaction id.
+        commitTxId:
+          type: integer
+          format: int64
+          description: Commit transaction id.
+        commitTime:
+          type: string
+          format: date-time
+          description: Commit time.
+        contents:
+          type: array
+          items:
+            $ref: "#/components/schemas/StoreStreamContent"
+      required:
+        - recordType
+        - beginTxId
+        - commitTxId
+        - commitTime
+        - contents
+    StoreStreamContent:
+      type: object
+      properties:
+        bucketName:
+          type: string
+          description: Kiev bucket name. This example returns only store_example_items content.
+        mutationType:
+          type: string
+          description: Mutation type.
+          enum:
+            - UPSERT
+            - DELETE
+        keys:
+          type: object
+          description: Mutation key columns.
+          additionalProperties: true
+        values:
+          type: object
+          description: Mutation value columns.
+          additionalProperties: true
+      required:
+        - bucketName
+        - mutationType
+        - keys
+        - values

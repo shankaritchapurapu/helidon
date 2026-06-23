@@ -33,13 +33,26 @@ The sample `application.yaml` also includes a commented Kiev-as-a-service config
 OCI SDK auth provider from `helidon.oci.*` and keeps Kiev-specific TLS settings under
 `oci.kiev.data-stores[].service.auth.tls.*`.
 
-The service exposes five plain-text routes:
+The service exposes plain-text item routes:
 
 - `POST /store/items` with a `key=value` body to create an item
 - `PUT /store/items/{key}` with a plain-text value body to update an existing item
 - `GET /store/items/{key}` to read one item
 - `DELETE /store/items/{key}` to remove one item
 - `GET /store/items?pageSize=10&pageToken=...` to list items in ascending key order
+
+It also exposes JSON stream routes:
+
+- `GET /store/stream/cursors` to read the oldest and newest Kiev stream cursors
+- `GET /store/stream?cursor=...&limit=10` to read Kiev stream records for the example item bucket
+
+Call `/store/stream/cursors` first, then pass `oldest`, `newest`, or a previous response's `nextCursor` as the
+required `cursor` query parameter.
+
+The stream routes require the store to use the `SERVICE` backend. With the default in-memory backend or the
+direct DB integration-test backend, they return `404` with a message explaining that Kiev streams require the
+service backend. Set `oci.kiev.data-stores[].stream-deleted-column-values: true` if delete stream records
+should include deleted column values.
 
 ## Test
 

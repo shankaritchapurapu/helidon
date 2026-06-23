@@ -24,8 +24,8 @@ import com.oracle.pic.kiev.mapping.Page;
  */
 @Service.Singleton
 class StoreService {
-    private static final String DATA_STORE_NAME = "helidon-store-example";
-    private static final String BUCKET_NAME = "store_example_items";
+    static final String DATA_STORE_NAME = "helidon-store-example";
+    static final String BUCKET_NAME = "store_example_items";
     private static final String HASH_KEY_COLUMN = "id";
 
     private final MappedHashBucket<String, StoreItem> bucket;

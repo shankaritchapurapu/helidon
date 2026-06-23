@@ -19,6 +19,7 @@ registers named access to:
 * `com.oracle.pic.kiev.DataStore`
 * `com.oracle.pic.kiev.mapping.MappedDataStore`
 * `com.oracle.helidon.oci.kiev.KievTransactionSupport`
+* `com.oracle.pic.kiev.streams.service.client.core.Stream` for `SERVICE` stores
 
 Applications can inject the named services directly or use the `@KievTransaction` annotation for declarative
 transaction handling on service methods.
@@ -86,6 +87,7 @@ oci:
             type: "INSTANCE"
             tls:
               root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
+        stream-deleted-column-values: false
 ```
 
 For Kiev as a service with S2S auth:
@@ -184,9 +186,10 @@ oci:
           password: changeit
 ```
 
-`DataStore`, `MappedDataStore`, and `KievTransactionSupport` injection points must use
+`DataStore`, `MappedDataStore`, `KievTransactionSupport`, and `Stream` injection points must use
 `@Service.Named`. Unqualified injection fails and reports the registered store names so the
 injection point can be qualified with one of the configured `data-stores[].store-name` values.
+`Stream` is available only for stores using the `SERVICE` backend.
 
 ### Inject the Kiev services
 
@@ -222,6 +225,82 @@ class ReportingService {
     }
 }
 ```
+
+### Inject a Streaming Client
+
+Inject `com.oracle.pic.kiev.streams.service.client.core.Stream` to read Kiev service stream records for a named
+`SERVICE` store. The streaming client reuses the store's `service` auth, endpoint, compartment, TLS, and locality
+configuration.
+
+```java
+import com.oracle.pic.kiev.streams.service.client.core.Stream;
+import com.oracle.pic.kiev.streams.service.client.core.StreamResult;
+
+@Service.Singleton
+class StoreStreamReader {
+    private final Stream stream;
+
+    @Service.Inject
+    StoreStreamReader(@Service.Named("your-store") Stream stream) {
+        this.stream = stream;
+    }
+
+    StreamResult next(String cursor) {
+        return stream.getRecords(cursor, 100);
+    }
+}
+```
+
+Set `stream-deleted-column-values` to `true` when delete records should include the deleted column values.
+
+### Poll Stream Records for Key Updates
+
+`Stream` is a cursor-based polling API. To be notified when a key changes, keep the last processed cursor, poll
+`getRecords`, inspect each transaction record, and persist the returned `nextCursor` after successful processing.
+Use `getNewestCursor()` when only future updates matter, or a previously persisted cursor when resuming a consumer.
+
+```java
+import com.oracle.pic.kiev.streams.service.client.core.Record;
+import com.oracle.pic.kiev.streams.service.client.core.Stream;
+import com.oracle.pic.kiev.streams.service.client.core.StreamResult;
+import com.oracle.pic.kiev.streams.service.client.core.TxCommitContent;
+import com.oracle.pic.kiev.streams.service.client.core.TxCommitRecord;
+import java.util.List;
+
+@Service.Singleton
+class StoreKeyChangePoller {
+    private final Stream stream;
+
+    @Service.Inject
+    StoreKeyChangePoller(@Service.Named("your-store") Stream stream) {
+        this.stream = stream;
+    }
+
+    String poll(String cursor, String watchedBucket, String watchedKey) {
+        StreamResult page = stream.getRecords(cursor, 100, List.of(watchedBucket));
+
+        for (Record record : page.getRecords()) {
+            if (record instanceof TxCommitRecord txRecord) {
+                notifyMatchingUpdates(txRecord, watchedBucket, watchedKey);
+            }
+        }
+
+        return page.getNextCursor();
+    }
+
+    private void notifyMatchingUpdates(TxCommitRecord txRecord, String watchedBucket, String watchedKey) {
+        for (TxCommitContent content : txRecord.getContents()) {
+            if (watchedBucket.equals(content.getBucketName())
+                    && watchedKey.equals(content.getKeys().getValueMap().get("id"))) {
+                // React to UPSERT or DELETE: invalidate a cache, enqueue work, or publish a notification.
+            }
+        }
+    }
+}
+```
+
+Stream pages can be empty and still include a `nextCursor`; keep advancing the cursor. Use
+`StreamResult.getSecondsFromTip()` as a consumer-lag signal.
 
 ### Access a Transaction
 
@@ -306,6 +385,7 @@ Each `oci.kiev.data-stores` entry defines one Kiev data store.
 | `oci.kiev.data-stores[].app-name`        |               | Application name passed to the Kiev client. |
 | `oci.kiev.data-stores[].transaction-max-reads` | `100` | Maximum reads per transaction. |
 | `oci.kiev.data-stores[].transaction-max-writes` | `100` | Maximum writes per transaction. |
+| `oci.kiev.data-stores[].stream-deleted-column-values` | `false` | Whether delete stream records should include deleted column values for `SERVICE` stores. |
 
 ### Direct DB configuration
 
