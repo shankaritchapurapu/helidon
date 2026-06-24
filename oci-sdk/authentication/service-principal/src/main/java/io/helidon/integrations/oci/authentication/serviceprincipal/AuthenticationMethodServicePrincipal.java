@@ -4,6 +4,7 @@
 
 package io.helidon.integrations.oci.authentication.serviceprincipal;
 
+import java.lang.System.Logger.Level;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -53,17 +54,40 @@ class AuthenticationMethodServicePrincipal implements OciAuthenticationMethod {
                            Supplier<Optional<ServicePrincipalMethodConfig>> servicePrincipalConfig,
                            Supplier<Optional<S2SAuthenticationDetailsProviderBuilder>> builder) {
         return LazyValue.create(() -> {
-            if (ServicePrincipalBuilderProvider.useInstancePrincipal(servicePrincipalConfig)) {
+            Optional<ServicePrincipalMethodConfig> maybeServicePrincipalConfig = servicePrincipalConfig.get();
+            boolean useInstancePrincipal =
+                    ServicePrincipalBuilderProvider.useInstancePrincipal(maybeServicePrincipalConfig);
+            if (LOGGER.isLoggable(Level.DEBUG)) {
+                LOGGER.log(Level.DEBUG,
+                           "Resolving service-principal authentication provider; "
+                                   + "servicePrincipalConfigPresent={0}, useInstancePrincipal={1}",
+                           maybeServicePrincipalConfig.isPresent(),
+                           useInstancePrincipal);
+            }
+            if (useInstancePrincipal) {
                 if (!HelidonOci.imdsAvailable(config)) {
-                    if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
-                        LOGGER.log(System.Logger.Level.TRACE, "OCI Metadata service is not available, "
-                                + "service principal cannot be used.");
+                    if (LOGGER.isLoggable(Level.DEBUG)) {
+                        LOGGER.log(Level.DEBUG, "OCI Metadata service is not available; "
+                                + "service-principal authentication provider cannot be created from "
+                                + "instance-principal certificate material");
                     }
                     return Optional.empty();
                 }
             }
-            return builder.get()
-                    .map(S2SAuthenticationDetailsProviderBuilder::build);
+            Optional<S2SAuthenticationDetailsProviderBuilder> maybeBuilder = builder.get();
+            if (maybeBuilder.isEmpty()) {
+                if (LOGGER.isLoggable(Level.DEBUG)) {
+                    LOGGER.log(Level.DEBUG, "Service-principal authentication provider builder is not available");
+                }
+                return Optional.empty();
+            }
+            BasicAuthenticationDetailsProvider provider = maybeBuilder.get().build();
+            if (LOGGER.isLoggable(Level.DEBUG)) {
+                LOGGER.log(Level.DEBUG,
+                           "Created service-principal authentication provider; providerType={0}",
+                           provider.getClass().getName());
+            }
+            return Optional.of(provider);
         });
     }
 }

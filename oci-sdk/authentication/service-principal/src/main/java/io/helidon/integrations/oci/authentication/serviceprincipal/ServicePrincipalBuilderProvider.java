@@ -4,6 +4,7 @@
 
 package io.helidon.integrations.oci.authentication.serviceprincipal;
 
+import java.lang.System.Logger.Level;
 import java.net.URI;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
@@ -30,6 +31,8 @@ import com.oracle.bmc.auth.X509CertificateSupplier;
 @Service.Provider
 @Weight(Weighted.DEFAULT_WEIGHT - 30)
 class ServicePrincipalBuilderProvider implements Supplier<S2SAuthenticationDetailsProviderBuilder> {
+    private static final System.Logger LOGGER = System.getLogger(ServicePrincipalBuilderProvider.class.getName());
+
     private final OciConfig config;
     private final Supplier<Optional<ServicePrincipalMethodConfig>> servicePrincipalConfig;
 
@@ -42,6 +45,7 @@ class ServicePrincipalBuilderProvider implements Supplier<S2SAuthenticationDetai
     @Override
     public S2SAuthenticationDetailsProviderBuilder get() {
         ServicePrincipalS2SAuthenticationDetailsProviderBuilder builder = getBuilder();
+        Optional<ServicePrincipalMethodConfig> maybeServicePrincipalConfig = servicePrincipalConfig.get();
 
         config.region()
                 .ifPresent(builder::region);
@@ -54,11 +58,26 @@ class ServicePrincipalBuilderProvider implements Supplier<S2SAuthenticationDetai
         config.tenantId()
                 .ifPresent(builder::tenancyId);
 
-        if (useInstancePrincipal(servicePrincipalConfig)) {
+        boolean useInstancePrincipal = useInstancePrincipal(maybeServicePrincipalConfig);
+        if (LOGGER.isLoggable(Level.DEBUG)) {
+            LOGGER.log(Level.DEBUG,
+                       "Configuring service-principal authentication builder; "
+                               + "regionConfigured={0}, federationEndpointConfigured={1}, "
+                               + "metadataBaseUrlConfigured={2}, tenancyIdConfigured={3}, "
+                               + "servicePrincipalConfigPresent={4}, useInstancePrincipal={5}",
+                       builder.getRegion() != null,
+                       builder.getFederationEndpoint() != null,
+                       builder.getMetadataBaseUrl() != null,
+                       builder.getTenancyId() != null,
+                       maybeServicePrincipalConfig.isPresent(),
+                       useInstancePrincipal);
+        }
+
+        if (useInstancePrincipal) {
             return builder.useInstancePrincipals();
         }
 
-        return configureExplicitCertificates(servicePrincipalConfig.get(), builder);
+        return configureExplicitCertificates(maybeServicePrincipalConfig, builder);
     }
 
     ServicePrincipalS2SAuthenticationDetailsProviderBuilder getBuilder() {
@@ -66,7 +85,11 @@ class ServicePrincipalBuilderProvider implements Supplier<S2SAuthenticationDetai
     }
 
     static boolean useInstancePrincipal(Supplier<Optional<ServicePrincipalMethodConfig>> servicePrincipalConfig) {
-        return servicePrincipalConfig.get()
+        return useInstancePrincipal(servicePrincipalConfig.get());
+    }
+
+    static boolean useInstancePrincipal(Optional<ServicePrincipalMethodConfig> servicePrincipalConfig) {
+        return servicePrincipalConfig
                 .map(ServicePrincipalMethodConfig::useInstancePrincipal)
                 .orElse(true);
     }
@@ -96,13 +119,21 @@ class ServicePrincipalBuilderProvider implements Supplier<S2SAuthenticationDetai
                             + "certificate when use-instance-principal is false");
         }
 
-        builder.leafCertificateSupplier(certificateSupplier(certificates.getFirst(), true));
+        if (LOGGER.isLoggable(Level.DEBUG)) {
+            LOGGER.log(Level.DEBUG,
+                       "Configuring service-principal builder with explicit certificate material; "
+                               + "certificateEntries={0}, intermediateCertificateEntries={1}",
+                       certificates.size(),
+                       Math.max(0, certificates.size() - 1));
+        }
+
+        builder.leafCertificateSupplier(certificateSupplier(certificates.getFirst(), true, true));
 
         if (certificates.size() > 1) {
             Set<X509CertificateSupplier> intermediateSuppliers = new LinkedHashSet<>();
             certificates.stream()
                     .skip(1)
-                    .map(certificate -> certificateSupplier(certificate, false))
+                    .map(certificate -> certificateSupplier(certificate, false, false))
                     .forEach(intermediateSuppliers::add);
             builder.intermediateCertificateSuppliers(intermediateSuppliers);
         }
@@ -111,11 +142,30 @@ class ServicePrincipalBuilderProvider implements Supplier<S2SAuthenticationDetai
     }
 
     private static X509CertificateSupplier certificateSupplier(ServicePrincipalCertificateConfig config,
-                                                              boolean requirePrivateKey) {
+                                                              boolean requirePrivateKey,
+                                                              boolean leafCertificate) {
         X509Certificate certificate = loadX509Certificate(config);
         Optional<RSAPrivateKey> privateKey = loadRsaPrivateKey(config);
         if (requirePrivateKey && privateKey.isEmpty()) {
             throw new IllegalStateException("The first service-principal certificate entry must configure private-key");
+        }
+        if (LOGGER.isLoggable(Level.DEBUG)) {
+            LOGGER.log(Level.DEBUG,
+                       "Loaded service-principal {0} certificate; certificateResource={1}, "
+                               + "privateKeyConfigured={2}, privateKeyRequired={3}, privateKeyLoaded={4}",
+                       leafCertificate ? "leaf" : "intermediate",
+                       config.certificate(),
+                       config.privateKey().isPresent(),
+                       requirePrivateKey,
+                       privateKey.isPresent());
+        }
+        if (LOGGER.isLoggable(Level.TRACE)) {
+            LOGGER.log(Level.TRACE,
+                       "Loaded service-principal {0} certificate details; subject={1}, issuer={2}, notAfter={3}",
+                       leafCertificate ? "leaf" : "intermediate",
+                       certificate.getSubjectX500Principal().getName(),
+                       certificate.getIssuerX500Principal().getName(),
+                       certificate.getNotAfter());
         }
         return new ConfiguredX509CertificateSupplier(certificate, privateKey.orElse(null));
     }
