@@ -52,6 +52,9 @@ import static org.hamcrest.Matchers.hasItem;
 @ServerTest
 class OciMetricsPublisherIntegrationTest {
 
+    private static final String HOST = "test-host";
+    private static final String AVAILABILITY_DOMAIN = "iad-ad-1";
+    private static final String FAULT_DOMAIN = "1";
     private static final List<MetricDataDetails> CAPTURED_METRICS_DETAILS = new CopyOnWriteArrayList<>();
     private static final Monitoring MONITORING = monitoringCapture();
 
@@ -116,15 +119,27 @@ class OciMetricsPublisherIntegrationTest {
                    allOf(
                            hasItem(allOf(hasName(equalTo("test.counter")),
                                          hasDataPoints(hasItem(hasValue(equalTo(3D)))),
-                                         hasDimensions(hasEntry("kind", "custom")))),
+                                         hasDimensions(allOf(hasEntry("kind", "custom"),
+                                                             hasEntry("host", HOST),
+                                                             hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
+                                                             hasEntry("faultDomain", FAULT_DOMAIN))))),
                            hasItem(allOf(hasName(equalTo("test.functional.counter")),
                                          hasDataPoints(hasItem(hasValue(equalTo(23D)))),
-                                         hasDimensions(hasEntry("kind", "sampled")))),
+                                         hasDimensions(allOf(hasEntry("kind", "sampled"),
+                                                             hasEntry("host", HOST),
+                                                             hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
+                                                             hasEntry("faultDomain", FAULT_DOMAIN))))),
                            hasItem(allOf(hasName(equalTo("test.timer")),
                                          hasDataPoints(hasItem(hasValue(equalTo(25D)))),
-                                         hasDimensions(hasEntry("operation", "sync")))),
+                                         hasDimensions(allOf(hasEntry("operation", "sync"),
+                                                             hasEntry("host", HOST),
+                                                             hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
+                                                             hasEntry("faultDomain", FAULT_DOMAIN))))),
                            hasItem(allOf(hasName(equalTo("test.gauge")),
-                                         hasDataPoints(hasItem(hasValue(equalTo(17D))))))
+                                         hasDataPoints(hasItem(hasValue(equalTo(17D)))),
+                                         hasDimensions(allOf(hasEntry("host", HOST),
+                                                             hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
+                                                             hasEntry("faultDomain", FAULT_DOMAIN)))))
                    ));
     }
 

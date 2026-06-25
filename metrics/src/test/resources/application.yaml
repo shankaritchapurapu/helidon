@@ -8,6 +8,7 @@ metrics:
       project: test-project
       fleet: test-fleet
       region: us-ashburn-1
+      hostname: test-host
       availability-domain: iad-ad-1
       fault-domain: 1
       default-dimensions: {}

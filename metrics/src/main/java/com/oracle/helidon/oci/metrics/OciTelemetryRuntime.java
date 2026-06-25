@@ -4,7 +4,11 @@
 
 package com.oracle.helidon.oci.metrics;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -172,6 +176,7 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
             monitoring = config.monitoring().orElseGet(() -> Services.get(Monitoring.class));
             Region region = RegionSupport.resolve(config.region(), () -> Services.get(Region.class));
             String publicRegionName = region.getPublicRegionName();
+            Optional<String> hostName = effectiveHostName(config);
             LOGGER.log(System.Logger.Level.TRACE, "Resolved OCI region: {0}", region.getInternalName());
             LOGGER.log(System.Logger.Level.TRACE,
                        "Initializing OCI telemetry runtime; project={0}, fleet={1}, region={2}, monitoringFromConfig={3}",
@@ -184,9 +189,9 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                     .project(config.project().orElseThrow())
                     .fleet(config.fleet().orElseThrow())
                     .postMetricsRequestHeaders(config.requestHeaders());
+            hostName.ifPresent(builder::hostname);
             config.useMetadataService().ifPresent(builder::useMetadataService);
             config.overrideMetricKeys().ifPresent(builder::shouldOverrideMetricKeys);
-            config.hostname().ifPresent(builder::hostname);
             config.availabilityDomain().ifPresent(builder::availabilityDomain);
             config.faultDomain().ifPresent(builder::faultDomain);
             builder.region(publicRegionName);
@@ -219,6 +224,28 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                                      intervalMillis,
                                      intervalMillis,
                                      TimeUnit.MILLISECONDS);
+    }
+
+    static Optional<String> effectiveHostName(OciMetricsPublisherConfig config) {
+        return effectiveHostName(config, () -> InetAddress.getLocalHost().getHostName());
+    }
+
+    static Optional<String> effectiveHostName(OciMetricsPublisherConfig config, Callable<String> resolver) {
+        Optional<String> configuredHostName = config.hostname();
+        if (configuredHostName.isPresent()) {
+            return configuredHostName;
+        }
+        try {
+            return Optional.of(resolver.call());
+        } catch (UnknownHostException e) {
+            LOGGER.log(System.Logger.Level.WARNING,
+                       "Hostname is not configured explicitly and local host name cannot be resolved; "
+                               + "continuing without the host metrics dimension.",
+                       e);
+            return Optional.empty();
+        } catch (Exception e) {
+            throw new IllegalStateException("Unexpected error resolving local host name for metrics", e);
+        }
     }
 
     private void sampleGauge(OciGauge<?> gauge) {

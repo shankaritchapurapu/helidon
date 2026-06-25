@@ -4,9 +4,12 @@
 
 package com.oracle.helidon.oci.metrics;
 
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -17,9 +20,53 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
 class OciTelemetryRuntimeTest {
+
+    @Test
+    void configuredHostNameWinsWithoutCallingResolver() {
+        AtomicBoolean called = new AtomicBoolean();
+        OciMetricsPublisherConfig config = publisherConfigBuilder()
+                .hostname("configured-host")
+                .buildPrototype();
+
+        Optional<String> hostName = OciTelemetryRuntime.effectiveHostName(config, () -> {
+            called.set(true);
+            return "resolved-host";
+        });
+
+        assertThat(hostName, is(Optional.of("configured-host")));
+        assertThat(called.get(), is(false));
+    }
+
+    @Test
+    void missingHostNameUsesResolver() {
+        OciMetricsPublisherConfig config = publisherConfigBuilder().buildPrototype();
+
+        Optional<String> hostName = OciTelemetryRuntime.effectiveHostName(config, () -> "resolved-host");
+
+        assertThat(hostName, is(Optional.of("resolved-host")));
+    }
+
+    @Test
+    void missingHostNameContinuesWithoutHostDimensionWhenResolverFails() {
+        CapturingLogHandler logHandler = CapturingLogHandler.attachTo(OciTelemetryRuntime.class);
+        UnknownHostException failure = new UnknownHostException("test-host");
+        try {
+            OciMetricsPublisherConfig config = publisherConfigBuilder().buildPrototype();
+
+            Optional<String> hostName = OciTelemetryRuntime.effectiveHostName(config, () -> {
+                throw failure;
+            });
+
+            assertThat(hostName, is(Optional.empty()));
+            assertThat(logHandler.warningThrown(), hasItem(is(failure)));
+        } finally {
+            logHandler.detach();
+        }
+    }
 
     @Test
     void closeDoesNotLogNullPointerExceptionWhenRuntimeWasNeverInitialized() {
@@ -41,6 +88,15 @@ class OciTelemetryRuntimeTest {
         } finally {
             logHandler.detach();
         }
+    }
+
+    private static OciMetricsPublisherConfig.Builder publisherConfigBuilder() {
+        return OciMetricsPublisherConfig.builder()
+                .enabled(true)
+                .project("test-project")
+                .fleet("test-fleet")
+                .defaultDimensions(Map.of())
+                .requestHeaders(Map.of());
     }
 
     private static final class CapturingLogHandler extends Handler {
