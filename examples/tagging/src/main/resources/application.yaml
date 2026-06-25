@@ -17,7 +17,6 @@ oci:
       application-name: helidon-tagging-example
       instance-principal-uri: http://localhost:8000
       root-cert-path: /etc/oci-pki/ca-bundle.pem
-      hard-coded-key-supplier: ${helidon.oci.hardCodedKeySupplier}
     authorization:
       service-name: helidon-tagging-example
       root-cert-path: /etc/oci-pki/ca-bundle.pem

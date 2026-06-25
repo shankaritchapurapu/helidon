@@ -25,28 +25,19 @@ class BaseAuthenticationClientTest {
         Security.addProvider(new JipherJCE());
     }
 
-    AuthenticationConfig authenticationConfig(boolean hardCodedKeys) {
-        AuthenticationConfig.Builder builder = AuthenticationConfig.builder()
+    AuthenticationConfig authenticationConfig() {
+        return AuthenticationConfig.builder()
                 .globalBusinessUnit("gbu")
                 .teamName("team")
                 .applicationName("app")
                 .region("us-phoenix-1")
                 .rootCertPath(testRootCertPath())
-                .hardCodedKeySupplier(hardCodedKeys);
-
-        if (hardCodedKeys) {
-            builder.useInstancePrincipal(false);
-        } else {
-            // Use local test certificates for the non-hardcoded branch so unit tests
-            // do not depend on instance principal metadata access.
-            builder.useInstancePrincipal(false)
-                    .certificates(List.of(AuthCertificateConfig.builder()
-                                                  .certificate("serverCert.pem")
-                                                  .privateKey("serverKey.pem")
-                                                  .build()));
-        }
-
-        return builder.build();
+                .useInstancePrincipal(false)
+                .certificates(List.of(AuthCertificateConfig.builder()
+                                           .certificate("serverCert.pem")
+                                           .privateKey("serverKey.pem")
+                                           .build()))
+                .build();
     }
 
     AuthorizationConfig authorizationConfig() {
@@ -59,11 +50,7 @@ class BaseAuthenticationClientTest {
     }
 
     IdentityConfigFactory identityConfigFactory() {
-        return identityConfigFactory(false);
-    }
-
-    IdentityConfigFactory identityConfigFactory(boolean hardCodedKeys) {
-        return identityConfigFactory(authenticationConfig(hardCodedKeys), authorizationConfig());
+        return identityConfigFactory(authenticationConfig(), authorizationConfig());
     }
 
     IdentityConfigFactory identityConfigFactory(AuthenticationConfig authenticationConfig,
@@ -93,12 +80,8 @@ class BaseAuthenticationClientTest {
     }
 
     ServiceAuthenticationClient serviceAuthenticationClient() {
-        return serviceAuthenticationClient(false);
-    }
-
-    ServiceAuthenticationClient serviceAuthenticationClient(boolean hardCodedKeys) {
         ServiceAuthenticationClientFactory clientFactory = new ServiceAuthenticationClientFactory(
-                identityConfigFactory(hardCodedKeys), ociEnvLocationDefaults(failingDefaultRegion()));
+                identityConfigFactory(), ociEnvLocationDefaults(failingDefaultRegion()));
         return clientFactory.get();
     }
 

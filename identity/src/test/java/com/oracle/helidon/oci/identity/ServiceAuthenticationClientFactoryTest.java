@@ -7,8 +7,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -17,10 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ServiceAuthenticationClientFactoryTest extends BaseAuthenticationClientTest {
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void testClientCreation(boolean hardCodedKeys) {
-        ServiceAuthenticationClient client = serviceAuthenticationClient(hardCodedKeys);
+    @Test
+    void testClientCreation() {
+        ServiceAuthenticationClient client = serviceAuthenticationClient();
         assertThat(client, notNullValue());
     }
 
@@ -32,8 +29,11 @@ class ServiceAuthenticationClientFactoryTest extends BaseAuthenticationClientTes
                 .applicationName("app")
                 .serviceUri(java.net.URI.create("https://auth.us-phoenix-1.oraclecloud.com"))
                 .rootCertPath(testRootCertPath())
-                .hardCodedKeySupplier(true)
                 .useInstancePrincipal(false)
+                .certificates(java.util.List.of(AuthCertificateConfig.builder()
+                                                   .certificate("serverCert.pem")
+                                                   .privateKey("serverKey.pem")
+                                                   .build()))
                 .build();
 
         ServiceAuthenticationClient client = new ServiceAuthenticationClientFactory(
@@ -49,8 +49,11 @@ class ServiceAuthenticationClientFactoryTest extends BaseAuthenticationClientTes
                 .teamName("team")
                 .applicationName("app")
                 .rootCertPath(testRootCertPath())
-                .hardCodedKeySupplier(true)
                 .useInstancePrincipal(false)
+                .certificates(java.util.List.of(AuthCertificateConfig.builder()
+                                                   .certificate("serverCert.pem")
+                                                   .privateKey("serverKey.pem")
+                                                   .build()))
                 .build();
 
         AtomicBoolean defaultRegionCalled = new AtomicBoolean();
@@ -69,7 +72,6 @@ class ServiceAuthenticationClientFactoryTest extends BaseAuthenticationClientTes
                 .applicationName("app")
                 .region("us-phoenix-1")
                 .serviceUri(java.net.URI.create("https://auth.us-phoenix-1.oraclecloud.com"))
-                .hardCodedKeySupplier(true)
                 .useInstancePrincipal(false)
                 .build();
 
@@ -85,7 +87,6 @@ class ServiceAuthenticationClientFactoryTest extends BaseAuthenticationClientTes
                 .globalBusinessUnit("gbu")
                 .teamName("team")
                 .applicationName("app")
-                .hardCodedKeySupplier(true)
                 .useInstancePrincipal(false)
                 .build();
 

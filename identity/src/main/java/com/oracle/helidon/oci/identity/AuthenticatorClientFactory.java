@@ -16,7 +16,6 @@ import com.oracle.pic.commons.util.Region;
 import com.oracle.pic.identity.auth.AuthMetricsFactory;
 import com.oracle.pic.identity.authentication.AuthenticatorClient;
 import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
-import com.oracle.pic.identity.authentication.key.WarnHardCodedRSAPublicKeySupplier;
 import com.oracle.pic.identity.authentication.metrics.NoopAuthMetricsImpl;
 
 /**
@@ -45,16 +44,6 @@ public class AuthenticatorClientFactory implements Supplier<AuthenticatorClient>
         // get instance of service auth client
         ServiceAuthenticationClient serviceAuthClient = Services.get(ServiceAuthenticationClient.class);
 
-        // check if hardcoded keys
-        if (config.hardCodedKeySupplier()) {
-            return new AuthenticatorClient.Builder()
-                    .keySupplier(new WarnHardCodedRSAPublicKeySupplier())
-                    .withNoAuthMetrics()
-                    .serviceAuthenticationClient(serviceAuthClient)
-                    .build();
-        }
-
-        // otherwise connect to auth endpoint
         Optional<String> metricsLib = config.metricsLib();
         URI serviceUri = resolveServiceUri();
         return new AuthenticatorClient.Builder()

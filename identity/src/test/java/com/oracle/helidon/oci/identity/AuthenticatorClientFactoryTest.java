@@ -11,8 +11,6 @@ import com.oracle.pic.identity.authentication.AuthenticatorClient;
 import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -26,18 +24,17 @@ class AuthenticatorClientFactoryTest extends BaseAuthenticationClientTest {
     @BeforeEach
     void setUp() {
         if (!INITIALIZED.get()) {
-            ServiceAuthenticationClient serviceAuthClient = serviceAuthenticationClient(true);
+            ServiceAuthenticationClient serviceAuthClient = serviceAuthenticationClient();
             assertThat(serviceAuthClient, notNullValue());
             Services.set(ServiceAuthenticationClient.class, serviceAuthClient);
             INITIALIZED.set(true);
         }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    void testClientCreation(boolean hardCodedKeys) {
+    @Test
+    void testClientCreation() {
         AuthenticatorClientFactory factory = new AuthenticatorClientFactory(
-                identityConfigFactory(hardCodedKeys), ociEnvLocationDefaults(failingDefaultRegion()));
+                identityConfigFactory(), ociEnvLocationDefaults(failingDefaultRegion()));
         AuthenticatorClient client = factory.get();
         assertThat(client, notNullValue());
     }

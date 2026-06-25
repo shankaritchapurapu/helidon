@@ -49,8 +49,8 @@ For the full identity integration guide, see
 * Maven
 
 For live signed requests, configure OCI Auth SDK trust material and request
-signing for the target environment. The local tests can also use the hard-coded
-key supplier mode.
+signing for the target environment. Local tests use either API key signing from
+`~/.oci/config` or explicit test certificate material.
 
 ## Build
 
@@ -257,10 +257,10 @@ From the repository root:
 mvn -pl examples/identity -am test
 ```
 
-The hard-coded-key test exercises the protected endpoints without a live OCI
-environment. The signed request test uses the `API_KEY` profile from
-`~/.oci/config` when available; if request signing cannot be configured locally,
-that test path logs a warning and skips the signed call.
+The signed request test uses the `API_KEY` profile from `~/.oci/config` when
+available; if request signing cannot be configured locally, that test path logs
+a warning and skips the signed call. The SPLAT-aware test uses explicit local
+test certificate material from `src/test/resources`.
 
 Run only the SPLAT-aware example test from the repository root:
 

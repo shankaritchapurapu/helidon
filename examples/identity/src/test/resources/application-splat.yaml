@@ -19,7 +19,6 @@ oci:
       team-name: my-team
       application-name: my-application
       root-cert-path: src/test/resources/serverCert.pem
-      hard-coded-key-supplier: true
     authorization:
       service-name: my-service
       root-cert-path: src/test/resources/serverCert.pem

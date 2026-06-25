@@ -24,7 +24,6 @@ class IdentityConfigFactoryTest {
                 entry("oci.identity.authentication.application-name", "app"),
                 entry("oci.identity.authentication.service-uri", "https://auth.us-phoenix-1.oraclecloud.com"),
                 entry("oci.identity.authentication.use-instance-principal", "false"),
-                entry("oci.identity.authentication.hard-coded-key-supplier", "true"),
                 entry("oci.identity.authorization.enabled", "true"),
                 entry("oci.identity.authorization.service-name", "service"),
                 entry("oci.identity.authorization.service-uri", "https://authservice.svc.ad1.us-phoenix-1"),

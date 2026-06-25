@@ -52,11 +52,6 @@ import org.junit.jupiter.api.TestMethodOrder;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class IdentityEndpointSignedTest extends IdentityEndpointBase {
 
-    static {
-        // needs to run in a fresh Java VM
-        System.setProperty("hard.coded.key.supplier", "false");
-    }
-
     public IdentityEndpointSignedTest(WebServer webServer) {
         super(webServer);
     }

@@ -58,12 +58,6 @@ public class ServiceAuthenticationClientFactory implements Supplier<ServiceAuthe
             builder.withNoAuthMetrics();
         }
 
-        // check if hardcoded keys
-        if (config.hardCodedKeySupplier()) {
-            builder.certificateSupplier(List::of);        // required
-            return builder.build();
-        }
-
         // check to use instance principal
         if (config.useInstancePrincipal()) {
             InstancePrincipalCertificateSupplier supplier = config.instancePrincipalUri().isPresent()

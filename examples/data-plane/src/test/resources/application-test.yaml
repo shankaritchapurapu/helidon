@@ -6,6 +6,10 @@ oci:
   identity:
     authentication:
       root-cert-path: src/test/resources/serverCert.pem
-      hard-coded-key-supplier: true
     authorization:
       root-cert-path: src/test/resources/serverCert.pem
+    splat-aware:
+      splat-request-port: 8080
+      additional-splat-request-ports: []
+      skip-authorization-for-splat: true
+      validate-splat-cert: false

@@ -284,14 +284,13 @@ oci:
 | `oci.identity.authentication.certificates[].passphrase` | `""` | Optional private key passphrase. |
 | `oci.identity.authentication.root-cert-path` | | Optional CA bundle or root certificate path. |
 | `oci.identity.authentication.metrics-lib` | | Optional Auth SDK metrics library name. |
-| `oci.identity.authentication.hard-coded-key-supplier` | `false` | Uses the Auth SDK hard-coded key supplier, typically for development or test only. |
 
 Authentication validation rules:
 
 * `oci.identity.authentication.service-uri` and `oci.identity.authentication.region` are mutually exclusive.
 * If neither `service-uri` nor `region` is configured, the `oci-env` default region must be available.
 * `global-business-unit`, `team-name`, and `application-name` are required.
-* When `use-instance-principal=false` and `hard-coded-key-supplier=false`, at least one certificate entry must be configured.
+* When `use-instance-principal=false`, at least one certificate entry must be configured.
 
 ### Authorization
 

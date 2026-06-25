@@ -27,7 +27,6 @@ oci:
       application-name: helidon-data-plane-example
       instance-principal-uri: http://localhost:8000
       root-cert-path: /etc/oci-pki/ca-bundle.pem
-      hard-coded-key-supplier: ${helidon.oci.hardCodedKeySupplier}
     authorization:
       service-name: helidon-data-plane-example
       root-cert-path: /etc/oci-pki/ca-bundle.pem

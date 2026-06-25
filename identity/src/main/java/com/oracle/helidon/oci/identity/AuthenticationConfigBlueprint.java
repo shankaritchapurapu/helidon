@@ -227,25 +227,4 @@ interface AuthenticationConfigBlueprint {
     @Option.Configured
     Optional<String> metricsLib();
 
-    /**
-     * Indicates whether a hard-coded key supplier should be used instead of
-     * obtaining keys dynamically from the Identity service.
-     * <p>
-     * When this option is enabled ({@code true}), authentication keys are
-     * provided by a locally configured, hard-coded supplier. This mode is
-     * typically intended for development and testing scenarios where calls to
-     * the real Identity service are undesirable or unavailable.
-     * </p>
-     * <p>
-     * When this option is disabled ({@code false}, the default), keys are
-     * retrieved from the Identity service according to the normal
-     * authentication flow.
-     * </p>
-     *
-     * @return {@code true} if a hard-coded key supplier should be used instead
-     *         of contacting the Identity service; {@code false} otherwise
-     */
-    @Option.Configured
-    @Option.DefaultBoolean(false)
-    boolean hardCodedKeySupplier();
 }

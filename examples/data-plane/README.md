@@ -100,13 +100,12 @@ curl -s http://localhost:8080/data-plane/probe
 
 Write operations are protected by `@AuthorizationPermission` annotations. The generated identity
 interceptor performs authentication, authorizes the declared permission, and makes the
-authenticated `Principal` available as a direct resource-method parameter. The test suite uses
-the hard-coded key supplier mode, already used by `examples/identity`, to exercise the secured
-routes without a live OCI environment.
+authenticated `Principal` available as a direct resource-method parameter. The local test suite
+exercises the protected write routes with SPLAT-aware forwarded-principal test headers and local
+test auth services, avoiding private key material or an external OCI Auth SDK setup.
 
 For a real environment you can switch to the same patterns used by `examples/identity`:
 
-- hard-coded key supplier for local/dev signing
 - OCI API key signing through `~/.oci/config`
 - instance principal material through the tunneled IMDS setup
 
@@ -159,4 +158,4 @@ The tests cover:
 - request-id propagation on open routes
 - OCI error JSON on missing resources
 - automatic `RenderableException` mapping through the error-code WebServer module
-- signed create/update/delete flows using the hard-coded key supplier
+- protected create/update/delete flows using SPLAT-aware test headers and local auth services

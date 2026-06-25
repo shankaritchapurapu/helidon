@@ -27,7 +27,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
     @BeforeEach
     void setUp() {
         if (!INITIALIZED.get()) {
-            ServiceAuthenticationClient serviceAuthClient = serviceAuthenticationClient(true);
+            ServiceAuthenticationClient serviceAuthClient = serviceAuthenticationClient();
             assertThat(serviceAuthClient, notNullValue());
             Services.set(ServiceAuthenticationClient.class, serviceAuthClient);
             INITIALIZED.set(true);
@@ -53,7 +53,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(failingDefaultRegion()));
         Optional<IAuthorizationClient> client = factory.get();
         assertThat(client.isPresent(), is(true));
@@ -71,7 +71,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(failingDefaultRegion()));
         AuthorizationClient client = (AuthorizationClient) factory.get().orElseThrow();
 
@@ -88,7 +88,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
 
         AtomicBoolean defaultRegionCalled = new AtomicBoolean();
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(defaultRegion(defaultRegionCalled)));
         Optional<IAuthorizationClient> client = factory.get();
         assertThat(client.isPresent(), is(true));
@@ -105,7 +105,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(ociEnvLocationConfig(), failingDefaultRegion()));
         AuthorizationClient client = (AuthorizationClient) factory.get().orElseThrow();
 
@@ -121,7 +121,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(ociEnvLocationConfig(), failingDefaultRegion()));
         AuthorizationClient client = (AuthorizationClient) factory.get().orElseThrow();
 
@@ -139,7 +139,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
 
         AtomicBoolean defaultRegionCalled = new AtomicBoolean();
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(defaultRegion(defaultRegionCalled)));
         Optional<IAuthorizationClient> client = factory.get();
         assertThat(client.isPresent(), is(true));
@@ -157,7 +157,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(ociEnvLocationConfig(), failingDefaultRegion()));
         AuthorizationClient client = (AuthorizationClient) factory.get().orElseThrow();
 
@@ -174,7 +174,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(ociEnvLocationConfig(), failingDefaultRegion()));
         AuthorizationClient client = (AuthorizationClient) factory.get().orElseThrow();
 
@@ -190,7 +190,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(ociEnvLocationConfig(), failingDefaultRegion()));
         Optional<IAuthorizationClient> client = factory.get();
         assertThat(client.isPresent(), is(true));
@@ -207,7 +207,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(failingDefaultRegion()));
         Optional<IAuthorizationClient> client = factory.get();
         assertThat(client.isPresent(), is(true));
@@ -225,7 +225,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(failingDefaultRegion()));
         AuthorizationClient client = (AuthorizationClient) factory.get().orElseThrow();
 
@@ -243,7 +243,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(failingDefaultRegion()));
         AuthorizationClient client = (AuthorizationClient) factory.get().orElseThrow();
 
@@ -261,7 +261,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(ociEnvLocationConfig(), failingDefaultRegion()));
         assertThrows(IllegalStateException.class, factory::get);
     }
@@ -275,7 +275,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(failingDefaultRegion()));
         assertThrows(IllegalStateException.class, factory::get);
     }
@@ -289,7 +289,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(failingDefaultRegion()));
         assertThrows(IllegalStateException.class, factory::get);
     }
@@ -303,7 +303,7 @@ class AuthorizationClientFactoryTest extends BaseAuthenticationClientTest {
                 .build();
 
         AuthorizationClientFactory factory = new AuthorizationClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig),
+                identityConfigFactory(authenticationConfig(), authorizationConfig),
                 ociEnvLocationDefaults(emptyDefaultRegion()));
         assertThrows(IllegalStateException.class, factory::get);
     }

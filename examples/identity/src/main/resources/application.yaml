@@ -40,7 +40,6 @@ oci:
       application-name: my-application
       instance-principal-uri: http://localhost:8000
       root-cert-path: /etc/oci-pki/ca-bundle.pem
-      hard-coded-key-supplier: ${helidon.oci.hardCodedKeySupplier}
     authorization:
       service-name: my-service
       root-cert-path: /etc/oci-pki/ca-bundle.pem

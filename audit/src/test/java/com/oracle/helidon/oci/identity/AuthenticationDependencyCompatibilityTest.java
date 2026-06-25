@@ -75,17 +75,22 @@ class AuthenticationDependencyCompatibilityTest {
         });
     }
 
-    private static AuthenticationConfig authenticationConfig(boolean hardCodedKeys) {
+    private static AuthenticationConfig authenticationConfig(boolean useInstancePrincipal) {
         AuthenticationConfig.Builder builder = AuthenticationConfig.builder()
                 .globalBusinessUnit("gbu")
                 .teamName("team")
                 .applicationName("app")
                 .region("us-phoenix-1")
-                .rootCertPath(testRootCertPath())
-                .hardCodedKeySupplier(hardCodedKeys);
+                .rootCertPath(testRootCertPath());
 
-        if (hardCodedKeys) {
-            builder.useInstancePrincipal(false);
+        if (useInstancePrincipal) {
+            builder.useInstancePrincipal(true);
+        } else {
+            builder.useInstancePrincipal(false)
+                    .certificates(java.util.List.of(AuthCertificateConfig.builder()
+                                                       .certificate("serverCert.pem")
+                                                       .privateKey("serverKey.pem")
+                                                       .build()));
         }
 
         return builder.build();

@@ -9,8 +9,10 @@ oci:
       team-name: "team"
       application-name: "app"
       root-cert-path: "src/test/resources/serverCert.pem"
-      hard-coded-key-supplier: true
       use-instance-principal: false
+      certificates:
+        - certificate: "serverCert.pem"
+          private-key: "serverKey.pem"
     authorization:
       enabled: false
       service-name: "service"
