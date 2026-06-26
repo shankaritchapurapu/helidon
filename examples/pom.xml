@@ -23,6 +23,7 @@
         <module>limits</module>
         <module>metrics</module>
         <module>request-id</module>
+        <module>secret-service</module>
         <module>splat</module>
         <module>store</module>
         <module>tagging</module>

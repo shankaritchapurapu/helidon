@@ -191,6 +191,11 @@ Runtime behavior:
 * The config source uses an internal SSv2 vault client backed by OCI SDK request signing, retry support, and the generated SSv2 response model.
 * The source-level `cache-ttl` is the effective secret-value cache for this feature.
 
+Runnable sample code is available in
+[`examples/secret-service`](../../examples/secret-service/README.md). The sample
+starts a Helidon SE endpoint, configures the SSv2 source from `oci-config.yaml`,
+and reads a sample SSv2-backed value through Helidon `Config`.
+
 ### Secret Service TLS Manager
 
 TLS manager `oci-ssv2` is capable of mTLS rotation with keys and certificates produced by PKI service and stored in SSv2 in JSON format.

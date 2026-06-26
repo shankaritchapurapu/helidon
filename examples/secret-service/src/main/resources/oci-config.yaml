@@ -1,0 +1,15 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+helidon:
+  oci:
+    authentication-method: "instance-principal"
+    imds-timeout: "PT3S"
+    imds-base-uri: "http://169.254.169.254/opc/v2/"
+    imds-detect-retries: 1
+
+  oci-secret-service:
+    prefix: "oci.ssv2"
+    cache-ttl: "PT5M"
+    poll-interval: "PT30M"
