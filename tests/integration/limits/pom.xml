@@ -23,10 +23,6 @@
             <artifactId>helidon-oci-limits</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-sdk-authentication-service-principal</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.helidon.service</groupId>
             <artifactId>helidon-service-registry</artifactId>
         </dependency>

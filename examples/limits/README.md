@@ -19,10 +19,15 @@ To run the client:
 java -jar ./target/helidon-oci-examples-limits.jar
 ```
 
-That will load default oci configuration located in `~/.oci/config` or `~/.oraclebmc/config`
+The example selects service-principal authentication from `src/main/resources/application.yaml`.
+Run it on OCI infrastructure with platform-provided service-principal material available, such as
+IDMS/ODO/OMK metadata, through an IMDS-compatible tunnel, or add explicit service-principal
+certificate settings to the same `oci.limits.auth` section. The default OCI config file at
+`~/.oci/config` or `~/.oraclebmc/config` only supplies common OCI settings for this example.
 
 You can override the path setting the environment variable `OCI_CONFIG_FILE` with a custom path.
 
 ## Overview
 
-For more details, please check [Limits](../../docs/limits.md) under [Helidon-OCI Native Services Integration Guide](../../docs/README.md).
+For more details, please check [Limits](../../docs/services/limits.md) under
+[Helidon-OCI Native Services Integration Guide](../../docs/README.md).

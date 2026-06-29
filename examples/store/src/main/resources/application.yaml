@@ -54,17 +54,18 @@ oci:
 #           locality: "AD1"
 #           auth:
 #             type: "S2S"
-#             auth-endpoint: https://auth.example
 #             tls:
 #               root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
 #               cert-reload-duration: PT15M
 #               cert-ssl-algorithm: SunX509
-#             s2s:
+#             service-principal:
+#               federation-endpoint: https://auth.example
 #               tenant-id: ocid1.tenancy.oc1...
-#               leaf-cert-path: /path/to/leaf.pem
-#               leaf-cert-key-path: /path/to/leaf.key
-#               intermediate-cert-path: /path/to/intermediate.pem
-#               key-passphrase: secret
+#               certificates:
+#                 - certificate: /path/to/leaf.pem
+#                   private-key: /path/to/leaf.key
+#                   passphrase: secret
+#                 - certificate: /path/to/intermediate.pem
 #         stream-deleted-column-values: true
 #
 # For local KIAB KaaS, use:

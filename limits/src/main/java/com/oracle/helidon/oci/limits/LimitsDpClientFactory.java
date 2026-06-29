@@ -11,7 +11,6 @@ import io.helidon.common.Weighted;
 import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.ClientConfiguration;
-import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.oci.limits.LimitsDPClient;
 
 /**
@@ -19,7 +18,7 @@ import com.oracle.oci.limits.LimitsDPClient;
  */
 @Service.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT - 30)
-class LimitsDpClientFactory implements Supplier<LimitsDPClient> {
+final class LimitsDpClientFactory implements Supplier<LimitsDPClient> {
 
     /**
      * Limits client configuration.
@@ -27,22 +26,22 @@ class LimitsDpClientFactory implements Supplier<LimitsDPClient> {
     private final LimitsConfig limitsConfig;
 
     /**
-     * OCI authentication details provider.
+     * Limits authentication provider factory.
      */
-    private final BasicAuthenticationDetailsProvider authProvider;
+    private final LimitsAuthProviderFactory authProviderFactory;
 
     /**
      * Create a new factory.
      *
      * @param clientConfig limits client configuration
-     * @param authProvider OCI authentication details provider
+     * @param authProviderFactory limits authentication provider factory
      */
     @Service.Inject
     LimitsDpClientFactory(
             LimitsConfig clientConfig,
-            BasicAuthenticationDetailsProvider authProvider) {
+            LimitsAuthProviderFactory authProviderFactory) {
         this.limitsConfig = clientConfig;
-        this.authProvider = authProvider;
+        this.authProviderFactory = authProviderFactory;
     }
 
     /**
@@ -56,6 +55,6 @@ class LimitsDpClientFactory implements Supplier<LimitsDPClient> {
                 .orElseGet(() -> ClientConfiguration.builder().build());
         var builder = LimitsDPClient.builder().configuration(config);
         limitsConfig.endpoint().ifPresent(builder::endpoint);
-        return builder.build(authProvider);
+        return builder.build(authProviderFactory.authProvider());
     }
 }

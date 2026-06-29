@@ -4,7 +4,25 @@
 
 oci:
   limits:
+    auth:
+      authentication-method: service-principal
     client:
       connection-timeout: PT5S
       read-timeout: PT30S
       max-async-threads: 20
+
+# For local or test runs with explicit service-principal certificates, configure the
+# Limits auth override inline:
+# oci:
+#   limits:
+#     auth:
+#       authentication-method: service-principal
+#       service-principal:
+#         federation-endpoint: https://auth.example/v1/x509
+#         tenant-id: ocid1.tenancy.oc1...
+#         use-platform-provided: false
+#         certificates:
+#           - certificate: /path/to/service-principal-leaf.pem
+#             private-key: /path/to/service-principal-leaf.key
+#             passphrase: ""
+#           - certificate: /path/to/intermediate.pem

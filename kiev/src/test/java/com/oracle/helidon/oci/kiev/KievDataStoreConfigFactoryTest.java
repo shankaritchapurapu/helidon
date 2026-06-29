@@ -236,13 +236,19 @@ class KievDataStoreConfigFactoryTest {
                 Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
                 Map.entry("oci.kiev.data-stores.0.service.locality", "AD1"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.key-passphrase", "secret"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.federation-endpoint",
+                          "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.certificate",
+                          "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.private-key",
+                          "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.1.certificate",
+                          "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.tenant-id",
+                          "ocid1.tenancy.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.passphrase",
+                          "secret"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.tls.cert-reload-duration", "PT15M"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.tls.cert-ssl-algorithm", "SunX509")
         ), "remote-store");
@@ -274,13 +280,19 @@ class KievDataStoreConfigFactoryTest {
                 Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
                 Map.entry("oci.kiev.data-stores.0.service.locality", "AD1"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.key-passphrase", "secret")
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.federation-endpoint",
+                          "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.certificate",
+                          "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.private-key",
+                          "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.1.certificate",
+                          "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.tenant-id",
+                          "ocid1.tenancy.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.passphrase",
+                          "secret")
         ), "remote-store");
 
         AuthDetailsConfig.S2sAuthDetailsConfig authConfig =
@@ -322,12 +334,17 @@ class KievDataStoreConfigFactoryTest {
                 Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
                 Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", rootCertPemPath),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example")
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.federation-endpoint",
+                          "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.certificate",
+                          "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.private-key",
+                          "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.1.certificate",
+                          "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.tenant-id",
+                          "ocid1.tenancy.oc1..example")
         ), "remote-store");
 
         KaasStoreConfig dataStoreConfig = assertInstanceOf(KaasStoreConfig.class, config);
@@ -534,12 +551,17 @@ class KievDataStoreConfigFactoryTest {
                 Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
                 Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example")
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.federation-endpoint",
+                          "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.certificate",
+                          "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.private-key",
+                          "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.1.certificate",
+                          "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.tenant-id",
+                          "ocid1.tenancy.oc1..example")
         ), "remote-store", authProvider);
     }
 
@@ -772,7 +794,7 @@ class KievDataStoreConfigFactoryTest {
     }
 
     @Test
-    void testFailsWithoutS2sAuthEndpoint() {
+    void testFailsWithoutS2sFederationEndpoint() {
         IllegalStateException ex = assertThrows(IllegalStateException.class, () -> dataStores(Map.ofEntries(
                 Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
                 Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
@@ -781,14 +803,75 @@ class KievDataStoreConfigFactoryTest {
                 Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example")
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.certificate",
+                          "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.private-key",
+                          "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.1.certificate",
+                          "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.tenant-id",
+                          "ocid1.tenancy.oc1..example")
         )));
 
-        assertEquals("oci.kiev.data-stores[].service.auth.auth-endpoint must be configured "
+        assertEquals("oci.kiev.data-stores[].service.auth.service-principal.federation-endpoint must be configured "
                              + "for store-name 'remote-store'",
+                     ex.getMessage());
+    }
+
+    @Test
+    void testRejectsS2sAuthEndpoint() {
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> dataStores(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.federation-endpoint",
+                          "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.certificate",
+                          "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.private-key",
+                          "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.1.certificate",
+                          "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.tenant-id",
+                          "ocid1.tenancy.oc1..example")
+        )));
+
+        assertEquals("oci.kiev.data-stores[].service.auth.auth-endpoint must not be configured for S2S; use "
+                             + "oci.kiev.data-stores[].service.auth.service-principal.federation-endpoint "
+                             + "for store-name 'remote-store'",
+                     ex.getMessage());
+    }
+
+    @Test
+    void testRejectsS2sPlatformProvidedAuth() {
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> dataStores(Map.ofEntries(
+                Map.entry("oci.kiev.data-stores.0.backend", "SERVICE"),
+                Map.entry("oci.kiev.data-stores.0.store-name", "remote-store"),
+                Map.entry("oci.kiev.data-stores.0.app-name", "StoreApp"),
+                Map.entry("oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.use-platform-provided", "true"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.federation-endpoint",
+                          "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.certificate",
+                          "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.private-key",
+                          "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.1.certificate",
+                          "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.tenant-id",
+                          "ocid1.tenancy.oc1..example")
+        )));
+
+        assertEquals("oci.kiev.data-stores[].service.auth.service-principal.use-platform-provided "
+                             + "must be false for Kiev S2S auth for store-name 'remote-store'",
                      ex.getMessage());
     }
 
@@ -801,11 +884,10 @@ class KievDataStoreConfigFactoryTest {
                 "oci.kiev.data-stores.0.service.compartment-id", "ocid1.compartment.oc1..example",
                 "oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example",
                 "oci.kiev.data-stores.0.service.auth.type", "S2S",
-                "oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example",
                 "oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"
         )));
 
-        assertEquals("oci.kiev.data-stores[].service.auth.s2s must be configured "
+        assertEquals("oci.kiev.data-stores[].service.auth.service-principal must be configured "
                              + "for store-name 'remote-store'",
                      ex.getMessage());
     }

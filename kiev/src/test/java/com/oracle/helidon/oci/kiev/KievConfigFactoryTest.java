@@ -11,6 +11,7 @@ import java.util.Map;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 
+import com.oracle.helidon.oci.sdk.common.core.ServicePrincipalAuthConfig;
 import com.oracle.pic.kiev.registry.data.ClientRegistryLocality;
 import org.junit.jupiter.api.Test;
 
@@ -246,30 +247,37 @@ class KievConfigFactoryTest {
                 Map.entry("oci.kiev.data-stores.0.service.frontend-endpoint", "https://frontend.example"),
                 Map.entry("oci.kiev.data-stores.0.service.locality", "AD1"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.type", "S2S"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.auth-endpoint", "https://auth.example"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.tls.root-cert-pem-path", "/tmp/root.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-path", "/tmp/leaf.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.leaf-cert-key-path", "/tmp/leaf.key"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.intermediate-cert-path", "/tmp/intermediate.pem"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.tenant-id", "ocid1.tenancy.oc1..example"),
-                Map.entry("oci.kiev.data-stores.0.service.auth.s2s.key-passphrase", "secret"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.federation-endpoint",
+                          "https://auth.example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.certificate",
+                          "/tmp/leaf.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.private-key",
+                          "/tmp/leaf.key"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.1.certificate",
+                          "/tmp/intermediate.pem"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.tenant-id",
+                          "ocid1.tenancy.oc1..example"),
+                Map.entry("oci.kiev.data-stores.0.service.auth.service-principal.certificates.0.passphrase",
+                          "secret"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.tls.cert-reload-duration", "PT15M"),
                 Map.entry("oci.kiev.data-stores.0.service.auth.tls.cert-ssl-algorithm", "SunX509")
         ))).get();
 
         KievServiceConfig serviceConfig = config.dataStores().get(0).service().orElseThrow();
         KievServiceAuthConfig authConfig = serviceConfig.auth().orElseThrow();
-        KievServiceS2sConfig s2sConfig = authConfig.s2s().orElseThrow();
+        ServicePrincipalAuthConfig servicePrincipalConfig = authConfig.servicePrincipal().orElseThrow();
         KievServiceTlsConfig tlsConfig = authConfig.tls().orElseThrow();
         assertEquals(ClientRegistryLocality.AD1, serviceConfig.locality().orElseThrow());
         assertEquals(KievAuthType.S2S, authConfig.type());
-        assertEquals("https://auth.example", authConfig.authEndpoint().orElseThrow());
+        assertFalse(servicePrincipalConfig.usePlatformProvided());
+        assertEquals("https://auth.example", servicePrincipalConfig.federationEndpoint().orElseThrow().toString());
         assertEquals("/tmp/root.pem", tlsConfig.rootCertPemPath().orElseThrow());
-        assertEquals("/tmp/leaf.pem", s2sConfig.leafCertPath().orElseThrow());
-        assertEquals("/tmp/leaf.key", s2sConfig.leafCertKeyPath().orElseThrow());
-        assertEquals("/tmp/intermediate.pem", s2sConfig.intermediateCertPath().orElseThrow());
-        assertEquals("ocid1.tenancy.oc1..example", s2sConfig.tenantId().orElseThrow());
-        assertEquals("secret", s2sConfig.keyPassphrase().orElseThrow());
+        assertEquals("/tmp/leaf.pem", servicePrincipalConfig.certificates().getFirst().certificate());
+        assertEquals("/tmp/leaf.key", servicePrincipalConfig.certificates().getFirst().privateKey().orElseThrow());
+        assertEquals("/tmp/intermediate.pem", servicePrincipalConfig.certificates().get(1).certificate());
+        assertEquals("ocid1.tenancy.oc1..example", servicePrincipalConfig.tenantId().orElseThrow());
+        assertEquals("secret", servicePrincipalConfig.certificates().getFirst().passphrase());
         assertEquals(Duration.ofMinutes(15), tlsConfig.certReloadDuration().orElseThrow());
         assertEquals("SunX509", tlsConfig.certSslAlgorithm().orElseThrow());
     }

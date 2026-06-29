@@ -3,6 +3,8 @@
 #
 
 helidon.oci:
+  federation-endpoint: https://auth.test.oraclecloud.com/v1/x509
+  tenant-id: ocid1.tenancy.oc1..testserviceprincipal
   authentication.config-file:
     path: src/test/resources/test-oci-config
     profile: MY_PROFILE

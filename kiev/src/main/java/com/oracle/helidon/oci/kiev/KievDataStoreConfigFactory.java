@@ -122,35 +122,7 @@ class KievDataStoreConfigFactory {
 
     private static AuthDetailsConfig.S2sAuthDetailsConfig toS2sAuthConfig(KievServiceAuthConfig authConfig,
                                                                           String storeName) {
-        KievServiceTlsConfig tlsConfig = requiredValue(authConfig.tls(),
-                                                       dataStoreKey("service.auth.tls"),
-                                                       storeName);
-        KievServiceS2sConfig s2sConfig = requiredValue(authConfig.s2s(),
-                                                       dataStoreKey("service.auth.s2s"),
-                                                       storeName);
-        AuthDetailsConfig.S2sAuthDetailsConfig config = new AuthDetailsConfig.S2sAuthDetailsConfig();
-        config.setAuthEndpoint(requiredValue(authConfig.authEndpoint(),
-                                             dataStoreKey("service.auth.auth-endpoint"),
-                                             storeName));
-        config.setRootCertPemPath(requiredValue(tlsConfig.rootCertPemPath(),
-                                                dataStoreKey("service.auth.tls.root-cert-pem-path"),
-                                                storeName));
-        config.setLeafCertPath(requiredValue(s2sConfig.leafCertPath(),
-                                             dataStoreKey("service.auth.s2s.leaf-cert-path"),
-                                             storeName));
-        config.setLeafCertKeyPath(requiredValue(s2sConfig.leafCertKeyPath(),
-                                                dataStoreKey("service.auth.s2s.leaf-cert-key-path"),
-                                                storeName));
-        config.setIntermediateCertPath(requiredValue(s2sConfig.intermediateCertPath(),
-                                                     dataStoreKey("service.auth.s2s.intermediate-cert-path"),
-                                                     storeName));
-        config.setTenantId(requiredValue(s2sConfig.tenantId(),
-                                         dataStoreKey("service.auth.s2s.tenant-id"),
-                                         storeName));
-        s2sConfig.keyPassphrase().ifPresent(config::setKeyPassphrase);
-        tlsConfig.certReloadDuration().ifPresent(config::setCertReloadDuration);
-        tlsConfig.certSslAlgorithm().ifPresent(config::setCertSslAlgorithm);
-        return config;
+        return KievS2sAuthConfigFactory.create(authConfig, storeName);
     }
 
     private static AuthDetailsConfig.OverriddenAuthDetailsConfig toKiabLocalAuthConfig() {

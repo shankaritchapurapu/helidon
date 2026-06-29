@@ -3,6 +3,6 @@
  */
 
 /**
- * Reusable dynamic SSL context provider configuration.
+ * Reusable OCI SDK integration configuration.
  */
 package com.oracle.helidon.oci.sdk.common.core;

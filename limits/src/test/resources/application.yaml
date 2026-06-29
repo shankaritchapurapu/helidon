@@ -4,6 +4,17 @@
 
 oci:
   limits:
+    auth:
+      authentication-method: service-principal
+      service-principal:
+        federation-endpoint: https://auth.example/v1/x509
+        tenant-id: ocid1.tenancy.oc1..example
+        use-platform-provided: false
+        certificates:
+          - certificate: servicePrincipalCert.pem
+            private-key: servicePrincipalKey.pem
+            passphrase: ""
+          - certificate: servicePrincipalCert.pem
     client:
       connection-timeout: PT5S
       read-timeout: PT30S

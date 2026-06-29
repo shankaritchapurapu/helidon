@@ -29,6 +29,10 @@
             <groupId>com.oracle.helidon.oci</groupId>
             <artifactId>helidon-oci-limits</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-sdk-oci</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

@@ -9,10 +9,12 @@ import java.util.Optional;
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 
+import com.oracle.helidon.oci.sdk.common.core.ServicePrincipalAuthConfig;
+
 /**
  * Authentication settings for Kiev as a service.
  */
-@Prototype.Blueprint
+@Prototype.Blueprint(decorator = KievServiceAuthConfigSupport.class)
 @Prototype.Configured
 interface KievServiceAuthConfigBlueprint {
 
@@ -42,10 +44,10 @@ interface KievServiceAuthConfigBlueprint {
     Optional<KievServiceTlsConfig> tls();
 
     /**
-     * S2S-specific settings for the auth mode.
+     * Service-principal settings for S2S auth.
      *
-     * @return optional S2S configuration
+     * @return optional service-principal configuration
      */
     @Option.Configured
-    Optional<KievServiceS2sConfig> s2s();
+    Optional<ServicePrincipalAuthConfig> servicePrincipal();
 }

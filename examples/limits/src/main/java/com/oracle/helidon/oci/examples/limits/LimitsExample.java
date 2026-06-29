@@ -10,7 +10,6 @@ import io.helidon.integrations.oci.OciConfig;
 import io.helidon.service.registry.Service;
 import io.helidon.service.registry.Service.Inject;
 
-import com.oracle.bmc.ConfigFileReader.ConfigFile;
 import com.oracle.oci.limits.LimitsDPClient;
 import com.oracle.oci.limits.requests.GetServiceLimitsRequest;
 import com.oracle.oci.limits.responses.GetServiceLimitsResponse;
@@ -19,19 +18,16 @@ import com.oracle.oci.limits.responses.GetServiceLimitsResponse;
 class LimitsExample {
 
     private static final Logger LOGGER = Logger.getLogger(LimitsExample.class.getName());
-    private final ConfigFile configFile;
     private final OciConfig ociConfig;
     private final LimitsDPClient client;
 
     @Inject
-    LimitsExample(ConfigFile configFile, OciConfig ociConfig, LimitsDPClient client) {
-        this.configFile = configFile;
+    LimitsExample(OciConfig ociConfig, LimitsDPClient client) {
         this.ociConfig = ociConfig;
         this.client = client;
     }
 
     public void run() {
-        LOGGER.info("Config file: " + configFile);
         LOGGER.info("OCI config: " + ociConfig);
 
         GetServiceLimitsRequest request = GetServiceLimitsRequest.builder()

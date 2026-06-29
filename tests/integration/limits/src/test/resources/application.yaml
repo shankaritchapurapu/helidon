@@ -4,6 +4,10 @@
 
 oci:
   limits:
+    auth:
+      authentication-method: "service-principal"
+      service-principal:
+        use-platform-provided: true
     client:
       connection-timeout: PT5S
       read-timeout: PT30S

@@ -105,17 +105,18 @@ oci:
           locality: "AD1"
           auth:
             type: "S2S"
-            auth-endpoint: https://auth.example
             tls:
               root-cert-pem-path: /etc/oci-pki/ca-bundle.pem
               cert-reload-duration: PT15M
               cert-ssl-algorithm: SunX509
-            s2s:
+            service-principal:
+              federation-endpoint: https://auth.example
               tenant-id: ocid1.tenancy.oc1...
-              leaf-cert-path: /path/to/leaf.pem
-              leaf-cert-key-path: /path/to/leaf.key
-              intermediate-cert-path: /path/to/intermediate.pem
-              key-passphrase: secret
+              certificates:
+                - certificate: /path/to/leaf.pem
+                  private-key: /path/to/leaf.key
+                  passphrase: secret
+                - certificate: /path/to/intermediate.pem
 ```
 
 For Kiev as a service with a shared OCI SDK auth provider and Kiev-managed TLS:
@@ -425,18 +426,39 @@ locality. Unknown `oci.env.ad-number` values are logged as warnings and fall bac
 
 `S2S` auth requires:
 
+For `S2S`, configure the identity auth endpoint with
+`oci.kiev.data-stores[].service.auth.service-principal.federation-endpoint`; do not combine `S2S` with the
+top-level `oci.kiev.data-stores[].service.auth.auth-endpoint` key used by `INSTANCE`.
+Kiev S2S requires explicit certificate configuration. Although the shared service-principal setting
+`use-platform-provided` defaults to `true`, Kiev defaults it to `false` when the setting is omitted from an S2S auth
+configuration loaded from application configuration. This contextual default is applied by the Kiev configuration
+decorator. When constructing `KievServiceAuthConfig` programmatically without a configuration node, set
+`usePlatformProvided(false)` on the nested `ServicePrincipalAuthConfig` builder. Kiev rejects `true` because
+platform-provided service-principal material is not supported by the Kiev client configuration path.
+
+```java
+KievServiceAuthConfig authConfig = KievServiceAuthConfig.builder()
+        .type(KievAuthType.S2S)
+        .servicePrincipal(servicePrincipal -> servicePrincipal
+                .usePlatformProvided(false)
+                // Configure the federation endpoint, tenant ID, and certificates.
+        )
+        .build();
+```
+
 | Key                                            | Default value | Description |
 |------------------------------------------------|---------------|-------------|
-| `oci.kiev.data-stores[].service.auth.auth-endpoint`          |               | Identity auth endpoint. |
 | `oci.kiev.data-stores[].service.auth.tls.root-cert-pem-path` |              | Root certificate PEM path. |
 | `oci.kiev.data-stores[].service.auth.tls.root-cert-path`     |              | Alias for `root-cert-pem-path`; configure only one of the two keys. |
 | `oci.kiev.data-stores[].service.auth.tls.cert-reload-duration` |            | Optional certificate reload interval. |
 | `oci.kiev.data-stores[].service.auth.tls.cert-ssl-algorithm` |              | Optional SSL algorithm override. |
-| `oci.kiev.data-stores[].service.auth.s2s.tenant-id`          |              | Tenant OCID. |
-| `oci.kiev.data-stores[].service.auth.s2s.leaf-cert-path`     |              | Leaf certificate path used for S2S credentials. |
-| `oci.kiev.data-stores[].service.auth.s2s.leaf-cert-key-path` |              | Leaf private key path used for S2S credentials. |
-| `oci.kiev.data-stores[].service.auth.s2s.intermediate-cert-path` |          | Intermediate certificate path used for S2S credentials. |
-| `oci.kiev.data-stores[].service.auth.s2s.key-passphrase`     |              | Optional private key passphrase for S2S credentials. |
+| `oci.kiev.data-stores[].service.auth.service-principal.use-platform-provided` | `false` | Effective default when loaded from application configuration. Programmatic builders must set `false`; `true` is not supported. |
+| `oci.kiev.data-stores[].service.auth.service-principal.federation-endpoint` | | Identity auth endpoint. |
+| `oci.kiev.data-stores[].service.auth.service-principal.tenant-id`          |              | Tenant OCID. |
+| `oci.kiev.data-stores[].service.auth.service-principal.certificates.0.certificate`     |              | Leaf certificate path used for S2S credentials. |
+| `oci.kiev.data-stores[].service.auth.service-principal.certificates.0.private-key` |              | Leaf private key path used for S2S credentials. |
+| `oci.kiev.data-stores[].service.auth.service-principal.certificates.1.certificate` |          | Intermediate certificate path used for S2S credentials. |
+| `oci.kiev.data-stores[].service.auth.service-principal.certificates.0.passphrase`     |              | Optional private key passphrase for S2S credentials. |
 
 `OVERRIDDEN` auth requires a `BasicAuthenticationDetailsProvider` to be available from the Helidon service registry,
 such as one created by the public OCI SDK integration under `helidon.oci.*`. It can also use the same

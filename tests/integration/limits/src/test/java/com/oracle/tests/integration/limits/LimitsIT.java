@@ -9,6 +9,8 @@ import java.util.List;
 import io.helidon.logging.common.LogConfig;
 import io.helidon.service.registry.Services;
 
+import com.oracle.helidon.oci.limits.LimitsAuthConfig;
+import com.oracle.helidon.oci.limits.LimitsConfig;
 import com.oracle.oci.limits.LimitsDPClient;
 import com.oracle.oci.limits.model.ServiceGroup;
 import com.oracle.oci.limits.model.ServiceLimitsItems;
@@ -32,6 +34,16 @@ class LimitsIT {
     @BeforeAll
     static void beforeAll() {
         LogConfig.configureRuntime();
+    }
+
+    @Test
+    void moduleLocalAuthConfigIsSelected() {
+        LimitsConfig config = Services.get(LimitsConfig.class);
+        LimitsAuthConfig auth = config.auth().orElseThrow();
+        assertEquals("service-principal", auth.authenticationMethod(),
+                     "Limits auth method should be configured locally");
+        assertTrue(auth.servicePrincipal().orElseThrow().usePlatformProvided(),
+                   "Limits integration test should use platform-provided service-principal config");
     }
 
     @Test

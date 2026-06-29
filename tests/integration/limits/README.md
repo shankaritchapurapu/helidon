@@ -16,8 +16,10 @@ The test checks:
 Run this test from an OCI test instance. The instance must have:
 
 - access to the Instance Metadata Service at `http://169.254.169.254/opc/v2/`
-- service-principal authentication enabled for the instance
+- platform-provided service-principal configuration available, such as IDMS/ODO/OMK metadata
 - network access to the OCI Limits DP endpoint for the instance region
 - IAM permission for the service principal to call the Limits DP service
 
-The test uses `src/test/resources/oci-config.yaml` with `helidon.oci.authentication-method: "service-principal"`.
+The test selects service-principal authentication in `src/test/resources/application.yaml` with
+`oci.limits.auth.authentication-method: "service-principal"`. The `oci-config.yaml` file only provides common
+OCI settings such as IMDS timeout and base URI.
