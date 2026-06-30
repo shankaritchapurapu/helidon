@@ -25,24 +25,32 @@ import com.oracle.pic.commons.util.Region;
 class SplatMtlsRequestHandler {
     private final SplatMtlsConfig config;
     private final Supplier<Region> defaultRegionSupplier;
+    private final SplatMtlsRequestValidator requestValidator;
 
     @Service.Inject
     SplatMtlsRequestHandler(SplatMtlsConfig config,
                             Supplier<Region> defaultRegionSupplier) {
         this.config = config;
         this.defaultRegionSupplier = Objects.requireNonNull(defaultRegionSupplier);
+        this.requestValidator = new SplatMtlsRequestValidator(config);
     }
 
     boolean shouldAllow(ServerRequest request,
                         ServerResponse response,
                         ResourceInfo resourceInfo) throws Exception {
-        var upstreamFilter = createFilter();
-        if (upstreamFilter.isEmpty()) {
+        if (!config.enabled()) {
             return true;
         }
 
+        Region region = resolveRegion();
+        var validationFailure = requestValidator.validate(request, region);
+        if (validationFailure.isPresent()) {
+            response.status(403).send(validationFailure.orElseThrow());
+            return false;
+        }
+
         return HelidonContainerRequestFilterRunner
-                .run(upstreamFilter.orElseThrow(), request, response, resourceInfo)
+                .run(createFilter(region), request, response, resourceInfo)
                 .isPresent();
     }
 
@@ -50,7 +58,11 @@ class SplatMtlsRequestHandler {
         if (!config.enabled()) {
             return Optional.empty();
         }
-        return Optional.of(new com.oracle.pic.platform.splat.sdk.mtls.SplatMtlsFilter(resolveRegion(), upstreamConfig()));
+        return Optional.of(createFilter(resolveRegion()));
+    }
+
+    private ContainerRequestFilter createFilter(Region region) {
+        return new com.oracle.pic.platform.splat.sdk.mtls.SplatMtlsFilter(region, upstreamConfig());
     }
 
     Region resolveRegion() {
