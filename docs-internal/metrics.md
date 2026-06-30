@@ -21,19 +21,15 @@ The Helidon Talon metrics integration library automatically sends the following 
 ### Overview
 OCI Helidon metrics integration provides a new implementation of the Helidon neutral metrics API, with these key aspects:
 * Delegates to some other underlying provider (Micrometer is the only one as of this writing) to store data for each meter.
-* Augments each update to a meter with a call to the OCI metrics library to record the meter's updated value.
+* Periodically samples registered meters and records changed values through the OCI metrics library.
 * Implements a new Helidon metrics publisher type, `oci`, which captures the configurable aspects of the connection to the backend.
 
-### Handling Gauges
-Gauges are wrappers around values which are updated _outside_ the Helidon metrics API. As a result, there is no way we can intercept updates to the values which underlie gauges. 
+### Handling sampled meters
+All supported Helidon meter types are sampled on the configured interval. Metric mutation methods update only the local
+meter/delegate state; they do not report directly to the OCI metrics layer.
 
-Instead, this library does the following:
-* Implements gauges so they retain the previous value reported. 
-* Periodically gathers all known gauges and calls the OCI metrics library to record gauge values which have changed. 
-  
-  Users can configure the gauge sampling behavior:
-  * whether to sample gauges at all, and
-  * what sampling interval to use.
+Counters publish interval deltas. Timers publish a single one-minute EWMA rate in events per second. Distribution
+summaries publish a single interval mean. Gauges and functional counters publish changed current values.
 
 ### General Configuration
 There are many configurable settings related to connecting to the backend and retrying failed transmissions, all exposed as attributes of the OCI metrics publisher. These are implemented as Helidon config blueprints and so are settable through configuration files or programmatically.
@@ -188,16 +184,17 @@ Avoid migrating service-core-only metrics behavior that is intentionally out of 
 * service-log-only annotations
 
 ### Reporter Configuration
-The OCI metrics publisher now has a nested `reporter` configuration object. It collects settings which correspond to service-core scheduled reporter controls:
+The OCI metrics publisher has a nested `reporter` configuration object. It collects settings which correspond to service-core scheduled reporter controls:
 * `metrics-scope-name`: The root name segment used as the prefix for built-in JVM metric names. The default is `service`, so JVM metrics use names such as `service.jvm.memory.heap.used`.
 * `includes`: Metric names to include.
 * `excludes`: Metric names to exclude.
 * `filter-matching-mode`: How to treat `includes` and `excludes` entries: `exact`, `regex`, or `substring`. The default is `exact`; regex matching uses full-pattern semantics.
 * `includes-attributes`: Metric attribute names to include when reporting derived values.
 * `excludes-attributes`: Metric attribute names to exclude when reporting derived values.
+* `sample-interval`: Interval between scheduled metric samples.
 
 The DropWizard `BaseReporterFactory` also exposes `durationUnit` and `rateUnit` settings, but Helidon Talon does not
-expose them. The service-core scheduled metrics reporter emits counters, gauges, and one-minute rates; it does not emit
+expose them. (The service-core metrics does not use its `durationUnit` setting anyway.) The service-core scheduled metrics reporter emits counters, gauges, and one-minute rates; it does not emit
 timer duration values, and its reported rates are events per second.
 
 Reporter include and exclude decisions apply to metric names only. Excludes take precedence over includes, and an empty `includes` list means all non-excluded metrics are eligible for publishing. The programmatic `filter` setting is intentionally not configurable from YAML; it exists only for code which builds the config directly.
@@ -215,7 +212,7 @@ When Heliport migrates service-core `scheduled-metrics-reporter` configuration t
 | `excludesAttributes` | `excludes-attributes` |
 | `frequency` | `sample-interval` |
 
-Helidon Talon samples metrics on the configured interval and does not report metric mutations to the OCI metrics layer as they happen. Heliport should map the legacy scheduled reporter interval/frequency setting to `sample-interval`. Counters use the configured metric name and emit interval deltas. Timers use the configured metric name and emit a single one-minute EWMA rate in events per second. Distribution summaries use the configured metric name and emit a single interval mean. This preserves service-core-style `SuccessRate` because it records `0.0` or `1.0`, so the interval mean is the success rate.
+Helidon Talon samples metrics on the configured interval and does not report metric mutations to the OCI metrics layer as they happen. Heliport should map the legacy scheduled reporter `frequency` setting to `sample-interval`. Counters use the configured metric name and emit interval deltas. Timers use the configured metric name and emit a single one-minute EWMA rate in events per second. Distribution summaries use the configured metric name and emit a single interval mean. This preserves service-core-style `SuccessRate` because it records `0.0` or `1.0`, so the interval mean is the success rate.
 
 Heliport should not migrate legacy `durationUnit`; there is no Helidon Talon equivalent because no emitted timer metric
 contains timer duration values. Attribute filters still apply to sampled values: counters, gauges, and functional counters

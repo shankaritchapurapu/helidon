@@ -12,8 +12,7 @@ The Metrics integration provides several features:
 When `helidon-oci-metrics` is on the classpath and an OCI metrics publisher is configured, the
 integration can:
 
-* publish `Counter`, `Timer`, and `DistributionSummary` updates directly to OCI metrics
-* periodically sample and publish gauges and functional counters and report them to OCI metrics
+* periodically sample and publish `Counter`, `Timer`, `DistributionSummary`, gauge, and functional-counter values to OCI metrics
 * register automatic HTTP request counters and timers and update them for each incoming request
 * register JVM gauges for measurements such as memory usage, thread state, class loading, file descriptors, and garbage collection
 * create the required OCI `Monitoring` client and make it available through the Helidon service registry
@@ -88,8 +87,8 @@ Once the service has started, service code can invoke the `com.oracle.pic.teleme
 #### Use Helidon Metrics imperative API
 
 Services can also use the Helidon metrics API to register and update application meters. This integration
-automatically publishes those Helidon meters to OCI metrics without requiring application code to call the OCI Monitoring
-client or a T2-specific API directly.
+periodically samples those Helidon meters and publishes changed values to OCI metrics without requiring application code
+to call the OCI Monitoring client or a T2-specific API directly.
 
 The following example shows imperative use of the Helidon metrics API in a hypothetical utility class `WorkService` that counts and times the invocations of the work. (Note that each timer includes a counter. Production code would rarely measure the same code using both; this is just an example to show the imperative API for both timers and counters.)
 
@@ -207,9 +206,8 @@ The publisher samples metrics on `sample-interval`; metric mutation methods do n
 Counters are emitted as interval deltas using the configured metric name. Timers are emitted as a single one-minute
 EWMA rate, in events per second, using the configured metric name. Distribution summaries are emitted as a single
 interval mean using the configured metric name. `SuccessRate` records `0.0` or `1.0`, so its interval mean is the
-success rate.
-Attribute filters use `value` for counters, gauges, and functional counters, `m1_rate` for timer one-minute EWMA rates,
-and `mean` for distribution summary interval means.
+success rate. Attribute filters use `value` for counters, gauges, and functional counters, `m1_rate` for timer
+one-minute EWMA rates, and `mean` for distribution summary interval means.
 
 | Key | Default value | Description                                                                                                                                                      |
 |-----|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
