@@ -30,3 +30,6 @@
   * [Jipher](guides/jipher.md)
   * [Lumberjack](guides/lumberjack.md)
   * [OMK](guides/omk.md)
+
+  * [Migration](guides/migration/README.md)
+    * [Heliport](guides/migration/heliport.md)
