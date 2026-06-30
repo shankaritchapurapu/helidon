@@ -31,7 +31,7 @@ use cases and configuration, so each module keeps its own package and service bi
 
 ## Maven Coordinates
 
-Add exactly one Helidon OCI metering dependency to your service.
+Add exactly one Helidon Talon metering dependency to your service.
 
 For a data plane service:
 
@@ -54,8 +54,8 @@ For a control plane service:
 The metering annotations in CP are processed at application compile time. Use the normal Helidon
 service/codegen annotation processing setup for applications that use declarative metering annotations.
 
-An OCI service using the Helidon OCI Metering CP library must make sure that a `@Service.Singleton Supplier<MappedDataStore>` Helidon service factory class is on the classpath. You can do this in any of the following ways:
-* Add a dependency on the Helidon OCI Kiev integration library:
+An OCI service using the Helidon Talon Metering CP library must make sure that a `@Service.Singleton Supplier<MappedDataStore>` Helidon service factory class is on the classpath. You can do this in any of the following ways:
+* Add a dependency on the Helidon Talon Kiev integration library:
   
   ```xml
   <dependency>
@@ -94,7 +94,7 @@ import io.helidon.service.registry.ServiceRegistryManager;
 ServiceRegistryManager.start(ApplicationBinding.create());
 ```
 
-Without this startup call, Helidon OCI cannot start or stop the DP
+Without this startup call, Helidon Talon cannot start or stop the DP
 `MeteringReportingAgent` or CP `MeteringAgent`  automatically. A service does not need to prime the `ServiceRegistryManager` this way if it wants to prepare and build the configuration explicitly and start and stop the OCI metering agent itself.
 
 ### Configure DP
@@ -190,8 +190,8 @@ When the CP config is present, Helidon can create and inject:
 * `com.oracle.pic.bling.emit.MeteringLogStores`
 * `com.oracle.pic.bling.emit.config.MeteringAgentConfig`
 
-NOTE: For CP metering, Helidon OCI for CP metering requires a Helidon service factory for the OCI type 
-`com.oracle.pic.kiev.mapping.MappedDataStore` but does not provide one itself. Services can get a `MappedDataStore` factory from the [Helidon OCI Kiev module](kiev.md) by
+NOTE: For CP metering, Helidon Talon for CP metering requires a Helidon service factory for the OCI type 
+`com.oracle.pic.kiev.mapping.MappedDataStore` but does not provide one itself. Services can get a `MappedDataStore` factory from the [Helidon Talon Kiev module](kiev.md) by
 adding and configuring `helidon-oci-kiev`, or service developers can provide their own factory instead.
 
 Service code can inject or look up `MeteringLogStores`, select the specific native `MeteringLogStore` for a meter name, and
@@ -405,4 +405,4 @@ method fails. Recording failures from the metering libraries are logged and do n
 * [OCI metering endpoints](https://internal-docs.oraclecorp.com/en-us/iaas/internalcontent/svcintegration/metering/metering-service-integration/metering-endpoints.htm)
 * [Control plane metering](https://internal-docs.oraclecorp.com/en-us/iaas/internalcontent/svcintegration/metering/metering-service-integration/metering-agent.htm)
 * [Data plane metering](https://internal-docs.oraclecorp.com/en-us/iaas/internalcontent/svcintegration/metering/metering-service-integration/data-plane-metering-agent.htm)
-* [Helidon OCI Kiev integration](kiev.md)
+* [Helidon Talon Kiev integration](kiev.md)

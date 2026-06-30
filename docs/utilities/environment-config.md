@@ -262,7 +262,7 @@ providers backed by the same lazy environment resolution:
 Behavior:
 
 * If no `oci-env` region is configured or detected from runtime files, the providers return no
-  value. For SDK `Region` lookup, this allows lower-priority Helidon OCI SDK region providers,
+  value. For SDK `Region` lookup, this allows lower-priority Helidon Talon SDK region providers,
   such as `helidon.oci.region`, authentication, or IMDS providers, to answer instead.
 * If an `oci-env` region value is present but invalid, such as an invalid
   `location-override.region` or invalid `/etc/region` value, resolution fails fast instead of

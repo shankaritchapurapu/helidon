@@ -5,7 +5,7 @@
 ## Overview
 
 Oracle Jipher provides a JCE security provider used by OCI services that need FIPS-compatible cryptography.
-Helidon OCI applications can enable Jipher by loading the Pegasus `com.oracle.pic.commons:core` support early in
+Helidon Talon applications can enable Jipher by loading the Pegasus `com.oracle.pic.commons:core` support early in
 application startup, before TLS, authentication, or other cryptographic subsystems are used.
 
 This guide shows how to add the dependency when needed, register Jipher as the primary JCE provider, and configure

@@ -14,7 +14,7 @@ OCI services that onboard to Splat/RQS still need a Splat-facing Swagger 2 API s
 OpenAPI Generator parses the Swagger 2 source into the OpenAPI model used by the Helidon generator.
 
 There is no separate custom OCI OpenAPI generator module for this path, and this page does not describe a runtime
-Helidon OCI service integration.
+Helidon Talon service integration.
 
 ---
 

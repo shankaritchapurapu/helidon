@@ -20,7 +20,7 @@ The configuration root is `oci.identity`. Authentication and authorization are c
 * `oci.identity.authorization`
 * `oci.identity.splat-aware`
 
-For request handling, authentication and authorization are applied through the Helidon OCI code generation integration.
+For request handling, authentication and authorization are applied through the Helidon Talon code generation integration.
 Annotated endpoint methods are intercepted automatically. This replaces the older filter-path configuration model and
 does not require configuring `oci.identity.filters.*`.
 
@@ -345,7 +345,7 @@ oci:
 | `oci.identity.authorization.metrics-lib` | | Optional Auth SDK metrics library name. |
 
 Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
-in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
+in other Helidon Talon modules. Specify at most one name for an aliased setting, not both.
 
 Authorization validation rules:
 

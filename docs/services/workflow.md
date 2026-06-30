@@ -111,7 +111,7 @@ WFaaS client properties:
 | `retry-policy.jitter-factor` | | Optional WFaaS retry jitter factor. |
 
 Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
-in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
+in other Helidon Talon modules. Specify at most one name for an aliased setting, not both.
 
 Workflow can use a reusable dynamic SSL context provider configured under `oci.dynamic-ssl-context-providers`.
 Those entries are exposed as named `DynamicSslContextProviderConfig` services. Applications can also provide their own

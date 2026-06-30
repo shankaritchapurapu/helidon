@@ -21,9 +21,9 @@ To enable audit support, add the following dependency to your project’s `pom.x
 </dependency>
 ```
 
-Direct `AuditPayloadAppender` endpoint parameter injection also requires the Helidon OCI codegen processor at
+Direct `AuditPayloadAppender` endpoint parameter injection also requires the Helidon Talon codegen processor at
 application compile time. Add `helidon-oci-codegen` to the Maven compiler annotation processor path alongside the
-normal Helidon annotation processors, using the same Helidon OCI version as `helidon-oci-audit`:
+normal Helidon annotation processors, using the same Helidon Talon version as `helidon-oci-audit`:
 
 ```xml
 <plugin>

@@ -49,7 +49,7 @@ Client settings live under `oci.object-storage-client`:
 
 The `region` and `region-id` settings are both available for user convenience:
 `region-id` aligns with the OCI Object Storage API parameter name, while `region`
-aligns with the Helidon OCI configuration convention. Configure only one of them;
+aligns with the Helidon Talon configuration convention. Configure only one of them;
 setting both is rejected as invalid configuration.
 
 | Key | Default Value | Description |

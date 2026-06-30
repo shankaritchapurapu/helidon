@@ -1,4 +1,4 @@
-# Helidon OCI Documentation: Guides
+# Helidon Talon Documentation: Guides
 
 | Topic                       | Description                                                                              |
 |-----------------------------|------------------------------------------------------------------------------------------|

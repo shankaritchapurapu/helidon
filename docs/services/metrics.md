@@ -36,7 +36,7 @@ Add the OCI metrics integration dependency to your service:
 
 The `@MetricPrefix` and `@SecondaryMetricPrefix` annotations allow API endpoint methods to modify the default names used for automatic HTTP metrics. To use these annotations, add `helidon-oci-codegen` to the annotation processor path.
 
-Services normally also configure OCI SDK authentication using the shared Helidon OCI SDK configuration under
+Services normally also configure OCI SDK authentication using the shared Helidon Talon SDK configuration under
 `helidon.oci.*`.
 
 ---
@@ -83,7 +83,7 @@ Service code can use several APIs as described below, within the same service if
 #### Use OCI `metrics-lib` `Metrics` API
 The metrics integration automatically prepares the OCI metrics runtime based on the configuration, invoking `Metrics.init` during start-up and `Metrics.shutdown` as the service stops.
 
-Once the service has started, service code can invoke the `com.oracle.pic.telemetry.commons.metrics.Metrics` methods such as `emit`, `sensor`, or `record` as normal. Service code should not normally invoke `Metrics.init` or `Metrics.shutdown`; the Helidon OCI metrics integration library does so. 
+Once the service has started, service code can invoke the `com.oracle.pic.telemetry.commons.metrics.Metrics` methods such as `emit`, `sensor`, or `record` as normal. Service code should not normally invoke `Metrics.init` or `Metrics.shutdown`; the Helidon Talon metrics integration library does so. 
 
 #### Use Helidon Metrics imperative API
 
@@ -232,7 +232,7 @@ When publisher `availability-domain` or `fault-domain` is omitted, the OCI metri
 | `fault-domain` | `oci.env.fault-domain` | Optional fault-domain override.                                                                                                                                  |
 
 Aliases (such as `hostname` and `host-name`) are provided for user convenience, either to align with native OCI parameter names or with similar settings
-in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
+in other Helidon Talon modules. Specify at most one name for an aliased setting, not both.
 
 Example:
 

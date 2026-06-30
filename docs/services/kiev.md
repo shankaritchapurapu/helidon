@@ -5,7 +5,7 @@
 ## Overview
 
 The Kiev integration registers configured Kiev data stores with the Helidon service registry and provides
-declarative transaction support for Helidon OCI applications that use Kiev.
+declarative transaction support for Helidon Talon applications that use Kiev.
 
 The configuration root is `oci.kiev`. Each configured data store uses one of three backends:
 
@@ -205,7 +205,7 @@ class StoreService {
     @Service.Inject
     StoreService(@Service.Named(DATA_STORE_NAME) MappedDataStore mappedDataStore) {
         this.bucket = mappedDataStore.getOrCreateBucket("store_example_items",
-                                                        "Helidon OCI Kiev store example bucket",
+                                                        "Helidon Talon Kiev store example bucket",
                                                         String.class,
                                                         StoreItem.class);
     }
@@ -453,7 +453,7 @@ applications can supply custom named `DynamicSslContextProviderConfig` services.
 | `oci.kiev.data-stores[].service.auth.tls.cert-ssl-algorithm` |       | Optional inline SSL algorithm override. |
 
 Aliases are provided for user convenience, either to align with native OCI parameter names or with similar settings
-in other Helidon OCI modules. Specify at most one name for an aliased setting, not both.
+in other Helidon Talon modules. Specify at most one name for an aliased setting, not both.
 
 `KIAB_LOCAL` auth is intended for local KIAB KaaS testing and does not require extra auth properties.
 

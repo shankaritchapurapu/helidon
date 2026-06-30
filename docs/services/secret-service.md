@@ -132,7 +132,7 @@ sources:
 ```
 
 The SSv2 client also accepts `client.retry` as an alias for `client.retry-config`. Aliases are provided for user
-convenience, either to align with native OCI parameter names or with similar settings in other Helidon OCI modules.
+convenience, either to align with native OCI parameter names or with similar settings in other Helidon Talon modules.
 Specify at most one name for an aliased setting, not both.
 
 Endpoint region and domain resolution is delegated to

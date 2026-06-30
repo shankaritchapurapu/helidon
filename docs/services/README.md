@@ -1,6 +1,6 @@
-# Helidon OCI Documentation: Services
+# Helidon Talon Documentation: Services
 
-Helidon OCI provides integration with the following services.
+Helidon Talon provides integration with the following services.
 
 | Topic                                         | Description                                                                          |
 |-----------------------------------------------|--------------------------------------------------------------------------------------|
