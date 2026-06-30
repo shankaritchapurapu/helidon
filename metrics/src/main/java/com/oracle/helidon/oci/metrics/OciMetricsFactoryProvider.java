@@ -20,7 +20,7 @@ import io.helidon.metrics.spi.MetricsFactoryProvider;
 import io.helidon.service.registry.Service;
 
 /**
- * Provider for the metrics factory implementation for Helidon OCI metrics.
+ * Provider for the metrics factory implementation for Helidon Talon metrics.
  */
 @Service.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT + 100.0)

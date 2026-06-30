@@ -27,16 +27,14 @@ import com.oracle.pic.telemetry.commons.metrics.TelemetryReporter;
 import com.oracle.pic.telemetry.commons.metrics.TelemetryReporterBuilder;
 
 /**
- * OCI Telemetry Runtime which oversees the Helidon OCI metrics implementation, primarily:
+ * OCI Telemetry Runtime which oversees the Helidon Talon metrics implementation, primarily:
  * <ul>
  *     <li>preparing connectivity to the backend ({@code Monitoring} and {@code TelemetryReporterBuilder}) and the
  *     OCI metrics {@code Metrics} object,</li>
  *     <li>maintaining the list of registries (typically just one), and</li>
- *     <li>managing the executor that periodically samples gauges and functional counters.</li>
+ *     <li>managing the executor that periodically samples meters.</li>
  * </ul>
- * We sample gauges and functional counters periodically. Although application code or Helidon code updates counters,
- * timers, and distribution summaries in-line, gauges and functional counters mirror values that are updated outside the
- * metrics subsystem. Therefore, we cannot know when those values change without sampling them.
+ * We sample all supported meters periodically so changes are not reported to OCI from application mutation paths.
  * <p>
  * The OCI metrics library itself does internal buffering, batching, and transmission of metrics data to the backend, so this
  * component does not need to do that.
@@ -54,7 +52,7 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
     private final ReentrantLock lifecycleLock = new ReentrantLock();
     private final AtomicBoolean started = new AtomicBoolean();
     private final AtomicBoolean closed = new AtomicBoolean();
-    private volatile ScheduledExecutorService gaugeSamplingExecutor;
+    private volatile ScheduledExecutorService samplingExecutor;
     private volatile Monitoring monitoring;
     private volatile boolean initializedMetrics;
 
@@ -71,9 +69,9 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
     void registerRegistry(OciMeterRegistry registry) {
         registries.add(registry);
         LOGGER.log(System.Logger.Level.TRACE,
-                   "Registered Helidon OCI meter registry; registries={0}, gauges={1}",
+                   "Registered Helidon Talon meter registry; registries={0}, meters={1}",
                    registries.size(),
-                   registry.gauges().size());
+                   registry.meters().size());
         start();
     }
 
@@ -82,16 +80,16 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
         try {
             if (closed.get() || started.get()) {
                 LOGGER.log(System.Logger.Level.TRACE,
-                           "Skipping Helidon OCI telemetry runtime start; closed={0}, started={1}",
+                           "Skipping Helidon Talon telemetry runtime start; closed={0}, started={1}",
                            closed.get(),
                            started.get());
                 return;
             }
-            LOGGER.log(System.Logger.Level.TRACE, "Starting Helidon OCI telemetry runtime");
+            LOGGER.log(System.Logger.Level.TRACE, "Starting Helidon Talon telemetry runtime");
             initializeRuntime();
             Main.addShutdownHandler(this);
             started.set(true);
-            LOGGER.log(System.Logger.Level.TRACE, "Helidon OCI telemetry runtime started");
+            LOGGER.log(System.Logger.Level.TRACE, "Helidon Talon telemetry runtime started");
         } finally {
             lifecycleLock.unlock();
         }
@@ -107,14 +105,14 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
         lifecycleLock.lock();
         try {
             if (!closed.compareAndSet(false, true)) {
-                LOGGER.log(System.Logger.Level.TRACE, "Skipping Helidon OCI telemetry runtime close; already closed");
+                LOGGER.log(System.Logger.Level.TRACE, "Skipping Helidon Talon telemetry runtime close; already closed");
                 return;
             }
-            LOGGER.log(System.Logger.Level.TRACE, "Closing Helidon OCI telemetry runtime");
-            ScheduledExecutorService executor = gaugeSamplingExecutor;
-            gaugeSamplingExecutor = null;
+            LOGGER.log(System.Logger.Level.TRACE, "Closing Helidon Talon telemetry runtime");
+            ScheduledExecutorService executor = samplingExecutor;
+            samplingExecutor = null;
             if (executor != null) {
-                LOGGER.log(System.Logger.Level.TRACE, "Stopping Helidon OCI gauge sampling executor");
+                LOGGER.log(System.Logger.Level.TRACE, "Stopping Helidon Talon metrics sampling executor");
                 executor.shutdownNow();
             }
             publisher.stop();
@@ -136,17 +134,20 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
     }
 
     /*
-    Package-private so integration test can trigger gauge sampling deterministically.
+    Package-private so integration test can trigger sampling deterministically.
      */
-    void sampleGauges() {
+    void sampleMeters() {
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
             LOGGER.log(System.Logger.Level.TRACE,
-                       "Sampling known gauges and functional counters across registries={0}",
+                       "Sampling known meters across registries={0}",
                        registries.size());
         }
         registries.forEach(registry -> {
             registry.gauges().forEach(this::sampleGauge);
             registry.functionalCounters().forEach(this::sampleFunctionalCounter);
+            registry.counters().forEach(this::sampleCounter);
+            registry.timers().forEach(this::sampleTimer);
+            registry.distributionSummaries().forEach(this::sampleDistributionSummary);
         });
     }
 
@@ -170,7 +171,7 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
 
         if (Metrics.isActive()) {
             LOGGER.log(System.Logger.Level.WARNING,
-                       "Helidon OCI metrics runtime found OCI Metrics object already initialized; Helidon OCI metrics config "
+                       "Helidon Talon metrics runtime found OCI Metrics object already initialized; Helidon Talon metrics config "
                                + "was not applied.");
         } else {
             monitoring = config.monitoring().orElseGet(() -> Services.get(Monitoring.class));
@@ -202,25 +203,25 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                        "Initialized telemetry Metrics runtime; defaultDimensions={0}",
                        config.defaultDimensions());
         }
-        scheduleGaugeSampling();
+        scheduleSampling();
     }
 
-    private void scheduleGaugeSampling() {
-        if (!config.sampleGauges()) {
-            LOGGER.log(System.Logger.Level.TRACE, "Gauge sampling disabled");
+    private void scheduleSampling() {
+        if (samplingExecutor != null) {
+            LOGGER.log(System.Logger.Level.TRACE, "Skipping metrics sampling schedule; executor already exists");
             return;
         }
         var executor = Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual()
-                                                                          .name("Helidon OCI metrics gauge sampler")
+                                                                          .name("Helidon Talon metrics sampler")
                                                                           .factory());
 
-        gaugeSamplingExecutor = executor;
-        long intervalMillis = Math.max(1000L, config.gaugeSampleInterval().toMillis());
+        samplingExecutor = executor;
+        long intervalMillis = Math.max(1000L, config.sampleInterval().toMillis());
         LOGGER.log(System.Logger.Level.TRACE,
-                   "Scheduling gauge sampling; intervalMillis={0}, registries={1}",
+                   "Scheduling metrics sampling; intervalMillis={0}, registries={1}",
                    intervalMillis,
                    registries.size());
-        executor.scheduleAtFixedRate(this::sampleGauges,
+        executor.scheduleAtFixedRate(this::sampleMeters,
                                      intervalMillis,
                                      intervalMillis,
                                      TimeUnit.MILLISECONDS);
@@ -249,6 +250,9 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
     }
 
     private void sampleGauge(OciGauge<?> gauge) {
+        if (!gauge.enabled()) {
+            return;
+        }
         try {
             gauge.valueIfChanged().ifPresent(value -> publisher.publishGauge(gauge, value.doubleValue()));
         } catch (RuntimeException e) {
@@ -257,12 +261,51 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
     }
 
     private void sampleFunctionalCounter(OciFunctionalCounter<?> functionalCounter) {
+        if (!functionalCounter.enabled()) {
+            return;
+        }
         try {
             functionalCounter.valueIfChanged()
                     .ifPresent(value -> publisher.publishFunctionalCounter(functionalCounter, value));
         } catch (RuntimeException e) {
             LOGGER.log(System.Logger.Level.WARNING,
                        "Error sampling OCI-backed functional counter " + functionalCounter.id().name(),
+                       e);
+        }
+    }
+
+    private void sampleCounter(OciCounter counter) {
+        if (!counter.enabled()) {
+            return;
+        }
+        try {
+            counter.deltaIfChanged().ifPresent(delta -> publisher.publishCounterDelta(counter, delta));
+        } catch (RuntimeException e) {
+            LOGGER.log(System.Logger.Level.WARNING, "Error sampling OCI-backed counter " + counter.id().name(), e);
+        }
+    }
+
+    private void sampleTimer(OciTimer timer) {
+        if (!timer.enabled()) {
+            return;
+        }
+        try {
+            publisher.publishTimerRate(timer, timer.oneMinuteRate());
+        } catch (RuntimeException e) {
+            LOGGER.log(System.Logger.Level.WARNING, "Error sampling OCI-backed timer " + timer.id().name(), e);
+        }
+    }
+
+    private void sampleDistributionSummary(OciDistributionSummary summary) {
+        if (!summary.enabled()) {
+            return;
+        }
+        try {
+            summary.intervalMeanIfChanged()
+                    .ifPresent(value -> publisher.publishDistributionSummaryMean(summary, value));
+        } catch (RuntimeException e) {
+            LOGGER.log(System.Logger.Level.WARNING,
+                       "Error sampling OCI-backed distribution summary " + summary.id().name(),
                        e);
         }
     }

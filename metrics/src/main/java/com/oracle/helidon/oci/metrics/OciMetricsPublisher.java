@@ -10,12 +10,9 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import io.helidon.builder.api.RuntimeType;
-import io.helidon.metrics.api.Counter;
-import io.helidon.metrics.api.DistributionSummary;
 import io.helidon.metrics.api.FunctionalCounter;
 import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.MetricsPublisher;
-import io.helidon.metrics.api.Timer;
 
 import com.oracle.pic.telemetry.commons.metrics.Metrics;
 import com.oracle.pic.telemetry.commons.metrics.Sensor;
@@ -29,6 +26,8 @@ final class OciMetricsPublisher implements MetricsPublisher,
 
     static final String TYPE = "oci";
     static final String VALUE_ATTRIBUTE = "value";
+    static final String MEAN_ATTRIBUTE = "mean";
+    static final String ONE_MINUTE_RATE_ATTRIBUTE = "m1_rate";
     private static final System.Logger LOGGER = System.getLogger(OciMetricsPublisher.class.getName());
 
     private final OciMetricsPublisherConfig prototype;
@@ -87,70 +86,70 @@ final class OciMetricsPublisher implements MetricsPublisher,
         acceptingUpdates.set(false);
     }
 
-    void publishCounter(Counter counter, long amount) {
+    void publishCounterDelta(OciCounter counter, long amount) {
         if (!acceptingUpdates.get()) {
             if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
                 LOGGER.log(System.Logger.Level.TRACE,
-                           "Ignoring counter update because publisher is stopped; meter={0}",
+                           "Ignoring counter sample because publisher is stopped; meter={0}",
                            meterDebug(counter));
             }
             return;
         }
-        if (!shouldPublish(counter, VALUE_ATTRIBUTE)) {
-            logFiltered(counter, "counter update");
+        if (!shouldPublishValue(counter)) {
+            logFiltered(counter, "counter sample");
             return;
         }
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
             LOGGER.log(System.Logger.Level.TRACE,
-                       "Publishing counter update; meter={0}, amount={1}",
+                       "Publishing counter sample; meter={0}, amount={1}",
                        meterDebug(counter),
                        amount);
         }
         Metrics.sensor(metricName(counter)).record(amount);
     }
 
-    void publishTimer(Timer timer, double normalizedRecordedDuration) {
+    void publishTimerRate(OciTimer timer, double value) {
         if (!acceptingUpdates.get()) {
             if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
                 LOGGER.log(System.Logger.Level.TRACE,
-                           "Ignoring timer update because publisher is stopped; meter={0}",
+                           "Ignoring timer rate sample because publisher is stopped; meter={0}",
                            meterDebug(timer));
             }
             return;
         }
-        if (!shouldPublish(timer, VALUE_ATTRIBUTE)) {
-            logFiltered(timer, "timer update");
+        if (!shouldPublishTimerRate(timer)) {
+            logFiltered(timer, "timer rate sample");
             return;
         }
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
             LOGGER.log(System.Logger.Level.TRACE,
-                       "Publishing timer update; meter={0}, normalizedDuration={1}",
+                       "Publishing timer rate sample; meter={0}, value={1}",
                        meterDebug(timer),
-                       normalizedRecordedDuration);
+                       value);
         }
-        Metrics.sensor(metricName(timer)).record(normalizedRecordedDuration);
+        Metrics.sensor(metricName(timer)).singleValue(Sensor.AggregationType.Last).record(value);
     }
 
-    void publishDistributionSummary(DistributionSummary summary, double normalizedAmount) {
+    void publishDistributionSummaryMean(OciDistributionSummary summary, double value) {
         if (!acceptingUpdates.get()) {
             if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
                 LOGGER.log(System.Logger.Level.TRACE,
-                           "Ignoring distribution summary update because publisher is stopped; meter={0}",
+                           "Ignoring distribution summary mean sample because publisher is stopped; meter={0}",
                            meterDebug(summary));
             }
             return;
         }
-        if (!shouldPublish(summary, VALUE_ATTRIBUTE)) {
-            logFiltered(summary, "distribution summary update");
+        if (!shouldPublishDistributionSummaryMean(summary)) {
+            logFiltered(summary, "distribution summary mean sample");
             return;
         }
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
             LOGGER.log(System.Logger.Level.TRACE,
-                       "Publishing distribution summary update; meter={0}, normalizedAmount={1}",
+                       "Publishing distribution summary mean sample; meter={0}, value={1}",
                        meterDebug(summary),
-                       normalizedAmount);
+                       value);
         }
-        Metrics.sensor(metricName(summary)).record(normalizedAmount);
+        Metrics.sensor(metricName(summary)).singleValue(Sensor.AggregationType.Last).record(value);
     }
 
     void publishFunctionalCounter(FunctionalCounter counter, long value) {
@@ -162,7 +161,7 @@ final class OciMetricsPublisher implements MetricsPublisher,
             }
             return;
         }
-        if (!shouldPublish(counter, VALUE_ATTRIBUTE)) {
+        if (!shouldPublishValue(counter)) {
             logFiltered(counter, "functional counter sample");
             return;
         }
@@ -184,7 +183,7 @@ final class OciMetricsPublisher implements MetricsPublisher,
             }
             return;
         }
-        if (!shouldPublish(gauge, VALUE_ATTRIBUTE)) {
+        if (!shouldPublishValue(gauge)) {
             logFiltered(gauge, "gauge sample");
             return;
         }
@@ -203,6 +202,18 @@ final class OciMetricsPublisher implements MetricsPublisher,
 
     boolean shouldPublish(Meter meter, String attribute) {
         return shouldPublish(meter) && shouldPublishAttribute(attribute);
+    }
+
+    boolean shouldPublishValue(Meter meter) {
+        return shouldPublish(meter, VALUE_ATTRIBUTE);
+    }
+
+    boolean shouldPublishTimerRate(Meter meter) {
+        return shouldPublish(meter, ONE_MINUTE_RATE_ATTRIBUTE);
+    }
+
+    boolean shouldPublishDistributionSummaryMean(Meter meter) {
+        return shouldPublish(meter, MEAN_ATTRIBUTE);
     }
 
     boolean shouldPublishAttribute(String attribute) {

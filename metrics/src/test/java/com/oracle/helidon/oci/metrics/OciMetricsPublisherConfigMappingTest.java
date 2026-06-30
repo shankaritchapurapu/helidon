@@ -4,9 +4,9 @@
 
 package com.oracle.helidon.oci.metrics;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.config.Config;
@@ -40,7 +40,7 @@ class OciMetricsPublisherConfigMappingTest {
                                                region: us-ashburn-1
                                                enable-detailed-timing-auto-metrics: false
                                                resource-package-prefix: com.example.store
-                                               duration-unit: seconds
+                                               sample-interval: PT7S
                                                metrics-scope-name: custom-service
                                                includes:
                                                  - test.counter
@@ -134,7 +134,7 @@ class OciMetricsPublisherConfigMappingTest {
     void mapsPublisherYamlToMetricFilteringConfig() {
         OciMetricsPublisherConfig publisherConfig = publisherConfig();
 
-        assertThat(publisherConfig.durationUnit(), is(TimeUnit.SECONDS));
+        assertThat(publisherConfig.sampleInterval(), is(Duration.ofSeconds(7)));
         assertThat(publisherConfig.metricsScopeName(), is("custom-service"));
         assertThat(publisherConfig.includes(), is(Set.of("test.counter", "test.timer")));
         assertThat(publisherConfig.excludes(), is(Set.of("test.excluded")));

@@ -15,6 +15,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 
 import io.helidon.logging.common.LogConfig;
 import io.helidon.metrics.api.Counter;
+import io.helidon.metrics.api.DistributionSummary;
 import io.helidon.metrics.api.FunctionalCounter;
 import io.helidon.metrics.api.Gauge;
 import io.helidon.metrics.api.MeterRegistry;
@@ -45,9 +46,11 @@ import static com.oracle.helidon.oci.metrics.OciMetricsPublisherIntegrationTest.
 import static com.oracle.helidon.oci.metrics.OciMetricsPublisherIntegrationTest.DatapointMatchers.hasValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 
 @ServerTest
 class OciMetricsPublisherIntegrationTest {
@@ -97,17 +100,24 @@ class OciMetricsPublisherIntegrationTest {
                                           .addTag(Tag.create("kind", "sampled")));
         Timer timer = meterRegistry.getOrCreate(Timer.builder("test.timer")
                                                         .addTag(Tag.create("operation", "sync")));
+        DistributionSummary summary = meterRegistry.getOrCreate(DistributionSummary.builder("test.summary")
+                                                                    .addTag(Tag.create("operation", "batch")));
         meterRegistry.getOrCreate(Gauge.builder("test.gauge", gaugeValue::get)
                                           .addTag(Tag.create("kind", "sampled")));
 
         counter.increment(3);
         timer.record(Duration.ofMillis(25));
+        summary.record(13D);
+
+        assertThat("Expected mutations not to report directly to OCI",
+                   CAPTURED_METRICS_DETAILS,
+                   empty());
 
         /*
-        Normally, gauges are measured on a scheduled thread. To avoid test timing issues, trigger a gauge sampling now
+        Normally, meters are measured on a scheduled thread. To avoid test timing issues, trigger sampling now
         rather than trying to wait for a regularly-scheduled periodic sampling to run.
          */
-        metricsFactory.runtime().sampleGauges();
+        metricsFactory.runtime().sampleMeters();
 
         /*
         Force a flush of pending writes.
@@ -130,8 +140,14 @@ class OciMetricsPublisherIntegrationTest {
                                                              hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
                                                              hasEntry("faultDomain", FAULT_DOMAIN))))),
                            hasItem(allOf(hasName(equalTo("test.timer")),
-                                         hasDataPoints(hasItem(hasValue(equalTo(25D)))),
+                                         hasDataPoints(hasItem(hasValue(equalTo(0D)))),
                                          hasDimensions(allOf(hasEntry("operation", "sync"),
+                                                             hasEntry("host", HOST),
+                                                             hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
+                                                             hasEntry("faultDomain", FAULT_DOMAIN))))),
+                           hasItem(allOf(hasName(equalTo("test.summary")),
+                                         hasDataPoints(hasItem(hasValue(equalTo(13D)))),
+                                         hasDimensions(allOf(hasEntry("operation", "batch"),
                                                              hasEntry("host", HOST),
                                                              hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
                                                              hasEntry("faultDomain", FAULT_DOMAIN))))),
@@ -139,7 +155,16 @@ class OciMetricsPublisherIntegrationTest {
                                          hasDataPoints(hasItem(hasValue(equalTo(17D)))),
                                          hasDimensions(allOf(hasEntry("host", HOST),
                                                              hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
-                                                             hasEntry("faultDomain", FAULT_DOMAIN)))))
+                                                             hasEntry("faultDomain", FAULT_DOMAIN))))),
+                           not(hasItem(hasName(equalTo("test.timer.count")))),
+                           not(hasItem(hasName(equalTo("test.timer.total")))),
+                           not(hasItem(hasName(equalTo("test.timer.mean")))),
+                           not(hasItem(hasName(equalTo("test.timer.max")))),
+                           not(hasItem(hasName(equalTo("test.timer.rate")))),
+                           not(hasItem(hasName(equalTo("test.summary.count")))),
+                           not(hasItem(hasName(equalTo("test.summary.total")))),
+                           not(hasItem(hasName(equalTo("test.summary.mean")))),
+                           not(hasItem(hasName(equalTo("test.summary.max"))))
                    ));
     }
 

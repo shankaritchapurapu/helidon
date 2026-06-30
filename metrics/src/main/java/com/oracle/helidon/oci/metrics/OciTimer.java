@@ -18,17 +18,19 @@ import io.helidon.metrics.api.MetricsFactory;
 import io.helidon.metrics.api.Timer;
 
 /**
- * OCI-backed timer with local count, total, and max state.
+ * OCI-backed timer with local one-minute rate state.
  */
 final class OciTimer extends AbstractOciMeter implements Timer {
 
     private final Clock clock;
     private final Timer delegate;
+    private final OciOneMinuteRate oneMinuteRate;
 
     OciTimer(Builder builder, OciMeterRegistry registry, Timer delegate, boolean enabled) {
         super(registry, delegate, enabled);
         this.clock = registry.clock();
         this.delegate = delegate;
+        this.oneMinuteRate = new OciOneMinuteRate(clock);
     }
 
     static Builder builder(String name) {
@@ -63,10 +65,7 @@ final class OciTimer extends AbstractOciMeter implements Timer {
             throw new IllegalArgumentException("Timer amount must be non-negative");
         }
         delegate.record(amount, unit);
-        if (enabled()) {
-            double normalizedDuration = OciUnitConverter.normalizeDuration(amount, unit, reportingTimeUnit());
-            registry().publisher().publishTimer(this, normalizedDuration);
-        }
+        oneMinuteRate.mark();
     }
 
     @Override
@@ -139,8 +138,8 @@ final class OciTimer extends AbstractOciMeter implements Timer {
         return delegate.max(unit);
     }
 
-    TimeUnit reportingTimeUnit() {
-        return registry().reportingTimeUnit();
+    double oneMinuteRate() {
+        return oneMinuteRate.rate();
     }
 
     static final class Builder extends AbstractOciMeterBuilder<Timer.Builder, Timer> implements Timer.Builder {

@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
@@ -411,6 +411,7 @@ class OciMetricsSemanticConventionsTest {
                 .orElseThrow();
         assertThat(summary.count(), greaterThanOrEqualTo(1L));
         assertThat(summary.totalAmount(), greaterThanOrEqualTo(successRate));
+        assertThat(((OciDistributionSummary) summary).intervalMeanIfChanged(), is(OptionalDouble.of(successRate)));
     }
 
     private static void assertCounterCount(MetricsTestHarness harness, String name, long count) {
@@ -485,7 +486,6 @@ class OciMetricsSemanticConventionsTest {
             MetricsFactory delegateFactory = delegateFactory(metricsConfig);
             OciMeterRegistry registry = new OciMeterRegistry(metricsConfig,
                                                              Clock.system(),
-                                                             TimeUnit.MILLISECONDS,
                                                              meter -> addCount.incrementAndGet(),
                                                              meter -> {
                                                              },

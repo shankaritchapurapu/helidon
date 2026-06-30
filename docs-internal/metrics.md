@@ -1,7 +1,7 @@
 # OCI Metrics Integration Notes
 
 ## Basic Functionality
-The Helidon OCI metrics integration library automatically sends the following metrics to the telemetry backend:
+The Helidon Talon metrics integration library automatically sends the following metrics to the telemetry backend:
 * Any Helidon metric registered by the service or its dependencies, whether imperatively using the neutral Helidon metrics API or declaratively using the Helidon `@Metrics.Timed` and `@Metrics.Counted` annotations.
 * Several JVM-related gauges.
 * A family of service-core-compatible automatic HTTP metrics covering all incoming HTTP requests:
@@ -188,8 +188,7 @@ Avoid migrating service-core-only metrics behavior that is intentionally out of 
 * service-log-only annotations
 
 ### Reporter Configuration
-The OCI metrics publisher now has a nested `reporter` configuration object. It collects settings which correspond to DropWizard's `BaseReporterFactory` reporter controls:
-* `duration-unit`: The time unit to use when normalizing timer durations before reporting them to OCI. The default is `milliseconds`.
+The OCI metrics publisher now has a nested `reporter` configuration object. It collects settings which correspond to service-core scheduled reporter controls:
 * `metrics-scope-name`: The root name segment used as the prefix for built-in JVM metric names. The default is `service`, so JVM metrics use names such as `service.jvm.memory.heap.used`.
 * `includes`: Metric names to include.
 * `excludes`: Metric names to exclude.
@@ -197,27 +196,32 @@ The OCI metrics publisher now has a nested `reporter` configuration object. It c
 * `includes-attributes`: Metric attribute names to include when reporting derived values.
 * `excludes-attributes`: Metric attribute names to exclude when reporting derived values.
 
-The DropWizard `BaseReporterFactory` also exposes a `rateUnit` setting, but Helidon OCI does not expose it because the
-service-core scheduled metrics reporter code does not seem to use it.
+The DropWizard `BaseReporterFactory` also exposes `durationUnit` and `rateUnit` settings, but Helidon Talon does not
+expose them. The service-core scheduled metrics reporter emits counters, gauges, and one-minute rates; it does not emit
+timer duration values, and its reported rates are events per second.
 
 Reporter include and exclude decisions apply to metric names only. Excludes take precedence over includes, and an empty `includes` list means all non-excluded metrics are eligible for publishing. The programmatic `filter` setting is intentionally not configurable from YAML; it exists only for code which builds the config directly.
 
 #### Heliport implications
-When Heliport migrates service-core `scheduled-metrics-reporter` configuration to Helidon OCI metrics configuration, it should map the legacy reporter settings into the single Helidon OCI publisher object at `metrics.publishers.oci`:
+When Heliport migrates service-core `scheduled-metrics-reporter` configuration to Helidon Talon metrics configuration, it should map the legacy reporter settings into the single Helidon Talon publisher object at `metrics.publishers.oci`:
 
-| service-core `scheduled-metrics-reporter` setting | Helidon OCI setting |
+| service-core `scheduled-metrics-reporter` setting | Helidon Talon setting |
 | --- | --- |
-| `durationUnit` | `duration-unit` |
 | `metricsScopeName` | `metrics-scope-name` |
 | `includes` | `includes` |
 | `excludes` | `excludes` |
 | legacy regex/substring matching flags | `filter-matching-mode` |
 | `includesAttributes` | `includes-attributes` |
 | `excludesAttributes` | `excludes-attributes` |
+| `frequency` | `sample-interval` |
 
-Heliport should not map the legacy scheduled reporter interval/frequency setting. Helidon OCI reports metric updates to the OCI metrics layer as those updates occur, except for gauges. Gauge sampling is controlled separately using `sample-gauges` and `gauge-sample-interval`.
+Helidon Talon samples metrics on the configured interval and does not report metric mutations to the OCI metrics layer as they happen. Heliport should map the legacy scheduled reporter interval/frequency setting to `sample-interval`. Counters use the configured metric name and emit interval deltas. Timers use the configured metric name and emit a single one-minute EWMA rate in events per second. Distribution summaries use the configured metric name and emit a single interval mean. This preserves service-core-style `SuccessRate` because it records `0.0` or `1.0`, so the interval mean is the success rate.
 
-Roughly speaking, a DropWizard reporter corresponds to a Helidon metrics publisher. The legacy OCI metrics configuration can specify multiple reporters, but Helidon OCI supports only one set of reporter-style controls in the `oci` metrics publisher. This is intentional: the legacy DropWizard-based approach periodically reported all metrics through each configured reporter, while Helidon OCI records most metric updates immediately as they happen. If a legacy config contains multiple scheduled metrics reporters, Heliport should choose or consolidate to one Helidon OCI publisher configuration and flag any ambiguous cases for review. If future requirements emerge to support multiple DW reporters, we can look at adding additional OCI-related metrics publishers to match.
+Heliport should not migrate legacy `durationUnit`; there is no Helidon Talon equivalent because no emitted timer metric
+contains timer duration values. Attribute filters still apply to sampled values: counters, gauges, and functional counters
+use `value`; timer one-minute EWMA rates use `m1_rate`; distribution summary interval means use `mean`.
+
+Roughly speaking, a DropWizard reporter corresponds to a Helidon metrics publisher. The legacy OCI metrics configuration can specify multiple reporters, but Helidon Talon supports only one set of reporter-style controls in the `oci` metrics publisher. This is intentional: both the legacy DropWizard-based approach and Helidon Talon periodically report metrics through configured reporter-style controls. If a legacy config contains multiple scheduled metrics reporters, Heliport should choose or consolidate to one Helidon Talon publisher configuration and flag any ambiguous cases for review. If future requirements emerge to support multiple DW reporters, we can look at adding additional OCI-related metrics publishers to match.
 
 Once Heliport identifies which `reporter` to migrate, it should map the `useRegExFilters` and `useSubstringMatching` booleans to the corresponding `FilterMatchingMode` enum value:
 

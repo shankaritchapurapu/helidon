@@ -176,6 +176,42 @@ class OciMetricsPublisherFilterTest {
     }
 
     @Test
+    void timerRateUsesOneMinuteRateAttributeFilter() {
+        OciMetricsPublisher publisher = publisher(builder -> builder.includesAttributes(
+                Set.of(OciMetricsPublisher.ONE_MINUTE_RATE_ATTRIBUTE)));
+
+        assertThat(publisher.shouldPublishTimerRate(new TestMeter("test.timer")), is(true));
+        assertThat(publisher.shouldPublishValue(new TestMeter("test.timer")), is(false));
+    }
+
+    @Test
+    void timerRateAttributeCanBeExcluded() {
+        OciMetricsPublisher publisher = publisher(builder -> builder.excludesAttributes(
+                Set.of(OciMetricsPublisher.ONE_MINUTE_RATE_ATTRIBUTE)));
+
+        assertThat(publisher.shouldPublishTimerRate(new TestMeter("test.timer")), is(false));
+        assertThat(publisher.shouldPublishValue(new TestMeter("test.timer")), is(true));
+    }
+
+    @Test
+    void distributionSummaryMeanUsesMeanAttributeFilter() {
+        OciMetricsPublisher publisher = publisher(builder -> builder.includesAttributes(
+                Set.of(OciMetricsPublisher.MEAN_ATTRIBUTE)));
+
+        assertThat(publisher.shouldPublishDistributionSummaryMean(new TestMeter("test.summary")), is(true));
+        assertThat(publisher.shouldPublishValue(new TestMeter("test.summary")), is(false));
+    }
+
+    @Test
+    void distributionSummaryMeanAttributeCanBeExcluded() {
+        OciMetricsPublisher publisher = publisher(builder -> builder.excludesAttributes(
+                Set.of(OciMetricsPublisher.MEAN_ATTRIBUTE)));
+
+        assertThat(publisher.shouldPublishDistributionSummaryMean(new TestMeter("test.summary")), is(false));
+        assertThat(publisher.shouldPublishValue(new TestMeter("test.summary")), is(true));
+    }
+
+    @Test
     void attributeExcludesSuppressListedAttributes() {
         OciMetricsPublisher publisher = publisher(builder -> builder.excludesAttributes(
                 Set.of(OciMetricsPublisher.VALUE_ATTRIBUTE)));

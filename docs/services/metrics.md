@@ -203,6 +203,14 @@ The OCI metrics publisher is configured as an entry under `metrics.publishers` w
 When publisher `availability-domain` or `fault-domain` is omitted, the OCI metrics publisher uses
 `oci.env.availability-domain` and `oci.env.fault-domain` when those values are available.
 
+The publisher samples metrics on `sample-interval`; metric mutation methods do not report directly to OCI.
+Counters are emitted as interval deltas using the configured metric name. Timers are emitted as a single one-minute
+EWMA rate, in events per second, using the configured metric name. Distribution summaries are emitted as a single
+interval mean using the configured metric name. `SuccessRate` records `0.0` or `1.0`, so its interval mean is the
+success rate.
+Attribute filters use `value` for counters, gauges, and functional counters, `m1_rate` for timer one-minute EWMA rates,
+and `mean` for distribution summary interval means.
+
 | Key | Default value | Description                                                                                                                                                      |
 |-----|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `type` | | Set to `oci` to use this publisher.                                                                                                                              |
@@ -213,17 +221,15 @@ When publisher `availability-domain` or `fault-domain` is omitted, the OCI metri
 | `endpoint` | | Optional monitoring ingestion endpoint override.                                                                                                                 |
 | `default-dimensions` | `{}` | Default dimensions for OCI `com.oracle.pic.telemetry.commons.metrics.Metrics.init`. Added to emitted metrics data that does not have any dimensions already set. |
 | `request-headers` | `{}` | Additional headers to send with OCI monitoring requests.                                                                                                         |
-| `sample-gauges` | `true` | Enables scheduled gauge and functional-counter sampling.                                                                                                         |
+| `sample-interval` | `PT1M` | Interval between scheduled metric samples.                                                                                                                       |
 | `enable-detailed-timing-auto-metrics` | `true` | Enables automatic HTTP `Time`, `ResourceTime`, `WireReadTime`, and `WireWriteTime` timers.                                                                       |
 | `resource-package-prefix` | | Optional package-name prefix for generated REST resources included in automatic HTTP metrics.                                                                    |
-| `duration-unit` | `milliseconds` | Unit for emitted timer duration values.                                                                                                                          |
 | `metrics-scope-name` | `service` | Root name segment used as the prefix for built-in JVM metric names.                                                                                              |
 | `includes` | `[]` | Metric names to include. An empty list includes all non-excluded metrics.                                                                                        |
 | `excludes` | `[]` | Metric names to exclude. Excludes take precedence over includes.                                                                                                 |
 | `filter-matching-mode` | `exact` | How to treat `includes` and `excludes` entries: `exact`, `regex`, or `substring`. Regex matching uses full-pattern semantics.                                    |
-| `includes-attributes` | `max`, `mean`, `min`, `stddev`, `p50`, `p75`, `p95`, `p98`, `p99`, `p999`, `count`, `m1_rate`, `m5_rate`, `m15_rate`, `mean_rate` | Metric attribute names to include when reporting derived values.                                                                                                 |
+| `includes-attributes` | `value`, `max`, `mean`, `min`, `stddev`, `total`, `p50`, `p75`, `p95`, `p98`, `p99`, `p999`, `count`, `m1_rate`, `m5_rate`, `m15_rate`, `mean_rate` | Metric attribute names to include when reporting derived values.                                                                                                 |
 | `excludes-attributes` | `[]` | Metric attribute names to exclude when reporting derived values.                                                                                                 |
-| `gauge-sample-interval` | `PT1M` | Interval between scheduled gauge and functional-counter samples.                                                                                                 |
 | `use-metadata-service` | | Optional flag passed to the OCI telemetry reporter builder.                                                                                                      |
 | `override-metric-keys` | | Optional flag passed to the OCI telemetry reporter builder.                                                                                                      |
 | `hostname` | | Optional hostname override for emitted dimensions.                                                                                                               |
@@ -242,7 +248,6 @@ metrics:
     - type: oci
       project: my-service
       fleet: my-fleet
-      duration-unit: seconds
       metrics-scope-name: my-service
       excludes:
         - "my-service\\.jvm\\..*"

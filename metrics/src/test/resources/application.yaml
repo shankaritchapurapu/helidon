@@ -12,6 +12,5 @@ metrics:
       availability-domain: iad-ad-1
       fault-domain: 1
       default-dimensions: {}
-      sample-gauges: true
-      gauge-sample-interval: PT1S
+      sample-interval: PT1S
       request-headers: {}

@@ -14,7 +14,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -34,7 +33,6 @@ final class OciMeterRegistry implements MeterRegistry {
     private final Set<MeterKey> deleted = ConcurrentHashMap.newKeySet();
     private final MetricsConfig metricsConfig;
     private final Clock clock;
-    private final TimeUnit reportingTimeUnit;
     private final OciMetricsPublisher publisher;
     private final MetricsFactory delegateFactory;
     private final MeterRegistry delegateRegistry;
@@ -43,7 +41,6 @@ final class OciMeterRegistry implements MeterRegistry {
 
     OciMeterRegistry(MetricsConfig metricsConfig,
                      Clock clock,
-                     TimeUnit reportingTimeUnit,
                      Consumer<Meter> onAdd,
                      Consumer<Meter> onRemove,
                      OciMetricsPublisher publisher,
@@ -51,7 +48,6 @@ final class OciMeterRegistry implements MeterRegistry {
                      MeterRegistry delegateRegistry) {
         this.metricsConfig = metricsConfig;
         this.clock = clock;
-        this.reportingTimeUnit = reportingTimeUnit;
         this.publisher = publisher;
         this.delegateFactory = delegateFactory;
         this.delegateRegistry = delegateRegistry;
@@ -59,32 +55,28 @@ final class OciMeterRegistry implements MeterRegistry {
         this.onRemoveListeners.add(onRemove);
     }
 
-    TimeUnit reportingTimeUnit() {
-        return reportingTimeUnit;
-    }
-
     OciMetricsPublisher publisher() {
         return publisher;
     }
 
     Collection<OciGauge<?>> gauges() {
-        List<OciGauge<?>> result = new ArrayList<>();
-        meters.values().forEach(meter -> {
-            if (meter instanceof OciGauge<?> gauge) {
-                result.add(gauge);
-            }
-        });
-        return List.copyOf(result);
+        return meters(OciGauge.class);
+    }
+
+    Collection<OciCounter> counters() {
+        return meters(OciCounter.class);
+    }
+
+    Collection<OciTimer> timers() {
+        return meters(OciTimer.class);
+    }
+
+    Collection<OciDistributionSummary> distributionSummaries() {
+        return meters(OciDistributionSummary.class);
     }
 
     Collection<OciFunctionalCounter<?>> functionalCounters() {
-        List<OciFunctionalCounter<?>> result = new ArrayList<>();
-        meters.values().forEach(meter -> {
-            if (meter instanceof OciFunctionalCounter<?> functionalCounter) {
-                result.add(functionalCounter);
-            }
-        });
-        return List.copyOf(result);
+        return meters(OciFunctionalCounter.class);
     }
 
     @Override
@@ -95,6 +87,17 @@ final class OciMeterRegistry implements MeterRegistry {
     @Override
     public Collection<Meter> meters(Predicate<Meter> predicate) {
         return meters.values().stream().filter(predicate).toList();
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Meter> Collection<T> meters(Class<?> type) {
+        List<T> result = new ArrayList<>();
+        meters.values().forEach(meter -> {
+            if (type.isInstance(meter)) {
+                result.add((T) meter);
+            }
+        });
+        return List.copyOf(result);
     }
 
     @Override

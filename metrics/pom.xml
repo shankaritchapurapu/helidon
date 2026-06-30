@@ -16,7 +16,7 @@
     <groupId>com.oracle.helidon.oci.metrics</groupId>
     <artifactId>helidon-oci-metrics</artifactId>
 
-    <name>Helidon OCI Metrics Integration</name>
+    <name>Helidon Talon Metrics Integration</name>
 
     <dependencies>
         <dependency>

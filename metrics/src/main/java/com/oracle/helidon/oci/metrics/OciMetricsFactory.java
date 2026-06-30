@@ -6,7 +6,6 @@ package com.oracle.helidon.oci.metrics;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -152,16 +151,13 @@ final class OciMetricsFactory implements MetricsFactory {
                                              MetricsConfig metricsConfig,
                                              Consumer<Meter> onAdd,
                                              Consumer<Meter> onRemove) {
-        TimeUnit reportingTimeUnit = publisherConfig.durationUnit();
         LOGGER.log(System.Logger.Level.TRACE,
-                   "Creating OCI meter registry; reportingTimeUnit={0}, publisherEnabled={1}, metersProviders={2}",
-                   reportingTimeUnit,
+                   "Creating OCI meter registry; publisherEnabled={0}, metersProviders={1}",
                    publisherConfig.enabled(),
                    metersProviders.size());
         MeterRegistry delegateRegistry = delegate.createMeterRegistry(clock, delegateMetricsConfig);
         OciMeterRegistry registry = new OciMeterRegistry(metricsConfig,
                                                          clock,
-                                                         reportingTimeUnit,
                                                          onAdd,
                                                          onRemove,
                                                          runtime.publisher(),

@@ -8,7 +8,9 @@ This library supports declarative and imperative Helidon metrics using OCI T2 me
 ### Design
 Most of this component is an implementation of the Helidon neutral metrics API, one that transmits metrics data via the OCI T2 APIs and also keeps minimal in-memory data to support most operations which get the current value of each meter type.
 
-This metrics provider augments updates to the internal values inside each counter, timer, and distribution summary (histogram) with invocations of the T2 `Metrics.sensor` method, thereby making those updates available for the T2 metrics library to transmit to the T2 backend. Because gauges are not updated via the metrics API but instead are wrappers around separately-updated values, we have no automatic way of discovering when a gauge's underlying value is updated. Therefore, this component includes periodic sampling of all registered gauges.
+This metrics provider keeps local values for counters, timers, distribution summaries, gauges, and functional counters, then periodically samples registered meters and invokes the T2 `Metrics.sensor` method. Application metric mutation paths do not report changes directly to T2.
+
+Sampled counters are emitted as interval deltas using the configured metric name. Timers are emitted as a single one-minute EWMA rate, in events per second, using the configured metric name. Distribution summaries are emitted as a single interval mean using the configured metric name. A `SuccessRate` distribution summary records `0.0` or `1.0`, so its interval mean is the success rate.
 
 The component uses Helidon configuration (config file or API) to programmatically set up the runtime behavior of T2, using several config blueprints and builders.
 
@@ -46,9 +48,8 @@ This component also includes a Helidon metrics publisher by which users control 
 Users can control the time unit in which Helidon timer data is expressed when sent to T2:
 * reporting time unit (default ms)
 
-Users can control the Helidon-specific periodic gauge sampling:
-* sample gauges (boolean, default true)
-* gauge sample interval (default 1 minute)
+Users can control the Helidon-specific periodic metric sampling interval:
+* sample interval (default 1 minute)
 
 
 Users configure these settings as the `oci` metrics publisher:
@@ -73,4 +74,3 @@ To publish metrics to T2, follow two main steps:
 
 Notes:
 * The region typically comes from the environment, but you can override it using configuration.
-

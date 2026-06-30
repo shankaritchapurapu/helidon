@@ -9,7 +9,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
 import io.helidon.builder.api.Option;
@@ -152,24 +151,6 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
     Map<String, String> requestHeaders();
 
     /**
-     * Whether gauges should be sampled and published on a schedule.
-     *
-     * @return gauge sampling flag
-     */
-    @Option.Configured
-    @Option.DefaultBoolean(true)
-    boolean sampleGauges();
-
-    /**
-     * Unit to report durations as.
-     *
-     * @return duration unit
-     */
-    @Option.Configured
-    @Option.DefaultCode("java.util.concurrent.TimeUnit.MILLISECONDS")
-    TimeUnit durationUnit();
-
-    /**
      * Metrics scope name prefix for built-in JVM meters.
      *
      * @return metrics scope name
@@ -219,7 +200,7 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
     @Option.Configured
     @Option.DefaultCode("""
             new java.util.LinkedHashSet<>(java.util.List.of("value",
-                                                            "max", "mean", "min", "stddev",
+                                                            "max", "mean", "min", "stddev", "total",
                                                             "p50", "p75", "p95", "p98", "p99", "p999",
                                                             "count", "m1_rate", "m5_rate",
                                                             "m15_rate", "mean_rate"))
@@ -252,12 +233,12 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
     Optional<String> resourcePackagePrefix();
 
     /**
-     * Interval between scheduled gauge samples.
+     * Interval between scheduled metric samples.
      *
-     * @return gauge sample interval
+     * @return sample interval
      */
     @Option.Configured
     @Option.Default("PT1M")
-    Duration gaugeSampleInterval();
+    Duration sampleInterval();
 
 }

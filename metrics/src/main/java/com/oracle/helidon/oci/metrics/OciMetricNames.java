@@ -29,8 +29,12 @@ final class OciMetricNames {
      * @return OCI {@code MetricName} corresponding to the Helidon meter
      */
     static MetricName create(Meter meter) {
+        return create(meter, meter.id().name());
+    }
+
+    static MetricName create(Meter meter, String name) {
         Map<String, String> dimensions = new LinkedHashMap<>(meter.id().tagsMap());
         meter.scope().ifPresent(scope -> dimensions.put(SCOPE_DIMENSION, scope));
-        return MetricName.of(meter.id().name(), dimensions);
+        return MetricName.of(name, dimensions);
     }
 }

@@ -5,6 +5,7 @@
 package com.oracle.helidon.oci.metrics;
 
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 import io.helidon.metrics.api.DistributionStatisticsConfig;
 import io.helidon.metrics.api.DistributionSummary;
@@ -13,10 +14,12 @@ import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.MetricsFactory;
 
 /**
- * OCI-backed distribution summary with local count, total, and max state.
+ * OCI-backed distribution summary.
  */
 final class OciDistributionSummary extends AbstractOciMeter implements DistributionSummary {
     private final DistributionSummary delegate;
+    private long intervalCount;
+    private double intervalTotal;
 
     OciDistributionSummary(Builder builder, OciMeterRegistry registry, DistributionSummary delegate, boolean enabled) {
         super(registry, delegate, enabled);
@@ -39,10 +42,7 @@ final class OciDistributionSummary extends AbstractOciMeter implements Distribut
             throw new IllegalArgumentException("Distribution summary amount must be non-negative");
         }
         delegate.record(amount);
-        if (enabled()) {
-            double normalizedAmount = OciUnitConverter.normalizeAmount(baseUnit(), amount);
-            registry().publisher().publishDistributionSummary(this, normalizedAmount);
-        }
+        updateInterval(OciUnitConverter.normalizeAmount(baseUnit(), amount));
     }
 
     @Override
@@ -68,6 +68,21 @@ final class OciDistributionSummary extends AbstractOciMeter implements Distribut
     @Override
     public HistogramSnapshot snapshot() {
         return delegate.snapshot();
+    }
+
+    synchronized OptionalDouble intervalMeanIfChanged() {
+        if (intervalCount == 0L) {
+            return OptionalDouble.empty();
+        }
+        double mean = intervalTotal / intervalCount;
+        intervalCount = 0L;
+        intervalTotal = 0D;
+        return OptionalDouble.of(mean);
+    }
+
+    private synchronized void updateInterval(double amount) {
+        intervalCount++;
+        intervalTotal += amount;
     }
 
     static final class Builder extends AbstractOciMeterBuilder<DistributionSummary.Builder, DistributionSummary>

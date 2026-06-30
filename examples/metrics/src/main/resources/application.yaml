@@ -15,6 +15,5 @@ metrics:
       project: helidon-metrics-test-project
       fleet: helidon-metrics-test-fleet
       default-dimensions: { }
-      sample-gauges: true
-      gauge-sample-interval: PT1S
+      sample-interval: PT1S
       request-headers: { }
