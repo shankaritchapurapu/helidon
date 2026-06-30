@@ -45,7 +45,7 @@
         <version.plugin.resources>3.3.1</version.plugin.resources>
         <version.plugin.splat-swagger-maven-plugin>0.3.9</version.plugin.splat-swagger-maven-plugin>
         <version.plugin.surefire>3.5.5</version.plugin.surefire>
-        <version.helidon.extensions.openapi-generator>4.0.0-RC2</version.helidon.extensions.openapi-generator>
+        <version.helidon.extensions.openapi-generator>4.0.0-RC3</version.helidon.extensions.openapi-generator>
     </properties>
 
     <repositories>
