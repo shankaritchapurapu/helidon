@@ -3,6 +3,7 @@
  */
 package com.oracle.helidon.oci.requestid.webserver;
 
+import io.helidon.common.Weight;
 import io.helidon.common.config.Config;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.spi.ServerFeature;
@@ -10,6 +11,8 @@ import io.helidon.webserver.spi.ServerFeature;
 /**
  * Server feature that adds support for Request ID to Helidon WebServer.
  */
+// after Context, before AccessLog
+@Weight(1050)
 public class RequestIdServerFeature implements ServerFeature {
     static final String TYPE = "oci-request-id";
 

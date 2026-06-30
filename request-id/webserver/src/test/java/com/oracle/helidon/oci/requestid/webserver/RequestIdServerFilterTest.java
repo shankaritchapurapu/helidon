@@ -4,6 +4,7 @@
 
 package com.oracle.helidon.oci.requestid.webserver;
 
+import io.helidon.common.Weights;
 import io.helidon.common.context.Context;
 import io.helidon.common.context.Contexts;
 import io.helidon.common.testing.http.junit5.HttpHeaderMatcher;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import static com.oracle.helidon.oci.requestid.webserver.RequestIdServerFilter.OCI_REQUEST_ID_HEADER;
 import static io.helidon.common.testing.junit5.OptionalMatcher.optionalValue;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -36,6 +38,12 @@ class RequestIdServerFilterTest {
     @BeforeAll
     static void setup() {
         LogConfig.configureRuntime();
+    }
+
+    @Test
+    void testFeatureControlsRegistrationOrder() {
+        assertThat(Weights.find(RequestIdServerFeature.create(), 100), is(1050.0));
+        assertThat(Weights.find(new RequestIdServerFilter(), 100), is(100.0));
     }
 
     @Test
@@ -84,6 +92,22 @@ class RequestIdServerFilterTest {
         assertThat(context.get(OciRequestId.class)
                            .map(OciRequestId::upstreamHeaderValue),
                    optionalValue(is(reqHeaders.get(OCI_REQUEST_ID_HEADER).getString())));
+    }
+
+    @Test
+    void testMalformedRequestIdHeader() {
+        WritableHeaders<?> reqHeaders = WritableHeaders.create();
+        reqHeaders.set(OCI_REQUEST_ID_HEADER, "/");
+        ServerResponseHeaders resHeaders = ServerResponseHeaders.create();
+
+        RequestIdServerFilter filter = new RequestIdServerFilter();
+        filter.filter(mockFilterChain(),
+                      mockRoutingRequest(reqHeaders),
+                      mockRoutingResponse(resHeaders));
+
+        assertThat(reqHeaders.get(OCI_REQUEST_ID_HEADER).getString(), notNullValue());
+        assertThat(reqHeaders.get(OCI_REQUEST_ID_HEADER).getString(), not("/"));
+        assertThat(resHeaders.get(OCI_REQUEST_ID_HEADER), is(reqHeaders.get(OCI_REQUEST_ID_HEADER)));
     }
 
     @Test

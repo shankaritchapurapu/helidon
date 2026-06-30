@@ -46,24 +46,26 @@ record OciRequestIdImpl(String customerId, String traceId, String spanId) implem
     static OciRequestId parseUpstreamRequest(String headerValue) {
         Objects.requireNonNull(headerValue);
 
-        String[] parts = headerValue.split(DELIMITER);
+        String[] parts = headerValue.split(DELIMITER, -1);
 
         if (parts.length == 1) {
             // only customer id (maybe empty)
             return new OciRequestIdImpl(clean(headerValue), generateUniqueId(), generateUniqueId());
         }
-        if (parts.length == 2) {
-            // customer id and trace id
-            return new OciRequestIdImpl(clean(parts[0]), clean(parts[1]), generateUniqueId());
-        }
         if (parts.length == 3) {
             // this is invalid, span id should never be sent from upstream services
             warnInvalid("Received upstream request id with spanId.", parts);
-        } else {
+        } else if (parts.length > 3) {
             // this is invalid, wrong number of parts
-            warnInvalid("Received upstream request id with to many elements: " + parts.length + ".", parts);
+            warnInvalid("Received upstream request id with too many elements: " + parts.length + ".", parts);
         }
-        return new OciRequestIdImpl(clean(parts[0]), clean(parts[1]), generateUniqueId());
+
+        String traceId = clean(parts[1]);
+        if (traceId.isEmpty()) {
+            warnInvalid("Received upstream request id with empty traceId.", parts);
+            traceId = generateUniqueId();
+        }
+        return new OciRequestIdImpl(clean(parts[0]), traceId, generateUniqueId());
     }
 
     static OciRequestId parseDownstreamResponse(OciRequestId requestId, String headerValue) {

@@ -46,6 +46,8 @@ import com.oracle.pic.sherlock.collector.AuditEventV2Validator;
 import com.oracle.pic.sherlock.common.event.AuditEventV2;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
@@ -124,11 +126,17 @@ class AuditV2FeatureTest {
                         .resources("/get")
                         .values("reqparam1")
                         .build()))
-                .requestHeaderRules(List.of(RuleConfig.builder()
-                        .actions("GET")
-                        .resources("/get")
-                        .values("reqheader1")
-                        .build()))
+                .requestHeaderRules(List.of(
+                        RuleConfig.builder()
+                                .actions("GET")
+                                .resources("/get")
+                                .values("reqheader1")
+                                .build(),
+                        RuleConfig.builder()
+                                .actions("GET")
+                                .resources("/get")
+                                .values("opc-request-id")
+                                .build()))
                 .responseHeaderRules(List.of(RuleConfig.builder()
                         .actions("GET")
                         .resources("/get")
@@ -313,11 +321,37 @@ class AuditV2FeatureTest {
 
         String content = Files.readString(auditFile, StandardCharsets.UTF_8);
         assertThat(content, containsString("test-source|com.oraclecloud.test-source.test|test|"
-                                                   + DEFAULT_COMPARTMENT_ID + "|resource-3|ID 1|/get|GET|200 OK"
-                                                   + "|param1|header1"));
+                                                   + DEFAULT_COMPARTMENT_ID + "|resource-3|"));
         assertThat(content, containsString("test-source|com.oraclecloud.test-source.test|test|"
-                                                   + DEFAULT_COMPARTMENT_ID + "|resource-2|ID 1|/get|GET|200 OK"
-                                                   + "|param1|header1"));
+                                                   + DEFAULT_COMPARTMENT_ID + "|resource-2|"));
+        assertThat(content, containsString("|/get|GET|200 OK|param1|header1"));
+        assertThat(content, not(containsString("ID 1")));
+    }
+
+    @Test
+    void shouldIgnoreUntrustedRequestIdWithoutRequestIdContext() throws Exception {
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+
+        try (Http1ClientResponse response = client.get("/get")
+                .header(OPC_REQUEST_ID_HEADER, "csidINJECTED!/trace?$")
+                .request()) {
+            assertThat(response.status(), is(Status.OK_200));
+        }
+
+        Mockito.verify(auditLogger, Mockito.timeout(2000).atLeast(2))
+                .log(captor.capture());
+        AuditEventV2.Data data = captor.getAllValues().get(0).getData();
+        String safeRequestId = data.getRequest().getId();
+
+        UUID.fromString(safeRequestId);
+        assertThat(data.getIdentity().getConsoleSessionId(), nullValue());
+
+        String[] requestIdHeader = data.getRequest().getHeaders().get(OPC_REQUEST_ID_HEADER.lowerCase());
+        assertThat(requestIdHeader, notNullValue());
+        assertThat(requestIdHeader[0], is(safeRequestId));
+        assertThat(requestIdHeader[0], not(containsString("!")));
+        assertThat(requestIdHeader[0], not(containsString("?")));
+        assertThat(requestIdHeader[0], not(containsString("$")));
     }
 
     private static String auditLine(AuditEventV2 event) {

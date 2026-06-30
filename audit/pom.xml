@@ -52,6 +52,11 @@
             <artifactId>helidon-config-metadata</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.oracle.helidon.oci.requestid</groupId>
+            <artifactId>helidon-oci-request-id</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.json</groupId>
             <artifactId>helidon-json</artifactId>
         </dependency>

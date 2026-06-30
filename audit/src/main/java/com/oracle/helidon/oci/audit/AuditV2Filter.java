@@ -28,6 +28,7 @@ import io.helidon.webserver.http.FilterChain;
 import io.helidon.webserver.http.RoutingRequest;
 import io.helidon.webserver.http.RoutingResponse;
 
+import com.oracle.helidon.oci.requestid.OciRequestId;
 import com.oracle.pic.sherlock.collector.AuditConfig.Whitelist;
 import com.oracle.pic.sherlock.collector.AuditConfig.Whitelist.Rule;
 import com.oracle.pic.sherlock.collector.AuditLogger;
@@ -284,18 +285,18 @@ class AuditV2Filter implements Filter {
         headers.find(HeaderNames.USER_AGENT).ifPresent(header -> identity.setUserAgent(header.get()));
         req.setPath(path);
         req.setAction(action);
-        headers.find(REQUEST_ID_HEADER_NAME).ifPresentOrElse(
-                header -> {
-                    String id = header.get();
-                    req.setId(id);
-                    if (id.toLowerCase().startsWith("csid")) {
-                        int idx = id.indexOf('/');
-                        if (idx > 0) {
-                            identity.setConsoleSessionId(id.substring(0, idx));
-                        }
-                    }
-                }, () -> req.setId(eventId));
-        addRequestHeaders(request, req);
+        String requestIdHeaderValue = request.context()
+                .get(OciRequestId.class)
+                .map(OciRequestId::upstreamHeaderValue)
+                .orElse(eventId);
+        req.setId(requestIdHeaderValue);
+        if (requestIdHeaderValue.toLowerCase().startsWith("csid")) {
+            int idx = requestIdHeaderValue.indexOf('/');
+            if (idx > 0) {
+                identity.setConsoleSessionId(requestIdHeaderValue.substring(0, idx));
+            }
+        }
+        addRequestHeaders(request, req, requestIdHeaderValue);
         addRequestParameters(request, req);
         return data;
     }
@@ -329,7 +330,7 @@ class AuditV2Filter implements Filter {
         }
     }
 
-    private void addRequestHeaders(RoutingRequest request, Request req) {
+    private void addRequestHeaders(RoutingRequest request, Request req, String requestIdHeaderValue) {
         Map<String, String[]> headers = Map.of();
         if (whitelister.requestHeadersWhitelisted(req.getPath(), req.getAction())) {
             headers = new HashMap<>();
@@ -340,6 +341,8 @@ class AuditV2Filter implements Filter {
                     if (HeaderNames.AUTHORIZATION.lowerCase().equals(header.name())
                             || REQUEST_OPC_PRINCIPAL_NAME.lowerCase().equals(header.name())) {
                         values = new String[] {"*****"};
+                    } else if (REQUEST_ID_HEADER_NAME.lowerCase().equals(header.name())) {
+                        values = new String[] {requestIdHeaderValue};
                     }
                     headers.put(header.name().toString(), values);
                 }

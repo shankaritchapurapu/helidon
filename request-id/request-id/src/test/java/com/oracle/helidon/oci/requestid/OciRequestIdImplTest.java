@@ -3,6 +3,8 @@
  */
 package com.oracle.helidon.oci.requestid;
 
+import java.util.List;
+
 import io.helidon.logging.common.LogConfig;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -64,5 +66,23 @@ class OciRequestIdImplTest {
         assertThat(ociRequestId.customerId(), is("1"));
         assertThat(ociRequestId.traceId(), is("2"));
         assertThat(ociRequestId.spanId(), not("3"));
+    }
+
+    @Test
+    void testMalformedUpstreamValuesDoNotThrow() {
+        for (String id : List.of("", "/", "//", "///", "////", "customer/", "customer/!", "tenant/!!!/ignored")) {
+            OciRequestId ociRequestId = OciRequestIdImpl.parseUpstreamRequest(id);
+            assertThat(ociRequestId.traceId(), not(""));
+            assertThat(ociRequestId.spanId(), not(""));
+        }
+    }
+
+    @Test
+    void testMalformedUpstreamValuePreservesCustomerId() {
+        OciRequestId ociRequestId = OciRequestIdImpl.parseUpstreamRequest("customer/");
+
+        assertThat(ociRequestId.customerId(), is("customer"));
+        assertThat(ociRequestId.traceId(), not(""));
+        assertThat(ociRequestId.spanId(), not(""));
     }
 }

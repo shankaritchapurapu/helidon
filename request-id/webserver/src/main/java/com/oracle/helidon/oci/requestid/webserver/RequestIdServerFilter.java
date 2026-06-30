@@ -4,7 +4,6 @@
 
 package com.oracle.helidon.oci.requestid.webserver;
 
-import io.helidon.common.Weight;
 import io.helidon.http.Header;
 import io.helidon.http.HeaderName;
 import io.helidon.http.HeaderNames;
@@ -24,8 +23,6 @@ import com.oracle.helidon.oci.requestid.OciRequestId;
  * available in the MDC context for logging, and to the Helidon context for general
  * processing of the request.
  */
-// after Context, before AccessLog
-@Weight(1050)
 class RequestIdServerFilter implements Filter {
     static final HeaderName OCI_REQUEST_ID_HEADER = HeaderNames.create(OciRequestId.OCI_REQUEST_ID);
 
