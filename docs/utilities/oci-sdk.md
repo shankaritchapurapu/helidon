@@ -107,6 +107,12 @@ Service-principal authentication adds the `service-principal` authentication met
 `S2SAuthenticationDetailsProvider` using ODO instance principal material, then exposes it through the same
 `BasicAuthenticationDetailsProvider` contract used by the other authentication methods.
 
+Service-principal configuration is part of the shared `OciConfig`. For the normal declarative configuration path,
+put the complete `helidon.oci` configuration in `oci-config.yaml`, including
+`authentication.service-principal`. The service-principal module reads this subtree from the configuration retained
+by `OciConfig`; it does not read service-principal settings from the application `Config` assembled by
+`meta-config.*`.
+
 Enable it by adding the service-principal authentication dependency and selecting the method:
 
 ```yaml
@@ -207,6 +213,10 @@ The selected provider is controlled only by configuration and classpath contents
 
 Common `helidon.oci` authentication keys:
 
+These keys are loaded together as `OciConfig`. In particular, do not split the
+`helidon.oci.authentication.service-principal` subtree into an application source configured through
+`meta-config.*`; keep it with the rest of `helidon.oci` in `oci-config.yaml`.
+
 | Key | Default value | Description |
 |-----|---------------|-------------|
 | `helidon.oci.authentication-method` | `auto` | Authentication method to use. Set to `service-principal` to require service-principal auth. |
@@ -224,7 +234,8 @@ Common `helidon.oci` authentication keys:
 | `helidon.oci.authentication.service-principal.certificates[].passphrase` | `""` | Optional private key passphrase. |
 
 Service-principal support uses `region`, `federation-endpoint`, `imds-base-uri`, and `tenant-id` when
-they are configured. Explicit certificate mode also uses `authentication.service-principal`.
+they are configured. Explicit certificate mode also uses `authentication.service-principal`. These settings must
+come from the same `OciConfig` source.
 
 ---
 

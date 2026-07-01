@@ -123,7 +123,7 @@ class ServicePrincipalBuilderProviderTest {
         )));
 
         OciConfig ociConfig = OciConfig.create(config.get("helidon.oci"));
-        ServicePrincipalMethodConfig servicePrincipalConfig = ServicePrincipalConfigProvider.create(config).get();
+        ServicePrincipalMethodConfig servicePrincipalConfig = ServicePrincipalConfigProvider.create(ociConfig).get();
 
         assertThat(ociConfig.authenticationMethod(), is("service-principal"));
         assertThat(ociConfig.federationEndpoint().orElseThrow(),

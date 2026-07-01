@@ -1,0 +1,18 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+helidon:
+  oci:
+    authentication-method: "service-principal"
+    imds-base-uri: "http://instance-metadata.svc.ad1.r1/opc/v2/"
+    federation-endpoint: "https://authservice-alpha-preprod.svc.ad2.r1"
+    tenant-id: "ocid1.tenancy.oc1..testserviceprincipal"
+    authentication:
+      service-principal:
+        use-instance-principal: false
+        certificates:
+          - certificate: "cert.pem"
+            private-key: "key.pem"
+            passphrase: ""
+          - certificate: "intermediates.pem"

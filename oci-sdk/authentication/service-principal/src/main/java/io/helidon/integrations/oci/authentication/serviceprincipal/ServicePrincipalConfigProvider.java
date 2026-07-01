@@ -4,38 +4,44 @@
 
 package io.helidon.integrations.oci.authentication.serviceprincipal;
 
+import java.lang.System.Logger.Level;
 import java.util.function.Supplier;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
-import io.helidon.config.Config;
+import io.helidon.integrations.oci.OciConfig;
 import io.helidon.service.registry.Service;
 
 /**
- * Provides service-principal-specific configuration without extending the common OCI config contract.
+ * Provides service-principal-specific configuration from the raw configuration retained by the common OCI config
+ * contract.
  */
 @Service.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT - 30)
 class ServicePrincipalConfigProvider implements Supplier<ServicePrincipalMethodConfig> {
-    private static final String CONFIG_PREFIX = "helidon.oci.authentication.service-principal";
+    private static final System.Logger LOGGER = System.getLogger(ServicePrincipalConfigProvider.class.getName());
+    private static final String CONFIG_KEY = "authentication.service-principal";
 
-    private final Config config;
+    private final OciConfig config;
 
     @Service.Inject
-    ServicePrincipalConfigProvider(Config config) {
+    ServicePrincipalConfigProvider(OciConfig config) {
         this.config = config;
     }
 
-    static ServicePrincipalConfigProvider create(Config config) {
+    static ServicePrincipalConfigProvider create(OciConfig config) {
         return new ServicePrincipalConfigProvider(config);
     }
 
     @Override
     public ServicePrincipalMethodConfig get() {
-        Config servicePrincipalConfig = config.get(CONFIG_PREFIX);
-        if (servicePrincipalConfig.exists()) {
-            return ServicePrincipalMethodConfig.create(servicePrincipalConfig);
+        if (LOGGER.isLoggable(Level.DEBUG)) {
+            LOGGER.log(Level.DEBUG, "Reading service-principal configuration from OciConfig");
         }
-        return ServicePrincipalMethodConfig.create();
+        return config.config()
+                .map(ociConfig -> ociConfig.get(CONFIG_KEY))
+                .filter(io.helidon.common.config.Config::exists)
+                .map(ServicePrincipalMethodConfig::create)
+                .orElseGet(ServicePrincipalMethodConfig::create);
     }
 }
