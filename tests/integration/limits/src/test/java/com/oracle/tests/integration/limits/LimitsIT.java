@@ -47,6 +47,13 @@ class LimitsIT {
     }
 
     @Test
+    void clientUsesPhoenixEndpoint() {
+        LimitsDPClient client = Services.get(LimitsDPClient.class);
+        assertEquals("https://limits.us-phoenix-1.oci.oraclecloud.com", client.getEndpoint(),
+                     "Limits endpoint should be derived from the test instance region");
+    }
+
+    @Test
     void getsServiceLimitServiceGroups() {
         LOGGER.log(System.Logger.Level.DEBUG, "Resolving LimitsDPClient");
         LimitsDPClient client = Services.get(LimitsDPClient.class);

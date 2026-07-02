@@ -8,6 +8,7 @@ authentication, endpoint resolution, and basic service reachability without requ
 
 The test checks:
 
+- endpoint resolution for the Phoenix test instance
 - `getServiceLimitServiceGroups`, using the visible service group list
 - `getServiceLimits`, using the public `database` service group
 

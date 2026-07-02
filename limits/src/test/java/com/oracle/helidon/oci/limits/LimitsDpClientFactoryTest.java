@@ -145,16 +145,13 @@ class LimitsDpClientFactoryTest {
                 .build();
 
         OciConfig effective = LimitsAuthProviderFactory.effectiveOciConfig(
-                LimitsConfig.builder()
-                        .region(Region.US_PHOENIX_1)
-                        .build(),
                 OciConfig.builder()
                         .region(Region.US_ASHBURN_1)
                         .tenantId("ocid1.tenancy.oc1..common")
                         .build(),
                 servicePrincipalConfig);
 
-        assertEquals(Region.US_PHOENIX_1, effective.region().orElseThrow());
+        assertEquals(Region.US_ASHBURN_1, effective.region().orElseThrow());
         assertEquals("ocid1.tenancy.oc1..limits", effective.tenantId().orElseThrow());
         assertEquals(URI.create("https://auth.test.oraclecloud.com/v1/x509"),
                      effective.federationEndpoint().orElseThrow());
@@ -165,7 +162,6 @@ class LimitsDpClientFactoryTest {
     @Test
     void limitsAuthPreservesCommonImdsConfig() {
         OciConfig effective = LimitsAuthProviderFactory.effectiveOciConfig(
-                LimitsConfig.builder().build(),
                 OciConfig.builder()
                         .imdsBaseUri(URI.create("http://127.0.0.1:8000/opc/v2/"))
                         .imdsTimeout(Duration.ofSeconds(3))

@@ -109,7 +109,6 @@ grouped under `oci.limits.client`.
 | Config Key | Default Value | Description |
 |------------|---------------|-------------|
 | `oci.limits.endpoint` | unset | Optional explicit OCI Limits endpoint override. |
-| `oci.limits.region` | unset | Optional region override used when building module-local auth. |
 | `oci.limits.auth.authentication-method` | `service-principal` | Authentication method for the Limits client. Only `service-principal` is supported for module-local auth. |
 | `oci.limits.auth.service-principal.federation-endpoint` | unset | Optional service-principal federation endpoint override. |
 | `oci.limits.auth.service-principal.tenant-id` | unset | Optional tenant OCID used by service-principal auth. |
@@ -119,6 +118,10 @@ grouped under `oci.limits.client`.
 | `oci.limits.client.connection-timeout` | `PT10S` | OCI SDK connection timeout. |
 | `oci.limits.client.read-timeout` | `PT1M` | OCI SDK read timeout. |
 | `oci.limits.client.max-async-threads` | `50` | Maximum async worker threads used by OCI SDK asynchronous helpers and waiters. |
+
+The module-local service-principal provider obtains its region from the shared `OciConfig`. Configure
+`helidon.oci.region` with the other `helidon.oci` settings in `oci-config.yaml`; see
+[OCI SDK configuration](../utilities/oci-sdk.md#configuration).
 
 If `client` is absent, the module uses `ClientConfiguration.builder().build()` from the OCI SDK. That provides the
 OCI SDK defaults: 10 seconds connection timeout, 60 seconds read timeout, and 50 max async threads.

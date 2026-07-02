@@ -72,7 +72,7 @@ final class LimitsAuthProviderFactory {
 
         ServicePrincipalAuthConfig servicePrincipalConfig = auth.servicePrincipal()
                 .orElseGet(ServicePrincipalAuthConfig::create);
-        OciConfig effectiveConfig = effectiveOciConfig(limitsConfig, ociConfig, servicePrincipalConfig);
+        OciConfig effectiveConfig = effectiveOciConfig(ociConfig, servicePrincipalConfig);
         validateExplicitServicePrincipalConfig(effectiveConfig, servicePrincipalConfig);
         return servicePrincipalAuthProvider(effectiveConfig, servicePrincipalConfig)
                 .orElseThrow(() -> new IllegalStateException("oci.limits.auth service-principal requires "
@@ -104,11 +104,10 @@ final class LimitsAuthProviderFactory {
         }
     }
 
-    static OciConfig effectiveOciConfig(LimitsConfig limitsConfig,
-                                        OciConfig ociConfig,
+    static OciConfig effectiveOciConfig(OciConfig ociConfig,
                                         ServicePrincipalAuthConfig servicePrincipalConfig) {
         OciConfig.Builder builder = OciConfig.builder(ociConfig);
-        limitsConfig.region().ifPresent(builder::region);
+        ociConfig.region().ifPresent(builder::region);
         servicePrincipalConfig.federationEndpoint().ifPresent(builder::federationEndpoint);
         servicePrincipalConfig.tenantId().ifPresent(builder::tenantId);
         servicePrincipalConfig.imdsBaseUri().ifPresent(builder::imdsBaseUri);
