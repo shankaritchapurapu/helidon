@@ -66,5 +66,5 @@ mvn test
 
 ## Overview
 
-For more details, please check [Audit](../../docs/audit.md) under
+For more details, please check [Audit](../../docs/services/audit.md) under
 [Helidon-OCI Native Services Integration Guide](../../docs/README.md).
