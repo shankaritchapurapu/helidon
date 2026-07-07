@@ -5,12 +5,14 @@ metrics:
   publishers:
     - type: oci
       enabled: true
-      project: test-project
-      fleet: test-fleet
-      region: us-ashburn-1
-      hostname: test-host
-      availability-domain: iad-ad-1
-      fault-domain: 1
+      reporter:
+        overlay:
+          project: test-project
+          fleet: test-fleet
+          region: us-ashburn-1
+          hostname: test-host
+          availability-domain: iad-ad-1
+          fault-domain: 1
+          request-headers: {}
       default-dimensions: {}
       sample-interval: PT1S
-      request-headers: {}

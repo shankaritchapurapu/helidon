@@ -17,14 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.helidon.Main;
-import io.helidon.service.registry.Services;
 import io.helidon.spi.HelidonShutdownHandler;
 
-import com.oracle.bmc.monitoring.Monitoring;
-import com.oracle.pic.commons.util.Region;
+import com.oracle.pic.telemetry.commons.metrics.MetricReporter;
 import com.oracle.pic.telemetry.commons.metrics.Metrics;
-import com.oracle.pic.telemetry.commons.metrics.TelemetryReporter;
-import com.oracle.pic.telemetry.commons.metrics.TelemetryReporterBuilder;
 
 /**
  * OCI Telemetry Runtime which oversees the Helidon Talon metrics implementation, primarily:
@@ -53,7 +49,6 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
     private final AtomicBoolean started = new AtomicBoolean();
     private final AtomicBoolean closed = new AtomicBoolean();
     private volatile ScheduledExecutorService samplingExecutor;
-    private volatile Monitoring monitoring;
     private volatile boolean initializedMetrics;
 
     OciTelemetryRuntime(OciMetricsPublisherConfig config) {
@@ -120,12 +115,12 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                 LOGGER.log(System.Logger.Level.TRACE, "Shutting down OCI Metrics");
                 Metrics.shutdown();
             }
-            Monitoring monitoringClient = monitoring;
-            if (monitoringClient != null) {
+            MetricReporter reporter = config.reporter();
+            if (reporter instanceof AutoCloseable closeable) {
                 try {
-                    monitoringClient.close();
+                    closeable.close();
                 } catch (Exception e) {
-                    LOGGER.log(System.Logger.Level.WARNING, "Error closing Monitoring client", e);
+                    LOGGER.log(System.Logger.Level.WARNING, "Error closing OCI metrics reporter", e);
                 }
             }
         } finally {
@@ -162,7 +157,14 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
             publisher.stop();
             return;
         }
-        if (config.project().isEmpty() || config.fleet().isEmpty()) {
+        /*
+        The reporterConfig will be either for overlay or substrate, according to the overall OCI metrics publisher config, and
+        therefore so will be reporter itself be either for overlay or substrate.
+         */
+        OciMetricReporterConfig reporterConfig = config.reporterConfig();
+        MetricReporter configuredReporter = config.reporter();
+        if (configuredReporter instanceof DeferredMetricReporter
+                && (reporterConfig.project().isEmpty() || reporterConfig.fleet().isEmpty())) {
             LOGGER.log(System.Logger.Level.WARNING,
                        "OCI metrics provider is enabled but project/fleet are not fully configured; publishing is disabled.");
             publisher.stop();
@@ -174,36 +176,25 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                        "Helidon Talon metrics runtime found OCI Metrics object already initialized; Helidon Talon metrics config "
                                + "was not applied.");
         } else {
-            monitoring = config.monitoring().orElseGet(() -> Services.get(Monitoring.class));
-            Region region = RegionSupport.resolve(config.region(), () -> Services.get(Region.class));
-            String publicRegionName = region.getPublicRegionName();
-            Optional<String> hostName = effectiveHostName(config);
-            LOGGER.log(System.Logger.Level.TRACE, "Resolved OCI region: {0}", region.getInternalName());
             LOGGER.log(System.Logger.Level.TRACE,
-                       "Initializing OCI telemetry runtime; project={0}, fleet={1}, region={2}, monitoringFromConfig={3}",
-                       config.project().orElse(""),
-                       config.fleet().orElse(""),
-                       publicRegionName,
-                       config.monitoring().isPresent());
-            TelemetryReporterBuilder builder = new TelemetryReporterBuilder()
-                    .monitoringClient(monitoring)
-                    .project(config.project().orElseThrow())
-                    .fleet(config.fleet().orElseThrow())
-                    .postMetricsRequestHeaders(config.requestHeaders());
-            hostName.ifPresent(builder::hostname);
-            config.useMetadataService().ifPresent(builder::useMetadataService);
-            config.overrideMetricKeys().ifPresent(builder::shouldOverrideMetricKeys);
-            config.availabilityDomain().ifPresent(builder::availabilityDomain);
-            config.faultDomain().ifPresent(builder::faultDomain);
-            builder.region(publicRegionName);
-            TelemetryReporter reporter = builder.build();
-            Metrics.init(reporter, config.defaultDimensions());
+                       "Initializing OCI telemetry runtime; project={0}, fleet={1}, reporterType={2}",
+                       reporterConfig.project().orElse(""),
+                       reporterConfig.fleet().orElse(""),
+                       reporterConfig.type());
+            Metrics.init(reporter(configuredReporter), config.defaultDimensions());
             initializedMetrics = true;
             LOGGER.log(System.Logger.Level.TRACE,
                        "Initialized telemetry Metrics runtime; defaultDimensions={0}",
                        config.defaultDimensions());
         }
         scheduleSampling();
+    }
+
+    private static MetricReporter reporter(MetricReporter reporter) {
+        if (reporter instanceof DeferredMetricReporter deferredReporter) {
+            return deferredReporter.initialize();
+        }
+        return reporter;
     }
 
     private void scheduleSampling() {
@@ -227,12 +218,15 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                                      TimeUnit.MILLISECONDS);
     }
 
-    static Optional<String> effectiveHostName(OciMetricsPublisherConfig config) {
-        return effectiveHostName(config, () -> InetAddress.getLocalHost().getHostName());
+    static Optional<String> effectiveHostName(OciMetricReporterConfig config) {
+        return effectiveHostName(config.hostname(), () -> InetAddress.getLocalHost().getHostName());
     }
 
-    static Optional<String> effectiveHostName(OciMetricsPublisherConfig config, Callable<String> resolver) {
-        Optional<String> configuredHostName = config.hostname();
+    static Optional<String> effectiveHostName(OciMetricReporterConfig config, Callable<String> resolver) {
+        return effectiveHostName(config.hostname(), resolver);
+    }
+
+    private static Optional<String> effectiveHostName(Optional<String> configuredHostName, Callable<String> resolver) {
         if (configuredHostName.isPresent()) {
             return configuredHostName;
         }

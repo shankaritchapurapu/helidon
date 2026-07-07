@@ -15,6 +15,12 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import io.helidon.service.registry.Services;
+
+import com.oracle.pic.telemetry.commons.metrics.MetricReporter;
+import com.oracle.pic.telemetry.commons.metrics.Metrics;
+import com.oracle.pic.telemetry.commons.metrics.model.TimeSeries;
+import com.oracle.pic.telemetry.dianoga.MetricTimeSeriesClient;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -22,15 +28,17 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class OciTelemetryRuntimeTest {
 
     @Test
     void configuredHostNameWinsWithoutCallingResolver() {
         AtomicBoolean called = new AtomicBoolean();
-        OciMetricsPublisherConfig config = publisherConfigBuilder()
+        OverlayMetricReporterConfig config = overlayReporterConfigBuilder()
                 .hostname("configured-host")
-                .buildPrototype();
+                .build();
 
         Optional<String> hostName = OciTelemetryRuntime.effectiveHostName(config, () -> {
             called.set(true);
@@ -43,7 +51,7 @@ class OciTelemetryRuntimeTest {
 
     @Test
     void missingHostNameUsesResolver() {
-        OciMetricsPublisherConfig config = publisherConfigBuilder().buildPrototype();
+        OverlayMetricReporterConfig config = overlayReporterConfigBuilder().build();
 
         Optional<String> hostName = OciTelemetryRuntime.effectiveHostName(config, () -> "resolved-host");
 
@@ -55,7 +63,7 @@ class OciTelemetryRuntimeTest {
         CapturingLogHandler logHandler = CapturingLogHandler.attachTo(OciTelemetryRuntime.class);
         UnknownHostException failure = new UnknownHostException("test-host");
         try {
-            OciMetricsPublisherConfig config = publisherConfigBuilder().buildPrototype();
+            OverlayMetricReporterConfig config = overlayReporterConfigBuilder().build();
 
             Optional<String> hostName = OciTelemetryRuntime.effectiveHostName(config, () -> {
                 throw failure;
@@ -79,7 +87,6 @@ class OciTelemetryRuntimeTest {
             OciTelemetryRuntime runtime = new OciTelemetryRuntime(OciMetricsPublisherConfig.builder()
                                                                  .enabled(false)
                                                                  .defaultDimensions(Map.of())
-                                                                 .requestHeaders(Map.of())
                                                                  .buildPrototype());
 
             runtime.close();
@@ -90,13 +97,131 @@ class OciTelemetryRuntimeTest {
         }
     }
 
-    private static OciMetricsPublisherConfig.Builder publisherConfigBuilder() {
-        return OciMetricsPublisherConfig.builder()
-                .enabled(true)
+    @Test
+    void programmaticReporterStartsWithoutConfiguredProjectOrFleet() {
+        if (Metrics.isActive()) {
+            Metrics.shutdown();
+        }
+        TestMetricReporter reporter = new TestMetricReporter();
+        OciTelemetryRuntime runtime = new OciTelemetryRuntime(OciMetricsPublisherConfig.builder()
+                                                              .reporter(reporter)
+                                                              .defaultDimensions(Map.of())
+                                                              .buildPrototype());
+        try {
+            runtime.publisher();
+
+            assertThat(Metrics.isActive(), is(true));
+        } finally {
+            runtime.close();
+            if (Metrics.isActive()) {
+                Metrics.shutdown();
+            }
+        }
+    }
+
+    @Test
+    void overlayReporterDoesNotOwnProgrammaticClient() {
+        TestMetricReporter reporter = new TestMetricReporter();
+        TestCloseable closeable = new TestCloseable();
+
+        MetricReporter result = OverlayMetricReporterFactory.applyOwnership(reporter, closeable, false);
+
+        assertThat(result, is(reporter));
+        assertThat(closeable.closed(), is(false));
+    }
+
+    @Test
+    void overlayReporterClosesOwnedClient() throws Exception {
+        TestMetricReporter reporter = new TestMetricReporter();
+        TestCloseable closeable = new TestCloseable();
+
+        MetricReporter result = OverlayMetricReporterFactory.applyOwnership(reporter, closeable, true);
+
+        assertThat(result, instanceOf(OwnedMetricReporter.class));
+        ((AutoCloseable) result).close();
+        assertThat(closeable.closed(), is(true));
+    }
+
+    @Test
+    void substrateReporterDoesNotOwnProgrammaticClient() {
+        TestMetricReporter reporter = new TestMetricReporter();
+        TestCloseable closeable = new TestCloseable();
+
+        MetricReporter result = SubstrateMetricReporterFactory.applyOwnership(reporter, closeable, false);
+
+        assertThat(result, is(reporter));
+        assertThat(closeable.closed(), is(false));
+    }
+
+    @Test
+    void substrateReporterClosesOwnedClient() throws Exception {
+        TestMetricReporter reporter = new TestMetricReporter();
+        TestCloseable closeable = new TestCloseable();
+
+        MetricReporter result = SubstrateMetricReporterFactory.applyOwnership(reporter, closeable, true);
+
+        assertThat(result, instanceOf(OwnedMetricReporter.class));
+        ((AutoCloseable) result).close();
+        assertThat(closeable.closed(), is(true));
+    }
+
+    @Test
+    void substrateReporterUsesRegistryClientWhenProgrammaticClientAbsent() throws Exception {
+        MetricTimeSeriesClient registryClient = metricTimeSeriesClient();
+        Services.set(MetricTimeSeriesClient.class, registryClient);
+        MetricReporter reporter = SubstrateMetricReporterFactory.create(SubstrateMetricReporterConfig.builder()
+                                                                                .project("test-project")
+                                                                                .fleet("test-fleet")
+                                                                                .build());
+
+        assertThat(reporter, instanceOf(OwnedMetricReporter.class));
+        ((AutoCloseable) reporter).close();
+        verify(registryClient).close();
+    }
+
+    @Test
+    void substrateReporterDoesNotOwnProgrammaticClientFromCreate() {
+        MetricTimeSeriesClient programmaticClient = metricTimeSeriesClient();
+        MetricReporter reporter = SubstrateMetricReporterFactory.create(SubstrateMetricReporterConfig.builder()
+                                                                                .project("test-project")
+                                                                                .fleet("test-fleet")
+                                                                                .metricTimeSeriesClient(programmaticClient)
+                                                                                .build());
+
+        assertThat(reporter, not(instanceOf(OwnedMetricReporter.class)));
+    }
+
+    private static OverlayMetricReporterConfig.Builder overlayReporterConfigBuilder() {
+        return OverlayMetricReporterConfig.builder()
                 .project("test-project")
-                .fleet("test-fleet")
-                .defaultDimensions(Map.of())
-                .requestHeaders(Map.of());
+                .fleet("test-fleet");
+    }
+
+    private static MetricTimeSeriesClient metricTimeSeriesClient() {
+        return mock(MetricTimeSeriesClient.class);
+    }
+
+    private static final class TestMetricReporter implements MetricReporter {
+        @Override
+        public void send(List<TimeSeries> timeSeries) {
+        }
+
+        @Override
+        public void stop() {
+        }
+    }
+
+    private static final class TestCloseable implements AutoCloseable {
+        private volatile boolean closed;
+
+        @Override
+        public void close() {
+            closed = true;
+        }
+
+        boolean closed() {
+            return closed;
+        }
     }
 
     private static final class CapturingLogHandler extends Handler {

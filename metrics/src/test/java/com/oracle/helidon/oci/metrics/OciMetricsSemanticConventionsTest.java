@@ -462,10 +462,11 @@ class OciMetricsSemanticConventionsTest {
             OciMetricsPublisherConfig.Builder publisherConfigBuilder = OciMetricsPublisherConfig.builder()
                     .enabled(false)
                     .enableDetailedTimingAutoMetrics(detailedTimingEnabled)
-                    .project("proj")
-                    .fleet("fleet")
-                    .defaultDimensions(Map.of())
-                    .requestHeaders(Map.of());
+                    .reporterConfig(OverlayMetricReporterConfig.builder()
+                                            .project("proj")
+                                            .fleet("fleet")
+                                            .build())
+                    .defaultDimensions(Map.of());
             resourcePackagePrefix.ifPresent(publisherConfigBuilder::resourcePackagePrefix);
             OciMetricsFactory factory = new OciMetricsFactory(delegateFactory(metricsConfig),
                                                               publisherConfigBuilder.buildPrototype(),

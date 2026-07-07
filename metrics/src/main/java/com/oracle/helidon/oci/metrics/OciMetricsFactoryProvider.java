@@ -61,7 +61,6 @@ public class OciMetricsFactoryProvider implements MetricsFactoryProvider {
                 .orElseGet(() -> OciMetricsPublisherConfig.builder()
                         .enabled(false)
                         .defaultDimensions(Map.of())
-                        .requestHeaders(Map.of())
                         .buildPrototype());
         OciMetricsFactory factory = new OciMetricsFactory(delegateMetricsFactory,
                                                           publisherConfig,

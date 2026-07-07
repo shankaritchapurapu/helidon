@@ -155,11 +155,12 @@ class JvmMetersProviderTest {
         return new OciMetricsFactory(new MicrometerMetricsFactoryProvider().create(Config.empty(), metricsConfig, java.util.List.of()),
                                      OciMetricsPublisherConfig.builder()
                                              .enabled(false)
-                                             .project("proj")
-                                             .fleet("fleet")
+                                             .reporterConfig(OverlayMetricReporterConfig.builder()
+                                                                     .project("proj")
+                                                                     .fleet("fleet")
+                                                                     .build())
                                              .metricsScopeName(metricsScopeName)
                                              .defaultDimensions(Map.of())
-                                             .requestHeaders(Map.of())
                                              .buildPrototype(),
                                      metricsConfig,
                                      java.util.List.of());

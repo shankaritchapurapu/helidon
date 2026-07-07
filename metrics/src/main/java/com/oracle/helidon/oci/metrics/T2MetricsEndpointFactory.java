@@ -10,7 +10,6 @@ import java.util.function.Function;
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
 import io.helidon.config.Config;
-import io.helidon.metrics.api.MetricsConfig;
 import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.monitoring.Monitoring;
@@ -35,13 +34,8 @@ class T2MetricsEndpointFactory implements Function<Monitoring, URI> {
 
     @Override
     public URI apply(Monitoring monitoring) {
-        var ociPublisher = MetricsConfig.create(config.get(MetricsConfig.METRICS_CONFIG_KEY)).publishers().stream()
-                .filter(OciMetricsPublisher.class::isInstance)
-                .map(OciMetricsPublisher.class::cast)
-                .findFirst()
-                .orElseGet(() -> OciMetricsPublisher.builder().build());
-
-        return ociPublisher.prototype().endpoint()
+        return OciMetricsConfigSupport.overlayReporterConfig(config)
+                .flatMap(OverlayMetricReporterConfig::endpoint)
                 .orElseGet(() -> monitoringEndpoint(monitoring));
     }
 

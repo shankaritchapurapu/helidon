@@ -184,7 +184,7 @@ Avoid migrating service-core-only metrics behavior that is intentionally out of 
 * service-log-only annotations
 
 ### Reporter Configuration
-The OCI metrics publisher has a nested `reporter` configuration object. It collects settings which correspond to service-core scheduled reporter controls:
+The OCI metrics publisher keeps publisher behavior settings at the `oci` publisher level:
 * `metrics-scope-name`: The root name segment used as the prefix for built-in JVM metric names. The default is `service`, so JVM metrics use names such as `service.jvm.memory.heap.used`.
 * `includes`: Metric names to include.
 * `excludes`: Metric names to exclude.
@@ -199,8 +199,17 @@ timer duration values, and its reported rates are events per second.
 
 Reporter include and exclude decisions apply to metric names only. Excludes take precedence over includes, and an empty `includes` list means all non-excluded metrics are eligible for publishing. The programmatic `filter` setting is intentionally not configurable from YAML; it exists only for code which builds the config directly.
 
+Reporter construction settings are nested under the publisher `reporter` object. `reporter.overlay` is the default
+variant and preserves the TelemetryReporterBuilder-based overlay behavior. `reporter.substrate` selects the
+DianogaReporter-based substrate path. Common settings for both variants include `project`, `fleet`, `client`,
+`endpoint`, `hostname` or `host-name`, `availability-domain`, `fault-domain`, and `region`. Overlay-only configured
+settings are `request-headers`, `use-metadata-service`, and `override-metric-keys`; these should not be migrated into
+`reporter.substrate`.
+
 #### Heliport implications
-When Heliport migrates service-core `scheduled-metrics-reporter` configuration to Helidon Talon metrics configuration, it should map the legacy reporter settings into the single Helidon Talon publisher object at `metrics.publishers.oci`:
+When Heliport migrates service-core `scheduled-metrics-reporter` configuration to Helidon Talon metrics configuration,
+it should map scheduled sampling and filtering settings into the single Helidon Talon publisher object at
+`metrics.publishers.oci`:
 
 | service-core `scheduled-metrics-reporter` setting | Helidon Talon setting |
 | --- | --- |
@@ -211,6 +220,43 @@ When Heliport migrates service-core `scheduled-metrics-reporter` configuration t
 | `includesAttributes` | `includes-attributes` |
 | `excludesAttributes` | `excludes-attributes` |
 | `frequency` | `sample-interval` |
+
+It should map backend/reporter construction settings into the selected nested reporter variant. For normal overlay
+migrations, use `reporter.overlay`:
+
+| service-core / legacy OCI reporter setting | Helidon Talon overlay setting |
+| --- | --- |
+| `project` | `reporter.overlay.project` |
+| `fleet` | `reporter.overlay.fleet` |
+| `client` | `reporter.overlay.client` |
+| `endpoint` | `reporter.overlay.endpoint` |
+| `hostname` or `hostName` | `reporter.overlay.hostname` |
+| `host-name` | `reporter.overlay.host-name` |
+| `availabilityDomain` | `reporter.overlay.availability-domain` |
+| `faultDomain` | `reporter.overlay.fault-domain` |
+| `region` | `reporter.overlay.region` |
+| `requestHeaders` | `reporter.overlay.request-headers` |
+| `useMetadataService` | `reporter.overlay.use-metadata-service` |
+| `overrideMetricKeys` | `reporter.overlay.override-metric-keys` |
+
+If the source service is known to target substrate, Heliport should use `reporter.substrate` instead and map only the
+common reporter settings:
+
+| service-core / legacy OCI reporter setting | Helidon Talon substrate setting |
+| --- | --- |
+| `project` | `reporter.substrate.project` |
+| `fleet` | `reporter.substrate.fleet` |
+| `client` | `reporter.substrate.client` |
+| `endpoint` | `reporter.substrate.endpoint` |
+| `hostname` or `hostName` | `reporter.substrate.hostname` |
+| `host-name` | `reporter.substrate.host-name` |
+| `availabilityDomain` | `reporter.substrate.availability-domain` |
+| `faultDomain` | `reporter.substrate.fault-domain` |
+| `region` | `reporter.substrate.region` |
+
+Heliport should not migrate overlay-only settings such as request headers, metadata-service use, or metric-key override
+into `reporter.substrate`; if those settings are present while the migration target is substrate, report them for manual
+review.
 
 Helidon Talon samples metrics on the configured interval and does not report metric mutations to the OCI metrics layer as they happen. Heliport should map the legacy scheduled reporter `frequency` setting to `sample-interval`. Counters use the configured metric name and emit interval deltas. Timers use the configured metric name and emit a single one-minute EWMA rate in events per second. Distribution summaries use the configured metric name and emit a single interval mean. This preserves service-core-style `SuccessRate` because it records `0.0` or `1.0`, so the interval mean is the success rate.
 
@@ -230,13 +276,24 @@ Once Heliport identifies which `reporter` to migrate, it should map the `useRegE
 | `true` | `true` | No valid value; flag for manual review |
 
 ## Metrics library choice
-As of OCI Helidon 2.0, metrics integration uses the `metrics-lib` library from the OCI telemetry team.
+As of OCI Helidon 2.0, metrics integration uses the `metrics-lib` runtime API from the OCI telemetry team.
 
 There are multiple libraries available for working with OCI metrics, among them:
 * [`com.oracle.pic.telemetry.commons:metrics-lib`](https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/metrics-lib/browse)
+* [`com.oracle.pic.telemetry.commons:metrics-reporter`](https://bitbucket.oci.oraclecorp.com/projects/TEL/repos/metrics-reporter/browse)
 * [`com.oracle.pic.commons:metrics`](https://bitbucket.oci.oraclecorp.com/projects/COMMONS/repos/metrics/browse)
 
 The `metrics-lib` `README.md` states, among other things:
 > NOTE: the PIC commons metrics library is more complex and more powerful in some ways but is much more prone to memory leaks if not carefully used. You should consider using this metrics-lib library directly where possible.
 
-For simplicity of our code and for reliability, this release of the T2 metrics integration follows the suggestion above and uses the `metrics-lib` library. This allows us to delegate to the T2 library all the responsibility of buffering metrics data and transmitting it (retrying if necessary) to the backend. That library _does not_ expose a way to control the frequency with which it sends data; it transmits (if values have been reported to it) at least each minute, more frequently if its internal buffers fill.
+For simplicity of our code and for reliability, this integration follows that suggestion for the application-facing
+metrics runtime. OCI Helidon initializes `com.oracle.pic.telemetry.commons.metrics.Metrics` with a configured
+`MetricReporter`, so existing service code that emits through metrics-lib can continue to work.
+
+Reporter construction is separate from the metrics-lib runtime choice. The overlay path builds the reporter with
+`TelemetryReporterBuilder`. The substrate path builds a `DianogaReporter` using a `MetricTimeSeriesClient`. Both produce a
+`MetricReporter` for `Metrics.init`.
+
+Helidon meter sampling frequency is controlled by the OCI publisher `sample-interval`. Any buffering, retrying, or
+transmission cadence inside the selected metrics-lib reporter is separate from that Helidon sampling interval and depends
+on the selected reporter implementation.

@@ -12,8 +12,10 @@ metrics:
   publishers:
     - type: oci
       enabled: true
-      project: helidon-metrics-test-project
-      fleet: helidon-metrics-test-fleet
+      reporter:
+        overlay:
+          project: helidon-metrics-test-project
+          fleet: helidon-metrics-test-fleet
+          request-headers: { }
       default-dimensions: { }
       sample-interval: PT1S
-      request-headers: { }

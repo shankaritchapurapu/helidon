@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
 import io.helidon.config.Config;
-import io.helidon.metrics.api.MetricsConfig;
 import io.helidon.service.registry.Service;
 
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
@@ -42,14 +41,10 @@ class OciMonitoringSupplier implements Supplier<Monitoring> {
 
     @Override
     public Monitoring get() {
-
-        var ociPublisher = MetricsConfig.create(config.get(MetricsConfig.METRICS_CONFIG_KEY)).publishers().stream()
-                .filter(OciMetricsPublisher.class::isInstance)
-                .map(OciMetricsPublisher.class::cast)
-                .findFirst()
-                .orElseGet(() -> OciMetricsPublisher.builder().build());
-
-        var clientConfigurationOpt = ociPublisher.prototype().client();
+        OverlayMetricReporterConfig reporterConfig = OciMetricsConfigSupport.overlayReporterConfig(config)
+                .orElseThrow(() -> new IllegalStateException(
+                        "OCI Monitoring client is only available for overlay metrics reporters."));
+        var clientConfigurationOpt = reporterConfig.client();
 
         var monitoringClient = clientConfigurationOpt.map(clientConfiguration -> new MonitoringClient(
                         authProvider,

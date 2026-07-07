@@ -80,6 +80,7 @@ class OciMetricsSemanticConventions implements AutoHttpMetricsProvider {
         }
 
         @Override
+
         public void filter(FilterChain chain, RoutingRequest request, RoutingResponse response) {
             OciHttpEndpointMetricsContext context = context(request);
             if (context != null && !shouldTrack(context)) {

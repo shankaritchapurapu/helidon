@@ -5,6 +5,7 @@
 package com.oracle.helidon.oci.metrics;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,12 +20,15 @@ import com.oracle.bmc.retrier.RetryOnOpenCircuitBreakerDefaultRetryCondition;
 import com.oracle.bmc.waiter.ExponentialBackoffDelayStrategy;
 import com.oracle.bmc.waiter.MaxAttemptsTerminationStrategy;
 import com.oracle.bmc.waiter.WaiterConfiguration;
+import com.oracle.pic.telemetry.commons.metrics.MetricReporter;
+import com.oracle.pic.telemetry.commons.metrics.model.TimeSeries;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class OciMetricsPublisherConfigMappingTest {
@@ -35,9 +39,35 @@ class OciMetricsPublisherConfigMappingTest {
                                            publishers:
                                              - type: oci
                                                enabled: true
-                                               project: test-project
-                                               fleet: test-fleet
-                                               region: us-ashburn-1
+                                               reporter:
+                                                 overlay:
+                                                   project: test-project
+                                                   fleet: test-fleet
+                                                   region: us-ashburn-1
+                                                   client:
+                                                     connection-timeout: PT7S
+                                                     read-timeout: PT11S
+                                                     max-async-threads: 13
+                                                     retry:
+                                                       termination-strategy:
+                                                         type: max-attempts
+                                                         max-attempts: 5
+                                                       delay-strategy:
+                                                         type: exponential
+                                                         max-delay: PT2S
+                                                       retry-condition:
+                                                         type: retry-on-open-circuit-breaker
+                                                       retry-options:
+                                                         mark-read-limit: 4096
+                                                     circuit-breaker:
+                                                       failure-rate-threshold: 77
+                                                       slow-call-rate-threshold: 66
+                                                       wait-duration-in-open-state: PT9S
+                                                       permitted-number-of-calls-in-half-open-state: 4
+                                                       minimum-number-of-calls: 3
+                                                       sliding-window-size: 22
+                                                       slow-call-duration-threshold: PT8S
+                                                       writable-stack-trace-enabled: false
                                                enable-detailed-timing-auto-metrics: false
                                                resource-package-prefix: com.example.store
                                                sample-interval: PT7S
@@ -53,40 +83,17 @@ class OciMetricsPublisherConfigMappingTest {
                                                  - count
                                                excludes-attributes:
                                                  - p999
-                                               client:
-                                                 connection-timeout: PT7S
-                                                 read-timeout: PT11S
-                                                 max-async-threads: 13
-                                                 retry:
-                                                   termination-strategy:
-                                                     type: max-attempts
-                                                     max-attempts: 5
-                                                   delay-strategy:
-                                                     type: exponential
-                                                     max-delay: PT2S
-                                                   retry-condition:
-                                                     type: retry-on-open-circuit-breaker
-                                                   retry-options:
-                                                     mark-read-limit: 4096
-                                                 circuit-breaker:
-                                                   failure-rate-threshold: 77
-                                                   slow-call-rate-threshold: 66
-                                                   wait-duration-in-open-state: PT9S
-                                                   permitted-number-of-calls-in-half-open-state: 4
-                                                   minimum-number-of-calls: 3
-                                                   sliding-window-size: 22
-                                                   slow-call-duration-threshold: PT8S
-                                                   writable-stack-trace-enabled: false
                                          """, MediaTypes.APPLICATION_YAML));
 
     @Test
-    void mapsPublisherYamlToTopLevelClientConfiguration() {
+    void mapsPublisherYamlToReporterClientConfiguration() {
         OciMetricsPublisherConfig publisherConfig = publisherConfig();
-        ClientConfiguration clientConfiguration = publisherConfig.client().orElseThrow();
+        OciMetricReporterConfig reporterConfig = publisherConfig.reporterConfig();
+        ClientConfiguration clientConfiguration = reporterConfig.client().orElseThrow();
 
-        assertThat(publisherConfig.project().orElseThrow(), is("test-project"));
-        assertThat(publisherConfig.fleet().orElseThrow(), is("test-fleet"));
-        assertThat(publisherConfig.region().orElseThrow(), is("us-ashburn-1"));
+        assertThat(reporterConfig.project().orElseThrow(), is("test-project"));
+        assertThat(reporterConfig.fleet().orElseThrow(), is("test-fleet"));
+        assertThat(reporterConfig.region().orElseThrow(), is("us-ashburn-1"));
         assertThat(publisherConfig.resourcePackagePrefix().orElseThrow(), is("com.example.store"));
         assertThat(clientConfiguration.getConnectionTimeoutMillis(), is(7000));
         assertThat(clientConfiguration.getReadTimeoutMillis(), is(11000));
@@ -94,8 +101,232 @@ class OciMetricsPublisherConfigMappingTest {
     }
 
     @Test
+    void defaultsReporterToOverlay() {
+        OciMetricsPublisherConfig publisherConfig = publisherConfig();
+
+        assertThat(publisherConfig.reporterConfig(), instanceOf(OverlayMetricReporterConfig.class));
+        assertThat(publisherConfig.reporterConfig().type(), is(OciMetricReporterType.OVERLAY.configKey()));
+        assertThat(publisherConfig.reporter(), instanceOf(MetricReporter.class));
+    }
+
+    @Test
+    void mapsExplicitOverlayReporter() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             reporter:
+                                               overlay:
+                                                 project: test-project
+                                                 fleet: test-fleet
+                                                 endpoint: https://telemetry.example.com
+                                                 hostname: test-host
+                                                 availability-domain: iad-ad-1
+                                                 fault-domain: 1
+                                                 request-headers:
+                                                   test-header: test-value
+                                                 use-metadata-service: false
+                                                 override-metric-keys: true
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
+        OciMetricReporterConfig reporterConfig = publisherConfig.reporterConfig();
+
+        assertThat(reporterConfig, instanceOf(OverlayMetricReporterConfig.class));
+        assertThat(reporterConfig.type(), is(OciMetricReporterType.OVERLAY.configKey()));
+        assertThat(reporterConfig.project().orElseThrow(), is("test-project"));
+        assertThat(reporterConfig.fleet().orElseThrow(), is("test-fleet"));
+        assertThat(reporterConfig.endpoint().orElseThrow().toString(), is("https://telemetry.example.com"));
+        assertThat(reporterConfig.hostname().orElseThrow(), is("test-host"));
+        assertThat(reporterConfig.availabilityDomain().orElseThrow(), is("iad-ad-1"));
+        assertThat(reporterConfig.faultDomain().orElseThrow(), is("1"));
+        OverlayMetricReporterConfig overlayConfig = (OverlayMetricReporterConfig) reporterConfig;
+        assertThat(overlayConfig.requestHeaders(), is(Map.of("test-header", "test-value")));
+        assertThat(overlayConfig.useMetadataService().orElseThrow(), is(false));
+        assertThat(overlayConfig.overrideMetricKeys().orElseThrow(), is(true));
+    }
+
+    @Test
+    void mapsExplicitSubstrateReporter() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             reporter:
+                                               substrate:
+                                                 project: test-project
+                                                 fleet: test-fleet
+                                                 endpoint: https://t2.example.com
+                                                 hostname: test-host
+                                                 availability-domain: iad-ad-1
+                                                 fault-domain: 1
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
+        OciMetricReporterConfig reporterConfig = publisherConfig.reporterConfig();
+
+        assertThat(reporterConfig, instanceOf(SubstrateMetricReporterConfig.class));
+        assertThat(reporterConfig.type(), is(OciMetricReporterType.SUBSTRATE.configKey()));
+        assertThat(reporterConfig.project().orElseThrow(), is("test-project"));
+        assertThat(reporterConfig.fleet().orElseThrow(), is("test-fleet"));
+        assertThat(reporterConfig.endpoint().orElseThrow().toString(), is("https://t2.example.com"));
+        assertThat(reporterConfig.hostname().orElseThrow(), is("test-host"));
+        assertThat(reporterConfig.availabilityDomain().orElseThrow(), is("iad-ad-1"));
+        assertThat(reporterConfig.faultDomain().orElseThrow(), is("1"));
+    }
+
+    @Test
+    void mapsReporterHostNameAlias() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             reporter:
+                                               overlay:
+                                                 project: test-project
+                                                 fleet: test-fleet
+                                                 host-name: alias-host
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
+
+        assertThat(publisherConfig.reporterConfig().hostname().orElseThrow(), is("alias-host"));
+    }
+
+    @Test
+    void mapsProgrammaticReporterHostNameAlias() {
+        OverlayMetricReporterConfig reporterConfig = OverlayMetricReporterConfig.builder()
+                .project("test-project")
+                .fleet("test-fleet")
+                .hostName("alias-host")
+                .build();
+
+        assertThat(reporterConfig.hostname().orElseThrow(), is("alias-host"));
+    }
+
+    @Test
+    void rejectsReporterHostNameAliasConflict() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             reporter:
+                                               overlay:
+                                                 project: test-project
+                                                 fleet: test-fleet
+                                                 hostname: canonical-host
+                                                 host-name: alias-host
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        assertThrows(RuntimeException.class, () -> OciMetricsPublisherConfig.create(config));
+    }
+
+    @Test
+    void mapsLocationDefaultsFromRootOciEnvironment() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             oci:
+                                               env:
+                                                 availability-domain: root-ad
+                                                 fault-domain: root-fd
+                                             metrics:
+                                               publishers:
+                                                 - type: oci
+                                                   reporter:
+                                                     substrate:
+                                                       project: test-project
+                                                       fleet: test-fleet
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        OciMetricReporterConfig reporterConfig = publisherConfig(config).reporterConfig();
+
+        assertThat(reporterConfig.availabilityDomain().orElseThrow(), is("root-ad"));
+        assertThat(reporterConfig.faultDomain().orElseThrow(), is("root-fd"));
+    }
+
+    @Test
+    void nestedLocationSettingsOverrideRootOciEnvironment() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             oci:
+                                               env:
+                                                 availability-domain: root-ad
+                                                 fault-domain: root-fd
+                                             metrics:
+                                               publishers:
+                                                 - type: oci
+                                                   reporter:
+                                                     overlay:
+                                                       project: test-project
+                                                       fleet: test-fleet
+                                                       availability-domain: nested-ad
+                                                       fault-domain: nested-fd
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        OciMetricReporterConfig reporterConfig = publisherConfig(config).reporterConfig();
+
+        assertThat(reporterConfig.availabilityDomain().orElseThrow(), is("nested-ad"));
+        assertThat(reporterConfig.faultDomain().orElseThrow(), is("nested-fd"));
+    }
+
+    @Test
+    void metricTimeSeriesClientIsProgrammaticOnly() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             reporter:
+                                               substrate:
+                                                 project: test-project
+                                                 fleet: test-fleet
+                                                 metric-time-series-client: ignored
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
+        SubstrateMetricReporterConfig reporterConfig = (SubstrateMetricReporterConfig) publisherConfig.reporterConfig();
+
+        assertThat(reporterConfig.metricTimeSeriesClient(), is(java.util.Optional.empty()));
+    }
+
+    @Test
+    void failsForInvalidReporterType() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             reporter:
+                                               unsupported: {}
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        assertThrows(RuntimeException.class, () -> OciMetricsPublisherConfig.create(config));
+    }
+
+    @Test
+    void reporterTypeIsNotASelector() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             reporter:
+                                               type: substrate
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        assertThrows(RuntimeException.class, () -> OciMetricsPublisherConfig.create(config));
+    }
+
+    @Test
+    void programmaticReporterWinsOverConfiguredReporterType() {
+        MetricReporter reporter = new TestMetricReporter();
+
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.builder()
+                .config(Config.just(ConfigSources.create("""
+                                                                 type: oci
+                                                                 reporter:
+                                                                   substrate:
+                                                                     project: configured-project
+                                                                 """, MediaTypes.APPLICATION_YAML)))
+                .reporter(reporter)
+                .buildPrototype();
+
+        assertThat(publisherConfig.reporter(), sameInstance(reporter));
+    }
+
+    @Test
     void mapsPublisherYamlToRetryConfiguration() {
-        ClientConfiguration clientConfiguration = publisherConfig().client().orElseThrow();
+        ClientConfiguration clientConfiguration = publisherConfig().reporterConfig().client().orElseThrow();
         RetryConfiguration retryConfiguration = clientConfiguration.getRetryConfiguration();
 
         assertThat(retryConfiguration, notNullValue());
@@ -116,7 +347,7 @@ class OciMetricsPublisherConfigMappingTest {
 
     @Test
     void mapsPublisherYamlToCircuitBreakerConfiguration() {
-        ClientConfiguration clientConfiguration = publisherConfig().client().orElseThrow();
+        ClientConfiguration clientConfiguration = publisherConfig().reporterConfig().client().orElseThrow();
         CircuitBreakerConfiguration circuitBreakerConfiguration = clientConfiguration.getCircuitBreakerConfiguration();
 
         assertThat(circuitBreakerConfiguration, notNullValue());
@@ -191,98 +422,6 @@ class OciMetricsPublisherConfigMappingTest {
         assertThat(publisherConfig().enableDetailedTimingAutoMetrics(), is(false));
     }
 
-    @Test
-    void mapsHostNameAlias() {
-        Config config = Config.just(
-                ConfigSources.create("""
-                                             type: oci
-                                             host-name: test-host
-                                             """, MediaTypes.APPLICATION_YAML));
-
-        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
-
-        assertThat(publisherConfig.hostname().orElseThrow(), is("test-host"));
-    }
-
-    @Test
-    void failsWhenHostnameAndHostNameAreConfigured() {
-        Config config = Config.just(
-                ConfigSources.create("""
-                                             type: oci
-                                             hostname: test-host
-                                             host-name: test-host-alias
-                                             """, MediaTypes.APPLICATION_YAML));
-
-        assertThrows(IllegalArgumentException.class, () -> OciMetricsPublisherConfig.create(config));
-    }
-
-    @Test
-    void defaultsLocationFromOciEnvConfig() {
-        Config rootConfig = Config.just(ConfigSources.create(Map.of(
-                "oci.env.availability-domain", "iad-ad-1",
-                "oci.env.fault-domain", "2",
-                "metrics.publishers.0.type", "oci",
-                "metrics.publishers.0.enabled", "true",
-                "metrics.publishers.0.project", "test-project",
-                "metrics.publishers.0.fleet", "test-fleet")));
-
-        OciMetricsPublisherConfig publisherConfig = publisherConfig(rootConfig);
-
-        assertThat(publisherConfig.availabilityDomain().orElseThrow(), is("iad-ad-1"));
-        assertThat(publisherConfig.faultDomain().orElseThrow(), is("2"));
-    }
-
-    @Test
-    void explicitLocationOverridesOciEnvConfig() {
-        Config rootConfig = Config.just(ConfigSources.create(Map.of(
-                "oci.env.availability-domain", "iad-ad-1",
-                "oci.env.fault-domain", "2",
-                "metrics.publishers.0.type", "oci",
-                "metrics.publishers.0.enabled", "true",
-                "metrics.publishers.0.project", "test-project",
-                "metrics.publishers.0.fleet", "test-fleet",
-                "metrics.publishers.0.availability-domain", "iad-ad-2",
-                "metrics.publishers.0.fault-domain", "3")));
-
-        OciMetricsPublisherConfig publisherConfig = publisherConfig(rootConfig);
-
-        assertThat(publisherConfig.availabilityDomain().orElseThrow(), is("iad-ad-2"));
-        assertThat(publisherConfig.faultDomain().orElseThrow(), is("3"));
-    }
-
-    @Test
-    void defaultsOnlyMissingLocationFromOciEnvConfig() {
-        Config rootConfig = Config.just(ConfigSources.create(Map.of(
-                "oci.env.availability-domain", "iad-ad-1",
-                "oci.env.fault-domain", "2",
-                "metrics.publishers.0.type", "oci",
-                "metrics.publishers.0.enabled", "true",
-                "metrics.publishers.0.project", "test-project",
-                "metrics.publishers.0.fleet", "test-fleet",
-                "metrics.publishers.0.availability-domain", "iad-ad-2")));
-
-        OciMetricsPublisherConfig publisherConfig = publisherConfig(rootConfig);
-
-        assertThat(publisherConfig.availabilityDomain().orElseThrow(), is("iad-ad-2"));
-        assertThat(publisherConfig.faultDomain().orElseThrow(), is("2"));
-    }
-
-    @Test
-    void buildsExplicitLocationWithoutConfigRoot() {
-        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.builder()
-                .enabled(true)
-                .project("test-project")
-                .fleet("test-fleet")
-                .availabilityDomain("iad-ad-2")
-                .faultDomain("3")
-                .defaultDimensions(Map.of())
-                .requestHeaders(Map.of())
-                .buildPrototype();
-
-        assertThat(publisherConfig.availabilityDomain().orElseThrow(), is("iad-ad-2"));
-        assertThat(publisherConfig.faultDomain().orElseThrow(), is("3"));
-    }
-
     private static OciMetricsPublisherConfig publisherConfig() {
         return publisherConfig(CONFIG);
     }
@@ -291,5 +430,15 @@ class OciMetricsPublisherConfigMappingTest {
         return OciMetricsPublisherConfig.create(config.get("metrics")
                                                        .get("publishers")
                                                        .get("0"));
+    }
+
+    private static final class TestMetricReporter implements MetricReporter {
+        @Override
+        public void send(List<TimeSeries> timeSeries) {
+        }
+
+        @Override
+        public void stop() {
+        }
     }
 }

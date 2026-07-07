@@ -247,10 +247,8 @@ class OciMeterRegistryTest {
         OciMetricsFactory factory = new OciMetricsFactory(delegateFactory(metricsConfig),
                                                           OciMetricsPublisherConfig.builder()
                                                                   .enabled(false)
-                                                                  .project("proj")
-                                                                  .fleet("fleet")
+                                                                  .reporterConfig(overlayReporterConfig())
                                                                   .defaultDimensions(Map.of())
-                                                                  .requestHeaders(Map.of())
                                                                   .buildPrototype(),
                                                           metricsConfig,
                                                           java.util.List.of());
@@ -272,10 +270,8 @@ class OciMeterRegistryTest {
         return new OciMetricsFactory(delegateFactory(metricsConfig),
                                      OciMetricsPublisherConfig.builder()
                                              .enabled(false)
-                                             .project("proj")
-                                             .fleet("fleet")
+                                             .reporterConfig(overlayReporterConfig())
                                              .defaultDimensions(Map.of())
-                                             .requestHeaders(Map.of())
                                              .buildPrototype(),
                                      metricsConfig,
                                      java.util.List.of());
@@ -285,6 +281,13 @@ class OciMeterRegistryTest {
         return MetricsConfig.builder()
                 .enabled(true)
                 .publishersDiscoverServices(false)
+                .build();
+    }
+
+    private static OverlayMetricReporterConfig overlayReporterConfig() {
+        return OverlayMetricReporterConfig.builder()
+                .project("proj")
+                .fleet("fleet")
                 .build();
     }
 
