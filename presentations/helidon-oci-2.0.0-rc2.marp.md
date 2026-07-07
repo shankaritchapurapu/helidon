@@ -3,7 +3,7 @@ marp: true
 theme: default
 paginate: true
 headingDivider: 2
-footer: "Helidon Talon | Internal Use Only"
+footer: "Helidon Talon 2.0.0 RC2 | Internal Use Only"
 style: |
   :root {
     --oracle-red: #c74634;
@@ -27,7 +27,7 @@ style: |
   }
 
   section.lead {
-    background: linear-gradient(135deg, #1f2933 0%, #2f3f4f 58%, #7b2d26 100%);
+    background: linear-gradient(135deg, #17324d 0%, #00688f 58%, #5e2a54 100%);
     color: #fff;
     justify-content: center !important;
   }
@@ -36,6 +36,11 @@ style: |
     max-width: 850px;
     font-size: 48px;
     line-height: 1.08;
+  }
+
+  section.lead footer,
+  section.lead::after {
+    color: rgba(255, 255, 255, 0.78);
   }
 
   h1 {
@@ -107,6 +112,17 @@ style: |
     line-height: 1.18;
   }
 
+  section.declarative-code pre {
+    margin-top: 16px;
+    width: 82%;
+  }
+
+  section.declarative-code pre,
+  section.declarative-code pre code {
+    font-size: 23px !important;
+    line-height: 1.22;
+  }
+
   section.tight-pre pre {
     margin-top: 6px;
   }
@@ -117,13 +133,36 @@ style: |
     line-height: 1.15;
   }
 
+  section.config-fit pre,
+  section.config-fit pre code {
+    font-size: 16px !important;
+    line-height: 1.1;
+  }
+
+  section.config-fit pre {
+    margin-top: 10px;
+  }
+
+  section.wide-config pre {
+    margin-left: 0;
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  section.wide-config pre,
+  section.wide-config pre code {
+    font-size: 22px !important;
+    line-height: 1.2;
+  }
+
   section.workflow-example pre {
-    margin-top: 2px;
+    margin-top: 18px;
+    width: 84%;
   }
 
   section.workflow-example pre,
   section.workflow-example pre code {
-    font-size: 15px !important;
+    font-size: 23px !important;
     line-height: 1.12;
   }
 
@@ -366,30 +405,35 @@ Marp PDF export embeds diagrams as images.
 OCI's next generation framework for building OCI Native Services
 </div>
 
+<small class="title-meta">2.0.0 RC2 · July 2026</small>
+
 ## What Is Helidon Talon?
 
-- Helidon extensions for building OCI Native Services
-- A versioned BOM for consistent adoption across service teams
-- Less infrastructure wiring in every application
+<ul>
+<li>Helidon 4 extensions for OCI Native Services</li>
+<li>Standardize config, authentication, OCI clients and observability</li>
+</ul>
 
-<div class="grid-2 compact">
+<div class="grid-2 compact" style="margin-top: 24px;">
   <div>
-    <h3>Provides</h3>
+    <h4>Build a New Service from Scratch</h4>
     <ul>
-      <li>OCI integrations and injectable clients</li>
-      <li>Environment config, auth, and observability</li>
+      <li>Start with a Helidon 4 SE application</li>
+      <li>Add only the OCI integrations the service needs</li>
+      <li>Follow the reference app and runnable examples</li>
     </ul>
   </div>
   <div>
-    <h3>Targets</h3>
+    <h4>Migrate a Dropwizard Application</h4>
     <ul>
-      <li>Helidon services running in OCI</li>
-      <li>DP services first; stronger CP support next</li>
+      <li>Use Heliport and Codex to guide the migration</li>
+      <li>Replace repeated platform wiring with Helidon Talon modules</li>
+      <li>Validate the application incrementally</li>
     </ul>
   </div>
 </div>
 
-## At a glance
+## At a Glance
 
 <div class="center module-portfolio">
 
@@ -397,11 +441,67 @@ OCI's next generation framework for building OCI Native Services
 
 </div>
 
-## Helidon 4 Foundation
+## Helidon Is Built for Modern Java Services
+
+Helidon is open source and available at [https://helidon.io/](https://helidon.io/).
+
+<div class="grid-3 compact">
+  <div>
+    <h3>Java-First</h3>
+    <ul>
+      <li>Java framework for microservices</li>
+      <li>Early adoption of new JDK releases and Java features</li>
+      <li>Lightweight runtime with strong performance</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Developer-Friendly</h3>
+    <ul>
+      <li>Code that is direct, readable, and easy to debug</li>
+      <li>Imperative and declarative programming styles</li>
+      <li>Build-time services without runtime scanning</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Cloud-Native</h3>
+    <ul>
+      <li>Designed for containers and Kubernetes</li>
+      <li>REST, gRPC, GraphQL, and WebSocket APIs</li>
+      <li>Observability and ecosystem integrations</li>
+    </ul>
+  </div>
+</div>
+
+## Helidon 4 Makes Scale Simpler
 
 <div class="grid-2 compact">
   <div>
-    <h3>Programming model</h3>
+    <h3>Before Virtual Threads</h3>
+    <ul>
+      <li>Platform threads limited concurrency</li>
+      <li>Reactive pipelines improved scale</li>
+      <li>Teams paid with a different coding and debugging model</li>
+    </ul>
+  </div>
+  <div>
+    <h3>With Helidon 4</h3>
+    <ul>
+      <li>Each request runs on a lightweight virtual thread</li>
+      <li>Blocking code scales without reactive plumbing</li>
+      <li>Service logic stays straightforward and maintainable</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout" style="margin-top: 28px;">
+  <p><strong>Result:</strong> high concurrency with the Java programming model teams already know.</p>
+</div>
+
+## Helidon Talon Builds on the Helidon 4 Model
+
+<div class="grid-2 compact">
+  <div>
+    <h3>Programming Model</h3>
     <ul>
       <li>Helidon SE-first services</li>
       <li>Compile-time injection via the service registry</li>
@@ -410,7 +510,7 @@ OCI's next generation framework for building OCI Native Services
     </ul>
   </div>
   <div>
-    <h3>Runtime model</h3>
+    <h3>Runtime Model</h3>
     <ul>
       <li>JDK 25 baseline</li>
       <li>High-performance request handling with virtual threads</li>
@@ -420,32 +520,69 @@ OCI's next generation framework for building OCI Native Services
   </div>
 </div>
 
-## Baseline and Size
+## Helidon SE Declarative
+
+<!-- _class: declarative-code -->
+
+Service annotations define endpoint discovery, lifecycle, and injection at build time.
+
+```java
+@RestServer.Endpoint
+@Http.Path("/greetings")
+@Service.Singleton
+class GreetingResource {
+    private final GreetingService service;
+
+    @Service.Inject
+    GreetingResource(GreetingService service) {
+        this.service = service;
+    }
+    ...
+```
+
+## Helidon SE Declarative
+
+<!-- _class: declarative-code -->
+
+HTTP annotations define routing, media types, and request binding.
+
+```java
+    @Http.GET
+    @Http.Path("/{name}")
+    @Http.Produces(MediaTypes.APPLICATION_JSON_VALUE)
+    Greeting get(@Http.PathParam("name") String name,
+                 @Http.QueryParam("lang") Optional<String> lang) {
+        return service.get(name, lang.orElse("en"));
+    }
+
+    @Http.POST
+    @Http.Consumes(MediaTypes.APPLICATION_JSON_VALUE)
+    Greeting create(@Http.Entity Greeting value) {
+        return service.create(value);
+   }
+}
+```
+
+## Talon Baseline and Size
 
 <div class="grid-3">
-  <div class="metric"><strong>Helidon 4</strong><span>Target runtime, currently `4.5.0-M1`</span></div>
+  <div class="metric"><strong>Helidon 4</strong><span>Target runtime, currently `4.5.1-M1`</span></div>
   <div class="metric"><strong>JDK 25</strong><span>Compiler and documented baseline</span></div>
   <div class="metric"><strong>OCI SDK 2.88.0</strong><span>Managed through dependencies</span></div>
 </div>
 
 <div class="grid-3" style="margin-top: 24px;">
-  <div class="metric"><strong>28+</strong><span>Managed artifacts in the BOM</span></div>
+  <div class="metric"><strong>30+</strong><span>Helidon Talon artifacts in BOM</span></div>
   <div class="metric"><strong>13+</strong><span>Documented service integrations</span></div>
-  <div class="metric"><strong>9+</strong><span>Runnable example applications</span></div>
+  <div class="metric"><strong>12+</strong><span>Runnable example applications</span></div>
 </div>
 
 ## OCI Environment Config
 
-- Discovers and publishes OCI location data
-- Keeps region/domain handling out of application code
-- Supports runtime discovery, dynamic core-regions metadata, IMDS fallback, and test overrides
-
-| Value class | Examples |
-|---|---|
-| Region | Public OCI region, internal region name, SDK `Region` service |
-| Location | Availability domain and fault domain |
-| Domains | Public domain and IaaS domain for endpoint construction |
-| Overrides | Local/test `location-override` values in `oci-config.yaml` |
+- Talon contributes a lazy `oci-env` source to Helidon Config
+- Publishes region, AD, FD, and OCI domain names as `oci.env.*`
+- Resolves location from OCI runtime files or IMDS and supports local/test overrides
+- Auto-registers by default or as an added source when using meta-config
 
 ## How `oci-env` Is Used
 
@@ -465,7 +602,7 @@ OCI's next generation framework for building OCI Native Services
 </div>
 
 - Keeps region and domain logic out of client integration code
-- Supports runtime discovery, IMDS fallback, dynamic metadata, and test overrides
+- Explicit `sources[].properties` wins per key over `helidon.oci-env`
 - Example: Secret Service can use `${oci.env.iaas-domain-name}`
 
 ## OCI SDK Authentication
@@ -474,24 +611,33 @@ OCI's next generation framework for building OCI Native Services
 - Exposes the selected `BasicAuthenticationDetailsProvider`
 - Auth methods are contributed by classpath modules
 - Client integrations consume one provider contract
+- Helidon Talon adds `service-principal` to Helidon's available authentication methods
 
 ## OCI SDK Authentication Configuration
-
-<!-- _class: small-code -->
 
 - Config root is `helidon.oci`
 - `authentication-method` selects or requires a provider
 - `auto` tries available methods from the service registry
 - `BasicAuthenticationDetailsProvider` can be injected
 
+## OCI Bootstrap Configuration Example
+
+<!-- _class: wide-config -->
+
 ```yaml
 helidon:
   oci:
-    authentication-method: auto
-    allowed-authentication-methods:
-      - instance-principal
-      - resource-principal
-    region: us-ashburn-1
+    authentication-method: "instance-principal"
+    imds-timeout: "PT3S"
+    imds-base-uri: http://localhost:8000/opc/v2/
+    imds-detect-retries: 1
+  oci-env:
+    dynamic-core-regions:
+      enabled: false
+    location-override:
+      region: us-ashburn-1
+      availability-domain: iad-ad-1
+      fault-domain: 1
 ```
 
 ## Service Integrations
@@ -505,6 +651,8 @@ helidon:
   <div class="integration-registry">Helidon Service Registry</div>
 </div>
 
+<!-- BEGIN COMMENTED OUT: Audit
+
 ## Audit
 
 - Inserts a Helidon WebServer filter for OCI Audit v2 events
@@ -514,23 +662,29 @@ helidon:
 - Respects `oci-splat-audited` to avoid duplicate SPLAT audit work
 - Lets endpoint logic enrich the current audit event
   - `AuditPayloadAppender` is available in request scope
+- Registers on the default and every named WebServer socket
+- Verification requests can return `oci-splat-audit-event-summary`
 
 ## Audit Configuration
 
-- `oci.auditv2` enables auditing and names the audit source
-- Rules explicitly whitelist audited request values
-- A rule applies only when resource and action match
+- `oci.auditv2` enables auditing and supplies event/resource defaults
+- Rules explicitly whitelist request parameters and request/response headers
+- `respect-splat-audited-flag` defaults to `true`
 
 ```yaml
 oci:
   auditv2:
     enabled: true
     event-source: MyService
+    event-name: HttpRequest
+    respect-splat-audited-flag: true
     request-parameter-rules:
       - resources: "/orders"
         actions: "POST"
         values: "orderId"
 ```
+
+END COMMENTED OUT: Audit -->
 
 ## Identity
 
@@ -583,7 +737,7 @@ class OrdersEndpoint {
 
 - Provides Helidon configuration and service registry bindings for Kiev
 - Supports in-memory, direct database, and Kiev-as-a-service backends
-- Exposes `DataStore`, `MappedDataStore`, and transaction support
+- Exposes `DataStore`, `MappedDataStore` and `Stream`
 - Adds `@KievTransaction` for declarative transaction handling
 
 ## Kiev Configuration
@@ -591,6 +745,7 @@ class OrdersEndpoint {
 - Config root is `oci.kiev`
 - Each entry defines one named data store
 - Store names qualify injected Kiev services and transactions
+- `SERVICE` stores can expose stream records and include deleted column values
 
 ```yaml
 oci:
@@ -599,6 +754,8 @@ oci:
       - backend: "IN_MEMORY"
         store-name: orders-store
         app-name: MyService
+        transaction-max-reads: 100
+        transaction-max-writes: 100
 ```
 
 ## Kiev Example
@@ -636,31 +793,41 @@ Order put(Transaction tx, Order order) {
 }
 ```
 
+<!-- BEGIN COMMENTED OUT: Limits
+
 ## Limits
 
 - Provides Helidon integration for OCI Limits
 - Exposes a configured Limits DP client
-- Uses shared OCI SDK authentication and client configuration
+- Uses scoped service-principal auth when configured; otherwise falls back to shared OCI SDK auth
 - Supports endpoint and timeout configuration
 
 ## Limits Configuration
 
+Marp class: config-fit
+
 - Config root is `oci.limits`
-- Client settings use the common OCI SDK timeout shape
+- `auth` supports module-local service-principal credentials
+- `client` uses the common OCI SDK timeout shape
 - Endpoint can be overridden for explicit routing
 
 ```yaml
 oci:
   limits:
+    auth:
+      authentication-method: service-principal
+      service-principal:
+        use-platform-provided: true
     endpoint: https://limits.example.oraclecloud.com
     client:
       connection-timeout: PT5S
       read-timeout: PT30S
+      max-async-threads: 20
 ```
 
 ## Limits Example
 
-<!-- _class: small-code limits-example -->
+Marp class: small-code limits-example
 
 - Inject the configured `LimitsDPClient`
 - Use it from service code to check limits and quotas
@@ -685,6 +852,10 @@ class LimitsService {
 }
 ```
 
+END COMMENTED OUT: Limits -->
+
+<!-- BEGIN COMMENTED OUT: Metering
+
 ## Metering
 
 - Reports OCI service usage through native metering libraries
@@ -697,7 +868,7 @@ class LimitsService {
 
 ## Metering Configuration (DP)
 
-<!-- _class: small-code -->
+Marp class: small-code
 
 - Config root is `oci.metering`
 - Required values come from the native emitter-dp builder
@@ -717,7 +888,7 @@ oci:
 
 ## Metering Example (DP)
 
-<!-- _class: metering-example -->
+Marp class: metering-example
 
 - DP services inject the native `LogFileUsageRecorder`
 - Service code records native emitter-dp meter batches
@@ -741,7 +912,7 @@ class OrderMetering {
 
 ## Metering Configuration (CP)
 
-<!-- _class: small-code -->
+Marp class: small-code
 
 - Uses metering-agent with Kiev-backed log stores
 - Metered calls run inside a Kiev transaction
@@ -762,7 +933,7 @@ oci:
 
 ## Metering Example (CP)
 
-<!-- _class: metering-example -->
+Marp class: metering-example
 
 - CP metering annotations are processed at compile time
 - Parameters identify compartment, resource, amount, and tags
@@ -778,19 +949,24 @@ void createOrder(@Metering.CompartmentId String compartmentId,
 }
 ```
 
+END COMMENTED OUT: Metering -->
+
 ## Metrics
 
-- Publishes Helidon neutral metrics to OCI metrics
-- Works with normal Helidon metrics APIs and annotations
+- Publishes Helidon meters to OCI Monitoring through `metrics-lib`
+- Supports metrics recorded with OCI `Metrics`, Helidon APIs, or Helidon annotations
 - Supports counters, timers, distribution summaries, gauges, and functional counters
-- Adds automatic HTTP request metrics and optional JVM gauges
+- Adds automatic HTTP request metrics and built-in JVM gauges
 
 ## Metrics Configuration
+
+<!-- _class: config-fit -->
 
 - Configured as a Helidon metrics publisher of type `oci`
 - Project and fleet identify the emitted metric stream
 - Region can be explicit or supplied through `oci-env`
 - Endpoint can be derived from OCI Monitoring or explicitly overridden
+- Include/exclude filters support exact, regex, or substring matching
 
 ```yaml
 metrics:
@@ -799,6 +975,10 @@ metrics:
       project: my-service
       fleet: my-fleet
       region: us-ashburn-1
+      sample-interval: PT1M
+      metrics-scope-name: my-service
+      excludes: ["my-service\\.jvm\\..*"]
+      filter-matching-mode: regex
 ```
 
 ## Metrics Example
@@ -816,55 +996,56 @@ String personalizedGreeting(@Http.PathParam("name") String name) {
 }
 ```
 
-[object-storage-slide-001]: # "## Object Storage"
-[object-storage-slide-002]: # ""
-[object-storage-slide-003]: # "- Provides a service registry binding for the OCI SDK Object Storage client"
-[object-storage-slide-004]: # "- Uses the shared OCI SDK authentication provider"
-[object-storage-slide-005]: # "- Supports configured endpoint and region routing"
-[object-storage-slide-006]: # "- Lets services inject the client instead of constructing it directly"
-[object-storage-slide-007]: # ""
-[object-storage-slide-008]: # "## Object Storage Configuration"
-[object-storage-slide-009]: # ""
-[object-storage-slide-010]: # "_class: small-code"
-[object-storage-slide-011]: # ""
-[object-storage-slide-012]: # "- Config root is `oci.object-storage-client`"
-[object-storage-slide-013]: # "- Region derives the service endpoint when no endpoint is set"
-[object-storage-slide-014]: # "- Client settings follow the common OCI SDK configuration shape"
-[object-storage-slide-015]: # ""
-[object-storage-slide-016]: # "```yaml"
-[object-storage-slide-017]: # "oci:"
-[object-storage-slide-018]: # "  object-storage-client:"
-[object-storage-slide-019]: # "    region-id: us-ashburn-1"
-[object-storage-slide-020]: # "    client:"
-[object-storage-slide-021]: # "      connection-timeout: PT10S"
-[object-storage-slide-022]: # "      read-timeout: PT1M"
-[object-storage-slide-023]: # "```"
-[object-storage-slide-024]: # ""
-[object-storage-slide-025]: # "## Object Storage Example"
-[object-storage-slide-026]: # ""
-[object-storage-slide-027]: # "_class: small-code tight-pre"
-[object-storage-slide-028]: # ""
-[object-storage-slide-029]: # "- Inject the OCI SDK `ObjectStorage` interface"
-[object-storage-slide-030]: # "- Build normal OCI SDK requests in service code"
-[object-storage-slide-031]: # ""
-[object-storage-slide-032]: # "```java"
-[object-storage-slide-033]: # "@Service.Singleton"
-[object-storage-slide-034]: # "class Buckets {"
-[object-storage-slide-035]: # "    private final ObjectStorage objectStorage;"
-[object-storage-slide-036]: # ""
-[object-storage-slide-037]: # "    @Service.Inject"
-[object-storage-slide-038]: # "    Buckets(ObjectStorage objectStorage) {"
-[object-storage-slide-039]: # "        this.objectStorage = objectStorage;"
-[object-storage-slide-040]: # "    }"
-[object-storage-slide-041]: # ""
-[object-storage-slide-042]: # "    void listBuckets(String namespace, String compartmentId) {"
-[object-storage-slide-043]: # "        objectStorage.listBuckets(ListBucketsRequest.builder()"
-[object-storage-slide-044]: # "                .namespaceName(namespace)"
-[object-storage-slide-045]: # "                .compartmentId(compartmentId)"
-[object-storage-slide-046]: # "                .build());"
-[object-storage-slide-047]: # "    }"
-[object-storage-slide-048]: # "}"
-[object-storage-slide-049]: # "```"
+## Object Storage
+
+- Registers the synchronous OCI SDK `ObjectStorage` client for injection
+- Builds it with shared OCI authentication and standard SDK client settings
+- Routes to an explicit endpoint or a configured or injected OCI region
+- Application code uses the native client and standard OCI requests
+
+## Object Storage Configuration
+
+<!-- _class: small-code -->
+
+- Settings live under `oci.object-storage-client`
+- `endpoint` overrides region-based routing
+- Otherwise use `region`, `region-id`, or the injected OCI region; configure only one region key
+- `client` controls timeouts, retry, circuit breaker, and upload behavior
+
+```yaml
+oci:
+  object-storage-client:
+    region-id: us-ashburn-1
+    client:
+      connection-timeout: PT10S
+      read-timeout: PT1M
+```
+
+## Object Storage Example
+
+<!-- _class: small-code tight-pre -->
+
+- Inject the OCI SDK `ObjectStorage` interface
+- Build normal OCI SDK requests in service code
+
+```java
+@Service.Singleton
+class Buckets {
+    private final ObjectStorage objectStorage;
+
+    @Service.Inject
+    Buckets(ObjectStorage objectStorage) {
+        this.objectStorage = objectStorage;
+    }
+
+    void listBuckets(String namespace, String compartmentId) {
+        objectStorage.listBuckets(ListBucketsRequest.builder()
+                .namespaceName(namespace)
+                .compartmentId(compartmentId)
+                .build());
+    }
+}
+```
 
 ## Secret Service V2
 
@@ -890,12 +1071,14 @@ String personalizedGreeting(@Http.PathParam("name") String name) {
 - Configured under `helidon.oci-secret-service`
 - Prefix maps config lookups to Secret Service paths
 - Endpoint can use `${oci.env.iaas-domain-name}`
+- `poll-interval` defaults to `PT30M`; polling starts only with change listeners
 
 ```yaml
 helidon:
   oci-secret-service:
     prefix: "oci.ssv2"
     cache-ttl: "PT5M"
+    poll-interval: "PT30M"
     client:
       endpoint: "https://secret-service-ce.${oci.env.iaas-domain-name}/v1"
 ```
@@ -948,26 +1131,35 @@ server:
         trust.path: "/etc/oci-pki/ca-bundle.pem"
 ```
 
+<!-- BEGIN COMMENTED OUT: Splat
+
 ## Splat
 
 - Adds SPLAT mTLS validation support for Helidon endpoints
 - Bridges SPLAT-authenticated requests into Helidon request handling
 - Supports OCI service front-door integration patterns
 - Works with Identity for SPLAT-aware authentication flows
+- Requires the WebServer listener itself to terminate mTLS and validate client certificates
 
 ## Splat Configuration
 
 - Config root is `oci.splat`
 - Validation runs on generated endpoint handlers
 - Region can be explicit or resolved from the OCI environment
+- Expose protected endpoints only on listeners that require client certificates
 
 ```yaml
 oci:
   splat:
     enabled: true
+    skip-authz-validation-check: false
     reject-x-region-calls: false
     region: us-ashburn-1
 ```
+
+END COMMENTED OUT: Splat -->
+
+<!-- BEGIN COMMENTED OUT: Tagging
 
 ## Tagging
 
@@ -990,7 +1182,7 @@ oci:
 
 ## Tagging Example
 
-<!-- _class: small-code tight-pre extra-small-code -->
+Marp class: small-code tight-pre extra-small-code
 
 - Inject `TaggingClient` from the service registry
 - Convert request tags into a persisted tag slug
@@ -1015,6 +1207,8 @@ class TagService {
     }
 }
 ```
+
+END COMMENTED OUT: Tagging -->
 
 ## Workflow
 
@@ -1043,9 +1237,6 @@ oci:
 
 <!-- _class: small-code extra-small-code workflow-example -->
 
-- Inject default worker `WorkflowClient`
-- Serialize JSON request with Helidon `JsonBinding`
-
 ```java
 @Service.Singleton
 class ProvisioningWorkflowService {
@@ -1058,13 +1249,9 @@ class ProvisioningWorkflowService {
     }
 
     WorkflowInstance launch(LaunchWorkflowRequest json) {
-        byte[] payload = JSON.serialize(json).getBytes(StandardCharsets.UTF_8);
-        LaunchWorkflowArguments request = LaunchWorkflowArguments.builder()
-                .workflowDefinitionId(WorkflowDefinitionId.builder()
-                                                          .name("instance-create")
-                                                          .build())
-                .workflowArguments(payload)
-                .build();
+        byte[] payload = JSON.serialize(json)
+                .getBytes(StandardCharsets.UTF_8);
+        LaunchWorkflowArguments request = buildRequest(payload);
         return workflowClient.launchWorkflow(request);
     }
 }
@@ -1079,6 +1266,7 @@ class ProvisioningWorkflowService {
 | Client library | Managed version |
 |---|---:|
 | OCI Java SDK | `2.88.0` |
+| Helidon | `4.5.1-M1` |
 | Identity Auth SDK | `3.1.336` |
 | Kiev | `2.0.35` |
 | Limits DP Java Client | `1.9` |
@@ -1096,6 +1284,7 @@ class ProvisioningWorkflowService {
 | Metering CP agent | `11.0.0.68` |
 | SPLAT SDK | `0.1.39635` |
 | Tagging | `4.3.5` |
+| Commons metrics | `5.0.13` |
 | Vault user Java client | `1.0.8` |
 
 </div>
@@ -1115,24 +1304,45 @@ class ProvisioningWorkflowService {
 
 </div>
 
+## Pilot Teams
+
+<div class="metric" style="margin-left: var(--content-inset); width: calc(100% - var(--content-inset));">
+  <strong>16+</strong>
+  <span>Pilot teams are looking to move existing services or build new services with Helidon Talon</span>
+</div>
+
+<div class="grid-3" style="margin-top: 32px; margin-left: var(--content-inset); width: calc(100% - var(--content-inset));">
+  <div class="metric"><strong style="font-size: 30px; line-height: 1.22;">SPLAT<br>EDS<br>Cloud Performance</strong><span>Active technical collaboration</span></div>
+  <div class="metric"><strong style="font-size: 30px; line-height: 1.22;">Secure Desktop<br>Clinical Config Service</strong><span>Pilot services</span></div>
+  <div class="metric"><strong style="font-size: 34px; line-height: 1.22;">More joining</strong><span>The pilot pipeline continues to grow</span></div>
+</div>
+
 ## Data Plane Reference App
 
 - Runnable Helidon Talon reference service under `examples/data-plane`
-- Combines request ID, OCI error responses, Identity, Kiev, and Audit
+- Combines hardened request ID handling, OCI error responses, Identity, Kiev, and Audit
 - Demonstrates signed robot create/update/delete APIs with `@AuthorizationPermission`
 - Uses in-memory Kiev by default so teams can run and test without external infrastructure
+
+## What's Next for Talon?
+
+- Pegasus integration
+- Enhanced logging support
+- Control-plane reference app
+- More integrations and features
 
 ## What Teams Should Take Away
 
 - Consider Heliport + Codex for Dropwizard-to-Helidon migration work
-- Consult the Data Plane Reference App before wiring a new DP service
-- Let `helidon-oci-envconfig` resolve region, AD, FD, and domains
+- Consult reference apps before wiring a new DP service
+- Let `oci-env` resolve region, AD, FD, and domains
 - Add only the Helidon Talon integrations your service needs
-- Stay tuned for additional features and integrations in upcoming releases!
+- Use the RC2 examples as executable configuration references
 
 ## Resources
 
-- User's Channel: `#helidon-users`
-- Documentation: `https://helidon.oraclecorp.com/docs/2.0.0-RC1/`
-- Repository: `https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon`
-- Heliport: `https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/heliport`
+- User channel: `#helidon-users`
+- Helidon: [https://helidon.io/](https://helidon.io/)
+- Documentation: [https://helidon.oraclecorp.com/docs/2.0.0-RC2/](https://helidon.oraclecorp.com/docs/2.0.0-RC2/)
+- Repository: [https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon)
+- Heliport: [https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/heliport](https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/heliport)

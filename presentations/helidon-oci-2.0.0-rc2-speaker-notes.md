@@ -4,43 +4,79 @@ These notes explain the intent behind each bullet in the presentation. They are 
 
 ## Title Slide
 
-No bullet points.
+Introduce Helidon Talon as OCI's next-generation framework for building OCI Native Services. Set the expectation that this RC2 presentation first establishes the Helidon 4 foundation, then shows the Talon integrations, developer workflow, and adoption path.
 
 ## What Is Helidon Talon?
 
-- **Helidon extensions for building OCI Native Services**
+- **Helidon 4 extensions for OCI Native Services**
 
-  Explain that Helidon Talon is a set of OCI-focused integrations layered on Helidon 4, intended to help service teams build applications that fit OCI platform expectations.
+  Explain that Helidon Talon builds on Helidon 4 and standardizes common OCI concerns—configuration, authentication, injectable clients, and observability.
 
-- **A versioned BOM for consistent adoption across service teams**
+- **Standardize config, authentication, OCI clients, and observability**
 
-  Emphasize that teams adopt a coordinated dependency set instead of independently choosing versions of every OCI client and integration library.
+  These are the recurring platform concerns that Talon packages into reusable integrations so individual services do not rebuild the same wiring.
 
-- **Less infrastructure wiring in every application**
+- **Migrate a Dropwizard Application**
 
-  The point is that common OCI plumbing, such as auth, region discovery, clients, metrics, and audit, should be provided by reusable modules rather than repeated in every service.
+  Existing Dropwizard services can use Heliport and Codex for guided migration, replacing repeated platform plumbing with reusable Helidon Talon modules and validating the result incrementally.
 
-- **OCI integrations and injectable clients**
+- **Build a New Service from Scratch**
 
-  The lower half summarizes the concrete runtime value: service integrations and clients should be available through Helidon's normal injection model.
+  New services can start directly with Helidon 4 SE, add only the required integrations, and use the data-plane reference application and focused examples as working patterns.
 
-- **Environment config, auth, and observability**
+## At a Glance
 
-  These are the shared platform concerns that Helidon Talon standardizes so applications do not rebuild them service by service.
+Use this diagram as the map for the rest of the presentation:
 
-- **Helidon services running in OCI**
+- **Runtime**
 
-  The primary audience is Helidon-based services that need to run cleanly inside OCI environments.
+  Talon aligns applications on the Helidon runtime, dependency management, SE application model, and the JAX-RS bridge where needed.
 
-- **DP services first; stronger CP support next**
+- **Platform utilities**
 
-  Current emphasis is on data-plane service patterns, while control-plane support is expected to improve in later iterations.
+  Shared OCI SDK authentication, environment configuration, error handling, and request IDs provide common platform behavior.
 
-## At A Glance
+- **Service integrations**
 
-No bullet points.
+  The lower cluster represents the injectable clients, configuration adapters, and generated interceptors that connect services to OCI capabilities.
 
-## Helidon 4 Foundation
+- **Developer path**
+
+  Code generation, OpenAPI Generator, runnable examples, and integration tests support the path from API definition and service implementation through validation.
+
+## Helidon Is Built for Modern Java Services
+
+- **Helidon is open source and available at `https://helidon.io/`**
+
+  Point the audience to the public project website for Helidon downloads, documentation, and community resources.
+
+- **Java-First**
+
+  Introduce Helidon as an open-source Java framework for microservices. It adopts new JDK capabilities early and aims to combine a small runtime with strong performance.
+
+- **Developer-Friendly**
+
+  The design goal is code teams can write, understand, debug, and maintain. Helidon supports direct imperative code and a declarative model backed by build-time generated services rather than runtime scanning.
+
+- **Cloud-Native**
+
+  Helidon is designed for container and Kubernetes deployments and supports the API and observability integrations expected in modern services.
+
+## Helidon 4 Makes Scale Simpler
+
+- **Before Virtual Threads**
+
+  Platform threads made high concurrency expensive. Reactive models improved scalability, but they required teams to adopt different coding, debugging, and operational patterns.
+
+- **With Helidon 4**
+
+  Helidon 4 rebuilt its server around Java virtual threads. A request can use straightforward blocking code on its own lightweight virtual thread while the runtime handles high concurrency.
+
+- **High concurrency with a familiar programming model**
+
+  This is the bridge to Helidon Talon: teams keep readable service logic, and the platform integrations provide the OCI-specific runtime behavior around it.
+
+## Helidon Talon Builds on the Helidon 4 Model
 
 - **Helidon SE-first services**
 
@@ -74,11 +110,35 @@ No bullet points.
 
   Helidon provides the runtime services that Helidon Talon integrations plug into, including routing, startup lifecycle, configuration, and telemetry.
 
-## Baseline and Size
+## Helidon SE Declarative — Endpoint and Injection
+
+This is the first half of one `GreetingResource` example. The next slide continues inside the same resource with its HTTP methods.
+
+- **`@RestServer.Endpoint` and `@Http.Path` declare the endpoint and its base route**
+
+  Helidon discovers the endpoint at build time and generates the routing integration. The application does not need to register handlers imperatively.
+
+- **`@Service.Singleton` and `@Service.Inject` integrate with the Helidon service registry**
+
+  Lifecycle and constructor injection are resolved through generated service metadata, without runtime reflection or classpath scanning.
+
+## Helidon SE Declarative — Routing and Binding
+
+Continue the `GreetingResource` from the prior slide. The code now focuses on request routing and binding rather than service construction.
+
+- **`@Http.GET`, `@Http.POST`, `@Http.Consumes`, and `@Http.Produces` define HTTP behavior**
+
+  Method-level annotations describe verbs and media types while keeping the resource implementation as normal Java code.
+
+- **`@Http.PathParam`, `@Http.QueryParam`, and `@Http.Entity` bind request data**
+
+  Helidon generates parameter binding for path segments, query values, and request bodies.
+
+## Talon Baseline and Size
 
 - **Helidon 4**
 
-  Helidon Talon is aligned with the Helidon 4 runtime model and currently targets Helidon `4.5.0-M1` in this deck.
+  Helidon Talon is aligned with the Helidon 4 runtime model and RC2 currently targets Helidon `4.5.1-M1`.
 
 - **JDK 25**
 
@@ -88,9 +148,9 @@ No bullet points.
 
   OCI Java SDK `2.88.0` is managed through Helidon Talon dependency management rather than chosen independently by each application.
 
-- **28+ managed artifacts in the BOM**
+- **30+ Helidon Talon artifacts managed in the BOM**
 
-  The BOM currently manages at least 28 Helidon Talon artifacts, coordinating modules and related dependencies so service teams can adopt a consistent set.
+  The BOM manages more than 30 Helidon Talon artifacts, coordinating modules and related dependencies so service teams can adopt a consistent set.
 
   For scale, the Helidon core BOM manages roughly 350 Helidon artifacts, so Helidon Talon is intentionally much smaller and focused on OCI-native service integration.
 
@@ -98,23 +158,27 @@ No bullet points.
 
   The integration count is expressed as `13+` because the deck covers the documented integration set, and the platform is expected to keep growing.
 
-- **9+ runnable example applications**
+- **12+ runnable example applications**
 
-  The example count is also `9+` to signal that the repository includes multiple runnable starting points and more can be added over time.
+  The repository includes more than 12 examples, including the Secret Service example and focused examples for Audit, Limits, Metrics, SPLAT, Kiev/store, and the integrated data-plane reference app.
 
 ## OCI Environment Config
 
-- **Discovers and publishes OCI location data**
+- **Talon contributes a lazy `oci-env` source to Helidon Config**
 
-  `helidon-oci-envconfig` finds runtime location information and exposes it as Helidon configuration.
+  The `helidon-oci-envconfig` module adds a Talon-owned config source using Helidon's source-provider infrastructure. Resolution is deferred until a handled key is requested.
 
-- **Keeps region/domain handling out of application code**
+- **Publishes region, AD, FD, and OCI domain names as `oci.env.*`**
 
-  Application code should not need custom logic to discover region, AD, FD, or domain names.
+  Integrations consume a shared set of environment-derived values instead of implementing their own region and domain discovery.
 
-- **Supports runtime discovery, dynamic core-regions metadata, IMDS fallback, and test overrides**
+- **Resolves location from OCI runtime files or IMDS and supports overrides**
 
-  The module works in real OCI environments, supports updated region metadata, can fall back to instance metadata, and remains testable.
+  Deployed services normally use OCI runtime metadata. The `helidon.oci-env` subtree in the shared `oci-config.yaml` can configure the source and provide deterministic local or test overrides.
+
+- **Default bootstrap is automatic; explicit meta-config must name the source**
+
+  With Helidon's default service-registry bootstrap, the source is auto-registered. If an application supplies `meta-config.*`, it owns the source list and must include `type: oci-env` explicitly.
 
 ## How `oci-env` Is Used
 
@@ -122,9 +186,9 @@ No bullet points.
 
   Client integrations can rely on shared environment config rather than each implementing its own location discovery.
 
-- **Supports runtime discovery, IMDS fallback, dynamic metadata, and test overrides**
+- **Explicit `sources[].properties` wins per key over `helidon.oci-env`**
 
-  Reiterate that the same mechanism works in production and in tests.
+  If a service manages bootstrap with `meta-config.*`, it must list `type: oci-env`. Source properties override same-named values from `oci-config.yaml`.
 
 - **Example: Secret Service can use `${oci.env.iaas-domain-name}`**
 
@@ -148,6 +212,10 @@ No bullet points.
 
   SDK-backed modules can build clients from the same provider contract rather than implementing their own auth selection logic.
 
+- **Helidon Talon adds `service-principal` to Helidon's authentication methods**
+
+  Helidon provides the shared authentication selection mechanism. Helidon Talon contributes the `service-principal` method so OCI-native services can select service-to-service credentials through the same model.
+
 ## OCI SDK Authentication Configuration
 
 - **Config root is `helidon.oci`**
@@ -166,11 +234,31 @@ No bullet points.
 
   Application code and SDK-backed integration modules can inject the selected provider directly from the Helidon service registry.
 
+## OCI Bootstrap Configuration Example
+
+- **`helidon.oci` configures the upstream Helidon OCI integration**
+
+  This example requires instance-principal authentication and shortens IMDS detection for a local development workflow.
+
+- **The active `imds-base-uri` targets a local tunnel**
+
+  Use the localhost URI only while the IMDS tunnel is established. In OCI, omit the override or use the standard link-local IMDS endpoint.
+
+- **`helidon.oci-env` configures Talon's environment source**
+
+  Dynamic core-region import is disabled and location values are overridden so local runs behave as if they are in the selected OCI location.
+
+- **This is a local-development example**
+
+  Production deployments normally discover location from OCI runtime metadata instead of hardcoding region, availability domain, and fault domain.
+
 ## Service Integrations
 
 No bullet points.
 
 This slide introduces the three main integration styles used throughout the service section. Some integrations participate in request handling through filters and interceptors, some expose OCI clients through injection, and some rely on declarative APIs plus generated code. The Helidon Registry is the common foundation that makes these pieces discoverable and injectable at runtime.
+
+<!-- BEGIN COMMENTED OUT: Audit
 
 ## Audit
 
@@ -202,19 +290,29 @@ This slide introduces the three main integration styles used throughout the serv
 
     The enrichment object is per request, so endpoint code should treat it as current-request state rather than a singleton service.
 
+- **Registers on the default and every named WebServer socket**
+
+  Audit coverage follows configured sockets instead of being limited to only the default listener.
+
+- **Verification requests can return `oci-splat-audit-event-summary`**
+
+  The `oci-splat-audit-verify: true` request header is useful for local and integration validation of emitted audit content.
+
 ## Audit Configuration
 
-- **`oci.auditv2` enables auditing and names the audit source**
+- **`oci.auditv2` enables auditing and supplies event/resource defaults**
 
   The config root turns Audit on and identifies the source name that appears in emitted events.
 
-- **Rules explicitly whitelist audited request values**
+- **Rules explicitly whitelist request parameters and request/response headers**
 
   Rules control which query parameters and headers may appear in audit data.
 
-- **A rule applies only when resource and action match**
+- **`respect-splat-audited-flag` defaults to `true`**
 
-  A rule is scoped by path and HTTP action, so a value is recorded only for matching routes and methods.
+  Requests already marked as audited by SPLAT skip duplicate emission. Explain that endpoint enrichment remains request-scoped even when emission is skipped.
+
+END COMMENTED OUT: Audit -->
 
 ## Identity
 
@@ -272,7 +370,7 @@ This slide introduces the three main integration styles used throughout the serv
 
   The same programming model can target local/test, database-backed, or service-backed Kiev deployments.
 
-- **Exposes `DataStore`, `MappedDataStore`, and transaction support**
+- **Exposes `DataStore`, `MappedDataStore`, stream clients, and transaction support**
 
   Services can inject the native Kiev abstractions they need.
 
@@ -293,6 +391,10 @@ This slide introduces the three main integration styles used throughout the serv
 - **Store names qualify injected Kiev services and transactions**
 
   The configured names are used to select the correct injected store and transactional context.
+
+- **`SERVICE` stores can expose stream records and include deleted column values**
+
+  Stream clients are named by store and reuse the store's endpoint, locality, TLS, and authentication configuration.
 
 ## Kiev Example
 
@@ -322,6 +424,8 @@ This slide introduces the three main integration styles used throughout the serv
 
   If the method throws, Helidon Talon aborts an in-flight write transaction, rethrows the exception, and closes the transaction in all cases.
 
+<!-- BEGIN COMMENTED OUT: Limits
+
 ## Limits
 
 - **Provides Helidon integration for OCI Limits**
@@ -332,9 +436,9 @@ This slide introduces the three main integration styles used throughout the serv
 
   The data-plane Limits client is created from config and made injectable.
 
-- **Uses shared OCI SDK authentication and client configuration**
+- **Uses scoped service-principal auth when configured; otherwise shared auth**
 
-  Limits participates in the same SDK auth and client setup used by other OCI integrations.
+  This is the key RC2 change: `oci.limits.auth` can select S2S credentials for Limits alone. Without that subtree, the client uses the shared `helidon.oci` provider.
 
 - **Supports endpoint and timeout configuration**
 
@@ -346,7 +450,11 @@ This slide introduces the three main integration styles used throughout the serv
 
   Limits settings live under this configuration subtree.
 
-- **Client settings use the common OCI SDK timeout shape**
+- **`auth` supports module-local service-principal credentials**
+
+  Only `service-principal` is supported for the module-local selector. It can use platform-provided S2S material or an explicit certificate chain.
+
+- **`client` uses the common OCI SDK timeout shape**
 
   The module follows the same timeout configuration pattern used by other SDK-backed clients.
 
@@ -363,6 +471,10 @@ This slide introduces the three main integration styles used throughout the serv
 - **Use it from service code to check limits and quotas**
 
   The client can be called from normal service logic to consult Limits behavior.
+
+END COMMENTED OUT: Limits -->
+
+<!-- BEGIN COMMENTED OUT: Metering
 
 ## Metering
 
@@ -438,21 +550,23 @@ This slide introduces the three main integration styles used throughout the serv
 
   Method parameters provide the fields needed to construct metering records.
 
+END COMMENTED OUT: Metering -->
+
 ## Metrics
 
-- **Publishes Helidon neutral metrics to OCI metrics**
+- **Publishes Helidon meters to OCI Monitoring through `metrics-lib`**
 
-  Helidon Talon sends metrics recorded through Helidon APIs to OCI Monitoring.
+  Helidon Talon initializes the OCI publication path and sends Helidon meter updates to OCI Monitoring.
 
-- **Works with normal Helidon metrics APIs and annotations**
+- **Supports metrics recorded with OCI `Metrics`, Helidon APIs, or Helidon annotations**
 
-  Services can use familiar Helidon metrics annotations and APIs.
+  Services can keep the recording style that fits their code while using the same OCI publishing integration.
 
 - **Supports counters, timers, distribution summaries, gauges, and functional counters**
 
   The integration supports the main metric types teams typically need.
 
-- **Adds automatic HTTP request metrics and optional JVM gauges**
+- **Adds automatic HTTP request metrics and built-in JVM gauges**
 
   Services can get request-level and runtime metrics with minimal custom code.
 
@@ -474,6 +588,10 @@ This slide introduces the three main integration styles used throughout the serv
 
   The module can use the regional Monitoring endpoint or a configured endpoint.
 
+- **Include/exclude filters support exact, regex, or substring matching**
+
+  Excludes take precedence over includes, and attribute filters select derived values such as counter value, timer `m1_rate`, and distribution-summary mean.
+
 ## Metrics Example
 
 - **Service code uses Helidon metrics annotations**
@@ -484,47 +602,51 @@ This slide introduces the three main integration styles used throughout the serv
 
   Helidon Talon handles the publication path from Helidon metrics to OCI.
 
-[object-storage-notes-001]: # "## Object Storage"
-[object-storage-notes-002]: # ""
-[object-storage-notes-003]: # "- **Provides a service registry binding for the OCI SDK Object Storage client**"
-[object-storage-notes-004]: # ""
-[object-storage-notes-005]: # "  Helidon Talon creates and registers the SDK client so applications can inject it."
-[object-storage-notes-006]: # ""
-[object-storage-notes-007]: # "- **Uses the shared OCI SDK authentication provider**"
-[object-storage-notes-008]: # ""
-[object-storage-notes-009]: # "  Object Storage uses the same OCI auth setup as other SDK integrations."
-[object-storage-notes-010]: # ""
-[object-storage-notes-011]: # "- **Supports configured endpoint and region routing**"
-[object-storage-notes-012]: # ""
-[object-storage-notes-013]: # "  The client can target an endpoint derived from region or explicitly configured."
-[object-storage-notes-014]: # ""
-[object-storage-notes-015]: # "- **Lets services inject the client instead of constructing it directly**"
-[object-storage-notes-016]: # ""
-[object-storage-notes-017]: # "  Application code should depend on the injected SDK interface rather than creating the client manually."
-[object-storage-notes-018]: # ""
-[object-storage-notes-019]: # "## Object Storage Configuration"
-[object-storage-notes-020]: # ""
-[object-storage-notes-021]: # "- **Config root is `oci.object-storage-client`**"
-[object-storage-notes-022]: # ""
-[object-storage-notes-023]: # "  Object Storage client settings live under this configuration subtree."
-[object-storage-notes-024]: # ""
-[object-storage-notes-025]: # "- **Region derives the service endpoint when no endpoint is set**"
-[object-storage-notes-026]: # ""
-[object-storage-notes-027]: # "  If no endpoint is configured, the module can derive one from region."
-[object-storage-notes-028]: # ""
-[object-storage-notes-029]: # "- **Client settings follow the common OCI SDK configuration shape**"
-[object-storage-notes-030]: # ""
-[object-storage-notes-031]: # "  Timeouts and related client settings are consistent with other SDK integrations."
-[object-storage-notes-032]: # ""
-[object-storage-notes-033]: # "## Object Storage Example"
-[object-storage-notes-034]: # ""
-[object-storage-notes-035]: # "- **Inject the OCI SDK `ObjectStorage` interface**"
-[object-storage-notes-036]: # ""
-[object-storage-notes-037]: # "  The example shows code receiving the native SDK client through injection."
-[object-storage-notes-038]: # ""
-[object-storage-notes-039]: # "- **Build normal OCI SDK requests in service code**"
-[object-storage-notes-040]: # ""
-[object-storage-notes-041]: # "  Once injected, the client is used with normal OCI SDK request builders."
+## Object Storage
+
+- **Registers the synchronous OCI SDK `ObjectStorage` client for injection**
+
+  Helidon Talon creates and registers the native SDK interface so application services can receive it through normal Helidon injection.
+
+- **Builds it with shared OCI authentication and standard SDK client settings**
+
+  Object Storage uses the same selected OCI credentials and common client configuration model as other SDK-backed Talon integrations.
+
+- **Routes to an explicit endpoint or a configured or injected OCI region**
+
+  Services can target a specific endpoint, select a region directly, or rely on the region supplied through the Helidon service registry.
+
+- **Application code uses the native client and standard OCI requests**
+
+  Talon owns client construction, but application code continues to use standard OCI SDK request builders and responses.
+
+## Object Storage Configuration
+
+- **Settings live under `oci.object-storage-client`**
+
+  Routing and OCI SDK client behavior for the injected Object Storage client are grouped under this subtree.
+
+- **`endpoint` overrides region-based routing**
+
+  An explicit endpoint takes precedence. Otherwise, Talon resolves a configured region or falls back to the region supplier in the service registry.
+
+- **Otherwise use `region`, `region-id`, or the injected OCI region; configure only one region key**
+
+  The two keys are aliases provided for naming convenience, and configuring both is rejected.
+
+- **`client` controls timeouts, retry, circuit breaker, and upload behavior**
+
+  The nested `client` section exposes the common OCI SDK connection and resilience options used when Talon builds the client.
+
+## Object Storage Example
+
+- **Inject the OCI SDK `ObjectStorage` interface**
+
+  The example shows code receiving the native SDK client through injection.
+
+- **Build normal OCI SDK requests in service code**
+
+  Once injected, the client is used with normal OCI SDK request builders.
 
 ## Secret Service V2
 
@@ -567,6 +689,10 @@ The diagram frames SSv2 as two related capabilities: secret values exposed throu
 - **Endpoint can use `${oci.env.iaas-domain-name}`**
 
   The endpoint can be built from environment-derived domain information.
+
+- **`poll-interval` defaults to `PT30M`**
+
+  Polling is listener-driven and checks only keys that the application has already requested.
 
 ## Secret Service V2 Secrets Example
 
@@ -614,6 +740,8 @@ The diagram frames SSv2 as two related capabilities: secret values exposed throu
 
   The example shows server TLS, but the same `manager.oci-ssv2` structure can be used under client TLS configuration for outbound mTLS.
 
+<!-- BEGIN COMMENTED OUT: Splat
+
 ## Splat
 
 - **Adds SPLAT mTLS validation support for Helidon endpoints**
@@ -632,6 +760,10 @@ The diagram frames SSv2 as two related capabilities: secret values exposed throu
 
   Splat validation and Identity's SPLAT-aware handling complement each other for forwarded principal scenarios.
 
+- **Requires listener-level mTLS**
+
+  SPLAT validates the peer certificate chain supplied by Helidon. The listener must terminate TLS, require client certificates, and trust the correct issuing CA before the SPLAT interceptor runs.
+
 ## Splat Configuration
 
 - **Config root is `oci.splat`**
@@ -645,6 +777,14 @@ The diagram frames SSv2 as two related capabilities: secret values exposed throu
 - **Region can be explicit or resolved from the OCI environment**
 
   SPLAT validation can use a configured region or a region supplied by `oci-env`.
+
+- **Expose protected endpoints only on mTLS listeners**
+
+  Generated interceptors run wherever the endpoint is exposed. A non-mTLS listener will not provide the peer certificates upstream SPLAT expects.
+
+END COMMENTED OUT: Splat -->
+
+<!-- BEGIN COMMENTED OUT: Tagging
 
 ## Tagging
 
@@ -688,6 +828,8 @@ The diagram frames SSv2 as two related capabilities: secret values exposed throu
 
   The example shows turning tag maps into the binary slug used for persistence.
 
+END COMMENTED OUT: Tagging -->
+
 ## Workflow
 
 - **Integrates OCI Workflow-as-a-Service with Helidon Talon services**
@@ -722,17 +864,23 @@ The diagram frames SSv2 as two related capabilities: secret values exposed throu
 
 ## Workflow Example
 
-- **Inject default worker `WorkflowClient`**
+No bullet points.
 
-  The default unqualified client is intended for launching workflow work.
-
-- **Serialize JSON request with Helidon `JsonBinding`**
-
-  The workflow payload is application-specific JSON serialized to bytes before launch.
+The example injects the default unqualified worker `WorkflowClient`, serializes an application-specific JSON payload with Helidon `JsonBinding`, and launches the workflow using the native WFaaS client.
 
 ## Integrated Client Versions
 
-No bullet points.
+- **Versions are managed as one tested set**
+
+  The table shows the client and platform versions coordinated by the Helidon Talon dependency management rather than selected independently by each service.
+
+- **The left column covers the core runtime and frequently used integrations**
+
+  Call out the Helidon, OCI Java SDK, Identity, Kiev, Limits, and metrics versions that shape the application baseline.
+
+- **The right column covers additional native-service integrations**
+
+  Workflow, metering, SPLAT, tagging, commons metrics, and the Vault user client are pinned to the versions tested with this RC2 line.
 
 ## Heliport
 
@@ -754,13 +902,31 @@ No bullet points.
 
   The loop on the Codex box represents iterative analysis, cleanup, and validation before the migrated candidate becomes a final Helidon application.
 
+## Pilot Teams
+
+- **16+ pilot teams**
+
+  More than 16 pilot teams are evaluating a move to Helidon Talon, either by migrating an existing service or by starting a new service on the platform.
+
+- **SPLAT, EDS, and Cloud Performance**
+
+  The Helidon Talon team is actively collaborating with SPLAT, EDS, and Cloud Performance on technical integration, validation, and adoption readiness.
+
+- **Secure Desktop and Clinical Config Service**
+
+  Secure Desktop and Clinical Config Service are also participating as pilot services.
+
+- **More joining**
+
+  The pilot pipeline continues to grow as more teams evaluate Helidon Talon.
+
 ## Data Plane Reference App
 
 - **Runnable Helidon Talon reference service under `examples/data-plane`**
 
   Teams can inspect and run a concrete Helidon Talon data-plane application in the repository.
 
-- **Combines request ID, OCI error responses, Identity, Kiev, and Audit**
+- **Combines hardened request ID handling, OCI error responses, Identity, Kiev, and Audit**
 
   The example demonstrates multiple modules working together in one service.
 
@@ -772,15 +938,33 @@ No bullet points.
 
   The default setup is intentionally easy to run locally.
 
+## What's Next for Talon?
+
+- **Pegasus integration**
+
+  Pegasus is one of the next areas planned for Talon integration and adoption support.
+
+- **Enhanced logging support**
+
+  Talon will expand the shared logging capabilities available to OCI Native Services.
+
+- **Control-plane reference app**
+
+  A control-plane reference application will complement the existing data-plane example with practical integration patterns.
+
+- **More integrations and features**
+
+  Talon will continue to expand its integration portfolio and shared platform capabilities as service needs evolve.
+
 ## What Teams Should Take Away
 
 - **Consider Heliport + Codex for Dropwizard-to-Helidon migration work**
 
   Teams migrating existing Dropwizard services should evaluate the guided migration workflow.
 
-- **Consult the Data Plane Reference App before wiring a new DP service**
+- **Consult reference apps before wiring a new DP service**
 
-  The reference app should be the first stop for data-plane service patterns.
+  Use the existing data-plane reference app for current patterns and the planned control-plane app as that guidance expands.
 
 - **Let `helidon-oci-envconfig` resolve region, AD, FD, and domains**
 
@@ -790,28 +974,28 @@ No bullet points.
 
   Helidon Talon is modular; services should adopt the relevant pieces without pulling in unnecessary integrations.
 
-- **Stay tuned for additional features and integrations in upcoming releases!**
+- **Use the RC2 examples as executable configuration references**
 
-  Helidon Talon is a foundation, and the integration set is expected to grow.
+  The examples reflect current configuration shapes and are the best starting point for copy-and-adapt adoption.
 
 ## Resources
 
-- **Helidon User's Channel: `#helidon-users`**
+- **Helidon user channel: `#helidon-users`**
 
   Direct people to the Slack channel for questions and discussion.
 
-- **Helidon Talon docs: `https://helidon.oraclecorp.com/docs/2.0.0-RC1/`**
+- **Helidon: `https://helidon.io/`**
 
-  This is the published documentation site for the Helidon Talon 2.0.0 RC1 release.
+  This is the public Helidon project website and the starting point for general Helidon documentation and resources.
 
-- **Helidon Talon: `https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon`**
+- **Documentation: `https://helidon.oraclecorp.com/docs/2.0.0-RC2/`**
+
+  This is the documentation location for the Helidon Talon 2.0.0 RC2 release.
+
+- **Repository: `https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/oci-helidon`**
 
   This is the main repository for the Helidon Talon code and examples.
 
 - **Heliport: `https://devops.oci.oraclecorp.com/devops-coderepository/namespaces/axuxirvibvvo/projects/HLDN/repositories/heliport`**
 
   This is the repository for the Dropwizard-to-Helidon migration tooling.
-
-- **Helidon Talon reference app: `examples/data-plane`**
-
-  This points teams to the local reference app inside the Helidon Talon repository.
