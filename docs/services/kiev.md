@@ -21,7 +21,7 @@ registers named access to:
 * `com.oracle.helidon.oci.kiev.KievTransactionSupport`
 * `com.oracle.pic.kiev.streams.service.client.core.Stream` for `SERVICE` stores
 
-Applications can inject the named services directly or use the `@KievTransaction` annotation for declarative
+Applications can inject the named services directly or use the `@Kiev.Transaction` annotation for declarative
 transaction handling on service methods.
 
 ---
@@ -311,7 +311,7 @@ Application code obtains a `com.oracle.pic.kiev.Transaction` from a transaction 
 that need to participate in the same transaction.
 
 ```java
-@KievTransaction(value = DATA_STORE_NAME, name = "store-put")
+@Kiev.Transaction(value = DATA_STORE_NAME, name = "store-put")
 String put(Transaction tx, String id, String value) {
     return writeItem(tx, id, value);
 }
@@ -323,7 +323,7 @@ String value = transactionSupport.execute("store-get", true, tx -> readItem(tx, 
 
 ### Use declarative transactions
 
-Annotate service methods with `@KievTransaction`. If the method declares a
+Annotate service methods with `@Kiev.Transaction`. If the method declares a
 `com.oracle.pic.kiev.Transaction` parameter, the active transaction is supplied automatically.
 Each transaction annotation value must use the configured `store-name`. Use `name` to set the transaction base name
 used for diagnostics; otherwise Helidon generates one from the intercepted method.
@@ -337,13 +337,13 @@ than 58 characters are rejected during code generation, and programmatic `KievTr
 longer base names before opening a transaction.
 
 ```java
-@KievTransaction(value = DATA_STORE_NAME, name = "store-put")
+@Kiev.Transaction(value = DATA_STORE_NAME, name = "store-put")
 String put(Transaction tx, String id, String value) {
     StoreItem item = bucket.put(tx, new StoreItem(id, value));
     return item.value;
 }
 
-@KievTransaction(value = DATA_STORE_NAME, name = "store-get", readOnly = true)
+@Kiev.Transaction(value = DATA_STORE_NAME, name = "store-get", readOnly = true)
 Optional<String> get(Transaction tx, String id) {
     return bucket.get(tx, id).map(item -> item.value);
 }
@@ -382,7 +382,7 @@ Each `oci.kiev.data-stores` entry defines one Kiev data store.
 | Key                                      | Default value | Description |
 |------------------------------------------|---------------|-------------|
 | `oci.kiev.data-stores[].backend`         | `IN_MEMORY`   | Kiev backend to use: `IN_MEMORY`, `DIRECT_DB`, or `SERVICE`. |
-| `oci.kiev.data-stores[].store-name`      |               | Kiev store name used with `@Service.Named` and `@KievTransaction`. For `SERVICE` backends, this is the KaaS `kiev_name`/data store name and must follow KaaS limits, including the 30-character maximum. |
+| `oci.kiev.data-stores[].store-name`      |               | Kiev store name used with `@Service.Named` and `@Kiev.Transaction`. For `SERVICE` backends, this is the KaaS `kiev_name`/data store name and must follow KaaS limits, including the 30-character maximum. |
 | `oci.kiev.data-stores[].app-name`        |               | Application name passed to the Kiev client. |
 | `oci.kiev.data-stores[].transaction-max-reads` | `100` | Maximum reads per transaction. |
 | `oci.kiev.data-stores[].transaction-max-writes` | `100` | Maximum writes per transaction. |

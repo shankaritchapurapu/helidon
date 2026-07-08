@@ -87,7 +87,7 @@ public class KievTransactionSupport {
     }
 
     /**
-     * Base interceptor implementation for methods annotated with {@link KievTransaction}.
+     * Base interceptor implementation for methods annotated with {@link Kiev.Transaction}.
      */
     public abstract static class TransactionMethod implements Interception.ElementInterceptor {
         /**
@@ -166,7 +166,7 @@ public class KievTransactionSupport {
             return transactionSupport.transactions.storeName(transaction)
                     .<IllegalStateException>map(actualStoreName -> new IllegalStateException(prefix
                             + " is associated with store-name '" + actualStoreName
-                            + "', but @KievTransaction requires store-name '" + storeName + "'"))
+                            + "', but @Kiev.Transaction requires store-name '" + storeName + "'"))
                     .orElseGet(() -> new IllegalStateException(prefix
                             + " is not managed by Helidon Kiev for store-name '" + storeName + "'"));
         }

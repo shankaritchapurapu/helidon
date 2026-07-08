@@ -9,7 +9,7 @@ It validates that a Kiev-backed service can be resolved from the Helidon service
 
 - `src/main/java/com/oracle/helidon/oci/tests/integration/kiev/KievStoreService.java`
   - Small Kiev service used by the integration test.
-  - Uses `MappedDataStore` and `@KievTransaction` methods for CRUD operations.
+  - Uses `MappedDataStore` and `@Kiev.Transaction` methods for CRUD operations.
 - `src/main/java/com/oracle/helidon/oci/tests/integration/kiev/StoreItem.java`
   - Kiev mapped entity used by `KievStoreService`.
 - `src/test/java/com/oracle/helidon/oci/tests/integration/kiev/KievIT.java`

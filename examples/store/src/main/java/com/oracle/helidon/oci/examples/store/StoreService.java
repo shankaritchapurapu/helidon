@@ -11,7 +11,7 @@ import io.helidon.http.HttpException;
 import io.helidon.http.Status;
 import io.helidon.service.registry.Service;
 
-import com.oracle.helidon.oci.kiev.KievTransaction;
+import com.oracle.helidon.oci.kiev.Kiev;
 import com.oracle.pic.kiev.Bucket;
 import com.oracle.pic.kiev.Transaction;
 import com.oracle.pic.kiev.exceptions.DuplicateKeyException;
@@ -42,7 +42,7 @@ class StoreService {
         return post(null, id, value);
     }
 
-    @KievTransaction(value = DATA_STORE_NAME, name = "store-post")
+    @Kiev.Transaction(value = DATA_STORE_NAME, name = "store-post")
     String post(Transaction tx, String id, String value) {
         try {
             StoreItem item = bucket.insert(tx, new StoreItem(id, value));
@@ -56,7 +56,7 @@ class StoreService {
         return put(null, id, value);
     }
 
-    @KievTransaction(value = DATA_STORE_NAME, name = "store-put")
+    @Kiev.Transaction(value = DATA_STORE_NAME, name = "store-put")
     String put(Transaction tx, String id, String value) {
         Optional<StoreItem> existing = bucket.get(tx, id);
         if (existing.isEmpty()) {
@@ -70,7 +70,7 @@ class StoreService {
         return get(null, id);
     }
 
-    @KievTransaction(value = DATA_STORE_NAME, name = "store-get")
+    @Kiev.Transaction(value = DATA_STORE_NAME, name = "store-get")
     Optional<String> get(Transaction tx, String id) {
         return bucket.get(tx, id).map(item -> item.value);
     }
@@ -79,7 +79,7 @@ class StoreService {
         return delete(null, id);
     }
 
-    @KievTransaction(value = DATA_STORE_NAME, name = "store-delete")
+    @Kiev.Transaction(value = DATA_STORE_NAME, name = "store-delete")
     Optional<String> delete(Transaction tx, String id) {
         Optional<StoreItem> existing = bucket.get(tx, id);
         existing.ifPresent(item -> bucket.delete(tx, id));
@@ -90,7 +90,7 @@ class StoreService {
         return list(null, pageToken, pageSize);
     }
 
-    @KievTransaction(value = DATA_STORE_NAME, name = "store-list", readOnly = true)
+    @Kiev.Transaction(value = DATA_STORE_NAME, name = "store-list", readOnly = true)
     StorePage list(Transaction tx, String pageToken, int pageSize) {
         Page<StoreItem> page = pageToken == null
                 ? bucket.rangeGet(tx, pageSize, Bucket.Direction.ASCENDING)

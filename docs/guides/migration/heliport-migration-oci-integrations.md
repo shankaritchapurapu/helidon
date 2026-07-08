@@ -33,7 +33,7 @@ In Dropwizard/Guice services, OCI clients are commonly assembled in modules from
 | Identity/auth | `helidon-oci-identity` and SDK auth modules | Authenticated endpoint annotations, legacy identity filter/binder cleanup, `IdentityContext` ownership, auth-provider frontiers, and `oci.identity` config. |
 | Identity Client | `helidon-oci-identity-client` | Plain identity client construction and service-registry candidates; tag lookup, SAML/principal enrichment, local/mock auth, and custom transport remain exact evidence until target equivalence is proven. |
 | OCI JAX-RS compatibility | `helidon-oci-jaxrs` where needed | Retained provider/client carrier compatibility without masking app-owned server-side JAX-RS or Servlet residue. |
-| Kiev | `helidon-oci-kiev` | Kiev data-store dependency convergence, transaction provider/supplier materialization, config evidence, transaction/frontier packets, and eventual `@KievTransaction` targets where safe. |
+| Kiev | `helidon-oci-kiev` | Kiev data-store dependency convergence, transaction provider/supplier materialization, config evidence, transaction/frontier packets, and eventual `@Kiev.Transaction` targets where safe. |
 | Limits | `helidon-oci-limits` | Plain `LimitsDPClient` provider convergence and `oci.limits` config transposition; CP/custom cache/TLS/transport remains frontier evidence. |
 | Metering | `helidon-oci-metering-cp` or `helidon-oci-metering-dp` | BLING dependency materialization by role, `meteringConfig` transposition, wrapper cleanup, and explicit metering behavior frontiers. |
 | Metrics | `helidon-oci-metrics` | OCI/T2 metrics publisher config under `metrics.publishers`, automatic HTTP metrics, JVM gauges, prefix annotation metadata, reporter/bootstrap frontiers, and Maven governance for known metrics module conflicts while preserving Talon-owned transitive dependencies. |
@@ -92,7 +92,7 @@ Preferred target shape:
 
 - Inject `MappedDataStore`, `DataStore`, or `KievTransactionSupport` through constructor injection on `@Service.Singleton` services.
 - Use `@Service.Named(<store-name>)` when multiple stores are present.
-- Replace ad hoc transaction wrappers with `@KievTransaction` when the service method boundary is the transaction boundary.
+- Replace ad hoc transaction wrappers with `@Kiev.Transaction` when the service method boundary is the transaction boundary.
 - Move backend, endpoint, auth, store, compartment, locality, and related values under `oci.kiev.data-stores`.
 - Use `oci.dynamic-ssl-context-providers[]` plus a `dynamic-ssl-context-provider-name` when Kiev service auth uses reusable TLS.
 
@@ -540,13 +540,13 @@ oci:
         meter-name: email-api.requests
 ```
 
-CP metering records through the Kiev-backed metering-agent path. Application code that records CP metering points still needs to run the metered work in the appropriate Kiev transaction boundary, either through existing transaction logic or through a migrated `@KievTransaction` service method.
+CP metering records through the Kiev-backed metering-agent path. Application code that records CP metering points still needs to run the metered work in the appropriate Kiev transaction boundary, either through existing transaction logic or through a migrated `@Kiev.Transaction` service method.
 
 ```java
-import com.oracle.helidon.oci.kiev.KievTransaction;
+import com.oracle.helidon.oci.kiev.Kiev;
 import com.oracle.helidon.oci.metering.cp.Metering;
 
-@KievTransaction("email-store")
+@Kiev.Transaction("email-store")
 @Metering.Point(value = "email.requests",
                 tags = @Metering.Tag(key = "source", value = "api"))
 void recordEmail(@Metering.CompartmentId String compartmentId,

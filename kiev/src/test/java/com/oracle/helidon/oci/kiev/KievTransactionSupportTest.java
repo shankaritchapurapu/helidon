@@ -197,7 +197,7 @@ class KievTransactionSupportTest {
             IllegalStateException ex = assertThrows(IllegalStateException.class,
                                                     () -> secondaryMethod.proceed(null, args -> "unexpected", tx));
             assertEquals("Kiev transaction argument at index 0 is associated with store-name 'primary-store', "
-                                 + "but @KievTransaction requires store-name 'secondary-store'",
+                                 + "but @Kiev.Transaction requires store-name 'secondary-store'",
                          ex.getMessage());
             return null;
         });

@@ -70,7 +70,7 @@ final class OciTypes {
             TypeName.create("com.oracle.pic.identity.authorization.permissions.annotations.ZprBasedAccessControl");
 
     static final TypeName KIEV_TRANSACTION =
-            TypeName.create("com.oracle.helidon.oci.kiev.KievTransaction");
+            TypeName.create("com.oracle.helidon.oci.kiev.Kiev.Transaction");
     static final TypeName KIEV_TRANSACTION_METHOD =
             TypeName.create("com.oracle.helidon.oci.kiev.KievTransactionSupport.TransactionMethod");
     static final TypeName KIEV_TRANSACTION_SUPPORT =

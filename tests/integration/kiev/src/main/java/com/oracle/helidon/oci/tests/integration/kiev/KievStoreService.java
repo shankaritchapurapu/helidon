@@ -10,7 +10,7 @@ import io.helidon.http.HttpException;
 import io.helidon.http.Status;
 import io.helidon.service.registry.Service;
 
-import com.oracle.helidon.oci.kiev.KievTransaction;
+import com.oracle.helidon.oci.kiev.Kiev;
 import com.oracle.pic.kiev.Bucket;
 import com.oracle.pic.kiev.Transaction;
 import com.oracle.pic.kiev.exceptions.DuplicateKeyException;
@@ -39,7 +39,7 @@ class KievStoreService {
         return post(null, id, value);
     }
 
-    @KievTransaction(value = KIEV_DATA_STORE, name = "store-post")
+    @Kiev.Transaction(value = KIEV_DATA_STORE, name = "store-post")
     String post(Transaction tx, String id, String value) {
         try {
             StoreItem item = bucket.insert(tx, new StoreItem(id, value));
@@ -53,7 +53,7 @@ class KievStoreService {
         return put(null, id, value);
     }
 
-    @KievTransaction(KIEV_DATA_STORE)
+    @Kiev.Transaction(KIEV_DATA_STORE)
     String put(Transaction tx, String id, String value) {
         Optional<StoreItem> existing = bucket.get(tx, id);
         if (existing.isEmpty()) {
@@ -67,7 +67,7 @@ class KievStoreService {
         return get(null, id);
     }
 
-    @KievTransaction(KIEV_DATA_STORE)
+    @Kiev.Transaction(KIEV_DATA_STORE)
     Optional<String> get(Transaction tx, String id) {
         return bucket.get(tx, id).map(item -> item.value);
     }
@@ -76,7 +76,7 @@ class KievStoreService {
         return delete(null, id);
     }
 
-    @KievTransaction(KIEV_DATA_STORE)
+    @Kiev.Transaction(KIEV_DATA_STORE)
     Optional<String> delete(Transaction tx, String id) {
         Optional<StoreItem> existing = bucket.get(tx, id);
         existing.ifPresent(_ -> bucket.delete(tx, id));
@@ -87,7 +87,7 @@ class KievStoreService {
         return list(null);
     }
 
-    @KievTransaction(value = KIEV_DATA_STORE, readOnly = true)
+    @Kiev.Transaction(value = KIEV_DATA_STORE, readOnly = true)
     List<StoreItem> list(Transaction tx) {
         return bucket.rangeGet(tx, 100, Bucket.Direction.ASCENDING).results();
     }

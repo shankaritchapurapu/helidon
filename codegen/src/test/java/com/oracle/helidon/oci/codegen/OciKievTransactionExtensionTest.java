@@ -58,7 +58,7 @@ class OciKievTransactionExtensionTest {
                                                   () -> explicitTransactionName(transactionName, "put()"));
 
         assertEquals("""
-                @KievTransaction name on put() must be at most %d characters because Helidon appends a runtime suffix \
+                @Kiev.Transaction name on put() must be at most %d characters because Helidon appends a runtime suffix \
                 and Kiev requires the final transaction name to be below 80 characters; got %d characters\
                 """.formatted(TRANSACTION_BASE_NAME_MAX_LENGTH,
                                transactionName.length()),

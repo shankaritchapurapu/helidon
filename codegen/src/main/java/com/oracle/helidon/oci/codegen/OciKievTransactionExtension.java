@@ -58,10 +58,10 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
 
     private TypeInfo enclosingType(Map<TypeName, TypeInfo> knownTypes, TypedElementInfo element) {
         if (element.kind() != ElementKind.METHOD) {
-            throw new CodegenException("@KievTransaction is only supported on methods", element.originatingElementValue());
+            throw new CodegenException("@Kiev.Transaction is only supported on methods", element.originatingElementValue());
         }
         TypeName enclosingTypeName = element.enclosingType()
-                .orElseThrow(() -> new CodegenException("@KievTransaction method is missing an enclosing type",
+                .orElseThrow(() -> new CodegenException("@Kiev.Transaction method is missing an enclosing type",
                                                         element.originatingElementValue()));
         TypeInfo enclosingType = knownTypes.get(enclosingTypeName);
         if (enclosingType == null) {
@@ -90,7 +90,7 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
                                                         element.elementName()));
         String dataStoreName = annotation.stringValue("value")
                 .filter(it -> !it.isBlank())
-                .orElseThrow(() -> new CodegenException("@KievTransaction value must be set to a configured "
+                .orElseThrow(() -> new CodegenException("@Kiev.Transaction value must be set to a configured "
                                                                  + "oci.kiev.data-stores[].store-name on "
                                                                  + element.signature().text(),
                                                          element.originatingElementValue()));
@@ -191,7 +191,7 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
 
     private static String tooLongExplicitNameMessage(String transactionName, String methodSignature) {
         return """
-                @KievTransaction name on %s must be at most %d characters because Helidon appends a runtime suffix \
+                @Kiev.Transaction name on %s must be at most %d characters because Helidon appends a runtime suffix \
                 and Kiev requires the final transaction name to be below %d characters; got %d characters\
                 """.formatted(methodSignature,
                                TRANSACTION_BASE_NAME_MAX_LENGTH,
@@ -223,7 +223,7 @@ final class OciKievTransactionExtension implements RegistryCodegenExtension {
         for (TypedElementInfo parameter : element.parameterArguments()) {
             if (OciTypes.KIEV_CLIENT_TRANSACTION.equals(parameter.typeName())) {
                 if (result != -1) {
-                    throw new CodegenException("@KievTransaction supports at most one Transaction parameter on "
+                    throw new CodegenException("@Kiev.Transaction supports at most one Transaction parameter on "
                                                        + element.signature().text(),
                                                element.originatingElementValue());
                 }
