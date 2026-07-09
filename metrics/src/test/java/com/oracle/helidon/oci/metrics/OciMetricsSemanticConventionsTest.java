@@ -381,8 +381,16 @@ class OciMetricsSemanticConventionsTest {
         assertMetricObservationCount(harness,
                                      "StoreEndpoint.userAgentBounded.Request.Client.JavaSDK.Count",
                                      2L);
-        assertMetricPresent(harness, "StoreEndpoint.userAgentBounded.Request.Client.JavaSDK.1.Count");
-        assertMetricAbsent(harness, "StoreEndpoint.userAgentBounded.Request.Client.JavaSDK.2.Count");
+        String version1Metric = "StoreEndpoint.userAgentBounded.Request.Client.JavaSDK.1.Count";
+        String version2Metric = "StoreEndpoint.userAgentBounded.Request.Client.JavaSDK.2.Count";
+        List<TimeSeries> flushedMetrics = harness.flushMetrics();
+        boolean version1Present = hasMetric(flushedMetrics, version1Metric);
+        boolean version2Present = hasMetric(flushedMetrics, version2Metric);
+        assertTrue(version1Present ^ version2Present,
+                   () -> "Expected exactly one detailed user-agent metric in " + flushedMetrics);
+        String admittedVersion = version1Present ? "1" : "2";
+        String overflowedMetric = version1Present ? version2Metric : version1Metric;
+        assertMetricAbsent(harness, overflowedMetric);
         assertMetricObservationCount(harness,
                                      "StoreEndpoint.userAgentBounded.Request.Client.OTHER.Count",
                                      2L);
@@ -391,7 +399,7 @@ class OciMetricsSemanticConventionsTest {
                                      2L);
         List<String> admittedNames = harness.registry().meters().stream()
                 .map(meter -> meter.id().name())
-                .filter(name -> name.contains("Request.Client.JavaSDK.1."))
+                .filter(name -> name.contains("Request.Client.JavaSDK." + admittedVersion + "."))
                 .toList();
         assertThat(admittedNames.toString(), admittedNames.size(), is(2));
     }
@@ -840,9 +848,13 @@ class OciMetricsSemanticConventionsTest {
 
     private static void assertMetricAbsent(MetricsTestHarness harness, String name) {
         List<TimeSeries> flushedMetrics = harness.flushMetrics();
-        assertTrue(flushedMetrics
-                           .stream()
-                           .noneMatch(series -> series.getMetricName().getName().equals(name)));
+        assertFalse(hasMetric(flushedMetrics, name));
+    }
+
+    private static boolean hasMetric(List<TimeSeries> flushedMetrics, String name) {
+        return flushedMetrics
+                .stream()
+                .anyMatch(series -> series.getMetricName().getName().equals(name));
     }
 
     private static TimeSeries metric(MetricsTestHarness harness, String name) {
