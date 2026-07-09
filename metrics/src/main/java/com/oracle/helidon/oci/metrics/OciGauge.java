@@ -4,9 +4,6 @@
 
 package com.oracle.helidon.oci.metrics;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
@@ -21,11 +18,8 @@ import io.helidon.metrics.api.MetricsFactory;
  */
 final class OciGauge<N extends Number> extends AbstractOciMeter implements Gauge<N> {
 
-    private static final Object NO_REPORTED_VALUE = new Object();
-
     private final Gauge<N> delegate;
     private final Supplier<N> supplier;
-    private final AtomicReference<Object> lastReportedValue = new AtomicReference<>(NO_REPORTED_VALUE);
 
     OciGauge(Builder<N> builder, OciMeterRegistry registry, Gauge<N> delegate, boolean enabled) {
         super(registry, delegate, enabled);
@@ -45,19 +39,6 @@ final class OciGauge<N extends Number> extends AbstractOciMeter implements Gauge
     public N value() {
         delegate.value();
         return supplier.get();
-    }
-
-    Optional<N> valueIfChanged() {
-        N value = value();
-        while (true) {
-            Object previous = lastReportedValue.get();
-            if (previous != NO_REPORTED_VALUE && Objects.equals(previous, value)) {
-                return Optional.empty();
-            }
-            if (lastReportedValue.compareAndSet(previous, value)) {
-                return Optional.of(value);
-            }
-        }
     }
 
     static final class Builder<N extends Number> extends AbstractOciMeterBuilder<Gauge.Builder<N>, Gauge<N>>

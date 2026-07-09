@@ -4,8 +4,8 @@
 
 package com.oracle.helidon.oci.metrics;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.OptionalDouble;
 
 import io.helidon.metrics.api.DistributionStatisticsConfig;
 import io.helidon.metrics.api.DistributionSummary;
@@ -13,17 +13,23 @@ import io.helidon.metrics.api.HistogramSnapshot;
 import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.MetricsFactory;
 
+import com.oracle.pic.telemetry.commons.metrics.model.Observation;
+
 /**
  * OCI-backed distribution summary.
  */
 final class OciDistributionSummary extends AbstractOciMeter implements DistributionSummary {
     private final DistributionSummary delegate;
-    private long intervalCount;
-    private double intervalTotal;
+    private final OciIntervalAccumulator intervalAccumulator;
 
     OciDistributionSummary(Builder builder, OciMeterRegistry registry, DistributionSummary delegate, boolean enabled) {
         super(registry, delegate, enabled);
         this.delegate = delegate;
+        this.intervalAccumulator = new OciIntervalAccumulator(delegate.id().name(),
+                                                             registry.accumulatorConfig(),
+                                                             registry.accumulatorConfig()
+                                                                     .maxRawSummarySamplesPerSecond(),
+                                                             registry.accumulatorStats());
     }
 
     static Builder builder(String name) {
@@ -42,7 +48,9 @@ final class OciDistributionSummary extends AbstractOciMeter implements Distribut
             throw new IllegalArgumentException("Distribution summary amount must be non-negative");
         }
         delegate.record(amount);
-        updateInterval(OciUnitConverter.normalizeAmount(baseUnit(), amount));
+        if (accumulationEnabled()) {
+            intervalAccumulator.record(registry().clock().wallTime(), OciUnitConverter.normalizeAmount(baseUnit(), amount));
+        }
     }
 
     @Override
@@ -70,19 +78,16 @@ final class OciDistributionSummary extends AbstractOciMeter implements Distribut
         return delegate.snapshot();
     }
 
-    synchronized OptionalDouble intervalMeanIfChanged() {
-        if (intervalCount == 0L) {
-            return OptionalDouble.empty();
-        }
-        double mean = intervalTotal / intervalCount;
-        intervalCount = 0L;
-        intervalTotal = 0D;
-        return OptionalDouble.of(mean);
+    List<Observation> drainClosedIntervalSamples(long nowMillis) {
+        return intervalAccumulator.drainClosed(nowMillis);
     }
 
-    private synchronized void updateInterval(double amount) {
-        intervalCount++;
-        intervalTotal += amount;
+    List<Observation> drainAllIntervalSamples() {
+        return intervalAccumulator.drainAll();
+    }
+
+    int pendingBucketCount() {
+        return intervalAccumulator.pendingBucketCount();
     }
 
     static final class Builder extends AbstractOciMeterBuilder<DistributionSummary.Builder, DistributionSummary>

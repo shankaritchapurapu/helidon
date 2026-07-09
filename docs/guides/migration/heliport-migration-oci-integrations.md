@@ -485,10 +485,18 @@ helidon:
 metrics:
   publishers:
     - type: oci
-      project: ${T2_PROJECT}
-      fleet: ${T2_FLEET}
-      region: ${OCI_REGION}
-      endpoint: ${T2_ENDPOINT}
+      reporter:
+        overlay:
+          project: ${T2_PROJECT}
+          fleet: ${T2_FLEET}
+          region: ${OCI_REGION}
+          endpoint: ${T2_ENDPOINT}
+      sample-interval: PT1S
+      accumulators:
+        max-pending-seconds: 10
+        max-raw-timer-samples-per-second: 1024
+        max-raw-summary-samples-per-second: 1024
+        pressure-log-interval: PT30S
       default-dimensions:
         service: email-api
         hostclass: ${HOSTCLASS}
@@ -496,7 +504,7 @@ metrics:
 
 Heliport migrates source-evidenced T2 project, fleet, endpoint, region, dimensions, and supported client settings when the mapping is clear. It does not invent metric names or fleet values. Legacy `ServiceConfigurator` metrics wiring, custom reporter bootstrap, and payload/runtime behavior are frontiers until target equivalence is encoded.
 
-Current Talon metrics also owns service-core-compatible automatic HTTP metrics and built-in JVM gauges. Heliport preserves source-evidenced publisher settings such as `enable-detailed-timing-auto-metrics`, `resource-package-prefix`, `duration-unit`, `metrics-scope-name`, `includes`, `excludes`, and filter matching mode. Endpoint prefix annotations such as `@MetricPrefix` and `@SecondaryMetricPrefix` are generated-metadata features and require the Talon codegen processor.
+Current Talon metrics also owns service-core-compatible automatic HTTP metrics and built-in JVM gauges. Heliport preserves source-evidenced publisher settings such as `enable-detailed-timing-auto-metrics`, `resource-package-prefix`, `auto-http.enabled`, `auto-http.user-agent-metrics-enabled`, `auto-http.max-user-agent-series`, `auto-http.runtime-dimension`, `metrics-scope-name`, `includes`, `excludes`, and filter matching mode. Detailed user-agent series are bounded and excess identities are aggregated as `OTHER`. Runtime-dimension values are inserted as-is into count-style automatic HTTP metric names, matching service-core. Timer and distribution-summary retention is controlled by publisher-level `accumulators`; Heliport should normally keep the defaults and surface them for owner review only for unusually high-volume services. Endpoint prefix annotations such as `@MetricPrefix` and `@SecondaryMetricPrefix` are generated-metadata features and require the Talon codegen processor.
 
 Metering is split by role:
 

@@ -54,6 +54,10 @@ abstract class AbstractOciMeter implements Meter {
         return enabled;
     }
 
+    boolean accumulationEnabled() {
+        return enabled && registry.publisher().enabled() && registry.publisher().shouldPublishValue(this);
+    }
+
     OciMeterRegistry registry() {
         return registry;
     }

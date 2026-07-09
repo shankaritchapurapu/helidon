@@ -4,6 +4,8 @@
 
 package com.oracle.helidon.oci.metrics;
 
+import io.helidon.config.ConfigException;
+
 /**
  * Configured OCI metrics reporter type.
  */
@@ -45,9 +47,9 @@ public enum OciMetricReporterType {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Unsupported OCI metrics reporter type: " + configValue
-                                                   + ". Expected one of: "
-                                                   + OVERLAY.configKey + ", "
-                                                   + SUBSTRATE.configKey);
+        throw new ConfigException("Unsupported OCI metrics reporter type: " + configValue
+                                          + ". Expected one of: "
+                                          + OVERLAY.configKey + ", "
+                                          + SUBSTRATE.configKey);
     }
 }

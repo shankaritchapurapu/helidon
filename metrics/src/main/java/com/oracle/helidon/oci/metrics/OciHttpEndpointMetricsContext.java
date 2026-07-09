@@ -13,6 +13,15 @@ import java.util.Objects;
  * This type is public so generated endpoint interceptors in application packages can create and register the context.
  */
 public final class OciHttpEndpointMetricsContext {
+    /**
+     * Request context key for suppressing status-code/status-family automatic HTTP metrics.
+     * <p>
+     * Register {@code true} under this key in the Helidon request context to suppress
+     * {@code ResponseOut.StatusCode.*.Count}, {@code ResponseOut.StatusFamily.*.Count}, and status-family
+     * {@code Request.Client.*.*XX.Count} metrics for that request.
+     */
+    public static final String SKIP_RESPONSE_STATUS_METRICS = "SkipResponseStatusMetrics";
+
     private final String primaryScope;
     private final List<String> secondaryScopes;
     private final String fullyQualifiedResourceClassName;

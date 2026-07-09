@@ -59,6 +59,15 @@ final class OciMeterRegistry implements MeterRegistry {
         return publisher;
     }
 
+    OciMetricsAccumulatorConfig accumulatorConfig() {
+        OciMetricsPublisherConfig prototype = publisher.prototype();
+        return prototype == null ? OciMetricsAccumulatorConfig.create() : prototype.accumulators();
+    }
+
+    OciAccumulatorStats accumulatorStats() {
+        return publisher.accumulatorStats();
+    }
+
     Collection<OciGauge<?>> gauges() {
         return meters(OciGauge.class);
     }
@@ -140,9 +149,9 @@ final class OciMeterRegistry implements MeterRegistry {
         if (!(builder instanceof AbstractOciMeterBuilder<?, ?> ociBuilder)) {
             throw new IllegalArgumentException("Unsupported builder type: " + builder.getClass().getName());
         }
-        boolean enabled = isMeterEnabled(builder.name(), builder.tags(), builder.scope());
         MeterKey key = ociBuilder.key();
         return (M) meters.computeIfAbsent(key, ignored -> {
+            boolean enabled = isMeterEnabled(builder.name(), builder.tags(), builder.scope());
             @SuppressWarnings("rawtypes")
             Meter.Builder delegateBuilder = ociBuilder.createDelegateBuilder(delegateFactory);
             @SuppressWarnings("unchecked")

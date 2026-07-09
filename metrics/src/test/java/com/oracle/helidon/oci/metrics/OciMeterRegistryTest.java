@@ -4,12 +4,11 @@
 
 package com.oracle.helidon.oci.metrics;
 
-import java.lang.reflect.Field;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.OptionalLong;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -20,15 +19,20 @@ import io.helidon.metrics.api.DistributionStatisticsConfig;
 import io.helidon.metrics.api.DistributionSummary;
 import io.helidon.metrics.api.FunctionalCounter;
 import io.helidon.metrics.api.Gauge;
+import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.MetricsConfig;
 import io.helidon.metrics.api.MetricsFactory;
 import io.helidon.metrics.api.Timer;
 import io.helidon.metrics.providers.micrometer.MicrometerMetricsFactoryProvider;
 
+import com.oracle.pic.telemetry.commons.metrics.MetricReporter;
+import com.oracle.pic.telemetry.commons.metrics.model.Observation;
+import com.oracle.pic.telemetry.commons.metrics.model.TimeSeries;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.sameInstance;
@@ -39,44 +43,47 @@ class OciMeterRegistryTest {
     void counterMaintainsCountAndReusesRegistration() {
         OciMeterRegistry registry = createRegistry();
 
-        Counter first = registry.getOrCreate(OciCounter.builder("requests")
-                                                     .addTag(io.helidon.metrics.api.Tag.create("k", "v")));
+        OciCounter first = (OciCounter) registry.getOrCreate(OciCounter.builder("requests")
+                                                            .addTag(io.helidon.metrics.api.Tag.create("k", "v")));
         Counter second = registry.getOrCreate(OciCounter.builder("requests")
                                                       .addTag(io.helidon.metrics.api.Tag.create("k", "v")));
 
         first.increment(3);
 
         assertThat(second, sameInstance(first));
-        assertThat(first.count(), is(3L));
+        assertThat(first.drainDelta(), is(3L));
     }
 
     @Test
-    void counterSamplesOnlyPositiveDeltas() {
+    void counterDrainsOnlyPositiveDeltas() {
         OciMeterRegistry registry = createRegistry();
         OciCounter counter = (OciCounter) registry.getOrCreate(OciCounter.builder("sampled.requests"));
 
         counter.increment(3);
 
-        assertThat(counter.deltaIfChanged(), is(OptionalLong.of(3L)));
-        assertThat(counter.deltaIfChanged(), is(OptionalLong.empty()));
+        assertThat(counter.drainDelta(), is(3L));
+        assertThat(counter.drainDelta(), is(0L));
 
         counter.increment(2);
 
-        assertThat(counter.deltaIfChanged(), is(OptionalLong.of(2L)));
+        assertThat(counter.drainDelta(), is(2L));
     }
 
     @Test
-    void counterResetUpdatesSamplingBaselineWithoutPublishingNegativeDelta() throws Exception {
-        OciMeterRegistry registry = createRegistry();
-        OciCounter counter = (OciCounter) registry.getOrCreate(OciCounter.builder("reset.requests"));
+    void excludedCounterDoesNotRetainPendingDelta() {
+        OciMeterRegistry registry = createRegistry(Clock.system(),
+                                                   OciMetricsPublisherConfig.builder()
+                                                           .enabled(true)
+                                                           .reporter(new TestMetricReporter())
+                                                           .reporterConfig(overlayReporterConfig())
+                                                           .defaultDimensions(Map.of())
+                                                           .excludes(Set.of("requests.excluded"))
+                                                           .buildPrototype());
+        OciCounter counter = (OciCounter) registry.getOrCreate(OciCounter.builder("requests.excluded"));
 
-        setLastSampledCount(counter, 10L);
+        counter.increment(3);
 
-        assertThat(counter.deltaIfChanged(), is(OptionalLong.empty()));
-
-        counter.increment(2);
-
-        assertThat(counter.deltaIfChanged(), is(OptionalLong.of(2L)));
+        assertThat(counter.drainDelta(), is(0L));
     }
 
     @Test
@@ -88,21 +95,6 @@ class OciMeterRegistryTest {
         assertThat(gauge.value(), is(5L));
         value.set(7);
         assertThat(gauge.value(), is(7L));
-    }
-
-    @Test
-    void gaugeReportsOnlyChangedSampleValues() {
-        OciMeterRegistry registry = createRegistry();
-        AtomicLong value = new AtomicLong(5);
-        OciGauge<?> gauge = (OciGauge<?>) registry.getOrCreate(OciGauge.builder("changed.queue.size", value::get));
-
-        assertThat(gauge.valueIfChanged(), is(Optional.of(5L)));
-        assertThat(gauge.valueIfChanged(), is(Optional.empty()));
-
-        value.set(7);
-
-        assertThat(gauge.valueIfChanged(), is(Optional.of(7L)));
-        assertThat(gauge.valueIfChanged(), is(Optional.empty()));
     }
 
     @Test
@@ -121,87 +113,215 @@ class OciMeterRegistryTest {
     }
 
     @Test
-    void timerSamplesDropwizardCompatibleOneMinuteRate() {
+    void timerDrainsSamplesOnceBySecond() {
         TestClock clock = new TestClock();
         OciMeterRegistry registry = createRegistry(clock);
-        OciTimer timer = (OciTimer) registry.getOrCreate(OciTimer.builder("sampled.latency"));
+        OciTimer timer = (OciTimer) registry.getOrCreate(OciTimer.builder("latency.samples"));
 
         timer.record(Duration.ofMillis(10));
-        timer.record(20, TimeUnit.MILLISECONDS);
+        timer.record(Duration.ofMillis(20));
+        clock.advance(Duration.ofSeconds(1));
+        timer.record(Duration.ofMillis(30));
 
-        assertThat(timer.oneMinuteRate(), is(0D));
-
-        clock.advance(Duration.ofSeconds(5).plusNanos(1));
-
-        assertThat(timer.oneMinuteRate(), closeTo(0.4D, 0.000001D));
+        assertThat(timer.drainClosedIntervalSamples(clock.wallTime()),
+                   contains(new Observation(0L, 10D, 1),
+                            new Observation(0L, 20D, 1)));
+        assertThat(timer.drainClosedIntervalSamples(clock.wallTime()), empty());
+        assertThat(timer.drainAllIntervalSamples(), contains(new Observation(1_000L, 30D, 1)));
     }
 
     @Test
-    void oneMinuteRateDecaysAfterEmptyTicks() {
+    void disabledTimerDoesNotRetainIntervalSamples() {
+        MetricsConfig metricsConfig = MetricsConfig.builder()
+                .enabled(true)
+                .publishersDiscoverServices(false)
+                .scoping(scoping -> scoping.putScope(Meter.Scope.DEFAULT,
+                                                     scope -> scope.name(Meter.Scope.DEFAULT)
+                                                             .exclude("latency\\.disabled")))
+                .build();
+        OciMeterRegistry registry = (OciMeterRegistry) createFactory(metricsConfig).createMeterRegistry(Clock.system(),
+                                                                                                       metricsConfig);
+        OciTimer timer = (OciTimer) registry.getOrCreate(OciTimer.builder("latency.disabled"));
+
+        timer.record(Duration.ofMillis(10));
+        timer.record(Duration.ofMillis(20));
+
+        assertThat(timer.enabled(), is(false));
+        assertThat(timer.drainAllIntervalSamples(), empty());
+    }
+
+    @Test
+    void publisherDisabledTimerDoesNotRetainIntervalSamples() {
+        OciMeterRegistry registry = createRegistry(Clock.system(),
+                                                   OciMetricsPublisherConfig.builder()
+                                                           .enabled(false)
+                                                           .reporterConfig(overlayReporterConfig())
+                                                           .defaultDimensions(Map.of())
+                                                           .buildPrototype());
+        OciTimer timer = (OciTimer) registry.getOrCreate(OciTimer.builder("latency.publisher.disabled"));
+
+        timer.record(Duration.ofMillis(10));
+
+        assertThat(timer.enabled(), is(true));
+        assertThat(timer.drainAllIntervalSamples(), empty());
+    }
+
+    @Test
+    void excludedTimerDoesNotRetainIntervalSamplesOrPressureStats() {
+        OciMeterRegistry registry = createRegistry(Clock.system(),
+                                                   OciMetricsPublisherConfig.builder()
+                                                           .enabled(true)
+                                                           .reporter(new TestMetricReporter())
+                                                           .reporterConfig(overlayReporterConfig())
+                                                           .defaultDimensions(Map.of())
+                                                           .excludes(Set.of("latency.excluded"))
+                                                           .accumulators(accumulators -> accumulators
+                                                                   .maxRawTimerSamplesPerSecond(2))
+                                                           .buildPrototype());
+        OciTimer timer = (OciTimer) registry.getOrCreate(OciTimer.builder("latency.excluded"));
+
+        timer.record(Duration.ofMillis(10));
+        timer.record(Duration.ofMillis(20));
+        timer.record(Duration.ofMillis(30));
+
+        assertThat(timer.drainAllIntervalSamples(), empty());
+        assertThat(timer.pendingBucketCount(), is(0));
+        assertThat(registry.publisher().accumulatorStats().drain().isEmpty(), is(true));
+    }
+
+    @Test
+    void timerDrainsExactServiceCoreStyleObservations() {
         TestClock clock = new TestClock();
-        OciOneMinuteRate rate = new OciOneMinuteRate(clock);
+        OciMeterRegistry registry = createRegistry(clock);
+        OciTimer timer = (OciTimer) registry.getOrCreate(OciTimer.builder("latency.exact"));
 
-        rate.mark();
-        clock.advance(Duration.ofSeconds(5).plusNanos(1));
-        assertThat(rate.rate(), closeTo(0.2D, 0.000001D));
+        timer.record(Duration.ofMillis(10));
+        timer.record(Duration.ofMillis(20));
+        timer.record(Duration.ofMillis(40));
+        timer.record(Duration.ofMillis(40));
 
-        clock.advance(Duration.ofSeconds(5));
-
-        assertThat(rate.rate(), closeTo(0.2D + (1 - Math.exp(-5.0 / 60.0)) * (0D - 0.2D), 0.000001D));
+        assertThat(timer.drainAllIntervalSamples(),
+                   contains(new Observation(0L, 10D, 1),
+                            new Observation(0L, 20D, 1),
+                            new Observation(0L, 40D, 1),
+                            new Observation(0L, 40D, 1)));
     }
 
     @Test
-    void oneMinuteRateAppliesMultipleElapsedTicks() {
-        TestClock clock = new TestClock();
-        OciOneMinuteRate rate = new OciOneMinuteRate(clock);
+    void timerCompactsAboveRawCapPreservingCountSumMinAndMax() {
+        OciMeterRegistry registry = createRegistry(Clock.system(),
+                                                   OciMetricsPublisherConfig.builder()
+                                                           .enabled(true)
+                                                           .reporter(new TestMetricReporter())
+                                                           .reporterConfig(overlayReporterConfig())
+                                                           .defaultDimensions(Map.of())
+                                                           .accumulators(accumulators -> accumulators
+                                                                   .maxRawTimerSamplesPerSecond(2))
+                                                           .buildPrototype());
+        OciTimer timer = (OciTimer) registry.getOrCreate(OciTimer.builder("latency.compact"));
 
-        rate.mark();
-        clock.advance(Duration.ofSeconds(15).plusNanos(1));
+        timer.record(Duration.ofMillis(10));
+        timer.record(Duration.ofMillis(20));
+        timer.record(Duration.ofMillis(40));
+        timer.record(Duration.ofMillis(50));
 
-        double alpha = 1 - Math.exp(-5.0 / 60.0);
-        double expected = 0.2D;
-        expected += alpha * (0D - expected);
-        expected += alpha * (0D - expected);
+        List<Observation> observations = timer.drainAllIntervalSamples();
 
-        assertThat(rate.rate(), closeTo(expected, 0.000001D));
+        assertThat(observations,
+                   contains(new Observation(observations.getFirst().getTimestamp(), 10D, 1),
+                            new Observation(observations.getFirst().getTimestamp(), 50D, 1),
+                            new Observation(observations.getFirst().getTimestamp(), 30D, 2)));
     }
 
     @Test
-    void distributionSummaryTracksCountTotalMeanAndMax() {
+    void distributionSummaryTracksIntervalSamples() {
         OciMeterRegistry registry = createRegistry();
-        DistributionSummary summary = registry.getOrCreate(OciDistributionSummary.builder("payload",
-                                                                                          DistributionStatisticsConfig.builder()));
+        OciDistributionSummary summary = (OciDistributionSummary) registry.getOrCreate(
+                OciDistributionSummary.builder("payload", DistributionStatisticsConfig.builder()));
 
         summary.record(10D);
         summary.record(20D);
 
-        assertThat(summary.count(), is(2L));
-        assertThat(summary.totalAmount(), is(30D));
-        assertThat(summary.mean(), is(15D));
-        assertThat(summary.max(), is(20D));
-        assertThat(summary.snapshot(), notNullValue());
+        List<Observation> observations = summary.drainAllIntervalSamples();
+
+        assertThat(observations,
+                   contains(new Observation(observations.getFirst().getTimestamp(), 10D, 1),
+                            new Observation(observations.getFirst().getTimestamp(), 20D, 1)));
     }
 
     @Test
-    void distributionSummarySamplesIntervalMeanOnlyWhenCountChanges() {
-        OciMeterRegistry registry = createRegistry();
+    void distributionSummaryDrainsExactIntervalSamples() {
+        TestClock clock = new TestClock();
+        OciMeterRegistry registry = createRegistry(clock);
         OciDistributionSummary summary = (OciDistributionSummary) registry.getOrCreate(
                 OciDistributionSummary.builder("sampled.payload", DistributionStatisticsConfig.builder()));
 
         summary.record(10D);
         summary.record(20D);
 
-        assertThat(summary.intervalMeanIfChanged(), is(OptionalDouble.of(15D)));
-        assertThat(summary.intervalMeanIfChanged(), is(OptionalDouble.empty()));
+        List<Observation> observations = summary.drainAllIntervalSamples();
 
-        summary.record(5D);
+        assertThat(observations,
+                   contains(new Observation(0L, 10D, 1),
+                            new Observation(0L, 20D, 1)));
+        assertThat(summary.drainAllIntervalSamples(), empty());
+    }
 
-        assertThat(summary.intervalMeanIfChanged(), is(OptionalDouble.of(5D)));
+    @Test
+    void distributionSummaryCompactsAboveRawCapPreservingCountSumMinAndMax() {
+        OciMeterRegistry registry = createRegistry(Clock.system(),
+                                                   OciMetricsPublisherConfig.builder()
+                                                           .enabled(true)
+                                                           .reporter(new TestMetricReporter())
+                                                           .reporterConfig(overlayReporterConfig())
+                                                           .defaultDimensions(Map.of())
+                                                           .accumulators(accumulators -> accumulators
+                                                                   .maxRawSummarySamplesPerSecond(2))
+                                                           .buildPrototype());
+        OciDistributionSummary summary = (OciDistributionSummary) registry.getOrCreate(
+                OciDistributionSummary.builder("sampled.payload", DistributionStatisticsConfig.builder()));
+
+        summary.record(10D);
+        summary.record(20D);
+        summary.record(40D);
+        summary.record(50D);
+
+        List<Observation> observations = summary.drainAllIntervalSamples();
+
+        assertThat(observations,
+                   contains(new Observation(observations.getFirst().getTimestamp(), 10D, 1),
+                            new Observation(observations.getFirst().getTimestamp(), 50D, 1),
+                            new Observation(observations.getFirst().getTimestamp(), 30D, 2)));
+    }
+
+    @Test
+    void excludedDistributionSummaryDoesNotRetainIntervalSamplesOrPressureStats() {
+        OciMeterRegistry registry = createRegistry(Clock.system(),
+                                                   OciMetricsPublisherConfig.builder()
+                                                           .enabled(true)
+                                                           .reporter(new TestMetricReporter())
+                                                           .reporterConfig(overlayReporterConfig())
+                                                           .defaultDimensions(Map.of())
+                                                           .excludes(Set.of("payload.excluded"))
+                                                           .accumulators(accumulators -> accumulators
+                                                                   .maxRawSummarySamplesPerSecond(2))
+                                                           .buildPrototype());
+        OciDistributionSummary summary = (OciDistributionSummary) registry.getOrCreate(
+                OciDistributionSummary.builder("payload.excluded", DistributionStatisticsConfig.builder()));
+
+        summary.record(10D);
+        summary.record(20D);
+        summary.record(30D);
+
+        assertThat(summary.drainAllIntervalSamples(), empty());
+        assertThat(summary.pendingBucketCount(), is(0));
+        assertThat(registry.publisher().accumulatorStats().drain().isEmpty(), is(true));
     }
 
     @Test
     void distributionSummarySamplesNormalizedIntervalMean() {
-        OciMeterRegistry registry = createRegistry();
+        TestClock clock = new TestClock();
+        OciMeterRegistry registry = createRegistry(clock);
         OciDistributionSummary summary = (OciDistributionSummary) registry.getOrCreate(
                 OciDistributionSummary.builder("sampled.kilobytes")
                         .baseUnit("kilobytes"));
@@ -209,7 +329,9 @@ class OciMeterRegistryTest {
         summary.record(1D);
         summary.record(2D);
 
-        assertThat(summary.intervalMeanIfChanged(), is(OptionalDouble.of(1536D)));
+        assertThat(summary.drainAllIntervalSamples(),
+                   contains(new Observation(0L, 1024D, 1),
+                            new Observation(0L, 2048D, 1)));
     }
 
     @Test
@@ -226,19 +348,19 @@ class OciMeterRegistryTest {
     }
 
     @Test
-    void functionalCounterReportsOnlyChangedSampleValues() {
+    void functionalCounterReportsPositiveDeltas() {
         OciMeterRegistry registry = createRegistry();
         AtomicLong state = new AtomicLong(11);
         OciFunctionalCounter<?> counter = (OciFunctionalCounter<?>) registry.getOrCreate(
                 OciFunctionalCounter.builder("changed.in.flight", state, AtomicLong::get));
 
-        assertThat(counter.valueIfChanged(), is(Optional.of(11L)));
-        assertThat(counter.valueIfChanged(), is(Optional.empty()));
+        assertThat(counter.deltaIfChanged(), is(OptionalLong.of(11L)));
+        assertThat(counter.deltaIfChanged(), is(OptionalLong.empty()));
 
         state.set(15);
 
-        assertThat(counter.valueIfChanged(), is(Optional.of(15L)));
-        assertThat(counter.valueIfChanged(), is(Optional.empty()));
+        assertThat(counter.deltaIfChanged(), is(OptionalLong.of(4L)));
+        assertThat(counter.deltaIfChanged(), is(OptionalLong.empty()));
     }
 
     @Test
@@ -262,17 +384,41 @@ class OciMeterRegistryTest {
     }
 
     private static OciMeterRegistry createRegistry(Clock clock) {
-        return (OciMeterRegistry) createFactory().createMeterRegistry(clock, metricsConfig());
+        return createRegistry(clock,
+                              OciMetricsPublisherConfig.builder()
+                                      .enabled(true)
+                                      .reporter(new TestMetricReporter())
+                                      .reporterConfig(overlayReporterConfig())
+                                      .defaultDimensions(Map.of())
+                                      .buildPrototype());
     }
 
-    private static OciMetricsFactory createFactory() {
+    private static OciMeterRegistry createRegistry(Clock clock, OciMetricsPublisherConfig publisherConfig) {
         MetricsConfig metricsConfig = metricsConfig();
+        MetricsFactory delegateFactory = delegateFactory(metricsConfig);
+        return new OciMeterRegistry(metricsConfig,
+                                    clock,
+                                    meter -> {
+                                    },
+                                    meter -> {
+                                    },
+                                    OciMetricsPublisher.create(publisherConfig),
+                                    delegateFactory,
+                                    delegateFactory.createMeterRegistry(clock, metricsConfig));
+    }
+
+    private static OciMetricsFactory createFactory(MetricsConfig metricsConfig) {
+        return createFactory(metricsConfig,
+                             OciMetricsPublisherConfig.builder()
+                                     .enabled(false)
+                                     .reporterConfig(overlayReporterConfig())
+                                     .defaultDimensions(Map.of())
+                                     .buildPrototype());
+    }
+
+    private static OciMetricsFactory createFactory(MetricsConfig metricsConfig, OciMetricsPublisherConfig publisherConfig) {
         return new OciMetricsFactory(delegateFactory(metricsConfig),
-                                     OciMetricsPublisherConfig.builder()
-                                             .enabled(false)
-                                             .reporterConfig(overlayReporterConfig())
-                                             .defaultDimensions(Map.of())
-                                             .buildPrototype(),
+                                     publisherConfig,
                                      metricsConfig,
                                      java.util.List.of());
     }
@@ -295,10 +441,14 @@ class OciMeterRegistryTest {
         return new MicrometerMetricsFactoryProvider().create(Config.empty(), metricsConfig, java.util.List.of());
     }
 
-    private static void setLastSampledCount(OciCounter counter, long value) throws Exception {
-        Field field = OciCounter.class.getDeclaredField("lastSampledCount");
-        field.setAccessible(true);
-        ((AtomicLong) field.get(counter)).set(value);
+    private static final class TestMetricReporter implements MetricReporter {
+        @Override
+        public void send(List<TimeSeries> timeSeries) {
+        }
+
+        @Override
+        public void stop() {
+        }
     }
 
     private static final class TestClock implements Clock {

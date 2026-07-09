@@ -43,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import static com.oracle.helidon.oci.metrics.OciMetricsPublisherIntegrationTest.DatapointMatchers.hasDataPoints;
 import static com.oracle.helidon.oci.metrics.OciMetricsPublisherIntegrationTest.DatapointMatchers.hasDimensions;
 import static com.oracle.helidon.oci.metrics.OciMetricsPublisherIntegrationTest.DatapointMatchers.hasName;
+import static com.oracle.helidon.oci.metrics.OciMetricsPublisherIntegrationTest.DatapointMatchers.hasPointCount;
 import static com.oracle.helidon.oci.metrics.OciMetricsPublisherIntegrationTest.DatapointMatchers.hasValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -107,6 +108,7 @@ class OciMetricsPublisherIntegrationTest {
 
         counter.increment(3);
         timer.record(Duration.ofMillis(25));
+        timer.record(Duration.ofMillis(35));
         summary.record(13D);
 
         assertThat("Expected mutations not to report directly to OCI",
@@ -117,7 +119,7 @@ class OciMetricsPublisherIntegrationTest {
         Normally, meters are measured on a scheduled thread. To avoid test timing issues, trigger sampling now
         rather than trying to wait for a regularly-scheduled periodic sampling to run.
          */
-        metricsFactory.runtime().sampleMeters();
+        metricsFactory.runtime().sampleMeters(true);
 
         /*
         Force a flush of pending writes.
@@ -128,21 +130,22 @@ class OciMetricsPublisherIntegrationTest {
                    CAPTURED_METRICS_DETAILS,
                    allOf(
                            hasItem(allOf(hasName(equalTo("test.counter")),
-                                         hasDataPoints(hasItem(hasValue(equalTo(3D)))),
+                                         hasDataPoints(hasItem(allOf(hasValue(equalTo(1D)),
+                                                                    hasPointCount(equalTo(3))))),
                                          hasDimensions(allOf(hasEntry("kind", "custom"),
                                                              hasEntry("host", HOST),
                                                              hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
                                                              hasEntry("faultDomain", FAULT_DOMAIN))))),
                            hasItem(allOf(hasName(equalTo("test.functional.counter")),
-                                         hasDataPoints(hasItem(hasValue(equalTo(23D)))),
+                                         hasDataPoints(hasItem(allOf(hasValue(equalTo(1D)),
+                                                                    hasPointCount(equalTo(23))))),
                                          hasDimensions(allOf(hasEntry("kind", "sampled"),
                                                              hasEntry("host", HOST),
                                                              hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
                                                              hasEntry("faultDomain", FAULT_DOMAIN))))),
-                           hasItem(allOf(hasName(equalTo("test.timer")),
-                                         hasDataPoints(hasItem(hasValue(equalTo(0D)))),
-                                         hasDimensions(allOf(hasEntry("operation", "sync"),
-                                                             hasEntry("host", HOST),
+                           hasItem(allOf(hasName(equalTo("test.gauge")),
+                                         hasDataPoints(hasItem(hasValue(equalTo(17D)))),
+                                         hasDimensions(allOf(hasEntry("host", HOST),
                                                              hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
                                                              hasEntry("faultDomain", FAULT_DOMAIN))))),
                            hasItem(allOf(hasName(equalTo("test.summary")),
@@ -151,9 +154,11 @@ class OciMetricsPublisherIntegrationTest {
                                                              hasEntry("host", HOST),
                                                              hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
                                                              hasEntry("faultDomain", FAULT_DOMAIN))))),
-                           hasItem(allOf(hasName(equalTo("test.gauge")),
-                                         hasDataPoints(hasItem(hasValue(equalTo(17D)))),
-                                         hasDimensions(allOf(hasEntry("host", HOST),
+                           hasItem(allOf(hasName(equalTo("test.timer")),
+                                         hasDataPoints(hasItem(hasValue(equalTo(25D)))),
+                                         hasDataPoints(hasItem(hasValue(equalTo(35D)))),
+                                         hasDimensions(allOf(hasEntry("operation", "sync"),
+                                                             hasEntry("host", HOST),
                                                              hasEntry("availabilityDomain", AVAILABILITY_DOMAIN),
                                                              hasEntry("faultDomain", FAULT_DOMAIN))))),
                            not(hasItem(hasName(equalTo("test.timer.count")))),
@@ -199,6 +204,15 @@ class OciMetricsPublisherIntegrationTest {
                 @Override
                 protected Double featureValueOf(Datapoint actual) {
                     return actual.getValue();
+                }
+            };
+        }
+
+        static Matcher<Datapoint> hasPointCount(Matcher<Integer> countMatcher) {
+            return new FeatureMatcher<>(countMatcher, "has point count", "count") {
+                @Override
+                protected Integer featureValueOf(Datapoint actual) {
+                    return actual.getCount();
                 }
             };
         }

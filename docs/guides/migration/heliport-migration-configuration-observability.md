@@ -560,10 +560,13 @@ OCI/T2 metrics move to a Helidon metrics publisher when source config maps clean
 metrics:
   publishers:
     - type: oci
-      project: ${T2_PROJECT}
-      fleet: ${T2_FLEET}
-      endpoint: ${T2_ENDPOINT}
-      region: ${OCI_REGION}
+      reporter:
+        overlay:
+          project: ${T2_PROJECT}
+          fleet: ${T2_FLEET}
+          endpoint: ${T2_ENDPOINT}
+          region: ${OCI_REGION}
+      sample-interval: PT1S
 ```
 
 ### Automatic HTTP And JVM Metrics
@@ -574,19 +577,32 @@ When `helidon-oci-metrics` is present and an OCI publisher is configured, Talon 
 metrics:
   publishers:
     - type: oci
-      project: ${T2_PROJECT}
-      fleet: ${T2_FLEET}
-      region: ${OCI_REGION}
+      reporter:
+        overlay:
+          project: ${T2_PROJECT}
+          fleet: ${T2_FLEET}
+          region: ${OCI_REGION}
       enable-detailed-timing-auto-metrics: true
       resource-package-prefix: com.example.orders.rest
-      duration-unit: milliseconds
+      auto-http:
+        enabled: true
+        user-agent-metrics-enabled: true
+        max-user-agent-series: 1000
       metrics-scope-name: orders
+      sample-interval: PT1S
+      accumulators:
+        max-pending-seconds: 10
+        max-raw-timer-samples-per-second: 1024
+        max-raw-summary-samples-per-second: 1024
+        pressure-log-interval: PT30S
       excludes:
         - "orders\\.jvm\\..*"
       filter-matching-mode: regex
 ```
 
-Automatic HTTP metrics use service-core-style names such as `<scope>.Time`, `<scope>.ResourceTime`, response status counts, response family counts, response count, and success rate. The default scope is the generated endpoint class and method name. `@MetricPrefix` and `@SecondaryMetricPrefix` can preserve legacy endpoint metric scopes and require `helidon-oci-codegen` in annotation processing.
+Automatic HTTP metrics use service-core-style names such as `<scope>.Time`, `<scope>.ResourceTime`, response status counts, response family counts, response count, success rate, and optional user-agent client counters. The default scope is the generated endpoint class and method name. `auto-http.max-user-agent-series` bounds detailed client series and aggregates excess identities as `OTHER`. `auto-http.runtime-dimension` can preserve one service-core runtime dimension from the Helidon request `Context`; count-style metric names insert the resolved value as-is, without sanitization, after the scope. `@MetricPrefix` and `@SecondaryMetricPrefix` can preserve legacy endpoint metric scopes and require `helidon-oci-codegen` in annotation processing.
+
+Timer and distribution-summary observations are retained in bounded per-second accumulators and sampled through OCI `metrics-lib`. Heliport normally keeps the `PT1S` sample interval and accumulator defaults; unusually high-volume services can expose those settings for owner review.
 
 ```java
 import java.util.List;

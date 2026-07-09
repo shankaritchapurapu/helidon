@@ -6,6 +6,7 @@ package com.oracle.helidon.oci.metrics;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -13,7 +14,7 @@ import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import io.helidon.config.ConfigException;
+import io.helidon.common.Errors;
 import io.helidon.metrics.api.Meter;
 
 final class ReporterMetricFilter implements BiFunction<String, Meter, Boolean> {
@@ -70,11 +71,15 @@ final class ReporterMetricFilter implements BiFunction<String, Meter, Boolean> {
             return ALLOW_ALL;
         }
         if (filterMatchingMode == FilterMatchingMode.REGEX) {
+            Errors.Collector errors = Errors.collector();
+            List<Pattern> includePatterns = compilePatterns(errors, "includes", includes);
+            List<Pattern> excludePatterns = compilePatterns(errors, "excludes", excludes);
+            errors.collect().checkValid();
             return new ReporterMetricFilter(Mode.REGEX,
                                             includes,
                                             excludes,
-                                            compilePatterns("includes", includes),
-                                            compilePatterns("excludes", excludes),
+                                            includePatterns,
+                                            excludePatterns,
                                             List.of(),
                                             List.of(),
                                             new ConcurrentHashMap<>());
@@ -127,18 +132,19 @@ final class ReporterMetricFilter implements BiFunction<String, Meter, Boolean> {
         return patterns.stream().anyMatch(pattern -> pattern.matcher(metricName).matches());
     }
 
-    private static List<Pattern> compilePatterns(String settingName, Set<String> expressions) {
+    private static List<Pattern> compilePatterns(Errors.Collector errors, String settingName, Set<String> expressions) {
         return expressions.stream()
-                .map(expression -> compilePattern(settingName, expression))
+                .map(expression -> compilePattern(errors, settingName, expression))
+                .flatMap(Optional::stream)
                 .toList();
     }
 
-    private static Pattern compilePattern(String settingName, String expression) {
+    private static Optional<Pattern> compilePattern(Errors.Collector errors, String settingName, String expression) {
         try {
-            return Pattern.compile(expression);
+            return Optional.of(Pattern.compile(expression));
         } catch (PatternSyntaxException e) {
-            throw new ConfigException("Invalid OCI metrics publisher regex in "
-                                              + settingName + ": '" + expression + "'", e);
+            errors.fatal("Invalid OCI metrics publisher regex in " + settingName + ": '" + expression + "'");
+            return Optional.empty();
         }
     }
 

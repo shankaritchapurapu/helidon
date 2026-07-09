@@ -77,8 +77,8 @@ final class OciMetricsFactory implements MetricsFactory {
 
     @Override
     public void close() {
-        registries.forEach(MeterRegistry::close);
         runtime.close();
+        registries.forEach(MeterRegistry::close);
         delegate.close();
     }
 

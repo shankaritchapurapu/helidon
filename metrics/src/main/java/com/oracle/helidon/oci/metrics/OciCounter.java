@@ -4,8 +4,7 @@
 
 package com.oracle.helidon.oci.metrics;
 
-import java.util.OptionalLong;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 import io.helidon.metrics.api.Counter;
 import io.helidon.metrics.api.Meter;
@@ -15,10 +14,8 @@ import io.helidon.metrics.api.MetricsFactory;
  * OCI-backed counter with local current-count state.
  */
 final class OciCounter extends AbstractOciMeter implements Counter {
-    private static final System.Logger LOGGER = System.getLogger(OciCounter.class.getName());
-
     private final Counter delegate;
-    private final AtomicLong lastSampledCount = new AtomicLong();
+    private final LongAdder pendingDelta = new LongAdder();
 
     OciCounter(Builder builder, OciMeterRegistry registry, Counter delegate, boolean enabled) {
         super(registry, delegate, enabled);
@@ -40,6 +37,9 @@ final class OciCounter extends AbstractOciMeter implements Counter {
             throw new IllegalArgumentException("Counter increment amount must be non-negative");
         }
         delegate.increment(amount);
+        if (accumulationEnabled()) {
+            pendingDelta.add(amount);
+        }
     }
 
     @Override
@@ -47,32 +47,8 @@ final class OciCounter extends AbstractOciMeter implements Counter {
         return delegate.count();
     }
 
-    OptionalLong deltaIfChanged() {
-        while (true) {
-            long current = count();
-            long previous = lastSampledCount.get();
-            if (current < previous) {
-                if (LOGGER.isLoggable(System.Logger.Level.DEBUG)) {
-                    LOGGER.log(System.Logger.Level.DEBUG,
-                               "Counter sample baseline reset because current count is less than previous sample; "
-                                       + "meter={0}, previous={1}, current={2}",
-                               id().name(),
-                               previous,
-                               current);
-                }
-                if (lastSampledCount.compareAndSet(previous, current)) {
-                    return OptionalLong.empty();
-                }
-                continue;
-            }
-            long delta = current - previous;
-            if (delta == 0L) {
-                return OptionalLong.empty();
-            }
-            if (lastSampledCount.compareAndSet(previous, current)) {
-                return OptionalLong.of(delta);
-            }
-        }
+    long drainDelta() {
+        return pendingDelta.sumThenReset();
     }
 
     static final class Builder extends AbstractOciMeterBuilder<Counter.Builder, Counter> implements Counter.Builder {

@@ -6,6 +6,7 @@ package com.oracle.helidon.oci.metrics;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -41,6 +42,7 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
     Most TRACE-level logging in this class is during start-up or shutdown so is not guarded with isLoggable.
      */
     private static final System.Logger LOGGER = System.getLogger(OciTelemetryRuntime.class.getName());
+    private static final Duration SHUTDOWN_FLUSH_TIMEOUT = Duration.ofSeconds(1);
 
     private final OciMetricsPublisherConfig config;
     private final OciMetricsPublisher publisher;
@@ -109,6 +111,10 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
             if (executor != null) {
                 LOGGER.log(System.Logger.Level.TRACE, "Stopping Helidon Talon metrics sampling executor");
                 executor.shutdownNow();
+                awaitSamplerTermination(executor);
+            }
+            if (Metrics.isActive()) {
+                flushPendingMeterData();
             }
             publisher.stop();
             if (initializedMetrics && Metrics.isActive()) {
@@ -128,22 +134,67 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
         }
     }
 
+    private void awaitSamplerTermination(ScheduledExecutorService executor) {
+        try {
+            if (!executor.awaitTermination(SHUTDOWN_FLUSH_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)) {
+                LOGGER.log(System.Logger.Level.WARNING,
+                           "Timed out waiting for Helidon Talon metrics sampler to stop before shutdown flush.");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.log(System.Logger.Level.WARNING,
+                       "Interrupted waiting for Helidon Talon metrics sampler to stop before shutdown flush.",
+                       e);
+        }
+    }
+
+    private void flushPendingMeterData() {
+        if (!OciMetricsSemanticConventions.awaitAsyncUpdates(SHUTDOWN_FLUSH_TIMEOUT)) {
+            LOGGER.log(System.Logger.Level.WARNING,
+                       "Timed out waiting for automatic HTTP metrics updates to finish before shutdown flush.");
+        }
+        LOGGER.log(System.Logger.Level.TRACE, "Sampling Helidon Talon metrics during shutdown flush");
+        sampleMetersSafely(true);
+    }
+
+    /**
+     * {@link ScheduledExecutorService} suppresses future fixed-rate executions if a task throws. Contains sampling failures
+     * so periodic sampling continues and a failed shutdown flush does not prevent the remaining resources from being closed.
+     */
+    private void sampleMetersSafely(boolean includeCurrentSecond) {
+        try {
+            sampleMeters(includeCurrentSecond);
+        } catch (RuntimeException e) {
+            LOGGER.log(System.Logger.Level.WARNING,
+                       "Unexpected error sampling Helidon Talon metrics; continuing runtime operation.",
+                       e);
+        }
+    }
+
     /*
     Package-private so integration test can trigger sampling deterministically.
      */
     void sampleMeters() {
+        sampleMeters(false);
+    }
+
+    void sampleMeters(boolean includeCurrentSecond) {
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
             LOGGER.log(System.Logger.Level.TRACE,
                        "Sampling known meters across registries={0}",
                        registries.size());
         }
         registries.forEach(registry -> {
+            long nowMillis = registry.clock().wallTime();
             registry.gauges().forEach(this::sampleGauge);
             registry.functionalCounters().forEach(this::sampleFunctionalCounter);
             registry.counters().forEach(this::sampleCounter);
-            registry.timers().forEach(this::sampleTimer);
-            registry.distributionSummaries().forEach(this::sampleDistributionSummary);
+            registry.timers().forEach(timer -> sampleTimer(timer, nowMillis, includeCurrentSecond));
+            registry.distributionSummaries().forEach(summary -> sampleDistributionSummary(summary,
+                                                                                         nowMillis,
+                                                                                         includeCurrentSecond));
         });
+        publisher.publishAccumulatorPressure(pendingBucketCount());
     }
 
     private void initializeRuntime() {
@@ -171,6 +222,7 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
             return;
         }
 
+        MetricReporter initializedReporter = reporter(configuredReporter);
         if (Metrics.isActive()) {
             LOGGER.log(System.Logger.Level.WARNING,
                        "Helidon Talon metrics runtime found OCI Metrics object already initialized; Helidon Talon metrics config "
@@ -181,7 +233,7 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                        reporterConfig.project().orElse(""),
                        reporterConfig.fleet().orElse(""),
                        reporterConfig.type());
-            Metrics.init(reporter(configuredReporter), config.defaultDimensions());
+            Metrics.init(initializedReporter, config.defaultDimensions());
             initializedMetrics = true;
             LOGGER.log(System.Logger.Level.TRACE,
                        "Initialized telemetry Metrics runtime; defaultDimensions={0}",
@@ -206,16 +258,21 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
                                                                           .name("Helidon Talon metrics sampler")
                                                                           .factory());
 
-        samplingExecutor = executor;
-        long intervalMillis = Math.max(1000L, config.sampleInterval().toMillis());
+        long intervalMillis = config.sampleInterval().toMillis();
         LOGGER.log(System.Logger.Level.TRACE,
                    "Scheduling metrics sampling; intervalMillis={0}, registries={1}",
                    intervalMillis,
                    registries.size());
-        executor.scheduleAtFixedRate(this::sampleMeters,
-                                     intervalMillis,
-                                     intervalMillis,
-                                     TimeUnit.MILLISECONDS);
+        try {
+            executor.scheduleAtFixedRate(() -> sampleMetersSafely(false),
+                                         intervalMillis,
+                                         intervalMillis,
+                                         TimeUnit.MILLISECONDS);
+            samplingExecutor = executor;
+        } catch (RuntimeException e) {
+            executor.shutdownNow();
+            throw e;
+        }
     }
 
     static Optional<String> effectiveHostName(OciMetricReporterConfig config) {
@@ -248,7 +305,7 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
             return;
         }
         try {
-            gauge.valueIfChanged().ifPresent(value -> publisher.publishGauge(gauge, value.doubleValue()));
+            publisher.publishGauge(gauge, gauge.value().doubleValue());
         } catch (RuntimeException e) {
             LOGGER.log(System.Logger.Level.WARNING, "Error sampling OCI-backed gauge " + gauge.id().name(), e);
         }
@@ -259,8 +316,8 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
             return;
         }
         try {
-            functionalCounter.valueIfChanged()
-                    .ifPresent(value -> publisher.publishFunctionalCounter(functionalCounter, value));
+            functionalCounter.deltaIfChanged()
+                    .ifPresent(delta -> publisher.publishFunctionalCounterDelta(functionalCounter, delta));
         } catch (RuntimeException e) {
             LOGGER.log(System.Logger.Level.WARNING,
                        "Error sampling OCI-backed functional counter " + functionalCounter.id().name(),
@@ -273,34 +330,51 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
             return;
         }
         try {
-            counter.deltaIfChanged().ifPresent(delta -> publisher.publishCounterDelta(counter, delta));
+            publisher.publishCounterDelta(counter, counter.drainDelta());
         } catch (RuntimeException e) {
             LOGGER.log(System.Logger.Level.WARNING, "Error sampling OCI-backed counter " + counter.id().name(), e);
         }
     }
 
-    private void sampleTimer(OciTimer timer) {
+    private void sampleTimer(OciTimer timer, long nowMillis, boolean includeCurrentSecond) {
         if (!timer.enabled()) {
             return;
         }
         try {
-            publisher.publishTimerRate(timer, timer.oneMinuteRate());
+            publisher.publishObservations(timer,
+                                          includeCurrentSecond
+                                                  ? timer.drainAllIntervalSamples()
+                                                  : timer.drainClosedIntervalSamples(nowMillis),
+                                          "timer duration samples");
         } catch (RuntimeException e) {
             LOGGER.log(System.Logger.Level.WARNING, "Error sampling OCI-backed timer " + timer.id().name(), e);
         }
     }
 
-    private void sampleDistributionSummary(OciDistributionSummary summary) {
+    private void sampleDistributionSummary(OciDistributionSummary summary, long nowMillis, boolean includeCurrentSecond) {
         if (!summary.enabled()) {
             return;
         }
         try {
-            summary.intervalMeanIfChanged()
-                    .ifPresent(value -> publisher.publishDistributionSummaryMean(summary, value));
+            publisher.publishObservations(summary,
+                                          includeCurrentSecond
+                                                  ? summary.drainAllIntervalSamples()
+                                                  : summary.drainClosedIntervalSamples(nowMillis),
+                                          "distribution summary samples");
         } catch (RuntimeException e) {
             LOGGER.log(System.Logger.Level.WARNING,
                        "Error sampling OCI-backed distribution summary " + summary.id().name(),
                        e);
         }
+    }
+
+    private long pendingBucketCount() {
+        return registries.stream()
+                .mapToLong(registry -> registry.timers().stream().mapToLong(OciTimer::pendingBucketCount).sum()
+                        + registry.distributionSummaries()
+                                .stream()
+                                .mapToLong(OciDistributionSummary::pendingBucketCount)
+                                .sum())
+                .sum();
     }
 }

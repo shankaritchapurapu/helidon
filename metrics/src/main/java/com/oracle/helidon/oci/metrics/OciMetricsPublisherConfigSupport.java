@@ -7,6 +7,7 @@ package com.oracle.helidon.oci.metrics;
 import java.util.function.BiFunction;
 
 import io.helidon.builder.api.Prototype;
+import io.helidon.common.Errors;
 import io.helidon.metrics.api.Meter;
 
 final class OciMetricsPublisherConfigSupport
@@ -24,6 +25,7 @@ final class OciMetricsPublisherConfigSupport
     public void decorate(OciMetricsPublisherConfig.BuilderBase<?, ?> builder) {
         applyReporter(builder);
         applyMetricFilter(builder);
+        validate(builder);
     }
 
     private static void applyMetricFilter(OciMetricsPublisherConfig.BuilderBase<?, ?> builder) {
@@ -52,4 +54,11 @@ final class OciMetricsPublisherConfigSupport
         return defaultReporterConfig();
     }
 
+    private static void validate(OciMetricsPublisherConfig.BuilderBase<?, ?> builder) {
+        Errors.Collector errors = Errors.collector();
+        if (builder.sampleInterval().toMillis() < 1L) {
+            errors.fatal("metrics.publishers[].sample-interval must be at least PT0.001S.");
+        }
+        errors.collect().checkValid();
+    }
 }

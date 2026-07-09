@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.helidon.common.Errors;
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.config.Config;
+import io.helidon.config.ConfigException;
 import io.helidon.config.ConfigSources;
 
 import com.oracle.bmc.ClientConfiguration;
@@ -25,6 +27,7 @@ import com.oracle.pic.telemetry.commons.metrics.model.TimeSeries;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -83,6 +86,19 @@ class OciMetricsPublisherConfigMappingTest {
                                                  - count
                                                excludes-attributes:
                                                  - p999
+                                               accumulators:
+                                                 max-pending-seconds: 12
+                                                 max-raw-timer-samples-per-second: 2048
+                                                 max-raw-summary-samples-per-second: 4096
+                                                 pressure-log-interval: PT15S
+                                               auto-http:
+                                                 enabled: false
+                                                 user-agent-metrics-enabled: false
+                                                 max-user-agent-series: 321
+                                                 runtime-dimension:
+                                                   property-name: lab-environment
+                                                   dimension-name: lab
+                                                   default-dimension: PINTLAB
                                          """, MediaTypes.APPLICATION_YAML));
 
     @Test
@@ -214,7 +230,7 @@ class OciMetricsPublisherConfigMappingTest {
                                                  host-name: alias-host
                                              """, MediaTypes.APPLICATION_YAML));
 
-        assertThrows(RuntimeException.class, () -> OciMetricsPublisherConfig.create(config));
+        assertThrows(ConfigException.class, () -> OciMetricsPublisherConfig.create(config));
     }
 
     @Test
@@ -292,7 +308,7 @@ class OciMetricsPublisherConfigMappingTest {
                                                unsupported: {}
                                              """, MediaTypes.APPLICATION_YAML));
 
-        assertThrows(RuntimeException.class, () -> OciMetricsPublisherConfig.create(config));
+        assertThrows(ConfigException.class, () -> OciMetricsPublisherConfig.create(config));
     }
 
     @Test
@@ -304,7 +320,26 @@ class OciMetricsPublisherConfigMappingTest {
                                                type: substrate
                                              """, MediaTypes.APPLICATION_YAML));
 
-        assertThrows(RuntimeException.class, () -> OciMetricsPublisherConfig.create(config));
+        assertThrows(ConfigException.class, () -> OciMetricsPublisherConfig.create(config));
+    }
+
+    @Test
+    void rejectsAllBlankAutoHttpRuntimeDimensionSettings() {
+        Config config = Config.just(ConfigSources.create("""
+                                                                 type: oci
+                                                                 auto-http:
+                                                                   runtime-dimension:
+                                                                     property-name: " "
+                                                                     dimension-name: " "
+                                                                 """, MediaTypes.APPLICATION_YAML));
+
+        Errors.ErrorMessagesException exception = assertThrows(Errors.ErrorMessagesException.class,
+                                                               () -> OciMetricsPublisherConfig.create(config));
+
+        assertThat(exception.getMessage(),
+                   containsString("auto-http.runtime-dimension.property-name must be configured."));
+        assertThat(exception.getMessage(),
+                   containsString("auto-http.runtime-dimension.dimension-name must be configured."));
     }
 
     @Test
@@ -376,6 +411,16 @@ class OciMetricsPublisherConfigMappingTest {
     }
 
     @Test
+    void mapsPublisherYamlToAccumulatorConfig() {
+        OciMetricsAccumulatorConfig accumulators = publisherConfig().accumulators();
+
+        assertThat(accumulators.maxPendingSeconds(), is(12));
+        assertThat(accumulators.maxRawTimerSamplesPerSecond(), is(2048));
+        assertThat(accumulators.maxRawSummarySamplesPerSecond(), is(4096));
+        assertThat(accumulators.pressureLogInterval(), is(Duration.ofSeconds(15)));
+    }
+
+    @Test
     void mapsPublisherYamlToSubstringMatchingConfig() {
         Config config = Config.just(
                 ConfigSources.create("""
@@ -398,6 +443,12 @@ class OciMetricsPublisherConfigMappingTest {
         OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
 
         assertThat(publisherConfig.filterMatchingMode(), is(FilterMatchingMode.EXACT));
+        assertThat(publisherConfig.includesAttributes(), is(Set.of("value")));
+        assertThat(publisherConfig.sampleInterval(), is(Duration.ofSeconds(1)));
+        assertThat(publisherConfig.accumulators().maxPendingSeconds(), is(10));
+        assertThat(publisherConfig.accumulators().maxRawTimerSamplesPerSecond(), is(1024));
+        assertThat(publisherConfig.accumulators().maxRawSummarySamplesPerSecond(), is(1024));
+        assertThat(publisherConfig.accumulators().pressureLogInterval(), is(Duration.ofSeconds(30)));
     }
 
     @Test
@@ -422,6 +473,132 @@ class OciMetricsPublisherConfigMappingTest {
         assertThat(publisherConfig().enableDetailedTimingAutoMetrics(), is(false));
     }
 
+    @Test
+    void mapsPublisherYamlToAutoHttpConfig() {
+        OciAutoHttpMetricsConfig autoHttp = publisherConfig().autoHttp();
+
+        assertThat(autoHttp.enabled(), is(false));
+        assertThat(autoHttp.userAgentMetricsEnabled(), is(false));
+        assertThat(autoHttp.maxUserAgentSeries(), is(321));
+        OciAutoHttpRuntimeDimensionConfig runtimeDimension = autoHttp.runtimeDimension().orElseThrow();
+        assertThat(runtimeDimension.propertyName(), is("lab-environment"));
+        assertThat(runtimeDimension.dimensionName(), is("lab"));
+        assertThat(runtimeDimension.defaultDimension().orElseThrow(), is("PINTLAB"));
+    }
+
+    @Test
+    void defaultsAutoHttpConfig() {
+        OciAutoHttpMetricsConfig autoHttp = OciMetricsPublisherConfig.create(Config.just(
+                ConfigSources.create("type: oci", MediaTypes.APPLICATION_YAML))).autoHttp();
+
+        assertThat(autoHttp.enabled(), is(true));
+        assertThat(autoHttp.userAgentMetricsEnabled(), is(true));
+        assertThat(autoHttp.maxUserAgentSeries(), is(1000));
+        assertThat(autoHttp.runtimeDimension(), is(java.util.Optional.empty()));
+    }
+
+    @Test
+    void rejectsBlankAutoHttpRuntimeDimensionPropertyName() {
+        Config config = Config.just(ConfigSources.create("""
+                                                                 type: oci
+                                                                 auto-http:
+                                                                   runtime-dimension:
+                                                                     property-name: " "
+                                                                     dimension-name: lab
+                                                                 """, MediaTypes.APPLICATION_YAML));
+
+        assertThrows(RuntimeException.class, () -> OciMetricsPublisherConfig.create(config));
+    }
+
+    @Test
+    void rejectsNonPositiveUserAgentSeriesLimit() {
+        Config config = Config.just(ConfigSources.create("""
+                                                                 type: oci
+                                                                 auto-http:
+                                                                   max-user-agent-series: 0
+                                                                 """, MediaTypes.APPLICATION_YAML));
+
+        assertThrows(RuntimeException.class, () -> OciMetricsPublisherConfig.create(config));
+    }
+
+    @Test
+    void rejectsBlankAutoHttpRuntimeDimensionDimensionName() {
+        Config config = Config.just(ConfigSources.create("""
+                                                                 type: oci
+                                                                 auto-http:
+                                                                   runtime-dimension:
+                                                                     property-name: lab-environment
+                                                                     dimension-name: " "
+                                                                 """, MediaTypes.APPLICATION_YAML));
+
+        assertThrows(RuntimeException.class, () -> OciMetricsPublisherConfig.create(config));
+    }
+
+    @Test
+    void rejectsNonPositiveSampleInterval() {
+        assertInvalidPublisherConfig("""
+                                             type: oci
+                                             sample-interval: PT0S
+                                             """);
+    }
+
+    @Test
+    void rejectsSubMillisecondSampleInterval() {
+        assertInvalidPublisherConfig("""
+                                             type: oci
+                                             sample-interval: PT0.000000001S
+                                             """);
+    }
+
+    @Test
+    void acceptsOneMillisecondSampleInterval() {
+        Config config = Config.just(
+                ConfigSources.create("""
+                                             type: oci
+                                             sample-interval: PT0.001S
+                                             """, MediaTypes.APPLICATION_YAML));
+
+        OciMetricsPublisherConfig publisherConfig = OciMetricsPublisherConfig.create(config);
+
+        assertThat(publisherConfig.sampleInterval(), is(Duration.ofMillis(1)));
+    }
+
+    @Test
+    void rejectsNonPositiveMaxPendingSeconds() {
+        assertInvalidPublisherConfig("""
+                                             type: oci
+                                             accumulators:
+                                               max-pending-seconds: 0
+                                             """);
+    }
+
+    @Test
+    void rejectsNonPositiveMaxRawTimerSamplesPerSecond() {
+        assertInvalidPublisherConfig("""
+                                             type: oci
+                                             accumulators:
+                                               max-raw-timer-samples-per-second: 0
+                                             """);
+    }
+
+    @Test
+    void rejectsNonPositiveMaxRawSummarySamplesPerSecond() {
+        assertInvalidPublisherConfig("""
+                                             type: oci
+                                             accumulators:
+                                               max-raw-summary-samples-per-second: 0
+                                             """);
+    }
+
+    @Test
+    void rejectsNonPositivePressureLogInterval() {
+        assertInvalidPublisherConfig("""
+                                             type: oci
+                                             accumulators:
+                                               pressure-log-interval: PT0S
+                                             """);
+    }
+
     private static OciMetricsPublisherConfig publisherConfig() {
         return publisherConfig(CONFIG);
     }
@@ -430,6 +607,12 @@ class OciMetricsPublisherConfigMappingTest {
         return OciMetricsPublisherConfig.create(config.get("metrics")
                                                        .get("publishers")
                                                        .get("0"));
+    }
+
+    private static void assertInvalidPublisherConfig(String yaml) {
+        Config config = Config.just(ConfigSources.create(yaml, MediaTypes.APPLICATION_YAML));
+
+        assertThrows(RuntimeException.class, () -> OciMetricsPublisherConfig.create(config));
     }
 
     private static final class TestMetricReporter implements MetricReporter {

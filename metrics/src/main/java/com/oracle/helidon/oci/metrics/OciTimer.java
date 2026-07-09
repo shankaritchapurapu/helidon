@@ -17,20 +17,26 @@ import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.MetricsFactory;
 import io.helidon.metrics.api.Timer;
 
+import com.oracle.pic.telemetry.commons.metrics.model.Observation;
+
 /**
- * OCI-backed timer with local one-minute rate state.
+ * OCI-backed timer.
  */
 final class OciTimer extends AbstractOciMeter implements Timer {
 
     private final Clock clock;
     private final Timer delegate;
-    private final OciOneMinuteRate oneMinuteRate;
+    private final OciIntervalAccumulator intervalAccumulator;
 
     OciTimer(Builder builder, OciMeterRegistry registry, Timer delegate, boolean enabled) {
         super(registry, delegate, enabled);
         this.clock = registry.clock();
         this.delegate = delegate;
-        this.oneMinuteRate = new OciOneMinuteRate(clock);
+        this.intervalAccumulator = new OciIntervalAccumulator(delegate.id().name(),
+                                                             registry.accumulatorConfig(),
+                                                             registry.accumulatorConfig()
+                                                                     .maxRawTimerSamplesPerSecond(),
+                                                             registry.accumulatorStats());
     }
 
     static Builder builder(String name) {
@@ -65,7 +71,9 @@ final class OciTimer extends AbstractOciMeter implements Timer {
             throw new IllegalArgumentException("Timer amount must be non-negative");
         }
         delegate.record(amount, unit);
-        oneMinuteRate.mark();
+        if (accumulationEnabled()) {
+            recordIntervalSample(unit.toNanos(amount));
+        }
     }
 
     @Override
@@ -138,8 +146,20 @@ final class OciTimer extends AbstractOciMeter implements Timer {
         return delegate.max(unit);
     }
 
-    double oneMinuteRate() {
-        return oneMinuteRate.rate();
+    List<Observation> drainClosedIntervalSamples(long nowMillis) {
+        return intervalAccumulator.drainClosed(nowMillis);
+    }
+
+    List<Observation> drainAllIntervalSamples() {
+        return intervalAccumulator.drainAll();
+    }
+
+    int pendingBucketCount() {
+        return intervalAccumulator.pendingBucketCount();
+    }
+
+    private void recordIntervalSample(long nanos) {
+        intervalAccumulator.record(clock.wallTime(), nanos / 1_000_000D);
     }
 
     static final class Builder extends AbstractOciMeterBuilder<Timer.Builder, Timer> implements Timer.Builder {

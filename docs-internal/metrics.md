@@ -13,6 +13,8 @@ The Helidon Talon metrics integration library automatically sends the following 
   * `<scope>.ResponseOut.StatusFamily.<n>XX.Count`
   * `<scope>.ResponseOut.Count`
   * `<scope>.SuccessRate`
+  * `<scope>.Request.Client.<clientAgg>.Count`
+  * `<scope>.Request.Client.<clientAgg>.<n>XX.Count`
 
   These metrics intentionally do not use automatic `method`, `route`, or `status.family` tags. The endpoint identity is
   encoded in the metric scope so migrated services can continue to use service-core-style dashboards and alerts.
@@ -28,8 +30,16 @@ OCI Helidon metrics integration provides a new implementation of the Helidon neu
 All supported Helidon meter types are sampled on the configured interval. Metric mutation methods update only the local
 meter/delegate state; they do not report directly to the OCI metrics layer.
 
-Counters publish interval deltas. Timers publish a single one-minute EWMA rate in events per second. Distribution
-summaries publish a single interval mean. Gauges and functional counters publish changed current values.
+Helidon `Counter.count()` reports the local cumulative delegate count. OCI publication for counters emits only the
+delta since the previous sample as an interval event count. Timers publish service-core-style duration observations in
+milliseconds, using the configured timer metric name. Distribution summaries publish observations using the configured
+summary metric name. Gauges publish their current value on each sample. Functional counters publish interval event
+counts based on the delta since the previous sample.
+
+Timers and distribution summaries use bounded per-second accumulators. A bucket retains exact raw observations up to
+the configured cap. Once the cap is exceeded, the bucket compacts into min, max, and weighted middle mean observations,
+preserving count, sum, mean, min, and max while bounding retained objects. Normal sampling drains only closed seconds;
+shutdown sampling drains all buckets, including the current open second, before OCI `metrics-lib` shutdown.
 
 ### General Configuration
 There are many configurable settings related to connecting to the backend and retrying failed transmissions, all exposed as attributes of the OCI metrics publisher. These are implemented as Helidon config blueprints and so are settable through configuration files or programmatically.
@@ -67,6 +77,22 @@ response body stream writes and is emitted only when a non-empty response body i
 `SuccessRate` records `1` for response statuses below `500` and `0` for `500` or higher. Client errors therefore count
 as successful from this metric's perspective, matching the service-core convention.
 
+When `auto-http.user-agent-metrics-enabled` is `true`, which is the default, OCI Helidon also parses the request
+`User-Agent` header using service-core-compatible known client parsers and emits client aggregation counters:
+
+```text
+StoreEndpoint.listItems.Request.Client.JavaSDK.Count
+StoreEndpoint.listItems.Request.Client.JavaSDK.2XX.Count
+```
+
+Detailed user-agent series are bounded by `auto-http.max-user-agent-series` (default `1000`). The stable client-family
+series do not count against this limit. Once the limit is reached, new detailed identities contribute to
+`Request.Client.OTHER.*` counters, and `OciMetrics.AutoHttp.UserAgentCardinalityOverflows.Count` reports the number of
+scope/request updates which encountered the limit.
+
+Browser user agents such as Safari, Chrome, and Firefox are grouped as
+`BrowserClient.UNKNOWN.UNKNOWN.UNKNOWN.UNKNOWN.UNKNOWN`, matching service-core's generic browser parser.
+
 If a request is not matched to generated endpoint metadata, metrics fall back to the `UnknownMethod` scope. The fallback
 still emits response count, status code count, status family count, and `SuccessRate`. If detailed timing is enabled, it
 also emits `Time` and any observed wire timers under `UnknownMethod`, but it does not emit `ResourceTime`.
@@ -74,6 +100,41 @@ also emits `Time` and any observed wire timers under `UnknownMethod`, but it doe
 The OCI publisher setting `enable-detailed-timing-auto-metrics` defaults to `true`, matching service-core's
 `MetricsConfiguration.enableDetailedTimingAutoMetrics`. When set to `false`, OCI Helidon suppresses `Time`,
 `ResourceTime`, `WireReadTime`, and `WireWriteTime`; response counters and `SuccessRate` still emit.
+
+The OCI publisher setting `auto-http.enabled` defaults to `true`. When set to `false`, OCI Helidon does not install the
+automatic HTTP metrics filter, so no automatic HTTP metrics are gathered or emitted by this mechanism.
+
+The optional `auto-http.runtime-dimension` section supports one service-core-compatible runtime dimension. OCI Helidon
+reads the configured `property-name` from the Helidon request `Context`; if no value is present, it uses
+`default-dimension` when configured. The resolved value is emitted as an OCI metric dimension named by
+`dimension-name`. Count-style automatic HTTP metrics also insert the value into the dotted metric name after the scope,
+matching service-core. The value is inserted as-is, without sanitization, so values containing punctuation create
+corresponding metric-name segments and each distinct value can create a distinct metric series:
+
+```yaml
+metrics:
+  publishers:
+    - type: oci
+      auto-http:
+        runtime-dimension:
+          property-name: lab-environment
+          dimension-name: lab
+          default-dimension: PINTLAB
+```
+
+Application code supplies request-specific values with the same property name:
+
+```java
+request.context().register("lab-environment", "PINTLAB");
+```
+
+Example output:
+
+```text
+StoreEndpoint.listItems.Time{"lab": "PINTLAB"}
+StoreEndpoint.listItems.PINTLAB.ResponseOut.Count{"lab": "PINTLAB"}
+StoreEndpoint.listItems.PINTLAB.Request.Client.JavaSDK.Count{"lab": "PINTLAB"}
+```
 
 ### Endpoint scope annotations
 
@@ -177,10 +238,29 @@ OCI publisher setting `resource-package-prefix`. This preserves the service-core
 fully-qualified class name starts with the configured prefix are tracked by automatic HTTP metrics. If the setting is
 absent, OCI Helidon tracks HTTP metrics for every generated endpoint.
 
+Heliport should migrate service-core automatic HTTP configuration into the OCI publisher and nested `auto-http` section:
+
+| service-core `MetricsConfiguration` setting | Helidon Talon setting |
+| --- | --- |
+| `enableAutoMetrics` | `auto-http.enabled` |
+| `enableDetailedTimingAutoMetrics` | `enable-detailed-timing-auto-metrics` |
+| `enableUserAgentMetrics` | `auto-http.user-agent-metrics-enabled` |
+| `resourcePackagePrefix` | `resource-package-prefix` |
+| `runtimeDimensionConfig.propertyName` | `auto-http.runtime-dimension.property-name` |
+| `runtimeDimensionConfig.dimensionName` | `auto-http.runtime-dimension.dimension-name` |
+| `runtimeDimensionConfig.defaultDimension` | `auto-http.runtime-dimension.default-dimension` |
+
+The service-core runtime dimension source was a Jersey `ContainerRequest` property. The Helidon equivalent is a
+`RoutingRequest.context()` entry using the configured `property-name`; migrated filters or endpoint code should register
+the value in the request context before the response is sent.
+
+If service-core code sets the skip-response-status property on a request, Heliport should migrate that request property
+write to the Helidon request context using `OciHttpEndpointMetricsContext.SKIP_RESPONSE_STATUS_METRICS`. This suppresses
+status-code and status-family automatic HTTP metrics, including status-family user-agent counters, but still allows
+`ResponseOut.Count`, `SuccessRate`, and client aggregate count metrics.
+
 Avoid migrating service-core-only metrics behavior that is intentionally out of scope for this integration:
 
-* user-agent metrics
-* runtime dimensions
 * service-log-only annotations
 
 ### Reporter Configuration
@@ -192,10 +272,16 @@ The OCI metrics publisher keeps publisher behavior settings at the `oci` publish
 * `includes-attributes`: Metric attribute names to include when reporting derived values.
 * `excludes-attributes`: Metric attribute names to exclude when reporting derived values.
 * `sample-interval`: Interval between scheduled metric samples.
+* `accumulators`: Bounded per-second accumulator settings for timers and distribution summaries.
 
 The DropWizard `BaseReporterFactory` also exposes `durationUnit` and `rateUnit` settings, but Helidon Talon does not
-expose them. (The service-core metrics does not use its `durationUnit` setting anyway.) The service-core scheduled metrics reporter emits counters, gauges, and one-minute rates; it does not emit
-timer duration values, and its reported rates are events per second.
+expose them. Timers are emitted as exact duration observations in milliseconds using the configured metric name, matching
+the service-core `MetricsScope` timer semantics used by automatic HTTP metrics and other scope timers. They are not
+emitted as DropWizard scheduled-reporter one-minute rates.
+
+Distribution summaries also use the bounded observation accumulator. For `SuccessRate`, automatic HTTP metrics record
+`1.0` for non-5xx responses and `0.0` for 5xx responses; below the raw cap those observations are emitted exactly, and
+above the cap compaction preserves the bucket count and mean.
 
 Reporter include and exclude decisions apply to metric names only. Excludes take precedence over includes, and an empty `includes` list means all non-excluded metrics are eligible for publishing. The programmatic `filter` setting is intentionally not configurable from YAML; it exists only for code which builds the config directly.
 
@@ -220,6 +306,24 @@ it should map scheduled sampling and filtering settings into the single Helidon 
 | `includesAttributes` | `includes-attributes` |
 | `excludesAttributes` | `excludes-attributes` |
 | `frequency` | `sample-interval` |
+
+Heliport normally should not synthesize accumulator settings from service-core configuration. The defaults are intended
+for migrated services:
+
+```yaml
+metrics:
+  publishers:
+    - type: oci
+      sample-interval: PT1S
+      accumulators:
+        max-pending-seconds: 10
+        max-raw-timer-samples-per-second: 1024
+        max-raw-summary-samples-per-second: 1024
+        pressure-log-interval: PT30S
+```
+
+If migration analysis identifies an unusually high-volume service or a service that requires exact raw timer or summary
+observations at higher per-second rates, Heliport can surface these settings for owner review instead of guessing.
 
 It should map backend/reporter construction settings into the selected nested reporter variant. For normal overlay
 migrations, use `reporter.overlay`:
@@ -258,11 +362,25 @@ Heliport should not migrate overlay-only settings such as request headers, metad
 into `reporter.substrate`; if those settings are present while the migration target is substrate, report them for manual
 review.
 
-Helidon Talon samples metrics on the configured interval and does not report metric mutations to the OCI metrics layer as they happen. Heliport should map the legacy scheduled reporter `frequency` setting to `sample-interval`. Counters use the configured metric name and emit interval deltas. Timers use the configured metric name and emit a single one-minute EWMA rate in events per second. Distribution summaries use the configured metric name and emit a single interval mean. This preserves service-core-style `SuccessRate` because it records `0.0` or `1.0`, so the interval mean is the success rate.
+Helidon Talon samples metrics on the configured interval and does not report metric mutations to the OCI metrics layer
+as they happen. Heliport should map the legacy scheduled reporter `frequency` setting to `sample-interval` when a
+service has an explicit scheduled reporter frequency; otherwise the OCI Helidon default is `PT1S`. `Counter.count()`
+remains the local cumulative Helidon count, but publication uses the configured metric name and emits interval event
+counts. Timers use the configured metric name and emit service-core-style duration observations in milliseconds.
+Distribution summaries use the configured metric name and emit observations. This preserves service-core-style
+`SuccessRate` input values below the raw cap because it records `0.0` or `1.0`; above the cap, compaction preserves
+bucket count and mean.
 
-Heliport should not migrate legacy `durationUnit`; there is no Helidon Talon equivalent because no emitted timer metric
-contains timer duration values. Attribute filters still apply to sampled values: counters, gauges, and functional counters
-use `value`; timer one-minute EWMA rates use `m1_rate`; distribution summary interval means use `mean`.
+Timer and distribution summary observations are retained in bounded per-second buckets until sampling. For high-volume
+meters, exact raw observations are bounded by `max-raw-timer-samples-per-second` and
+`max-raw-summary-samples-per-second`; additional observations in the same second compact into min, max, and weighted
+middle mean. If the sampler falls behind more than `max-pending-seconds`, oldest buckets are dropped and pressure
+metrics/logs are emitted. Use `sample-interval` for sampler frequency and `accumulators` for retained-object and
+exactness tuning.
+
+Heliport should not migrate legacy `durationUnit` or `rateUnit`; there is no Helidon Talon equivalent. Attribute filters
+still apply to sampled values: counters, gauges, functional counters, timer duration observations, and distribution
+summary observations use `value`.
 
 Roughly speaking, a DropWizard reporter corresponds to a Helidon metrics publisher. The legacy OCI metrics configuration can specify multiple reporters, but Helidon Talon supports only one set of reporter-style controls in the `oci` metrics publisher. This is intentional: both the legacy DropWizard-based approach and Helidon Talon periodically report metrics through configured reporter-style controls. If a legacy config contains multiple scheduled metrics reporters, Heliport should choose or consolidate to one Helidon Talon publisher configuration and flag any ambiguous cases for review. If future requirements emerge to support multiple DW reporters, we can look at adding additional OCI-related metrics publishers to match.
 

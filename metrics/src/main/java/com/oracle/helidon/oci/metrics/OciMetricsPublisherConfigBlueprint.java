@@ -109,11 +109,7 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
      */
     @Option.Configured
     @Option.DefaultCode("""
-            new java.util.LinkedHashSet<>(java.util.List.of("value",
-                                                            "max", "mean", "min", "stddev", "total",
-                                                            "p50", "p75", "p95", "p98", "p99", "p999",
-                                                            "count", "m1_rate", "m5_rate",
-                                                            "m15_rate", "mean_rate"))
+            new java.util.LinkedHashSet<>(java.util.List.of("value"))
             """)
     Set<String> includesAttributes();
 
@@ -148,7 +144,25 @@ interface OciMetricsPublisherConfigBlueprint extends MetricsPublisherConfig, Pro
      * @return sample interval
      */
     @Option.Configured
-    @Option.Default("PT1M")
+    @Option.Default("PT1S")
     Duration sampleInterval();
+
+    /**
+     * Bounded accumulator settings for event-driven meters.
+     *
+     * @return accumulator configuration
+     */
+    @Option.Configured("accumulators")
+    @Option.DefaultCode("OciMetricsAccumulatorConfig.create()")
+    OciMetricsAccumulatorConfig accumulators();
+
+    /**
+     * Automatic HTTP metrics async delivery settings.
+     *
+     * @return automatic HTTP metrics configuration
+     */
+    @Option.Configured("auto-http")
+    @Option.DefaultCode("OciAutoHttpMetricsConfig.create()")
+    OciAutoHttpMetricsConfig autoHttp();
 
 }

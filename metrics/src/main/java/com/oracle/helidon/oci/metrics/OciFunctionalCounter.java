@@ -4,9 +4,8 @@
 
 package com.oracle.helidon.oci.metrics;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.OptionalLong;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 import io.helidon.metrics.api.FunctionalCounter;
@@ -20,10 +19,8 @@ import io.helidon.metrics.api.MetricsFactory;
  */
 final class OciFunctionalCounter<T> extends AbstractOciMeter implements FunctionalCounter {
 
-    private static final Object NO_REPORTED_VALUE = new Object();
-
     private final FunctionalCounter delegate;
-    private final AtomicReference<Object> lastReportedValue = new AtomicReference<>(NO_REPORTED_VALUE);
+    private final AtomicLong lastSampledCount = new AtomicLong();
 
     OciFunctionalCounter(Builder<T> builder, OciMeterRegistry registry, FunctionalCounter delegate, boolean enabled) {
         super(registry, delegate, enabled);
@@ -39,15 +36,22 @@ final class OciFunctionalCounter<T> extends AbstractOciMeter implements Function
         return delegate.count();
     }
 
-    Optional<Long> valueIfChanged() {
+    OptionalLong deltaIfChanged() {
         long value = count();
         while (true) {
-            Object previous = lastReportedValue.get();
-            if (previous != NO_REPORTED_VALUE && Objects.equals(previous, value)) {
-                return Optional.empty();
+            long previous = lastSampledCount.get();
+            if (value < previous) {
+                if (lastSampledCount.compareAndSet(previous, value)) {
+                    return OptionalLong.empty();
+                }
+                continue;
             }
-            if (lastReportedValue.compareAndSet(previous, value)) {
-                return Optional.of(value);
+            long delta = value - previous;
+            if (delta == 0L) {
+                return OptionalLong.empty();
+            }
+            if (lastSampledCount.compareAndSet(previous, value)) {
+                return OptionalLong.of(delta);
             }
         }
     }

@@ -147,12 +147,23 @@ The integration emits:
 * `<scope>.ResponseOut.StatusFamily.<n>XX.Count`
 * `<scope>.ResponseOut.Count`
 * `<scope>.SuccessRate`
+* `<scope>.Request.Client.<clientAgg>.Count`
+* `<scope>.Request.Client.<clientAgg>.<n>XX.Count`
 
 `Time`, `ResourceTime`, `WireReadTime`, and `WireWriteTime` are detailed timing metrics controlled by
 `enable-detailed-timing-auto-metrics`, which defaults to `true`. `WireReadTime` is emitted only when the request body
 stream is read, and `WireWriteTime` is emitted only when a non-empty response body is written.
 
 `SuccessRate` records `1` for response statuses below `500` and `0` for statuses `500` or higher.
+
+When `auto-http.user-agent-metrics-enabled` is `true`, which is the default, the integration parses the request
+`User-Agent` header and emits service-core-style client aggregation counters. Browser user agents such as Safari,
+Chrome, and Firefox are grouped as `BrowserClient.UNKNOWN.UNKNOWN.UNKNOWN.UNKNOWN.UNKNOWN`.
+
+The optional `auto-http.runtime-dimension` section reads a value from the Helidon request `Context`. The resolved value
+is emitted as an OCI dimension, and count-style automatic HTTP metric names insert the value after the scope, matching
+service-core's runtime dimension naming convention. The value is inserted as-is, without sanitization, so choose values
+that are appropriate for metric names and backend cardinality.
 
 `@MetricPrefix` can be added to an endpoint class to replace the default scope. Set `appendMethodName=true` to append the
 Java method name to the configured prefix. `@SecondaryMetricPrefix` can be added to an endpoint class or method to emit
@@ -209,12 +220,19 @@ Reporter construction settings are nested under the `reporter` key. The `overlay
 When reporter `availability-domain` or `fault-domain` is omitted, the OCI metrics publisher uses
 `oci.env.availability-domain` and `oci.env.fault-domain` when those values are available.
 
-The publisher samples metrics on `sample-interval`; metric mutation methods do not report directly to OCI.
-Counters are emitted as interval deltas using the configured metric name. Timers are emitted as a single one-minute
-EWMA rate, in events per second, using the configured metric name. Distribution summaries are emitted as a single
-interval mean using the configured metric name. `SuccessRate` records `0.0` or `1.0`, so its interval mean is the
-success rate. Attribute filters use `value` for counters, gauges, and functional counters, `m1_rate` for timer
-one-minute EWMA rates, and `mean` for distribution summary interval means.
+The publisher samples Helidon meters on `sample-interval`; metric mutation methods do not report directly to OCI.
+Helidon `Counter.count()` still reports the local cumulative delegate count, but OCI publication emits only the
+delta since the previous sample as an interval event count using the configured metric name. Timers are emitted as
+MetricsScope-style duration observations in milliseconds using the configured metric name, not as one-minute rates.
+Distribution summaries are emitted as observations using the configured metric name. Automatic HTTP request metrics use
+the same Helidon meter sampling path, subject to the additional `auto-http.enabled` switch. Attribute filters use
+`value` for counters, timers, summaries, gauges, and functional counters.
+
+Timers and distribution summaries retain per-second buckets until sampled. Buckets retain exact raw observations up to
+the configured accumulator cap; above the cap, the bucket compacts to min, max, and weighted middle mean observations
+that preserve count, sum, mean, min, and max. During normal sampling the current second remains open. During shutdown,
+OCI Helidon drains all buckets, including the current second, then shuts down OCI `metrics-lib` so it can flush queued
+values.
 
 | Key | Default value | Description                                                                                                                                                      |
 |-----|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -222,15 +240,37 @@ one-minute EWMA rates, and `mean` for distribution summary interval means.
 | `enabled` | `true` | Enables or disables OCI metrics publishing.                                                                                                                      |
 | `reporter` | `overlay` | Nested reporter configuration. Use `reporter.overlay` for overlay or `reporter.substrate` for substrate.                                                          |
 | `default-dimensions` | `{}` | Default dimensions for OCI `com.oracle.pic.telemetry.commons.metrics.Metrics.init`. Added to emitted metrics data that does not have any dimensions already set. |
-| `sample-interval` | `PT1M` | Interval between scheduled metric samples.                                                                                                                       |
+| `sample-interval` | `PT1S` | Interval between scheduled metric samples.                                                                                                                       |
+| `accumulators` | | Nested configuration for bounded timer and distribution summary accumulators.                                                                                     |
+| `auto-http` | | Nested configuration for automatic HTTP metrics.                                                                                                                  |
 | `enable-detailed-timing-auto-metrics` | `true` | Enables automatic HTTP `Time`, `ResourceTime`, `WireReadTime`, and `WireWriteTime` timers.                                                                       |
 | `resource-package-prefix` | | Optional package-name prefix for generated REST resources included in automatic HTTP metrics.                                                                    |
 | `metrics-scope-name` | `service` | Root name segment used as the prefix for built-in JVM metric names.                                                                                              |
 | `includes` | `[]` | Metric names to include. An empty list includes all non-excluded metrics.                                                                                        |
 | `excludes` | `[]` | Metric names to exclude. Excludes take precedence over includes.                                                                                                 |
 | `filter-matching-mode` | `exact` | How to treat `includes` and `excludes` entries: `exact`, `regex`, or `substring`. Regex matching uses full-pattern semantics.                                    |
-| `includes-attributes` | `value`, `max`, `mean`, `min`, `stddev`, `total`, `p50`, `p75`, `p95`, `p98`, `p99`, `p999`, `count`, `m1_rate`, `m5_rate`, `m15_rate`, `mean_rate` | Metric attribute names to include when reporting derived values.                                                                                                 |
+| `includes-attributes` | `value` | Metric attribute names to include when reporting derived values.                                                                                                  |
 | `excludes-attributes` | `[]` | Metric attribute names to exclude when reporting derived values.                                                                                                 |
+
+Accumulator settings:
+
+| Key | Default value | Description |
+|-----|---------------|-------------|
+| `accumulators.max-pending-seconds` | `10` | Maximum number of pending per-second buckets retained by one meter. If the sampler falls behind, oldest buckets beyond this limit are dropped. |
+| `accumulators.max-raw-timer-samples-per-second` | `1024` | Maximum exact timer samples retained per second before compacting the bucket. |
+| `accumulators.max-raw-summary-samples-per-second` | `1024` | Maximum exact distribution summary samples retained per second before compacting the bucket. |
+| `accumulators.pressure-log-interval` | `PT30S` | Minimum time between accumulator pressure log messages for compaction or drops. |
+
+Automatic HTTP metrics settings:
+
+| Key | Default value | Description |
+|-----|---------------|-------------|
+| `auto-http.enabled` | `true` | Enables gathering automatic HTTP metrics. Set to `false` to avoid installing the automatic HTTP metrics filter. |
+| `auto-http.user-agent-metrics-enabled` | `true` | Emits service-core-style `Request.Client.*` counters based on the request `User-Agent` header. |
+| `auto-http.max-user-agent-series` | `1000` | Maximum detailed user-agent counter series retained by one automatic HTTP metrics filter. New detailed identities beyond the limit are aggregated into stable `Request.Client.OTHER.*` counters. |
+| `auto-http.runtime-dimension.property-name` | required when `runtime-dimension` is configured | Helidon request `Context` property to read. |
+| `auto-http.runtime-dimension.dimension-name` | required when `runtime-dimension` is configured | OCI metric dimension name to emit. |
+| `auto-http.runtime-dimension.default-dimension` | absent | Optional fallback value when the request context has no property value. |
 
 Example:
 
@@ -243,6 +283,16 @@ metrics:
           project: my-service
           fleet: my-fleet
       metrics-scope-name: my-service
+      sample-interval: PT1S
+      accumulators:
+        max-pending-seconds: 10
+        max-raw-timer-samples-per-second: 1024
+        max-raw-summary-samples-per-second: 1024
+        pressure-log-interval: PT30S
+      auto-http:
+        enabled: true
+        user-agent-metrics-enabled: true
+        max-user-agent-series: 1000
       excludes:
         - "my-service\\.jvm\\..*"
       filter-matching-mode: regex

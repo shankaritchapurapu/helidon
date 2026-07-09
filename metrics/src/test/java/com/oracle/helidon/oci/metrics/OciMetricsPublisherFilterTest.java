@@ -9,9 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.regex.PatternSyntaxException;
 
-import io.helidon.config.ConfigException;
+import io.helidon.common.Errors;
 import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -85,22 +84,34 @@ class OciMetricsPublisherFilterTest {
 
     @Test
     void invalidIncludeRegexFailsWithClearMessage() {
-        ConfigException exception = assertThrows(ConfigException.class,
-                                                 () -> publisherConfig(builder -> builder.filterMatchingMode(FilterMatchingMode.REGEX)
-                                                         .includes(Set.of("test["))));
+        Errors.ErrorMessagesException exception = assertThrows(Errors.ErrorMessagesException.class,
+                                                               () -> publisherConfig(builder -> builder
+                                                                       .filterMatchingMode(FilterMatchingMode.REGEX)
+                                                                       .includes(Set.of("test["))));
 
         assertThat(exception.getMessage(), containsString("Invalid OCI metrics publisher regex in includes: 'test['"));
-        assertThat(exception.getCause(), instanceOf(PatternSyntaxException.class));
     }
 
     @Test
     void invalidExcludeRegexFailsWithClearMessage() {
-        ConfigException exception = assertThrows(ConfigException.class,
-                                                 () -> publisherConfig(builder -> builder.filterMatchingMode(FilterMatchingMode.REGEX)
-                                                         .excludes(Set.of("test["))));
+        Errors.ErrorMessagesException exception = assertThrows(Errors.ErrorMessagesException.class,
+                                                               () -> publisherConfig(builder -> builder
+                                                                       .filterMatchingMode(FilterMatchingMode.REGEX)
+                                                                       .excludes(Set.of("test["))));
 
         assertThat(exception.getMessage(), containsString("Invalid OCI metrics publisher regex in excludes: 'test['"));
-        assertThat(exception.getCause(), instanceOf(PatternSyntaxException.class));
+    }
+
+    @Test
+    void invalidRegexFiltersReportAllViolations() {
+        Errors.ErrorMessagesException exception = assertThrows(Errors.ErrorMessagesException.class,
+                                                               () -> publisherConfig(builder -> builder
+                                                                       .filterMatchingMode(FilterMatchingMode.REGEX)
+                                                                       .includes(Set.of("include["))
+                                                                       .excludes(Set.of("exclude["))));
+
+        assertThat(exception.getMessage(), containsString("Invalid OCI metrics publisher regex in includes: 'include['"));
+        assertThat(exception.getMessage(), containsString("Invalid OCI metrics publisher regex in excludes: 'exclude['"));
     }
 
     @Test
@@ -176,45 +187,10 @@ class OciMetricsPublisherFilterTest {
     }
 
     @Test
-    void timerRateUsesOneMinuteRateAttributeFilter() {
-        OciMetricsPublisher publisher = publisher(builder -> builder.includesAttributes(
-                Set.of(OciMetricsPublisher.ONE_MINUTE_RATE_ATTRIBUTE)));
-
-        assertThat(publisher.shouldPublishTimerRate(new TestMeter("test.timer")), is(true));
-        assertThat(publisher.shouldPublishValue(new TestMeter("test.timer")), is(false));
-    }
-
-    @Test
-    void timerRateAttributeCanBeExcluded() {
-        OciMetricsPublisher publisher = publisher(builder -> builder.excludesAttributes(
-                Set.of(OciMetricsPublisher.ONE_MINUTE_RATE_ATTRIBUTE)));
-
-        assertThat(publisher.shouldPublishTimerRate(new TestMeter("test.timer")), is(false));
-        assertThat(publisher.shouldPublishValue(new TestMeter("test.timer")), is(true));
-    }
-
-    @Test
-    void distributionSummaryMeanUsesMeanAttributeFilter() {
-        OciMetricsPublisher publisher = publisher(builder -> builder.includesAttributes(
-                Set.of(OciMetricsPublisher.MEAN_ATTRIBUTE)));
-
-        assertThat(publisher.shouldPublishDistributionSummaryMean(new TestMeter("test.summary")), is(true));
-        assertThat(publisher.shouldPublishValue(new TestMeter("test.summary")), is(false));
-    }
-
-    @Test
-    void distributionSummaryMeanAttributeCanBeExcluded() {
-        OciMetricsPublisher publisher = publisher(builder -> builder.excludesAttributes(
-                Set.of(OciMetricsPublisher.MEAN_ATTRIBUTE)));
-
-        assertThat(publisher.shouldPublishDistributionSummaryMean(new TestMeter("test.summary")), is(false));
-        assertThat(publisher.shouldPublishValue(new TestMeter("test.summary")), is(true));
-    }
-
-    @Test
     void attributeExcludesSuppressListedAttributes() {
         OciMetricsPublisher publisher = publisher(builder -> builder.excludesAttributes(
-                Set.of(OciMetricsPublisher.VALUE_ATTRIBUTE)));
+                        Set.of(OciMetricsPublisher.VALUE_ATTRIBUTE))
+                .includesAttributes(Set.of(OciMetricsPublisher.VALUE_ATTRIBUTE, "count")));
 
         assertThat(publisher.shouldPublishAttribute(OciMetricsPublisher.VALUE_ATTRIBUTE), is(false));
         assertThat(publisher.shouldPublishAttribute("count"), is(true));

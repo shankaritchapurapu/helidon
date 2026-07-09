@@ -6,6 +6,7 @@ package com.oracle.helidon.oci.metrics;
 
 import io.helidon.builder.api.Prototype;
 import io.helidon.config.Config;
+import io.helidon.config.ConfigException;
 
 final class OciMetricReporterConfigSupport
         implements Prototype.BuilderDecorator<OciMetricReporterConfigBase.BuilderBase<?, ?>> {
@@ -25,7 +26,7 @@ final class OciMetricReporterConfigSupport
 
     private static void applyHostNameAlias(OciMetricReporterConfigBase.BuilderBase<?, ?> builder) {
         if (builder.hostname().isPresent() && builder.hostName().isPresent()) {
-            throw new IllegalArgumentException("Do not configure both hostname and host-name; specify only one.");
+            throw new ConfigException("Do not configure both hostname and host-name; specify only one.");
         }
         if (builder.hostname().isEmpty()) {
             builder.hostName().ifPresent(builder::hostname);
