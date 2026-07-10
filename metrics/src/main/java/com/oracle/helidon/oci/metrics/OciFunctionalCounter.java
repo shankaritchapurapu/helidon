@@ -22,8 +22,12 @@ final class OciFunctionalCounter<T> extends AbstractOciMeter implements Function
     private final FunctionalCounter delegate;
     private final AtomicLong lastSampledCount = new AtomicLong();
 
-    OciFunctionalCounter(Builder<T> builder, OciMeterRegistry registry, FunctionalCounter delegate, boolean enabled) {
-        super(registry, delegate, enabled);
+    OciFunctionalCounter(Builder<T> builder,
+                         OciMeterRegistry registry,
+                         FunctionalCounter delegate,
+                         boolean enabled,
+                         boolean accumulationEligible) {
+        super(registry, delegate, enabled, accumulationEligible);
         this.delegate = delegate;
     }
 
@@ -89,8 +93,15 @@ final class OciFunctionalCounter<T> extends AbstractOciMeter implements Function
         }
 
         @Override
-        FunctionalCounter build(boolean enabled, OciMeterRegistry registry, Meter delegate) {
-            return new OciFunctionalCounter<>(this, registry, (FunctionalCounter) delegate, enabled);
+        FunctionalCounter build(boolean enabled,
+                                boolean accumulationEligible,
+                                OciMeterRegistry registry,
+                                Meter delegate) {
+            return new OciFunctionalCounter<>(this,
+                                             registry,
+                                             (FunctionalCounter) delegate,
+                                             enabled,
+                                             accumulationEligible);
         }
 
         @Override

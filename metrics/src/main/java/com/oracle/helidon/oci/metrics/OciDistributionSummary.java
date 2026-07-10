@@ -22,8 +22,12 @@ final class OciDistributionSummary extends AbstractOciMeter implements Distribut
     private final DistributionSummary delegate;
     private final OciIntervalAccumulator intervalAccumulator;
 
-    OciDistributionSummary(Builder builder, OciMeterRegistry registry, DistributionSummary delegate, boolean enabled) {
-        super(registry, delegate, enabled);
+    OciDistributionSummary(Builder builder,
+                           OciMeterRegistry registry,
+                           DistributionSummary delegate,
+                           boolean enabled,
+                           boolean accumulationEligible) {
+        super(registry, delegate, enabled, accumulationEligible);
         this.delegate = delegate;
         this.intervalAccumulator = new OciIntervalAccumulator(delegate.id().name(),
                                                              registry.accumulatorConfig(),
@@ -155,8 +159,15 @@ final class OciDistributionSummary extends AbstractOciMeter implements Distribut
         }
 
         @Override
-        DistributionSummary build(boolean enabled, OciMeterRegistry registry, Meter delegate) {
-            return new OciDistributionSummary(this, registry, (DistributionSummary) delegate, enabled);
+        DistributionSummary build(boolean enabled,
+                                  boolean accumulationEligible,
+                                  OciMeterRegistry registry,
+                                  Meter delegate) {
+            return new OciDistributionSummary(this,
+                                             registry,
+                                             (DistributionSummary) delegate,
+                                             enabled,
+                                             accumulationEligible);
         }
 
         @Override

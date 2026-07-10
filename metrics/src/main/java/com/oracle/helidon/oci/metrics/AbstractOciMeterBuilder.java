@@ -110,7 +110,7 @@ abstract class AbstractOciMeterBuilder<B extends Meter.Builder<B, M>, M extends 
 
     abstract Meter.Builder<?, ?> createDelegateBuilder(MetricsFactory metricsFactory);
 
-    abstract M build(boolean enabled, OciMeterRegistry registry, Meter delegate);
+    abstract M build(boolean enabled, boolean accumulationEligible, OciMeterRegistry registry, Meter delegate);
 
     abstract B self();
 }

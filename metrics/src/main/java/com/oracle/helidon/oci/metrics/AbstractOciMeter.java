@@ -16,13 +16,16 @@ abstract class AbstractOciMeter implements Meter {
     private final OciMeterRegistry registry;
     private final Meter delegate;
     private final boolean enabled;
+    private final boolean accumulationEligible;
 
     AbstractOciMeter(OciMeterRegistry registry,
                      Meter delegate,
-                     boolean enabled) {
+                     boolean enabled,
+                     boolean accumulationEligible) {
         this.registry = registry;
         this.delegate = delegate;
         this.enabled = enabled;
+        this.accumulationEligible = accumulationEligible;
     }
 
     @Override
@@ -55,7 +58,7 @@ abstract class AbstractOciMeter implements Meter {
     }
 
     boolean accumulationEnabled() {
-        return enabled && registry.publisher().enabled() && registry.publisher().shouldPublishValue(this);
+        return accumulationEligible && registry.publisher().acceptingUpdates();
     }
 
     OciMeterRegistry registry() {

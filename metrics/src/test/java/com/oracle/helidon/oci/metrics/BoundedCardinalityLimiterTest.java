@@ -7,12 +7,14 @@ package com.oracle.helidon.oci.metrics;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class BoundedCardinalityLimiterTest {
 
@@ -34,13 +36,15 @@ class BoundedCardinalityLimiterTest {
         try (var executor = Executors.newFixedThreadPool(16)) {
             var futures = IntStream.range(0, 500)
                     .mapToObj(index -> executor.submit(() -> {
-                        start.await();
+                        if (!start.await(30, TimeUnit.SECONDS)) {
+                            fail("Timed out waiting for concurrent start");
+                        }
                         return limiter.tryAdmit(List.of("key-" + index));
                     }))
                     .toList();
             start.countDown();
             for (var future : futures) {
-                future.get();
+                future.get(30, TimeUnit.SECONDS);
             }
         }
 

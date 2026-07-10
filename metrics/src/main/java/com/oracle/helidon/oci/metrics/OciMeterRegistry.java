@@ -156,7 +156,10 @@ final class OciMeterRegistry implements MeterRegistry {
             Meter.Builder delegateBuilder = ociBuilder.createDelegateBuilder(delegateFactory);
             @SuppressWarnings("unchecked")
             Meter delegate = delegateRegistry.getOrCreate(delegateBuilder);
-            Meter meter = ociBuilder.build(enabled, this, delegate);
+            boolean accumulationEligible = enabled
+                    && publisher.enabled()
+                    && publisher.shouldCreateValueMeter(builder.name(), ociBuilder.meterType());
+            Meter meter = ociBuilder.build(enabled, accumulationEligible, this, delegate);
             onAddListeners.forEach(listener -> listener.accept(meter));
             return meter;
         });

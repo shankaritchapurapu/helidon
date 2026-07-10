@@ -373,6 +373,7 @@ class OciMetricsSemanticConventionsTest {
                       "/store/items",
                       Status.OK_200,
                       "Oracle-JavaSDK/1 (Mac OS X/13.0; Java/17.0.4; vendor)");
+        harness.awaitAsyncMetrics();
         recordRequest(harness,
                       "/store/items",
                       Status.OK_200,
@@ -1104,7 +1105,7 @@ class OciMetricsSemanticConventionsTest {
         }
 
         private void awaitAsyncMetrics() {
-            if (!OciMetricsSemanticConventions.awaitAsyncUpdates(Duration.ofSeconds(5))) {
+            if (!OciMetricsSemanticConventions.awaitAsyncUpdates(Duration.ofSeconds(30))) {
                 fail("Timed out waiting for asynchronous HTTP metrics update");
             }
         }

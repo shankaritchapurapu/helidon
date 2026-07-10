@@ -181,8 +181,8 @@ class OciTelemetryRuntimeTest {
             Counter counter = registry.getOrCreate(Counter.builder("preactive.shutdown.counter"));
 
             counter.increment(5L);
-            factory.close();
         } finally {
+            factory.close();
             shutdownMetricsIfActive();
         }
         assertThat(activeReporter.timeSeries()
@@ -263,6 +263,63 @@ class OciTelemetryRuntimeTest {
                            .map(candidate -> candidate.getMetricName().getName())
                            .toList(),
                    not(hasItem(equalTo("direct.timer"))));
+    }
+
+    @Test
+    void deferredReporterIsNotInitializedWhenMetricsWasAlreadyActive() {
+        shutdownMetricsIfActive();
+        CapturingMetricReporter activeReporter = new CapturingMetricReporter();
+        AtomicBoolean initialized = new AtomicBoolean();
+        MetricReporter deferredReporter = DeferredMetricReporter.create(() -> {
+            initialized.set(true);
+            throw new AssertionError("Deferred reporter should not be initialized");
+        });
+        Metrics.init(activeReporter, Map.of());
+        OciTelemetryRuntime runtime = new OciTelemetryRuntime(OciMetricsPublisherConfig.builder()
+                                                              .reporter(deferredReporter)
+                                                              .reporterConfig(overlayReporterConfigBuilder().build())
+                                                              .defaultDimensions(Map.of())
+                                                              .buildPrototype());
+        try {
+            runtime.publisher();
+
+            assertThat(initialized.get(), is(false));
+        } finally {
+            runtime.close();
+            shutdownMetricsIfActive();
+        }
+    }
+
+    @Test
+    void missingDeferredReporterSettingsDoNotDisableSamplingWhenMetricsWasAlreadyActive() {
+        shutdownMetricsIfActive();
+        CapturingMetricReporter activeReporter = new CapturingMetricReporter();
+        Metrics.init(activeReporter, Map.of());
+        MetricsConfig metricsConfig = MetricsConfig.builder()
+                .enabled(true)
+                .publishersDiscoverServices(false)
+                .build();
+        OciMetricsFactory factory = new OciMetricsFactory(delegateFactory(metricsConfig),
+                                                          OciMetricsPublisherConfig.builder()
+                                                                  .defaultDimensions(Map.of())
+                                                                  .sampleInterval(Duration.ofMinutes(1))
+                                                                  .buildPrototype(),
+                                                          metricsConfig,
+                                                          List.of());
+        try {
+            MeterRegistry registry = factory.globalRegistry();
+            Counter counter = registry.getOrCreate(Counter.builder("preactive.default.counter"));
+
+            counter.increment(5L);
+        } finally {
+            factory.close();
+            shutdownMetricsIfActive();
+        }
+        assertThat(activeReporter.timeSeries()
+                                  .stream()
+                                  .map(series -> series.getMetricName().getName())
+                                  .toList(),
+                   hasItem(equalTo("preactive.default.counter")));
     }
 
     @Test

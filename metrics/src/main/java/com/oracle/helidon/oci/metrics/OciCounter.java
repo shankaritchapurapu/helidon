@@ -17,8 +17,12 @@ final class OciCounter extends AbstractOciMeter implements Counter {
     private final Counter delegate;
     private final LongAdder pendingDelta = new LongAdder();
 
-    OciCounter(Builder builder, OciMeterRegistry registry, Counter delegate, boolean enabled) {
-        super(registry, delegate, enabled);
+    OciCounter(Builder builder,
+               OciMeterRegistry registry,
+               Counter delegate,
+               boolean enabled,
+               boolean accumulationEligible) {
+        super(registry, delegate, enabled, accumulationEligible);
         this.delegate = delegate;
     }
 
@@ -68,8 +72,8 @@ final class OciCounter extends AbstractOciMeter implements Counter {
         }
 
         @Override
-        Counter build(boolean enabled, OciMeterRegistry registry, Meter delegate) {
-            return new OciCounter(this, registry, (Counter) delegate, enabled);
+        Counter build(boolean enabled, boolean accumulationEligible, OciMeterRegistry registry, Meter delegate) {
+            return new OciCounter(this, registry, (Counter) delegate, enabled, accumulationEligible);
         }
 
         @Override

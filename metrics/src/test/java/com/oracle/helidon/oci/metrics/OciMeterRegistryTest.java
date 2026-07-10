@@ -319,6 +319,58 @@ class OciMeterRegistryTest {
     }
 
     @Test
+    void customFilterDoesNotRunDuringEventDrivenMeterMutation() {
+        AtomicLong filterCalls = new AtomicLong();
+        String metricName = "custom.filter.counter";
+        TestClock clock = new TestClock();
+        OciMeterRegistry registry = createRegistry(clock,
+                                                   OciMetricsPublisherConfig.builder()
+                                                           .enabled(true)
+                                                           .reporter(new TestMetricReporter())
+                                                           .reporterConfig(overlayReporterConfig())
+                                                           .defaultDimensions(Map.of())
+                                                           .filter((name, meter) -> {
+                                                               filterCalls.incrementAndGet();
+                                                               return !metricName.equals(name);
+                                                           })
+                                                           .buildPrototype());
+        OciCounter counter = (OciCounter) registry.getOrCreate(OciCounter.builder(metricName));
+        OciTimer timer = (OciTimer) registry.getOrCreate(OciTimer.builder("custom.filter.timer"));
+        OciDistributionSummary summary = (OciDistributionSummary) registry.getOrCreate(
+                OciDistributionSummary.builder("custom.filter.summary", DistributionStatisticsConfig.builder()));
+
+        counter.increment(3);
+        timer.record(Duration.ofMillis(10));
+        summary.record(20D);
+
+        assertThat(filterCalls.get(), is(0L));
+        registry.publisher().publishCounterDelta(counter, counter.drainDelta());
+        assertThat(filterCalls.get(), is(1L));
+        assertThat(timer.drainAllIntervalSamples(), contains(new Observation(0L, 10D, 1)));
+        assertThat(summary.drainAllIntervalSamples(), contains(new Observation(0L, 20D, 1)));
+    }
+
+    @Test
+    void stoppedPublisherPreventsEventDrivenAccumulation() {
+        TestClock clock = new TestClock();
+        OciMeterRegistry registry = createRegistry(clock);
+        OciCounter counter = (OciCounter) registry.getOrCreate(OciCounter.builder("stopped.counter"));
+        OciTimer timer = (OciTimer) registry.getOrCreate(OciTimer.builder("stopped.timer"));
+        OciDistributionSummary summary = (OciDistributionSummary) registry.getOrCreate(
+                OciDistributionSummary.builder("stopped.summary", DistributionStatisticsConfig.builder()));
+
+        registry.publisher().stop();
+
+        counter.increment(3);
+        timer.record(Duration.ofMillis(10));
+        summary.record(20D);
+
+        assertThat(counter.drainDelta(), is(0L));
+        assertThat(timer.drainAllIntervalSamples(), empty());
+        assertThat(summary.drainAllIntervalSamples(), empty());
+    }
+
+    @Test
     void distributionSummarySamplesNormalizedIntervalMean() {
         TestClock clock = new TestClock();
         OciMeterRegistry registry = createRegistry(clock);

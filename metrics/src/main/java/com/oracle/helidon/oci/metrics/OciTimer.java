@@ -28,8 +28,12 @@ final class OciTimer extends AbstractOciMeter implements Timer {
     private final Timer delegate;
     private final OciIntervalAccumulator intervalAccumulator;
 
-    OciTimer(Builder builder, OciMeterRegistry registry, Timer delegate, boolean enabled) {
-        super(registry, delegate, enabled);
+    OciTimer(Builder builder,
+             OciMeterRegistry registry,
+             Timer delegate,
+             boolean enabled,
+             boolean accumulationEligible) {
+        super(registry, delegate, enabled, accumulationEligible);
         this.clock = registry.clock();
         this.delegate = delegate;
         this.intervalAccumulator = new OciIntervalAccumulator(delegate.id().name(),
@@ -255,8 +259,8 @@ final class OciTimer extends AbstractOciMeter implements Timer {
         }
 
         @Override
-        Timer build(boolean enabled, OciMeterRegistry registry, Meter delegate) {
-            return new OciTimer(this, registry, (Timer) delegate, enabled);
+        Timer build(boolean enabled, boolean accumulationEligible, OciMeterRegistry registry, Meter delegate) {
+            return new OciTimer(this, registry, (Timer) delegate, enabled, accumulationEligible);
         }
 
         @Override

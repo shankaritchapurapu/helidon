@@ -214,20 +214,20 @@ final class OciTelemetryRuntime implements AutoCloseable, HelidonShutdownHandler
          */
         OciMetricReporterConfig reporterConfig = config.reporterConfig();
         MetricReporter configuredReporter = config.reporter();
-        if (configuredReporter instanceof DeferredMetricReporter
-                && (reporterConfig.project().isEmpty() || reporterConfig.fleet().isEmpty())) {
-            LOGGER.log(System.Logger.Level.WARNING,
-                       "OCI metrics provider is enabled but project/fleet are not fully configured; publishing is disabled.");
-            publisher.stop();
-            return;
-        }
-
-        MetricReporter initializedReporter = reporter(configuredReporter);
         if (Metrics.isActive()) {
             LOGGER.log(System.Logger.Level.WARNING,
                        "Helidon Talon metrics runtime found OCI Metrics object already initialized; Helidon Talon metrics config "
                                + "was not applied.");
         } else {
+            if (configuredReporter instanceof DeferredMetricReporter
+                    && (reporterConfig.project().isEmpty() || reporterConfig.fleet().isEmpty())) {
+                LOGGER.log(System.Logger.Level.WARNING,
+                           "OCI metrics provider is enabled but project/fleet are not fully configured; publishing is disabled.");
+                publisher.stop();
+                return;
+            }
+
+            MetricReporter initializedReporter = reporter(configuredReporter);
             LOGGER.log(System.Logger.Level.TRACE,
                        "Initializing OCI telemetry runtime; project={0}, fleet={1}, reporterType={2}",
                        reporterConfig.project().orElse(""),

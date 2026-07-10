@@ -92,6 +92,10 @@ final class OciMetricsPublisher implements MetricsPublisher,
         return prototype == null || prototype.enabled();
     }
 
+    boolean acceptingUpdates() {
+        return acceptingUpdates.get();
+    }
+
     void stop() {
         if (LOGGER.isLoggable(System.Logger.Level.TRACE)) {
             LOGGER.log(System.Logger.Level.TRACE, "Stopping OCI metrics publisher; name={0}", name());

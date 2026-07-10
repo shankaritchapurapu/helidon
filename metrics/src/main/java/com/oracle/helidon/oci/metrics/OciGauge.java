@@ -21,8 +21,12 @@ final class OciGauge<N extends Number> extends AbstractOciMeter implements Gauge
     private final Gauge<N> delegate;
     private final Supplier<N> supplier;
 
-    OciGauge(Builder<N> builder, OciMeterRegistry registry, Gauge<N> delegate, boolean enabled) {
-        super(registry, delegate, enabled);
+    OciGauge(Builder<N> builder,
+             OciMeterRegistry registry,
+             Gauge<N> delegate,
+             boolean enabled,
+             boolean accumulationEligible) {
+        super(registry, delegate, enabled, accumulationEligible);
         this.delegate = delegate;
         this.supplier = builder.supplier();
     }
@@ -67,8 +71,8 @@ final class OciGauge<N extends Number> extends AbstractOciMeter implements Gauge
         }
 
         @Override
-        Gauge<N> build(boolean enabled, OciMeterRegistry registry, Meter delegate) {
-            return new OciGauge<>(this, registry, (Gauge<N>) delegate, enabled);
+        Gauge<N> build(boolean enabled, boolean accumulationEligible, OciMeterRegistry registry, Meter delegate) {
+            return new OciGauge<>(this, registry, (Gauge<N>) delegate, enabled, accumulationEligible);
         }
 
         @Override
