@@ -205,9 +205,9 @@ traffic.
 ## When The SPLAT Path Is Used
 
 The generated identity interceptor asks `AuthContextRequestFilterFactory` for an
-Auth SDK request filter. That factory always creates a
-`SplatAwareAuthContextRequestFilter`; the request itself decides which branch is
-used.
+Auth SDK request filter. That factory creates a provenance-aware
+`SplatAwareAuthContextRequestFilter` subclass; the request itself decides which
+branch is used.
 
 The request is treated as SPLAT-aware when:
 

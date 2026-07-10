@@ -14,7 +14,6 @@ import com.oracle.pic.commons.util.Region;
 import com.oracle.pic.identity.authentication.AuthenticatorClient;
 import com.oracle.pic.identity.authorization.sdk.AuthContextRequestFilter;
 import com.oracle.pic.identity.authorization.sdk.IAuthorizationClient;
-import com.oracle.pic.identity.authorization.sdk.SplatAwareAuthContextRequestFilter;
 import com.oracle.pic.identity.authorization.sdk.config.SplatAwareAuthConfig;
 
 /**
@@ -56,7 +55,7 @@ public class AuthContextRequestFilterFactory {
      */
     public AuthContextRequestFilter create(AuthenticatorClient authenticatorClient,
                                            Optional<IAuthorizationClient> authorizationClient) {
-        return new SplatAwareAuthContextRequestFilter(
+        return new ProvenanceAwareSplatAuthContextRequestFilter(
                 authenticatorClient,
                 authorizationClient.orElse(null),
                 splatAwareAuthConfig(),

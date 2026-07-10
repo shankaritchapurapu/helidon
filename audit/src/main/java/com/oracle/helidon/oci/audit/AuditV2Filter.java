@@ -69,6 +69,8 @@ class AuditV2Filter implements Filter {
     private static final HeaderName EVENT_SUMMARY_HEADER_NAME = HeaderNames.create("oci-splat-audit-event-summary");
     private static final HeaderName VERIFICATION_HEADER_NAME = HeaderNames.create("oci-splat-audit-verify");
     private static final String APPENDER_ATTRIBUTE_NAME = AuditPayloadAppender.class.getName();
+    private static final String SPLAT_REQUEST_VALIDATED_CONTEXT_KEY =
+            "com.oracle.helidon.oci.splat.requestValidated";
     static final String EVENT_TYPE = "com.oraclecloud";
 
     private final AuditLogger auditLogger;
@@ -88,18 +90,18 @@ class AuditV2Filter implements Filter {
         AuditPayloadAppenderImpl appender = new AuditPayloadAppenderImpl(event);
         // Keep the appender injectable even when emission is skipped.
         request.context().register(APPENDER_ATTRIBUTE_NAME, appender);
-        if (skipAuditDueToSplat(request)) {
-            filterChain.proceed();
-        } else {
-            if (attachSummary(request)) {
-                response.beforeSend(() -> {
+        if (attachSummary(request)) {
+            response.beforeSend(() -> {
+                if (!skipAuditDueToSplat(request)) {
                     addResponse(response, event.getData().getRequest(), event.getData().getResponse());
                     attachSummary(response, generateEvents(appender, request, response));
-                });
-            }
-            try {
-                filterChain.proceed();
-            } finally {
+                }
+            });
+        }
+        try {
+            filterChain.proceed();
+        } finally {
+            if (!skipAuditDueToSplat(request)) {
                 addResponse(response, event.getData().getRequest(), event.getData().getResponse());
                 List<AuditEventV2> events = generateEvents(appender, request, response);
                 for (AuditEventV2 ev : events) {
@@ -142,7 +144,17 @@ class AuditV2Filter implements Filter {
         if (!auditConfig.respectSplatAuditedFlag()) {
             return false;
         }
-        return request.headers().first(REQUEST_SPLAT_AUDITED_NAME).map(Boolean::parseBoolean).orElse(false);
+        boolean splatAudited = request.headers()
+                .first(REQUEST_SPLAT_AUDITED_NAME)
+                .map(Boolean::parseBoolean)
+                .orElse(false);
+        if (!splatAudited) {
+            return false;
+        }
+        // Only server-validated SPLAT provenance makes it trustworthy.
+        return request.context()
+                .get(SPLAT_REQUEST_VALIDATED_CONTEXT_KEY, Boolean.class)
+                .orElse(false);
     }
 
 

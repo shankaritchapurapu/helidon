@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.helidon.http.HeaderName;
@@ -52,6 +54,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RoutingTest
 class AuditV2FeatureTest {
@@ -60,7 +63,10 @@ class AuditV2FeatureTest {
     private static final AuditLogger DELEGATING_LOGGER = event -> AUDIT_LOGGER_REF.get().log(event);
     private static final HeaderName AUDIT_SUMMARY_HEADER = HeaderNames.create("oci-splat-audit-event-summary");
     private static final HeaderName OPC_REQUEST_ID_HEADER = HeaderNames.create("opc-request-id");
+    private static final HeaderName SPLAT_AUDITED_HEADER = HeaderNames.create("oci-splat-audited");
     private static final HeaderName VERIFY_AUDIT_HEADER = HeaderNames.create("oci-splat-audit-verify");
+    private static final String SPLAT_REQUEST_VALIDATED_CONTEXT_KEY =
+            "com.oracle.helidon.oci.splat.requestValidated";
     private static final String DEFAULT_TENANT_ID = "ocid1.tenancy.oc1..aaaaaaaahelidonaudittest";
     private static final String DEFAULT_COMPARTMENT_ID = "ocid1.compartment.oc1..aaaaaaaahelidonaudittest";
     private static final String DEFAULT_RESOURCE_ID = "audit-test-resource";
@@ -104,6 +110,10 @@ class AuditV2FeatureTest {
                 res.status(Status.NOT_ACCEPTABLE_406).send("AuditPayloadAppender not found");
             }
         });
+        router.get("/trusted-splat", (req, res) -> {
+            req.context().register(SPLAT_REQUEST_VALIDATED_CONTEXT_KEY, Boolean.TRUE);
+            res.status(Status.OK_200).send();
+        });
     }
 
     @SetUpRoute("admin")
@@ -115,7 +125,7 @@ class AuditV2FeatureTest {
     static List<ServerFeature> features() {
         AuditV2Config config = AuditV2Config.builder()
                 .enabled(true)
-                .respectSplatAuditedFlag(false)
+                .respectSplatAuditedFlag(true)
                 .eventSource("test-source")
                 .tenantId(DEFAULT_TENANT_ID)
                 .compartmentId(DEFAULT_COMPARTMENT_ID)
@@ -255,6 +265,52 @@ class AuditV2FeatureTest {
     }
 
     @Test
+    void testSpoofedSplatAuditedHeaderDoesNotSuppressAudit() throws Exception {
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+
+        try (Http1ClientResponse response = client.get("/default")
+                .header(SPLAT_AUDITED_HEADER, "true")
+                .request()) {
+            assertThat(response.status(), is(Status.OK_200));
+        }
+
+        Mockito.verify(auditLogger, Mockito.timeout(2000).atLeastOnce()).log(captor.capture());
+        assertThat(captor.getAllValues()
+                           .stream()
+                           .anyMatch(event -> "/default".equals(event.getData().getRequest().getPath())),
+                   is(true));
+    }
+
+    @Test
+    void testValidatedSplatRequestCanSuppressDuplicateAudit() throws Exception {
+        try (Http1ClientResponse response = client.get("/trusted-splat")
+                .header(SPLAT_AUDITED_HEADER, "true")
+                .header(VERIFY_AUDIT_HEADER, "true")
+                .request()) {
+            assertThat(response.status(), is(Status.OK_200));
+            assertThat(response.headers().contains(AUDIT_SUMMARY_HEADER), is(false));
+        }
+
+        Mockito.verifyNoInteractions(auditLogger);
+    }
+
+    @Test
+    void testValidatedSplatRequestWithoutAuditedHeaderIsAudited() throws Exception {
+        // Provenance alone must not suppress auditing unless SPLAT also declares the request already audited.
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+
+        try (Http1ClientResponse response = client.get("/trusted-splat").request()) {
+            assertThat(response.status(), is(Status.OK_200));
+        }
+
+        Mockito.verify(auditLogger, Mockito.timeout(2000).atLeastOnce()).log(captor.capture());
+        assertThat(captor.getAllValues()
+                           .stream()
+                           .anyMatch(event -> "/trusted-splat".equals(event.getData().getRequest().getPath())),
+                   is(true));
+    }
+
+    @Test
     void testConfigDefaults() {
         AuditV2Config config = AuditV2Config.builder().buildPrototype();
 
@@ -302,11 +358,15 @@ class AuditV2FeatureTest {
     @Test
     void testCustomLoggerWritesAuditEventsToFile(@TempDir Path tempDir) throws Exception {
         Path auditFile = tempDir.resolve("custom.audit");
-        AUDIT_LOGGER_REF.set(event -> Files.writeString(auditFile,
-                                                         auditLine(event),
-                                                         StandardCharsets.UTF_8,
-                                                         StandardOpenOption.CREATE,
-                                                         StandardOpenOption.APPEND));
+        CountDownLatch auditEvents = new CountDownLatch(2);
+        AUDIT_LOGGER_REF.set(event -> {
+            Files.writeString(auditFile,
+                              auditLine(event),
+                              StandardCharsets.UTF_8,
+                              StandardOpenOption.CREATE,
+                              StandardOpenOption.APPEND);
+            auditEvents.countDown();
+        });
 
         try (Http1ClientResponse response = client.get("/get")
                 .queryParam("reqparam1", "param1")
@@ -316,6 +376,7 @@ class AuditV2FeatureTest {
             assertThat(response.status(), is(Status.OK_200));
         }
 
+        assertTrue(auditEvents.await(2, TimeUnit.SECONDS), "Audit events were not written in time");
         List<String> lines = Files.readAllLines(auditFile, StandardCharsets.UTF_8);
         assertThat(lines.size(), is(2));
 

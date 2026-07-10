@@ -65,7 +65,7 @@ class AuditEndpointTest {
     }
 
     @Test
-    void testSkipAuditHeaderSuppressesSummary() {
+    void testUntrustedSkipAuditHeaderDoesNotSuppressSummary() {
         try (Http1ClientResponse response = client.get("/audit/orders")
                 .queryParam("orderId", "order-456")
                 .header(HeaderValues.ACCEPT_JSON)
@@ -73,7 +73,7 @@ class AuditEndpointTest {
                 .header(SKIP_AUDIT_HEADER, "true")
                 .request()) {
             assertThat(response.status(), is(Status.OK_200));
-            assertThat(response.headers().first(AUDIT_SUMMARY_HEADER).isPresent(), is(false));
+            assertSummary(response.headers().first(AUDIT_SUMMARY_HEADER).orElseThrow());
             assertThat(response.headers().first(VERSION_HEADER).orElseThrow(), is("v1"));
         }
     }

@@ -67,9 +67,11 @@ WebServer.builder()
 
 To verify the filter ran during local testing, send the `oci-splat-audit-verify: true` request header. The
 response will include `oci-splat-audit-event-summary` as a JSON array. Each entry contains `eventId`.
-If `respect-splat-audited-flag` is enabled, sending `oci-splat-audited: true`
-skips audit emission and verification summary creation for that request, while leaving the request appender available
-to endpoint code.
+If `respect-splat-audited-flag` is enabled, `oci-splat-audited: true` skips audit emission and verification summary
+creation only after either the `helidon-oci-splat` mTLS interceptor or SplatAware Identity with
+`validate-splat-cert: true` validates the request and records trusted SPLAT provenance in the server-side request
+context. The header alone is not trusted, so a direct caller cannot suppress auditing by spoofing it. The request
+appender remains available to endpoint code even when emission is skipped.
 
 The feature is registered on the default WebServer socket and on every configured named socket.
 
@@ -121,7 +123,7 @@ Configure `AuditV2Filter` behavior using the `application.yaml` file.
 | oci.auditv2.compartment-id             |                             | Compartment OCID used when application code does not set a target compartment.                        |
 | oci.auditv2.resource-id                |                             | Resource identifier used when application code does not set one.                                      |
 | oci.auditv2.resource-name              |                             | Resource name used when application code does not set one.                                            |
-| oci.auditv2.respect-splat-audited-flag | true                        | Whether to respect the `oci-splat-audited` request header to conditionally disable auditing.          |
+| oci.auditv2.respect-splat-audited-flag | true                        | Whether a request with trusted SPLAT provenance may use `oci-splat-audited: true` to disable duplicate auditing. The header alone is never trusted. |
 | oci.auditv2.request-parameter-rules    | []                          | List of rules for filtering or auditing HTTP request parameters.                                      |
 | oci.auditv2.request-header-rules       | []                          | List of rules for filtering or auditing HTTP request headers.                                         |
 | oci.auditv2.response-header-rules      | []                          | List of rules for filtering or auditing HTTP response headers.                                        |

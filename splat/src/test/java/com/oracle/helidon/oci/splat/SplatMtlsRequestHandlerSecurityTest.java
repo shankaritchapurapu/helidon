@@ -4,10 +4,15 @@
 
 package com.oracle.helidon.oci.splat;
 
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 import java.util.Optional;
 
+import javax.security.auth.x500.X500Principal;
 import javax.ws.rs.container.ResourceInfo;
 
+import io.helidon.common.socket.PeerInfo;
+import io.helidon.common.context.Context;
 import io.helidon.common.uri.UriInfo;
 import io.helidon.http.HeaderNames;
 import io.helidon.http.HeaderValues;
@@ -29,6 +34,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class SplatMtlsRequestHandlerSecurityTest {
+    private static final String SPLAT_REQUEST_VALIDATED_CONTEXT_KEY =
+            "com.oracle.helidon.oci.splat.requestValidated";
 
     @Test
     void shouldRejectInsecureRequestWithoutClientCertificate() throws Exception {
@@ -41,6 +48,7 @@ class SplatMtlsRequestHandlerSecurityTest {
         boolean allowed = handler.shouldAllow(request, response, mock(ResourceInfo.class));
 
         assertFalse(allowed);
+        assertFalse(isSplatRequestValidated(request));
         verify(response).status(403);
     }
 
@@ -55,6 +63,7 @@ class SplatMtlsRequestHandlerSecurityTest {
         boolean allowed = handler.shouldAllow(request, response, mock(ResourceInfo.class));
 
         assertFalse(allowed);
+        assertFalse(isSplatRequestValidated(request));
         verify(response).status(403);
     }
 
@@ -70,6 +79,7 @@ class SplatMtlsRequestHandlerSecurityTest {
         boolean allowed = handler.shouldAllow(request, response, mock(ResourceInfo.class));
 
         assertFalse(allowed);
+        assertFalse(isSplatRequestValidated(request));
         verify(response).status(403);
     }
 
@@ -86,6 +96,7 @@ class SplatMtlsRequestHandlerSecurityTest {
         boolean allowed = handler.shouldAllow(request, response, mock(ResourceInfo.class));
 
         assertFalse(allowed);
+        assertFalse(isSplatRequestValidated(request));
         verify(response).status(403);
     }
 
@@ -135,7 +146,70 @@ class SplatMtlsRequestHandlerSecurityTest {
         boolean allowed = handler.shouldAllow(request, response, mock(ResourceInfo.class));
 
         assertFalse(allowed);
+        assertFalse(isSplatRequestValidated(request));
         verify(response).status(403);
+    }
+
+    @Test
+    void shouldNotMarkProvenanceWhenOnlyHelidonCommonNameHeaderIsPresent() throws Exception {
+        // A caller-supplied CN header cannot replace the TLS peer certificate required by the upstream filter.
+        SplatMtlsRequestHandler handler = handler(SplatMtlsConfig.builder()
+                                                         .region("us-ashburn-1")
+                                                         .skipAuthzValidationCheck(true)
+                                                         .buildPrototype());
+        ServerRequest request = mockRequestWithCommonName(
+                true,
+                "https",
+                "splat-api-client.us-ashburn-1.oci.oracleiaas.com");
+        PeerInfo remotePeer = mock(PeerInfo.class);
+        when(remotePeer.tlsCertificates()).thenReturn(Optional.empty());
+        when(request.remotePeer()).thenReturn(remotePeer);
+        ServerResponse response = mockResponse();
+
+        boolean allowed = handler.shouldAllow(request, response, mock(ResourceInfo.class));
+
+        assertFalse(allowed);
+        assertFalse(isSplatRequestValidated(request));
+    }
+
+    @Test
+    void shouldAllowWithoutMarkingProvenanceWhenDisabled() throws Exception {
+        // Disabling SPLAT validation permits normal routing but must not create trusted provenance.
+        SplatMtlsRequestHandler handler = handler(SplatMtlsConfig.builder()
+                                                         .enabled(false)
+                                                         .buildPrototype());
+        ServerRequest request = mockRequest(false, "http", ServerRequestHeaders.create());
+
+        boolean allowed = handler.shouldAllow(request, mockResponse(), mock(ResourceInfo.class));
+
+        assertTrue(allowed);
+        assertFalse(isSplatRequestValidated(request));
+    }
+
+    @Test
+    void shouldRecordValidatedSplatProvenance() throws Exception {
+        SplatMtlsRequestHandler handler = handler(SplatMtlsConfig.builder()
+                                                         .region("us-ashburn-1")
+                                                         .skipAuthzValidationCheck(true)
+                                                         .buildPrototype());
+        ServerRequestHeaders headers = ServerRequestHeaders.create(WritableHeaders.create()
+                .add(HeaderValues.create(HeaderNames.X_HELIDON_CN,
+                                         "splat-api-client.us-ashburn-1.oci.oracleiaas.com"))
+                .add(HeaderValues.create("oci-skip-authorization-for-splat", "true")));
+        ServerRequest request = mockRequest(true, "https", headers);
+        X509Certificate certificate = mock(X509Certificate.class);
+        when(certificate.getSubjectX500Principal())
+                .thenReturn(new X500Principal("CN=splat-api-client.us-ashburn-1.oci.oracleiaas.com"));
+        PeerInfo remotePeer = mock(PeerInfo.class);
+        when(remotePeer.tlsCertificates()).thenReturn(Optional.of(new Certificate[] {certificate}));
+        when(request.remotePeer()).thenReturn(remotePeer);
+        Context context = Context.create();
+        when(request.context()).thenReturn(context);
+
+        boolean allowed = handler.shouldAllow(request, mockResponse(), mock(ResourceInfo.class));
+
+        assertTrue(allowed);
+        assertTrue(isSplatRequestValidated(request));
     }
 
     private static SplatMtlsRequestHandler handler(SplatMtlsConfig config) {
@@ -164,6 +238,7 @@ class SplatMtlsRequestHandlerSecurityTest {
                                                      .path("/splat")
                                                      .buildPrototype());
         when(request.headers()).thenReturn(headers);
+        when(request.context()).thenReturn(Context.create());
         return request;
     }
 
@@ -171,5 +246,9 @@ class SplatMtlsRequestHandlerSecurityTest {
         ServerResponse response = mock(ServerResponse.class);
         when(response.status(anyInt())).thenReturn(response);
         return response;
+    }
+
+    private static boolean isSplatRequestValidated(ServerRequest request) {
+        return request.context().get(SPLAT_REQUEST_VALIDATED_CONTEXT_KEY, Boolean.class).orElse(false);
     }
 }

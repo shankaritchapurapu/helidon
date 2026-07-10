@@ -18,7 +18,6 @@ import com.oracle.pic.identity.authorization.sdk.AuthorizationRequest;
 import com.oracle.pic.identity.authorization.sdk.AuthorizationResponse;
 import com.oracle.pic.identity.authorization.sdk.AuthContextRequestFilter;
 import com.oracle.pic.identity.authorization.sdk.IAuthorizationClient;
-import com.oracle.pic.identity.authorization.sdk.SplatAwareAuthContextRequestFilter;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,7 +32,7 @@ class AuthContextRequestFilterFactoryTest extends BaseAuthenticationClientTest {
         AuthContextRequestFilterFactory factory = new AuthContextRequestFilterFactory(config);
         AuthContextRequestFilter filter = factory.create(null, Optional.of(new FakeAuthorizationClient()));
 
-        assertThat(filter, instanceOf(SplatAwareAuthContextRequestFilter.class));
+        assertThat(filter, instanceOf(ProvenanceAwareSplatAuthContextRequestFilter.class));
     }
 
     @Test
@@ -41,7 +40,7 @@ class AuthContextRequestFilterFactoryTest extends BaseAuthenticationClientTest {
         AuthContextRequestFilterFactory factory = new AuthContextRequestFilterFactory(Config.empty());
         AuthContextRequestFilter filter = factory.create(null, Optional.of(new FakeAuthorizationClient()));
 
-        assertThat(filter, instanceOf(SplatAwareAuthContextRequestFilter.class));
+        assertThat(filter, instanceOf(ProvenanceAwareSplatAuthContextRequestFilter.class));
     }
 
     private static final class FakeAuthorizationClient implements IAuthorizationClient {

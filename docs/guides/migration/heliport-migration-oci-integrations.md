@@ -721,6 +721,10 @@ oci:
         values: "etag"
 ```
 
-For local validation, Talon audit can return an audit summary when the request includes `oci-splat-audit-verify: true`. If `respect-splat-audited-flag` is enabled, `oci-splat-audited: true` skips audit emission for a request while keeping the request appender available to endpoint code.
+For local validation, Talon audit can return an audit summary when the request includes `oci-splat-audit-verify: true`.
+If `respect-splat-audited-flag` is enabled, `oci-splat-audited: true` skips audit emission only when
+`helidon-oci-splat` or SplatAware Identity with certificate validation enabled has successfully validated the request
+and recorded trusted SPLAT provenance. A spoofed header on a direct request does not suppress auditing, and the request
+appender remains available to endpoint code.
 
 OCI JAX-RS compatibility is not a blanket exemption. `helidon-oci-jaxrs` can be present for retained provider/client surfaces, but application-owned server-side JAX-RS, Jersey, Servlet, request, response, and filter residue must still be migrated by the runtime waves or reported as owner work.

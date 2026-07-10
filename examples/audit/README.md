@@ -53,8 +53,10 @@ curl -i 'http://localhost:8080/audit/orders?orderId=order-123&expand=details' \
   -H 'oci-splat-audit-verify: true'
 ```
 
-To demonstrate opt-out behavior, send `oci-splat-audited: true`. With the default config in this example, that
-suppresses audit processing for the request.
+In a deployed service, a request validated by either `helidon-oci-splat` or SplatAware Identity with certificate
+validation enabled can send `oci-splat-audited: true` to suppress duplicate service-side auditing. The header does not
+suppress auditing by itself; this standalone example has no SPLAT provenance publisher and therefore treats it as
+untrusted.
 
 ## Test
 

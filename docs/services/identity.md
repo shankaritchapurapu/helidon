@@ -212,9 +212,16 @@ If `oci.identity.authorization.enabled=false`, the authorization client is not c
 available through `ServiceAuthenticationClient` and `AuthenticatorClient`. Endpoints that use authenticated-only
 interception continue to work without the authorization client.
 
-The request filter is `SplatAwareAuthContextRequestFilter`. For requests that arrive on the configured Splat mTLS port,
-it treats the request as already authenticated by Splat and hydrates Auth SDK request properties from Splat principal
-headers. For other requests, it falls back to normal direct Identity authentication behavior.
+The request filter extends `SplatAwareAuthContextRequestFilter` with Helidon request-provenance recording. For requests
+that arrive on the configured Splat mTLS port, it treats the request as already authenticated by Splat and hydrates Auth
+SDK request properties from Splat principal headers. For other requests, it falls back to normal direct Identity
+authentication behavior.
+
+When `validate-splat-cert=true`, a request that passes the configured port and SPLAT certificate checks also records
+trusted SPLAT provenance under the shared server-side request-context key. Audit V2 can then safely honor
+`oci-splat-audited: true`
+without requiring the standalone `helidon-oci-splat` filter. Disabling certificate validation never records trusted
+provenance.
 
 ---
 

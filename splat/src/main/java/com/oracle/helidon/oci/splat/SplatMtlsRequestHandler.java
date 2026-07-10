@@ -23,6 +23,9 @@ import com.oracle.pic.commons.util.Region;
  */
 @Service.Singleton
 class SplatMtlsRequestHandler {
+    private static final String SPLAT_REQUEST_VALIDATED_CONTEXT_KEY =
+            "com.oracle.helidon.oci.splat.requestValidated";
+
     private final SplatMtlsConfig config;
     private final Supplier<Region> defaultRegionSupplier;
     private final SplatMtlsRequestValidator requestValidator;
@@ -49,9 +52,13 @@ class SplatMtlsRequestHandler {
             return false;
         }
 
-        return HelidonContainerRequestFilterRunner
+        boolean allowed = HelidonContainerRequestFilterRunner
                 .run(createFilter(region), request, response, resourceInfo)
                 .isPresent();
+        if (allowed) {
+            request.context().register(SPLAT_REQUEST_VALIDATED_CONTEXT_KEY, Boolean.TRUE);
+        }
+        return allowed;
     }
 
     Optional<ContainerRequestFilter> createFilter() {

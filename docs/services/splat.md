@@ -13,6 +13,11 @@ The integration delegates certificate and authorization validation to upstream S
 `oci.splat` configuration for validation behavior such as region selection, cross-region rejection,
 and authorization validation checks.
 
+After all validation succeeds, the integration records trusted SPLAT provenance under a shared key in the server-side
+request context. SplatAware Identity records the same value after its own port and certificate checks.
+Other integrations, such as Audit V2, use that shared provenance instead of trusting caller-controlled SPLAT headers
+alone.
+
 ---
 
 ## Maven Coordinates
