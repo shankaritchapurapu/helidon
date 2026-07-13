@@ -13,8 +13,10 @@ import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
 import io.helidon.common.configurable.Resource;
 import io.helidon.common.pki.Keys;
+import io.helidon.integrations.oci.OciResourcePrincipalProvider;
 import io.helidon.service.registry.Service;
 
+import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.pic.identity.auth.AuthMetricsFactory;
 import com.oracle.pic.identity.authentication.AuthServiceAuthenticationClient;
 import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
@@ -32,11 +34,20 @@ public class ServiceAuthenticationClientFactory implements Supplier<ServiceAuthe
 
     private final AuthenticationConfig config;
     private final OciEnvLocationDefaults locationDefaults;
+    private final List<OciResourcePrincipalProvider> resourcePrincipalProviders;
 
     @Service.Inject
-    ServiceAuthenticationClientFactory(IdentityConfigFactory config, OciEnvLocationDefaults locationDefaults) {
+    ServiceAuthenticationClientFactory(
+            IdentityConfigFactory config,
+            OciEnvLocationDefaults locationDefaults,
+            List<OciResourcePrincipalProvider> resourcePrincipalProviders) {
         this.config = config.get().authentication();
         this.locationDefaults = locationDefaults;
+        this.resourcePrincipalProviders = resourcePrincipalProviders;
+    }
+
+    ServiceAuthenticationClientFactory(IdentityConfigFactory config, OciEnvLocationDefaults locationDefaults) {
+        this(config, locationDefaults, List.of());
     }
 
     @Override
@@ -56,6 +67,18 @@ public class ServiceAuthenticationClientFactory implements Supplier<ServiceAuthe
             builder.authMetrics(AuthMetricsFactory.getInstance(config.metricsLib().get()));
         } else {
             builder.withNoAuthMetrics();
+        }
+
+        Optional<BasicAuthenticationDetailsProvider> resourcePrincipal = resourcePrincipalProviders.stream()
+                .map(OciResourcePrincipalProvider::provider)
+                .flatMap(Optional::stream)
+                .findFirst();
+        if (resourcePrincipal.isPresent()) {
+            AuthSdkResourcePrincipal authSdkResourcePrincipal = new AuthSdkResourcePrincipal(resourcePrincipal.get());
+            builder.resourcePrincipalSessionTokenSupplier(authSdkResourcePrincipal::sessionToken)
+                    .resourcePrincipalSessionKeySupplier(authSdkResourcePrincipal)
+                    .useResourcePrincipals();
+            return builder.build();
         }
 
         // check to use instance principal

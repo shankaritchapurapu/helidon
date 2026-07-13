@@ -3,8 +3,12 @@
  */
 package com.oracle.helidon.oci.identity;
 
+import java.io.InputStream;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
 import com.oracle.pic.identity.authentication.ServiceAuthenticationClient;
 import org.junit.jupiter.api.Test;
 
@@ -110,5 +114,47 @@ class ServiceAuthenticationClientFactoryTest extends BaseAuthenticationClientTes
                 identityConfigFactory(authenticationConfig, authorizationConfig()),
                 ociEnvLocationDefaults(failingDefaultRegion()));
         assertThrows(IllegalStateException.class, factory::get);
+    }
+
+    @Test
+    void testClientWithResourcePrincipal() {
+        AuthenticationConfig authenticationConfig = AuthenticationConfig.builder()
+                .globalBusinessUnit("gbu")
+                .teamName("team")
+                .applicationName("app")
+                .region("us-phoenix-1")
+                .rootCertPath(testRootCertPath())
+                .build();
+        AtomicBoolean tokenRequested = new AtomicBoolean();
+        BasicAuthenticationDetailsProvider provider = new BasicAuthenticationDetailsProvider() {
+            @Override
+            public String getKeyId() {
+                tokenRequested.set(true);
+                return "ST$resource-principal-token";
+            }
+
+            @Override
+            public InputStream getPrivateKey() {
+                throw new AssertionError("The private key should be loaded lazily");
+            }
+
+            @Override
+            public String getPassPhrase() {
+                return null;
+            }
+
+            @Override
+            public char[] getPassphraseCharacters() {
+                return null;
+            }
+        };
+
+        ServiceAuthenticationClient client = new ServiceAuthenticationClientFactory(
+                identityConfigFactory(authenticationConfig, authorizationConfig()),
+                ociEnvLocationDefaults(failingDefaultRegion()),
+                List.of(() -> Optional.of(provider))).get();
+
+        assertThat(client, notNullValue());
+        assertThat(tokenRequested.get(), is(true));
     }
 }

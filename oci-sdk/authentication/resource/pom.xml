@@ -156,6 +156,7 @@
                                     <excludes>
                                         io/helidon/integrations/oci/authentication/resource/*__ServiceDescriptor.java,
                                         io/helidon/integrations/oci/authentication/resource/package-info.java,
+                                        io/helidon/integrations/oci/authentication/resource/AuthenticationMethodResourcePrincipal.java,
                                         io/helidon/integrations/oci/authentication/resource/ResourcePrincipalBuilderProvider.java
                                     </excludes>
                                 </artifactItem>

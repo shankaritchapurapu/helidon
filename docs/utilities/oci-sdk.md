@@ -103,9 +103,12 @@ The available methods are determined by the authentication modules on the classp
 
 ## Service Principal Authentication
 
-Service-principal authentication adds the `service-principal` authentication method. It builds an OCI SDK
-`S2SAuthenticationDetailsProvider` using ODO instance principal material, then exposes it through the same
-`BasicAuthenticationDetailsProvider` contract used by the other authentication methods.
+Service-principal authentication adds the `service-principal` authentication method and an
+`OciServicePrincipalProvider` capability. On ODO it builds an OCI SDK
+`S2SAuthenticationDetailsProvider` using instance-principal material. When an
+`OciResourcePrincipalProvider` is available, such as OKE workload identity on OMK or standard OCI resource-principal
+authentication, it builds an `RpS2SAuthenticationDetailsProvider` instead. Both are exposed through the common
+`BasicAuthenticationDetailsProvider` contract.
 
 Service-principal configuration is part of the shared `OciConfig`. For the normal declarative configuration path,
 put the complete `helidon.oci` configuration in `oci-config.yaml`, including
@@ -162,9 +165,33 @@ helidon:
     tenant-id: ocid1.tenancy.oc1...
 ```
 
-By default, the provider requires an available instance metadata service. If `authentication-method` is set explicitly
-to `service-principal`, `authentication.service-principal.use-instance-principal` is left at its default of `true`,
-and IMDS is not available, startup fails because the requested authentication method cannot provide an auth provider.
+On OMK, `federation-endpoint` and `tenant-id` are required for the RP-to-SP exchange. The OKE
+workload authentication module supplies the resource principal automatically; service consumers do
+not need their own ODO/OMK switch.
+
+Modules that need a service principal in addition to the globally selected authentication method
+can inject the capability directly:
+
+```java
+import io.helidon.integrations.oci.OciServicePrincipalProvider;
+import io.helidon.service.registry.Service;
+
+@Service.Singleton
+class DownstreamClientFactory {
+    private final OciServicePrincipalProvider servicePrincipalProvider;
+
+    @Service.Inject
+    DownstreamClientFactory(OciServicePrincipalProvider servicePrincipalProvider) {
+        this.servicePrincipalProvider = servicePrincipalProvider;
+    }
+}
+```
+
+When no resource principal is available, the provider requires an available instance metadata
+service by default. If `authentication-method` is set explicitly to `service-principal`,
+`authentication.service-principal.use-instance-principal` is left at its default of `true`, and IMDS
+is not available, startup fails because the requested authentication method cannot provide an auth
+provider.
 
 When `authentication.service-principal.use-instance-principal=false`, IMDS is not required. In this mode
 `federation-endpoint`, `tenant-id`, and at least one certificate entry must be configured. The first certificate

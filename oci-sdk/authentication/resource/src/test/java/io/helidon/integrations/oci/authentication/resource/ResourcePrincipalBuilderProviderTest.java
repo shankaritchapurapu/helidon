@@ -7,6 +7,7 @@ package io.helidon.integrations.oci.authentication.resource;
 import java.net.URI;
 
 import io.helidon.integrations.oci.OciConfig;
+import io.helidon.integrations.oci.OciResourcePrincipalProvider;
 import io.helidon.integrations.oci.spi.OciAuthenticationMethod;
 import io.helidon.service.registry.ServiceRegistryConfig;
 import io.helidon.service.registry.ServiceRegistryManager;
@@ -60,6 +61,7 @@ class ResourcePrincipalBuilderProviderTest {
             var registry = manager.registry();
             var authMethods = registry.all(OciAuthenticationMethod.class);
             BasicAuthenticationDetailsProvider resolved = registry.get(BasicAuthenticationDetailsProvider.class);
+            var resourcePrincipalProvider = registry.get(OciResourcePrincipalProvider.class);
             var maybeResourcePrincipalMethod = authMethods.stream()
                     .filter(method -> "io.helidon.integrations.oci.authentication.resource.AuthenticationMethodResourcePrincipal"
                             .equals(method.getClass().getName()))
@@ -71,6 +73,7 @@ class ResourcePrincipalBuilderProviderTest {
             assertThat(maybeResourcePrincipalMethod.map(OciAuthenticationMethod::method).orElse(null),
                        is("resource-principal"));
             assertThat(resolved, sameInstance(provider));
+            assertThat(resourcePrincipalProvider.provider().orElseThrow(), sameInstance(provider));
         } finally {
             manager.shutdown();
         }

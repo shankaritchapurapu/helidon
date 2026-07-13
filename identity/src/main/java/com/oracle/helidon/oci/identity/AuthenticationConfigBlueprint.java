@@ -117,14 +117,13 @@ interface AuthenticationConfigBlueprint {
      * </p>
      * <p>
      * When this option is disabled ({@code false}), instance principal
-     * authentication is not used and the configuration must instead supply
-     * explicit certificates via {@link #certificates()} and, optionally,
-     * {@link #rootCertPath()}.
+     * authentication is not used. If the runtime does not provide a resource
+     * principal, the configuration must instead supply explicit certificates
+     * via {@link #certificates()} and, optionally, {@link #rootCertPath()}.
      * </p>
      *
      * @return {@code true} if instance principal certificates should be used
-     *         for authentication (the default), or {@code false} if explicit
-     *         certificates are expected instead
+     *         for authentication (the default), or {@code false} otherwise
      */
     @Option.Configured
     @Option.DefaultBoolean(true)
@@ -155,7 +154,8 @@ interface AuthenticationConfigBlueprint {
 
     /**
      * Returns the list of explicit certificates to use for authentication when
-     * instance principal authentication is disabled.
+     * instance principal authentication is disabled and the runtime does not
+     * provide a resource principal.
      * <p>
      * The list may contain one or more certificates, including intermediate and
      * leaf certificates, that together form the certificate chain used by the
@@ -166,9 +166,7 @@ interface AuthenticationConfigBlueprint {
      * </p>
      * <p>
      * This configuration is ignored when {@link #useInstancePrincipal()} is
-     * {@code true}, in which case certificates are obtained from the Oracle
-     * Cloud Infrastructure instance metadata service instead of being supplied
-     * explicitly.
+     * {@code true} or the runtime provides a resource principal.
      * </p>
      *
      * @return a {@link List} of {@link AuthCertificateConfig} instances

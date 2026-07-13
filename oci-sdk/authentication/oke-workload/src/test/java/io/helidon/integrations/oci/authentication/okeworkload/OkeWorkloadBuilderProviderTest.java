@@ -8,6 +8,7 @@ import java.net.URI;
 import java.time.Duration;
 
 import io.helidon.integrations.oci.OciConfig;
+import io.helidon.integrations.oci.OciResourcePrincipalProvider;
 import io.helidon.integrations.oci.spi.OciAuthenticationMethod;
 import io.helidon.service.registry.ServiceRegistryConfig;
 import io.helidon.service.registry.ServiceRegistryManager;
@@ -62,6 +63,7 @@ class OkeWorkloadBuilderProviderTest {
         try {
             var registry = manager.registry();
             var authMethods = registry.all(OciAuthenticationMethod.class);
+            var resourcePrincipalProviders = registry.all(OciResourcePrincipalProvider.class);
             BasicAuthenticationDetailsProvider resolved = registry.get(BasicAuthenticationDetailsProvider.class);
             var maybeOkeWorkloadMethod = authMethods.stream()
                     .filter(method -> "io.helidon.integrations.oci.authentication.okeworkload.AuthenticationMethodOkeWorkload"
@@ -74,6 +76,8 @@ class OkeWorkloadBuilderProviderTest {
             assertThat(maybeOkeWorkloadMethod.map(OciAuthenticationMethod::method).orElse(null),
                        is("oke-workload-identity"));
             assertThat(resolved, sameInstance(provider));
+            assertThat(resourcePrincipalProviders.size(), is(1));
+            assertThat(resourcePrincipalProviders.getFirst().provider().orElseThrow(), sameInstance(provider));
         } finally {
             manager.shutdown();
         }

@@ -269,6 +269,35 @@ oci:
       root-cert-path: "/etc/oci-pki/ca-bundle.pem"
 ```
 
+Example using OKE workload identity on OMK:
+
+```xml
+<dependency>
+    <groupId>com.oracle.helidon.oci</groupId>
+    <artifactId>helidon-oci-sdk-authentication-oke-workload</artifactId>
+</dependency>
+```
+
+```yaml
+helidon:
+  oci:
+    authentication-method: "oke-workload-identity"
+
+oci:
+  identity:
+    authentication:
+      global-business-unit: "Cloud-Infra"
+      team-name: "ExampleTeam"
+      application-name: "ExampleService"
+```
+
+The OKE authentication module obtains the workload RPST from the Kubernetes service account. The
+module exposes those credentials as an `OciResourcePrincipalProvider`. Identity detects that
+capability automatically and passes the RPST and matching session key to Auth SDK, which exchanges
+the RPST for a service principal session token. A resource principal takes precedence over Identity
+instance-principal and certificate configuration. The workload must have the IAM policy required
+for the RP-to-SP exchange.
+
 | Key | Default Value | Description |
 |-----|---------------|-------------|
 | `oci.identity.authentication.service-uri` | | Explicit Auth service endpoint. Mutually exclusive with `region`. |
@@ -290,7 +319,8 @@ Authentication validation rules:
 * `oci.identity.authentication.service-uri` and `oci.identity.authentication.region` are mutually exclusive.
 * If neither `service-uri` nor `region` is configured, the `oci-env` default region must be available.
 * `global-business-unit`, `team-name`, and `application-name` are required.
-* When `use-instance-principal=false`, at least one certificate entry must be configured.
+* When no `OciResourcePrincipalProvider` is available and `use-instance-principal=false`, at least
+  one certificate entry must be configured.
 
 ### Authorization
 

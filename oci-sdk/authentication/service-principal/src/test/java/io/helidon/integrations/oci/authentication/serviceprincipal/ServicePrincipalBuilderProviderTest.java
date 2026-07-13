@@ -23,12 +23,15 @@ import java.util.concurrent.TimeUnit;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.integrations.oci.OciConfig;
+import io.helidon.integrations.oci.OciResourcePrincipalProvider;
+import io.helidon.integrations.oci.OciServicePrincipalProvider;
 import io.helidon.integrations.oci.spi.OciAuthenticationMethod;
 import io.helidon.service.registry.ServiceRegistryConfig;
 import io.helidon.service.registry.ServiceRegistryManager;
 
 import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.BasicAuthenticationDetailsProvider;
+import com.oracle.bmc.auth.RpS2SAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.S2SAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.S2SAuthenticationDetailsProvider.S2SAuthenticationDetailsProviderBuilder;
 import org.junit.jupiter.api.Test;
@@ -39,6 +42,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static java.util.Map.entry;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -158,6 +162,7 @@ class ServicePrincipalBuilderProviderTest {
             try {
                 var registry = manager.registry();
                 var authMethods = registry.all(OciAuthenticationMethod.class);
+                var servicePrincipalProviders = registry.all(OciServicePrincipalProvider.class);
                 BasicAuthenticationDetailsProvider resolved = registry.get(BasicAuthenticationDetailsProvider.class);
                 var maybeServicePrincipalMethod = authMethods.stream()
                         .filter(method -> METHOD_CLASS_NAME.equals(method.getClass().getName()))
@@ -169,6 +174,8 @@ class ServicePrincipalBuilderProviderTest {
                 assertThat(maybeServicePrincipalMethod.map(OciAuthenticationMethod::method).orElse(null),
                            is("service-principal"));
                 assertThat(resolved, sameInstance(provider));
+                assertThat(servicePrincipalProviders.size(), is(1));
+                assertThat(servicePrincipalProviders.getFirst().provider().orElseThrow(), sameInstance(provider));
             } finally {
                 manager.shutdown();
             }
@@ -197,9 +204,32 @@ class ServicePrincipalBuilderProviderTest {
 
         var method = new AuthenticationMethodServicePrincipal(ociConfig,
                                                               () -> Optional.of(servicePrincipalConfig),
-                                                              () -> Optional.of(builder));
+                                                              () -> Optional.of(builder),
+                                                              List.of());
 
         assertThat(method.provider().orElseThrow(), sameInstance(provider));
+    }
+
+    @Test
+    void resourcePrincipalIsElevatedToReusableServicePrincipal() {
+        var ociConfig = OciConfig.builder()
+                .region(Region.US_ASHBURN_1)
+                .federationEndpoint(URI.create("https://auth.test.oraclecloud.com/v1/x509"))
+                .tenantId("ocid1.tenancy.oc1..testserviceprincipal")
+                .build();
+        BasicAuthenticationDetailsProvider resourcePrincipal = mock(BasicAuthenticationDetailsProvider.class);
+        when(resourcePrincipal.getKeyId()).thenReturn("ST$resource-principal-token");
+        when(resourcePrincipal.getPrivateKey())
+                .thenAnswer(invocation -> Files.newInputStream(Path.of("src/test/resources/serverKey.pem")));
+        OciResourcePrincipalProvider resourcePrincipalProvider = () -> Optional.of(resourcePrincipal);
+
+        var method = new AuthenticationMethodServicePrincipal(ociConfig,
+                                                              Optional::empty,
+                                                              Optional::empty,
+                                                              List.of(resourcePrincipalProvider));
+
+        assertInstanceOf(RpS2SAuthenticationDetailsProvider.class, method.provider().orElseThrow());
+        assertInstanceOf(OciServicePrincipalProvider.class, method);
     }
 
     @Test
