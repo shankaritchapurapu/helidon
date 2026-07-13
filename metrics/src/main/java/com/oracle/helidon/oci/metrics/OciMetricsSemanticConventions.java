@@ -152,6 +152,11 @@ class OciMetricsSemanticConventions implements AutoHttpMetricsProvider {
                     wireWriteTiming.stop(sentNanos);
                 }
                 /*
+                 * Copy data used during async metrics processing because, once response.whenSent completes synchronously, the
+                 * request and response are not reliable.
+                 */
+                HttpMetricsUpdateSnapshot snapshot = HttpMetricsUpdateSnapshot.create(request, response, this);
+                /*
                 Primarily lets tests know when asynchronous metric updates have completed.
                  */
                 ASYNC_UPDATES_IN_FLIGHT.incrementAndGet();
@@ -164,7 +169,7 @@ class OciMetricsSemanticConventions implements AutoHttpMetricsProvider {
                             .name("oci-http-metrics-update-")
                             .start(() -> {
                                 try {
-                                    updateMetrics(request, response, sentNanos - startNanos);
+                                    updateMetrics(snapshot, sentNanos - startNanos);
                                 } catch (RuntimeException e) {
                                     LOGGER.log(System.Logger.Level.WARNING, "Error updating automatic HTTP metrics", e);
                                 } finally {
@@ -179,66 +184,59 @@ class OciMetricsSemanticConventions implements AutoHttpMetricsProvider {
             chain.proceed();
         }
 
-        private void updateMetrics(RoutingRequest request, RoutingResponse response, long elapsedNanos) {
-            OciHttpEndpointMetricsContext context = context(request);
-            if (!shouldTrack(context)) {
+        private void updateMetrics(HttpMetricsUpdateSnapshot snapshot, long elapsedNanos) {
+            if (!snapshot.tracked()) {
                 return;
             }
-            int statusCode = response.status().code();
-            String statusFamily = (statusCode / 100) + "XX";
-            boolean skipResponseStatusMetrics = skipResponseStatusMetrics(request);
-            RuntimeDimension runtimeDimension = runtimeDimension(request);
+            int statusCode = snapshot.statusCode();
+            RuntimeDimension runtimeDimension = snapshot.runtimeDimension();
 
-            for (String scope : scopes(context)) {
+            for (String scope : snapshot.scopes()) {
                 if (detailedTimingEnabled) {
                     timer(scope + "." + TIME, runtimeDimension.tags()).record(elapsedNanos, TimeUnit.NANOSECONDS);
-                    if (context != null && context.hasResourceTiming()) {
+                    if (snapshot.hasResourceTiming()) {
                         timer(scope + "." + RESOURCE_TIME, runtimeDimension.tags())
-                                .record(context.resourceElapsedNanos(), TimeUnit.NANOSECONDS);
+                                .record(snapshot.resourceElapsedNanos(), TimeUnit.NANOSECONDS);
                     }
                 }
-                if (!skipResponseStatusMetrics) {
+                if (!snapshot.skipResponseStatusMetrics()) {
                     counter(countMetricName(scope, RESPONSE_STATUS_CODE_PREFIX + statusCode + ".Count", runtimeDimension),
                             runtimeDimension.tags()).increment();
                     counter(countMetricName(scope,
-                                            RESPONSE_STATUS_FAMILY_PREFIX + statusFamily + ".Count",
+                                            RESPONSE_STATUS_FAMILY_PREFIX + snapshot.statusFamily() + ".Count",
                                             runtimeDimension),
                             runtimeDimension.tags()).increment();
                 }
                 counter(countMetricName(scope, RESPONSE_TOTAL_COUNT, runtimeDimension), runtimeDimension.tags()).increment();
                 distributionSummary(scope + "." + SUCCESS_RATE, runtimeDimension.tags())
                         .record(statusCode < 500 ? 1.0 : 0.0);
-                recordUserAgentMetrics(request, scope, statusFamily, skipResponseStatusMetrics, runtimeDimension);
+                recordUserAgentMetrics(snapshot, scope);
             }
         }
 
-        private void recordUserAgentMetrics(RoutingRequest request,
-                                            String scope,
-                                            String statusFamily,
-                                            boolean skipResponseStatusMetrics,
-                                            RuntimeDimension runtimeDimension) {
+        private void recordUserAgentMetrics(HttpMetricsUpdateSnapshot snapshot, String scope) {
             if (!userAgentMetricsEnabled) {
                 return;
             }
 
-            List<String> clientAggregations = userAgentAggregations(request);
+            List<String> clientAggregations = userAgentAggregations(snapshot.userAgent());
             if (clientAggregations.isEmpty()) {
                 return;
             }
 
             incrementUserAgentCounters(scope,
                                        clientAggregations.getFirst(),
-                                       statusFamily,
-                                       skipResponseStatusMetrics,
-                                       runtimeDimension);
+                                       snapshot.statusFamily(),
+                                       snapshot.skipResponseStatusMetrics(),
+                                       snapshot.runtimeDimension());
 
             boolean overflow = false;
             for (String clientAggregation : clientAggregations.subList(1, clientAggregations.size())) {
                 List<MeterCacheKey> keys = userAgentCounterKeys(scope,
                                                                clientAggregation,
-                                                               statusFamily,
-                                                               skipResponseStatusMetrics,
-                                                               runtimeDimension).stream()
+                                                               snapshot.statusFamily(),
+                                                               snapshot.skipResponseStatusMetrics(),
+                                                               snapshot.runtimeDimension()).stream()
                         .filter(this::shouldCreateCounter)
                         .toList();
                 if (keys.isEmpty()) {
@@ -253,15 +251,14 @@ class OciMetricsSemanticConventions implements AutoHttpMetricsProvider {
             if (overflow) {
                 incrementUserAgentCounters(scope,
                                            OTHER_CLIENT,
-                                           statusFamily,
-                                           skipResponseStatusMetrics,
-                                           runtimeDimension);
+                                           snapshot.statusFamily(),
+                                           snapshot.skipResponseStatusMetrics(),
+                                           snapshot.runtimeDimension());
                 registry.publisher().recordUserAgentCardinalityOverflow();
             }
         }
 
-        private List<String> userAgentAggregations(RoutingRequest request) {
-            String userAgent = request.headers().first(HeaderNames.USER_AGENT).orElse(null);
+        private List<String> userAgentAggregations(String userAgent) {
             UserAgentInfo userAgentInfo = userAgent == null
                     ? UserAgentInfo.UNDEFINED
                     : userAgentParserCollator.parse(userAgent);
@@ -339,14 +336,14 @@ class OciMetricsSemanticConventions implements AutoHttpMetricsProvider {
                     .orElse(true);
         }
 
-        private Iterable<String> scopes(OciHttpEndpointMetricsContext context) {
+        private List<String> scopes(OciHttpEndpointMetricsContext context) {
             if (context == null) {
-                return java.util.List.of(UNKNOWN_METHOD);
+                return List.of(UNKNOWN_METHOD);
             }
-            java.util.List<String> scopes = new java.util.ArrayList<>(1 + context.secondaryScopes().size());
+            List<String> scopes = new ArrayList<>(1 + context.secondaryScopes().size());
             scopes.add(context.primaryScope());
             scopes.addAll(context.secondaryScopes());
-            return scopes;
+            return List.copyOf(scopes);
         }
 
         private RuntimeDimension runtimeDimension(RoutingRequest request) {
@@ -359,8 +356,7 @@ class OciMetricsSemanticConventions implements AutoHttpMetricsProvider {
                     ? requestValue
                     : config.defaultDimension().filter(value -> !value.isEmpty());
             return dimensionValue
-                    .map(value -> new RuntimeDimension(Map.of(config.dimensionName(), value),
-                                                       value.isEmpty() ? "" : value + "."))
+                    .map(value -> new RuntimeDimension(Map.of(config.dimensionName(), value), value))
                     .orElse(RuntimeDimension.NONE);
         }
 
@@ -405,8 +401,67 @@ class OciMetricsSemanticConventions implements AutoHttpMetricsProvider {
             tags.forEach((key, value) -> builder.addTag(Tag.create(key, value)));
         }
 
-        private record RuntimeDimension(Map<String, String> tags, String countNamePrefix) {
+        private record HttpMetricsUpdateSnapshot(List<String> scopes,
+                                                 long resourceElapsedNanos,
+                                                 int statusCode,
+                                                 boolean skipResponseStatusMetrics,
+                                                 RuntimeDimension runtimeDimension,
+                                                 String userAgent) {
+            private static final long NO_RESOURCE_TIMING = -1L;
+            private static final HttpMetricsUpdateSnapshot UNTRACKED =
+                    new HttpMetricsUpdateSnapshot(List.of(), NO_RESOURCE_TIMING, 0, false, RuntimeDimension.NONE, null);
+
+            private HttpMetricsUpdateSnapshot {
+                scopes = List.copyOf(scopes);
+            }
+
+            private static HttpMetricsUpdateSnapshot create(RoutingRequest request,
+                                                            RoutingResponse response,
+                                                            OciHttpMetricsFilter filter) {
+                OciHttpEndpointMetricsContext context = filter.context(request);
+                if (!filter.shouldTrack(context)) {
+                    return UNTRACKED;
+                }
+                return new HttpMetricsUpdateSnapshot(
+                        filter.scopes(context),
+                        filter.resourceElapsedNanos(context),
+                        response.status().code(),
+                        filter.skipResponseStatusMetrics(request),
+                        filter.runtimeDimension(request),
+                        filter.userAgentMetricsEnabled
+                                ? request.headers().first(HeaderNames.USER_AGENT).orElse(null)
+                                : null);
+            }
+
+            private boolean tracked() {
+                return !scopes.isEmpty();
+            }
+
+            private boolean hasResourceTiming() {
+                return resourceElapsedNanos >= 0L;
+            }
+
+            private String statusFamily() {
+                return (statusCode / 100) + "XX";
+            }
+        }
+
+        private long resourceElapsedNanos(OciHttpEndpointMetricsContext context) {
+            return detailedTimingEnabled && context != null && context.hasResourceTiming()
+                    ? context.resourceElapsedNanos()
+                    : HttpMetricsUpdateSnapshot.NO_RESOURCE_TIMING;
+        }
+
+        private record RuntimeDimension(Map<String, String> tags, String dimensionValue) {
             private static final RuntimeDimension NONE = new RuntimeDimension(Map.of(), "");
+
+            private RuntimeDimension {
+                tags = Map.copyOf(tags);
+            }
+
+            private String countNamePrefix() {
+                return dimensionValue.isEmpty() ? "" : dimensionValue + ".";
+            }
         }
 
         private record MeterCacheKey(String name, Map<String, String> tags) {

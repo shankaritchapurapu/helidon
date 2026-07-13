@@ -595,6 +595,50 @@ class OciMetricsSemanticConventionsTest {
     }
 
     @Test
+    void asyncMetricsUseSnapshotAfterWhenSent() {
+        MetricsTestHarness harness = MetricsTestHarness.create(endpoint("StoreEndpoint.snapshot"),
+                                                               true,
+                                                               Optional.empty(),
+                                                               builder -> builder.autoHttp(autoHttpRuntimeDimension()));
+
+        recordRequestRejectingAsyncRequestAccess(harness,
+                                                 "/store/items",
+                                                 Status.NOT_FOUND_404,
+                                                 "Oracle-JavaSDK/3.1.2 (Mac OS X/13.0; Java/17.0.4; vendor)",
+                                                 false,
+                                                 "PINTLAB");
+
+        assertMetricDimensions(harness, "StoreEndpoint.snapshot.Time", Map.of(RUNTIME_DIMENSION, "PINTLAB"));
+        assertMetricDimensions(harness, "StoreEndpoint.snapshot.ResourceTime", Map.of(RUNTIME_DIMENSION, "PINTLAB"));
+        assertMetricValue(harness, "StoreEndpoint.snapshot.PINTLAB.ResponseOut.StatusCode.404.Count", 1.0);
+        assertMetricValue(harness, "StoreEndpoint.snapshot.PINTLAB.ResponseOut.StatusFamily.4XX.Count", 1.0);
+        assertMetricValue(harness, "StoreEndpoint.snapshot.PINTLAB.ResponseOut.Count", 1.0);
+        assertMetricValue(harness, "StoreEndpoint.snapshot.PINTLAB.Request.Client.JavaSDK.4XX.Count", 1.0);
+        assertMetricValue(harness, "StoreEndpoint.snapshot.PINTLAB.Request.Client.JavaSDK.Count", 1.0);
+    }
+
+    @Test
+    void asyncMetricsSnapshotPreservesSkipResponseStatusFlag() {
+        MetricsTestHarness harness = MetricsTestHarness.create(endpoint("StoreEndpoint.snapshotSkip"),
+                                                               true,
+                                                               Optional.empty(),
+                                                               builder -> builder.autoHttp(autoHttpRuntimeDimension()));
+
+        recordRequestRejectingAsyncRequestAccess(harness,
+                                                 "/store/items",
+                                                 Status.NOT_FOUND_404,
+                                                 "Oracle-JavaSDK/3.1.2 (Mac OS X/13.0; Java/17.0.4; vendor)",
+                                                 true,
+                                                 "PINTLAB");
+
+        assertMetricAbsent(harness, "StoreEndpoint.snapshotSkip.PINTLAB.ResponseOut.StatusCode.404.Count");
+        assertMetricAbsent(harness, "StoreEndpoint.snapshotSkip.PINTLAB.ResponseOut.StatusFamily.4XX.Count");
+        assertMetricAbsent(harness, "StoreEndpoint.snapshotSkip.PINTLAB.Request.Client.JavaSDK.4XX.Count");
+        assertMetricValue(harness, "StoreEndpoint.snapshotSkip.PINTLAB.ResponseOut.Count", 1.0);
+        assertMetricValue(harness, "StoreEndpoint.snapshotSkip.PINTLAB.Request.Client.JavaSDK.Count", 1.0);
+    }
+
+    @Test
     void runtimeDimensionCreatesDistinctMetersForDistinctValues() {
         MetricsTestHarness harness = MetricsTestHarness.create(endpoint("StoreEndpoint.runtimeCardinality"),
                                                                true,
@@ -644,6 +688,25 @@ class OciMetricsSemanticConventionsTest {
                                       String userAgent,
                                       boolean skipResponseStatusMetrics,
                                       String runtimeDimensionValue) {
+        recordRequest(harness, path, status, userAgent, skipResponseStatusMetrics, runtimeDimensionValue, false);
+    }
+
+    private static void recordRequestRejectingAsyncRequestAccess(MetricsTestHarness harness,
+                                                                 String path,
+                                                                 Status status,
+                                                                 String userAgent,
+                                                                 boolean skipResponseStatusMetrics,
+                                                                 String runtimeDimensionValue) {
+        recordRequest(harness, path, status, userAgent, skipResponseStatusMetrics, runtimeDimensionValue, true);
+    }
+
+    private static void recordRequest(MetricsTestHarness harness,
+                                      String path,
+                                      Status status,
+                                      String userAgent,
+                                      boolean skipResponseStatusMetrics,
+                                      String runtimeDimensionValue,
+                                      boolean rejectAsyncRequestAccess) {
         recordRequest(harness,
                       path,
                       status,
@@ -652,7 +715,8 @@ class OciMetricsSemanticConventionsTest {
                       true,
                       userAgent,
                       skipResponseStatusMetrics,
-                      runtimeDimensionValue);
+                      runtimeDimensionValue,
+                      rejectAsyncRequestAccess);
     }
 
     private static void recordRequest(MetricsTestHarness harness,
@@ -696,7 +760,8 @@ class OciMetricsSemanticConventionsTest {
                       closeResponseBodyStream,
                       null,
                       false,
-                      null);
+                      null,
+                      false);
     }
 
     private static void recordRequest(MetricsTestHarness harness,
@@ -707,31 +772,45 @@ class OciMetricsSemanticConventionsTest {
                                       boolean closeResponseBodyStream,
                                       String userAgent,
                                       boolean skipResponseStatusMetrics,
-                                      String runtimeDimensionValue) {
+                                      String runtimeDimensionValue,
+                                      boolean rejectAsyncRequestAccess) {
         harness.invalidateFlush();
         Context context = Context.create();
-        RoutingRequest request = proxy(RoutingRequest.class, (proxy, method, args) -> switch (method.getName()) {
-            case "prologue" -> HttpPrologue.create("HTTP/1.1", "HTTP", "1.1", Method.GET, path, false);
-            case "context" -> context;
-            case "headers" -> headers(userAgent);
-            case "streamFilter" -> {
-                harness.requestStreamFilter().set(compose(harness.requestStreamFilter().get(), streamFilter(args)));
-                yield null;
-            }
-            default -> defaultValue(method.getReturnType());
+        AtomicReference<Thread> allowedRequestAccessThread = new AtomicReference<>();
+        RoutingRequest request = proxy(RoutingRequest.class, (proxy, method, args) -> {
+            rejectAsyncRequestAccess(rejectAsyncRequestAccess,
+                                     allowedRequestAccessThread,
+                                     "request",
+                                     method.getName());
+            return switch (method.getName()) {
+                case "prologue" -> HttpPrologue.create("HTTP/1.1", "HTTP", "1.1", Method.GET, path, false);
+                case "context" -> context;
+                case "headers" -> headers(userAgent);
+                case "streamFilter" -> {
+                    harness.requestStreamFilter().set(compose(harness.requestStreamFilter().get(), streamFilter(args)));
+                    yield null;
+                }
+                default -> defaultValue(method.getReturnType());
+            };
         });
 
-        RoutingResponse response = proxy(RoutingResponse.class, (proxy, method, args) -> switch (method.getName()) {
-            case "status" -> status;
-            case "whenSent" -> {
-                harness.whenSentHandler().set((Runnable) args[0]);
-                yield proxy;
-            }
-            case "streamFilter" -> {
-                harness.responseStreamFilter().set(compose(harness.responseStreamFilter().get(), streamFilter(args)));
-                yield null;
-            }
-            default -> defaultValue(method.getReturnType());
+        RoutingResponse response = proxy(RoutingResponse.class, (proxy, method, args) -> {
+            rejectAsyncRequestAccess(rejectAsyncRequestAccess,
+                                     allowedRequestAccessThread,
+                                     "response",
+                                     method.getName());
+            return switch (method.getName()) {
+                case "status" -> status;
+                case "whenSent" -> {
+                    harness.whenSentHandler().set((Runnable) args[0]);
+                    yield proxy;
+                }
+                case "streamFilter" -> {
+                    harness.responseStreamFilter().set(compose(harness.responseStreamFilter().get(), streamFilter(args)));
+                    yield null;
+                }
+                default -> defaultValue(method.getReturnType());
+            };
         });
 
         if (harness.endpointContext() != null) {
@@ -754,7 +833,21 @@ class OciMetricsSemanticConventionsTest {
                 writeResponseBody(harness, responseBodyStream, closeResponseBodyStream);
             }
         });
-        harness.filter().filter(harness.chain(), request, response);
+        allowedRequestAccessThread.set(Thread.currentThread());
+        try {
+            harness.filter().filter(harness.chain(), request, response);
+        } finally {
+            allowedRequestAccessThread.set(null);
+        }
+    }
+
+    private static void rejectAsyncRequestAccess(boolean reject,
+                                                 AtomicReference<Thread> allowedThread,
+                                                 String target,
+                                                 String methodName) {
+        if (reject && Thread.currentThread() != allowedThread.get()) {
+            throw new AssertionError("Unexpected async " + target + "." + methodName + " access after whenSent");
+        }
     }
 
     private static ServerRequestHeaders headers(String userAgent) {
