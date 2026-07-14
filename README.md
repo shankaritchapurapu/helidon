@@ -5,7 +5,7 @@
 ## Overview
 
 These project contains a compilation of different modules that extend the use of the
-[Helidon framework]((https://github.com/helidon-io/helidon)) to allow integration with Native OCI services.
+[Helidon framework](https://github.com/helidon-io/helidon) to allow integration with Native OCI services.
 
 If you are building a service "built on public OCI SDK and public-facing services" then you can use
 our [public quickstart for building OCI applications](https://helidon.io/starter/2.6.3?step=2&flavor=mp).
@@ -85,7 +85,7 @@ an ssh tunnel to the remote Instance Metadata Service for testing the code local
 
 ## Pipeline documentation
 
-Check the pipeline docs [here](docs-internal/README.md)
+Check the pipeline docs [here](docs-internal/pipeline.md)
 
 ## Links
 
