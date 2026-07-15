@@ -30,14 +30,15 @@ class AuthenticationDependencyCompatibilityTest {
 
     @Test
     void testAuthenticatorClientCreationUsesCompatibleAuthenticationClasses() {
+        // Use local test credentials so this unit test never contacts OCI IMDS.
         ServiceAuthenticationClient serviceAuthClient = new ServiceAuthenticationClientFactory(
-                identityConfigFactory(authenticationConfig(true), authorizationConfig()),
+                identityConfigFactory(authenticationConfig(), authorizationConfig()),
                 locationDefaults())
                 .get();
         Services.set(ServiceAuthenticationClient.class, serviceAuthClient);
 
         AuthenticatorClient client = new AuthenticatorClientFactory(
-                identityConfigFactory(authenticationConfig(false), authorizationConfig()),
+                identityConfigFactory(authenticationConfig(), authorizationConfig()),
                 locationDefaults())
                 .get();
 
@@ -75,25 +76,19 @@ class AuthenticationDependencyCompatibilityTest {
         });
     }
 
-    private static AuthenticationConfig authenticationConfig(boolean useInstancePrincipal) {
-        AuthenticationConfig.Builder builder = AuthenticationConfig.builder()
+    private static AuthenticationConfig authenticationConfig() {
+        return AuthenticationConfig.builder()
                 .globalBusinessUnit("gbu")
                 .teamName("team")
                 .applicationName("app")
                 .region("us-phoenix-1")
-                .rootCertPath(testRootCertPath());
-
-        if (useInstancePrincipal) {
-            builder.useInstancePrincipal(true);
-        } else {
-            builder.useInstancePrincipal(false)
-                    .certificates(java.util.List.of(AuthCertificateConfig.builder()
-                                                       .certificate("serverCert.pem")
-                                                       .privateKey("serverKey.pem")
-                                                       .build()));
-        }
-
-        return builder.build();
+                .rootCertPath(testRootCertPath())
+                .useInstancePrincipal(false)
+                .certificates(java.util.List.of(AuthCertificateConfig.builder()
+                                                   .certificate("serverCert.pem")
+                                                   .privateKey("serverKey.pem")
+                                                   .build()))
+                .build();
     }
 
     private static AuthorizationConfig authorizationConfig() {
