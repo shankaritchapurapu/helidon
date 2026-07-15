@@ -70,6 +70,7 @@
                             </includes>
                             <excludes>
                                 <exclude>**/Ssv2EndpointIT.java</exclude>
+                                <exclude>**/Ssv2ServerTlsIT.java</exclude>
                             </excludes>
                             <environmentVariables>
                                 <HELIDON_OCI_IMDS_DASH_BASE_DASH_URI>http://localhost:8000/opc/v2/

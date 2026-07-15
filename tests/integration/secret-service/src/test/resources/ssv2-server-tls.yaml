@@ -1,0 +1,23 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+
+server:
+  tls:
+    manager:
+      oci-ssv2:
+        reload:
+          enabled: false
+        pki:
+          secret-path: "/secret/helidon/helidon-tls-path/latest"
+        trust:
+          path: "/etc/oci-pki/ca-bundle.pem"
+
+client:
+  tls:
+    endpoint-identification-algorithm: "NONE"
+    trust:
+      pem:
+        certificates:
+          resource:
+            path: "/etc/oci-pki/ca-bundle.pem"

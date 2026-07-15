@@ -29,6 +29,11 @@
             <artifactId>helidon-oci-secret-service-config-source</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.oracle.helidon.oci.secret-service</groupId>
+            <artifactId>helidon-oci-secret-service-tls-manager</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.oracle.helidon.oci.envconfig</groupId>
             <artifactId>helidon-oci-envconfig</artifactId>
             <scope>runtime</scope>
