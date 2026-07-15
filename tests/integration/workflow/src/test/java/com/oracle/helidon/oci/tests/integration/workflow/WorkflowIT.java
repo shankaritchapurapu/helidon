@@ -7,7 +7,6 @@ package com.oracle.helidon.oci.tests.integration.workflow;
 import java.nio.charset.StandardCharsets;
 import java.security.Security;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import io.helidon.logging.common.LogConfig;
@@ -108,9 +107,9 @@ class WorkflowIT {
 
     private void createWorkflowDefinition(WorkflowClient client, WorkflowDefinitionId id) {
         try {
-            Optional<WorkflowDefinition> definition = client.getWorkflowDefinition(id);
-            assertThat(definition.isPresent(), is(true));
-            assertThat(definition.get().getFirstStep(), is(WORKFLOW_STEP));
+            WorkflowDefinition definition = client.getWorkflowDefinition(id);
+            assertThat(definition, notNullValue());
+            assertThat(definition.getFirstStep(), is(WORKFLOW_STEP));
         } catch (BmcException e) {
             // If there is no workflow definition, create one.
             WorkflowDefinition definition = WorkflowDefinition.builder()

@@ -9,9 +9,9 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.oracle.helidon.oci</groupId>
-        <artifactId>helidon-oci-dependencies</artifactId>
+        <artifactId>helidon-oci-parent</artifactId>
         <version>2.0.0-SNAPSHOT</version>
-        <relativePath>./dependencies/pom.xml</relativePath>
+        <relativePath>./parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>helidon-oci-project</artifactId>
@@ -20,6 +20,9 @@
     <name>Helidon OCI Project</name>
 
     <properties>
+        <helidon.version>4.5.1-M1</helidon.version>
+        <version.oci.dropwizard.bom>5.0.1</version.oci.dropwizard.bom>
+
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
 
@@ -40,6 +43,7 @@
 
         <version.lib.checkstyle>13.3.0</version.lib.checkstyle>
         <version.lib.mockito>5.22.0</version.lib.mockito>
+        <version.lib.oci>2.88.0</version.lib.oci>
 
         <version.plugin.checkstyle>3.6.0</version.plugin.checkstyle>
         <version.plugin.compiler>3.14.1</version.plugin.compiler>
@@ -61,6 +65,7 @@
     <modules>
         <module>parent</module>
         <module>bom</module>
+        <module>helidon-oci-internal-bom</module>
         <module>dependencies</module>
         <module>codegen</module>
         <module>oci-sdk</module>
@@ -84,6 +89,30 @@
 
     <dependencyManagement>
         <dependencies>
+        <!-- Manage version of com.oracle.pic stuff -->
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-internal-bom</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <!-- Manage versions of Talon, Helidon and associated third party libraries -->
+        <dependency>
+            <groupId>com.oracle.helidon.oci</groupId>
+            <artifactId>helidon-oci-dependencies</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <!-- Manage versions of various OCI third party libraries -->
+        <dependency>
+            <groupId>com.oracle.pic.commons</groupId>
+            <artifactId>dropwizard-service-bom</artifactId>
+            <version>${version.oci.dropwizard.bom}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>

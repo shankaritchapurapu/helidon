@@ -22,64 +22,6 @@
         <dependency>
             <groupId>com.oracle.pic.bling</groupId>
             <artifactId>metering-agent</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.oracle.pic.kiev</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.oracle.pic.commons</groupId>
-                    <artifactId>kiev-commons</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.oracle.pic.commons</groupId>
-                    <artifactId>core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.oracle.pic.vault</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.oracle.pic.identity.authentication</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.oracle.pic.identity.authorization</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.oracle.pic.commons.client</groupId>
-                    <artifactId>java-rest-client</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.nimbusds</groupId>
-                    <artifactId>nimbus-jose-jwt</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.maven</groupId>
-                    <artifactId>maven-model</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.oracle.pic.bling</groupId>
-                    <artifactId>lease-kiev</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.dropwizard</groupId>
-                    <artifactId>dropwizard-lifecycle</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.assertj</groupId>
-                    <artifactId>assertj-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.oracle.pic.kiev</groupId>
@@ -114,10 +56,6 @@
                     <artifactId>s2s-client-util</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-lifecycle</artifactId>
         </dependency>
         <dependency>
             <groupId>com.oracle.pic.bling</groupId>
