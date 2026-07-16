@@ -48,6 +48,10 @@ final class OciIntervalAccumulator {
         }
     }
 
+    synchronized void restore(List<Observation> observations) {
+        observations.forEach(this::restore);
+    }
+
     synchronized List<Observation> drainClosed(long nowMillis) {
         long currentSecondMillis = Math.floorDiv(nowMillis, MILLIS_PER_SECOND) * MILLIS_PER_SECOND;
         return drain(bucketSecond -> bucketSecond < currentSecondMillis);
@@ -76,6 +80,12 @@ final class OciIntervalAccumulator {
             iterator.remove();
         }
         return observations.isEmpty() ? List.of() : observations;
+    }
+
+    private void restore(Observation observation) {
+        Bucket bucket = buckets.computeIfAbsent(observation.getTimestamp(), Bucket::new);
+        bucket.restore(observation);
+        dropOldestIfNeeded();
     }
 
     private void dropOldestIfNeeded() {
@@ -151,8 +161,10 @@ final class OciIntervalAccumulator {
 
     private final class Bucket {
         private final long timestampMillis;
+        private final List<Observation> restoredObservations = new ArrayList<>();
         private List<Double> rawSamples = new ArrayList<>();
         private boolean compacted;
+        private long restoredCount;
         private long count;
         private double sum;
         private double min = Double.POSITIVE_INFINITY;
@@ -176,24 +188,32 @@ final class OciIntervalAccumulator {
             max = Math.max(max, value);
         }
 
+        private void restore(Observation observation) {
+            restoredObservations.add(observation);
+            restoredCount += observation.getCount();
+        }
+
         private long count() {
-            return compacted ? count : rawSamples.size();
+            return restoredCount + (compacted ? count : rawSamples.size());
         }
 
         private List<Observation> observations() {
+            List<Observation> restored = List.copyOf(restoredObservations);
             if (!compacted) {
                 if (rawSamples.isEmpty()) {
-                    return List.of();
+                    return restored;
                 }
-                List<Observation> result = new ArrayList<>(rawSamples.size());
+                List<Observation> result = new ArrayList<>(restored.size() + rawSamples.size());
+                result.addAll(restored);
                 rawSamples.forEach(value -> result.add(new Observation(timestampMillis, value, 1)));
                 return result;
             }
 
             if (count == 0L) {
-                return List.of();
+                return restored;
             }
-            List<Observation> result = new ArrayList<>(3);
+            List<Observation> result = new ArrayList<>(restored.size() + 3);
+            result.addAll(restored);
             if (count == 1L) {
                 addObservation(result, min, 1L);
             } else if (count == 2L) {

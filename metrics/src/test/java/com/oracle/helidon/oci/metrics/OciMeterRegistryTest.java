@@ -90,11 +90,17 @@ class OciMeterRegistryTest {
     void gaugeSamplesOnAccessWithoutCaching() {
         OciMeterRegistry registry = createRegistry();
         AtomicLong value = new AtomicLong(5);
-        Gauge<Long> gauge = registry.getOrCreate(OciGauge.builder("queue.size", value::get));
+        AtomicLong calls = new AtomicLong();
+        Gauge<Long> gauge = registry.getOrCreate(OciGauge.builder("queue.size", () -> {
+            calls.incrementAndGet();
+            return value.get();
+        }));
 
         assertThat(gauge.value(), is(5L));
+        assertThat(calls.get(), is(1L));
         value.set(7);
         assertThat(gauge.value(), is(7L));
+        assertThat(calls.get(), is(2L));
     }
 
     @Test

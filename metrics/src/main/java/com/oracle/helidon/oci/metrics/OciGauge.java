@@ -18,7 +18,6 @@ import io.helidon.metrics.api.MetricsFactory;
  */
 final class OciGauge<N extends Number> extends AbstractOciMeter implements Gauge<N> {
 
-    private final Gauge<N> delegate;
     private final Supplier<N> supplier;
 
     OciGauge(Builder<N> builder,
@@ -27,7 +26,6 @@ final class OciGauge<N extends Number> extends AbstractOciMeter implements Gauge
              boolean enabled,
              boolean accumulationEligible) {
         super(registry, delegate, enabled, accumulationEligible);
-        this.delegate = delegate;
         this.supplier = builder.supplier();
     }
 
@@ -41,8 +39,19 @@ final class OciGauge<N extends Number> extends AbstractOciMeter implements Gauge
 
     @Override
     public N value() {
-        delegate.value();
+        /*
+        Helidon's Micrometer-backed gauge delegate can return Double even for supplier-based Gauge<Long>
+        instances. We invoke the original supplier directly so the wrapper preserves the public Gauge<N>
+        contract and samples the application supplier exactly once.
+         */
         return supplier.get();
+    }
+
+    Sample sample(long timestampMillis) {
+        return new Sample(value().doubleValue(), timestampMillis);
+    }
+
+    record Sample(double value, long timestampMillis) {
     }
 
     static final class Builder<N extends Number> extends AbstractOciMeterBuilder<Gauge.Builder<N>, Gauge<N>>

@@ -90,6 +90,10 @@ final class OciDistributionSummary extends AbstractOciMeter implements Distribut
         return intervalAccumulator.drainAll();
     }
 
+    void restoreIntervalSamples(List<Observation> observations) {
+        intervalAccumulator.restore(observations);
+    }
+
     int pendingBucketCount() {
         return intervalAccumulator.pendingBucketCount();
     }

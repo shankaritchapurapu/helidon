@@ -6,6 +6,7 @@ package com.oracle.helidon.oci.metrics;
 
 import java.util.OptionalLong;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 import io.helidon.metrics.api.FunctionalCounter;
@@ -21,6 +22,7 @@ final class OciFunctionalCounter<T> extends AbstractOciMeter implements Function
 
     private final FunctionalCounter delegate;
     private final AtomicLong lastSampledCount = new AtomicLong();
+    private final ReentrantLock samplingLock = new ReentrantLock();
 
     OciFunctionalCounter(Builder<T> builder,
                          OciMeterRegistry registry,
@@ -41,22 +43,53 @@ final class OciFunctionalCounter<T> extends AbstractOciMeter implements Function
     }
 
     OptionalLong deltaIfChanged() {
+        return drainDeltaIfChanged().positiveDelta();
+    }
+
+    Sample drainDeltaIfChanged() {
         long value = count();
         while (true) {
             long previous = lastSampledCount.get();
             if (value < previous) {
                 if (lastSampledCount.compareAndSet(previous, value)) {
-                    return OptionalLong.empty();
+                    return Sample.empty(value);
                 }
                 continue;
             }
             long delta = value - previous;
             if (delta == 0L) {
-                return OptionalLong.empty();
+                return Sample.empty(value);
             }
             if (lastSampledCount.compareAndSet(previous, value)) {
-                return OptionalLong.of(delta);
+                return new Sample(previous, value, delta);
             }
+        }
+    }
+
+    void restoreDelta(Sample sample) {
+        sample.positiveDelta()
+                .ifPresent(ignored -> {
+                    if (!lastSampledCount.compareAndSet(sample.sampledCount(), sample.previousCount())) {
+                        throw new IllegalStateException("Functional counter sample state changed during restore");
+                    }
+                });
+    }
+
+    void lockSampling() {
+        samplingLock.lock();
+    }
+
+    void unlockSampling() {
+        samplingLock.unlock();
+    }
+
+    record Sample(long previousCount, long sampledCount, long delta) {
+        static Sample empty(long sampledCount) {
+            return new Sample(sampledCount, sampledCount, 0L);
+        }
+
+        OptionalLong positiveDelta() {
+            return delta > 0L ? OptionalLong.of(delta) : OptionalLong.empty();
         }
     }
 

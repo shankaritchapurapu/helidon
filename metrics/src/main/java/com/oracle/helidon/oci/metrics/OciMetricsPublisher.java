@@ -138,8 +138,8 @@ final class OciMetricsPublisher implements MetricsPublisher,
         publishObservations(metricName(meter), observations);
     }
 
-    void publishGauge(OciGauge<?> gauge, double value) {
-        emitValue(gauge, value, 1, System.currentTimeMillis(), "gauge sample");
+    void publishGauge(OciGauge<?> gauge, OciGauge.Sample sample) {
+        emitValue(gauge, sample.value(), 1, sample.timestampMillis(), "gauge sample");
     }
 
     void publishAccumulatorPressure(long pendingBuckets) {

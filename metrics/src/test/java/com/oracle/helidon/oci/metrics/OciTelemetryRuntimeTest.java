@@ -9,9 +9,15 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -21,6 +27,8 @@ import io.helidon.config.Config;
 import io.helidon.metrics.api.Clock;
 import io.helidon.metrics.api.Counter;
 import io.helidon.metrics.api.DistributionSummary;
+import io.helidon.metrics.api.FunctionalCounter;
+import io.helidon.metrics.api.Gauge;
 import io.helidon.metrics.api.MeterRegistry;
 import io.helidon.metrics.api.MetricsConfig;
 import io.helidon.metrics.api.MetricsFactory;
@@ -418,6 +426,259 @@ class OciTelemetryRuntimeTest {
     }
 
     @Test
+    void closedRegistryIsNotSampled() {
+        shutdownMetricsIfActive();
+        CapturingMetricReporter reporter = new CapturingMetricReporter();
+        MetricsConfig metricsConfig = metricsConfig();
+        OciMetricsFactory factory = createFactory(metricsConfig, reporter);
+        try {
+            MeterRegistry registry = factory.createMeterRegistry(metricsConfig);
+            Counter counter = registry.getOrCreate(Counter.builder("closed.registry.counter"));
+
+            counter.increment(5L);
+            registry.close();
+            factory.runtime().sampleMeters(true);
+
+            assertThat(metricNames(reporter), not(hasItem(equalTo("closed.registry.counter"))));
+        } finally {
+            factory.close();
+            shutdownMetricsIfActive();
+        }
+    }
+
+    @Test
+    void transientPublishFailureRetainsDrainedSamplesForRetry() {
+        shutdownMetricsIfActive();
+        CapturingMetricReporter reporter = new CapturingMetricReporter();
+        Map<String, AtomicInteger> remainingFailures = Map.of("retry.counter", new AtomicInteger(2),
+                                                              "retry.functional", new AtomicInteger(2),
+                                                              "retry.timer", new AtomicInteger(2),
+                                                              "retry.summary", new AtomicInteger(2));
+        MetricsConfig metricsConfig = metricsConfig();
+        OciMetricsFactory factory = createFactory(metricsConfig,
+                                                  OciMetricsPublisherConfig.builder()
+                                                          .reporter(reporter)
+                                                          .defaultDimensions(Map.of())
+                                                          .sampleInterval(Duration.ofMinutes(1))
+                                                          .filter((name, meter) -> {
+                                                              AtomicInteger remaining = remainingFailures.get(name);
+                                                              if (remaining != null && remaining.get() > 0) {
+                                                                  remaining.decrementAndGet();
+                                                                  throw new RuntimeException("transient publish failure");
+                                                              }
+                                                              return true;
+                                                          })
+                                                          .buildPrototype());
+        try {
+            MeterRegistry registry = factory.globalRegistry();
+            Counter counter = registry.getOrCreate(Counter.builder("retry.counter"));
+            AtomicLong functionalState = new AtomicLong();
+            FunctionalCounter functionalCounter = registry.getOrCreate(FunctionalCounter.builder("retry.functional",
+                                                                                                 functionalState,
+                                                                                                 AtomicLong::get));
+            Timer timer = registry.getOrCreate(Timer.builder("retry.timer"));
+            DistributionSummary summary = registry.getOrCreate(DistributionSummary.builder("retry.summary"));
+
+            counter.increment(3L);
+            functionalState.set(4L);
+            timer.record(Duration.ofMillis(12));
+            summary.record(14D);
+
+            factory.runtime().sampleMeters(true);
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.counter"))));
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.functional"))));
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.timer"))));
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.summary"))));
+
+            factory.runtime().sampleMeters(true);
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.counter"))));
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.functional"))));
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.timer"))));
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.summary"))));
+
+            factory.runtime().sampleMeters(true);
+            Metrics.shutdown();
+
+            assertThat(metricNames(reporter), hasItem(equalTo("retry.counter")));
+            assertThat(metricNames(reporter), hasItem(equalTo("retry.functional")));
+            assertThat(metricNames(reporter), hasItem(equalTo("retry.timer")));
+            assertThat(metricNames(reporter), hasItem(equalTo("retry.summary")));
+            assertThat(metricValues(reporter, "retry.timer"), is(List.of(12D)));
+            assertThat(metricValues(reporter, "retry.summary"), is(List.of(14D)));
+            assertThat(functionalCounter.count(), is(4L));
+        } finally {
+            factory.close();
+            shutdownMetricsIfActive();
+        }
+    }
+
+    @Test
+    void concurrentFunctionalCounterSamplingDoesNotLoseFailedDelta() throws Exception {
+        shutdownMetricsIfActive();
+        CapturingMetricReporter reporter = new CapturingMetricReporter();
+        AtomicBoolean firstFunctionalPublish = new AtomicBoolean(true);
+        CountDownLatch firstPublishEntered = new CountDownLatch(1);
+        CountDownLatch releaseFirstPublish = new CountDownLatch(1);
+        MetricsConfig metricsConfig = metricsConfig();
+        OciMetricsFactory factory = createFactory(metricsConfig,
+                                                  OciMetricsPublisherConfig.builder()
+                                                          .reporter(reporter)
+                                                          .defaultDimensions(Map.of())
+                                                          .sampleInterval(Duration.ofMinutes(1))
+                                                          .filter((name, meter) -> {
+                                                              if (name.equals("retry.concurrent.functional")
+                                                                      && firstFunctionalPublish.compareAndSet(true, false)) {
+                                                                  firstPublishEntered.countDown();
+                                                                  await(releaseFirstPublish);
+                                                                  throw new RuntimeException("transient functional publish failure");
+                                                              }
+                                                              return true;
+                                                          })
+                                                          .buildPrototype());
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            MeterRegistry registry = factory.globalRegistry();
+            AtomicLong functionalState = new AtomicLong(4L);
+            registry.getOrCreate(FunctionalCounter.builder("retry.concurrent.functional",
+                                                           functionalState,
+                                                           AtomicLong::get));
+
+            Future<?> failingSample = executor.submit(() -> factory.runtime().sampleMeters(true));
+            assertThat(firstPublishEntered.await(5, TimeUnit.SECONDS), is(true));
+            Future<?> retryingSample = executor.submit(() -> factory.runtime().sampleMeters(true));
+
+            releaseFirstPublish.countDown();
+            failingSample.get(5, TimeUnit.SECONDS);
+            retryingSample.get(5, TimeUnit.SECONDS);
+            Metrics.shutdown();
+
+            assertThat(metricCounts(reporter, "retry.concurrent.functional"), is(List.of(4L)));
+        } finally {
+            releaseFirstPublish.countDown();
+            executor.shutdownNow();
+            factory.close();
+            shutdownMetricsIfActive();
+        }
+    }
+
+    @Test
+    void transientGaugePublishFailureRetainsExactSampleForRetry() {
+        shutdownMetricsIfActive();
+        CapturingMetricReporter reporter = new CapturingMetricReporter();
+        AtomicBoolean fail = new AtomicBoolean(true);
+        AtomicLong calls = new AtomicLong();
+        MetricsConfig metricsConfig = metricsConfig();
+        OciMetricsFactory factory = createFactory(metricsConfig,
+                                                  OciMetricsPublisherConfig.builder()
+                                                          .reporter(reporter)
+                                                          .defaultDimensions(Map.of())
+                                                          .sampleInterval(Duration.ofMinutes(1))
+                                                          .filter((name, meter) -> {
+                                                              if (fail.get() && name.equals("retry.gauge")) {
+                                                                  throw new RuntimeException("transient gauge publish failure");
+                                                              }
+                                                              return true;
+                                                          })
+                                                          .buildPrototype());
+        try {
+            MeterRegistry registry = factory.globalRegistry();
+            registry.getOrCreate(Gauge.builder("retry.gauge", calls::incrementAndGet));
+
+            factory.runtime().sampleMeters(true);
+            assertThat(calls.get(), is(1L));
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.gauge"))));
+
+            factory.runtime().sampleMeters(true);
+            assertThat(calls.get(), is(1L));
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.gauge"))));
+
+            fail.set(false);
+            factory.runtime().sampleMeters(true);
+            Metrics.shutdown();
+
+            assertThat(calls.get(), is(2L));
+            assertThat(metricValues(reporter, "retry.gauge"), is(List.of(1D, 2D)));
+        } finally {
+            factory.close();
+            shutdownMetricsIfActive();
+        }
+    }
+
+    @Test
+    void retainedGaugeSampleIsDiscardedWhenGaugeIsRemoved() {
+        shutdownMetricsIfActive();
+        CapturingMetricReporter reporter = new CapturingMetricReporter();
+        AtomicBoolean fail = new AtomicBoolean(true);
+        AtomicLong calls = new AtomicLong();
+        MetricsConfig metricsConfig = metricsConfig();
+        OciMetricsFactory factory = createFactory(metricsConfig,
+                                                  OciMetricsPublisherConfig.builder()
+                                                          .reporter(reporter)
+                                                          .defaultDimensions(Map.of())
+                                                          .sampleInterval(Duration.ofMinutes(1))
+                                                          .filter((name, meter) -> {
+                                                              if (fail.get() && name.equals("retry.removed.gauge")) {
+                                                                  throw new RuntimeException("transient gauge publish failure");
+                                                              }
+                                                              return true;
+                                                          })
+                                                          .buildPrototype());
+        try {
+            MeterRegistry registry = factory.globalRegistry();
+            Gauge<Long> gauge = registry.getOrCreate(Gauge.builder("retry.removed.gauge", calls::incrementAndGet));
+
+            factory.runtime().sampleMeters(true);
+            registry.remove(gauge);
+            fail.set(false);
+            factory.runtime().sampleMeters(true);
+            Metrics.shutdown();
+
+            assertThat(calls.get(), is(1L));
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.removed.gauge"))));
+        } finally {
+            factory.close();
+            shutdownMetricsIfActive();
+        }
+    }
+
+    @Test
+    void retainedGaugeSampleIsDiscardedWhenRegistryIsClosed() {
+        shutdownMetricsIfActive();
+        CapturingMetricReporter reporter = new CapturingMetricReporter();
+        AtomicBoolean fail = new AtomicBoolean(true);
+        AtomicLong calls = new AtomicLong();
+        MetricsConfig metricsConfig = metricsConfig();
+        OciMetricsFactory factory = createFactory(metricsConfig,
+                                                  OciMetricsPublisherConfig.builder()
+                                                          .reporter(reporter)
+                                                          .defaultDimensions(Map.of())
+                                                          .sampleInterval(Duration.ofMinutes(1))
+                                                          .filter((name, meter) -> {
+                                                              if (fail.get() && name.equals("retry.closed.gauge")) {
+                                                                  throw new RuntimeException("transient gauge publish failure");
+                                                              }
+                                                              return true;
+                                                          })
+                                                          .buildPrototype());
+        try {
+            MeterRegistry registry = factory.createMeterRegistry(metricsConfig);
+            registry.getOrCreate(Gauge.builder("retry.closed.gauge", calls::incrementAndGet));
+
+            factory.runtime().sampleMeters(true);
+            registry.close();
+            fail.set(false);
+            factory.runtime().sampleMeters(true);
+            Metrics.shutdown();
+
+            assertThat(calls.get(), is(1L));
+            assertThat(metricNames(reporter), not(hasItem(equalTo("retry.closed.gauge"))));
+        } finally {
+            factory.close();
+            shutdownMetricsIfActive();
+        }
+    }
+
+    @Test
     void overlayReporterDoesNotOwnProgrammaticClient() {
         TestMetricReporter reporter = new TestMetricReporter();
         TestCloseable closeable = new TestCloseable();
@@ -526,6 +787,42 @@ class OciTelemetryRuntimeTest {
         if (Metrics.isActive()) {
             Metrics.shutdown();
         }
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            if (!latch.await(5, TimeUnit.SECONDS)) {
+                throw new AssertionError("Timed out waiting for test latch");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AssertionError("Interrupted waiting for test latch", e);
+        }
+    }
+
+    private static List<String> metricNames(CapturingMetricReporter reporter) {
+        return reporter.timeSeries()
+                .stream()
+                .map(series -> series.getMetricName().getName())
+                .toList();
+    }
+
+    private static List<Double> metricValues(CapturingMetricReporter reporter, String name) {
+        return reporter.timeSeries()
+                .stream()
+                .filter(series -> series.getMetricName().getName().equals(name))
+                .flatMap(series -> series.getObservations().stream())
+                .map(observation -> observation.getValue())
+                .toList();
+    }
+
+    private static List<Long> metricCounts(CapturingMetricReporter reporter, String name) {
+        return reporter.timeSeries()
+                .stream()
+                .filter(series -> series.getMetricName().getName().equals(name))
+                .flatMap(series -> series.getObservations().stream())
+                .map(observation -> (long) observation.getCount())
+                .toList();
     }
 
     private static MetricsFactory delegateFactory(MetricsConfig metricsConfig) {

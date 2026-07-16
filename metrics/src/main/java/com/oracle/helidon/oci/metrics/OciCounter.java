@@ -55,6 +55,12 @@ final class OciCounter extends AbstractOciMeter implements Counter {
         return pendingDelta.sumThenReset();
     }
 
+    void restoreDelta(long amount) {
+        if (amount > 0L) {
+            pendingDelta.add(amount);
+        }
+    }
+
     static final class Builder extends AbstractOciMeterBuilder<Counter.Builder, Counter> implements Counter.Builder {
 
         Builder(String name) {

@@ -158,6 +158,10 @@ final class OciTimer extends AbstractOciMeter implements Timer {
         return intervalAccumulator.drainAll();
     }
 
+    void restoreIntervalSamples(List<Observation> observations) {
+        intervalAccumulator.restore(observations);
+    }
+
     int pendingBucketCount() {
         return intervalAccumulator.pendingBucketCount();
     }
