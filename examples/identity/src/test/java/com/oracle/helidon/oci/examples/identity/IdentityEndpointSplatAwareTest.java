@@ -58,6 +58,30 @@ public class IdentityEndpointSplatAwareTest extends IdentityEndpointBase {
         testSplatTwiceSuccess(Status.OK_200.code(), "Hello WorldHello World");
     }
 
+    @Test
+    @Order(4)
+    void testSplatChunkedOnceSuccess() throws Exception {
+        testSplatChunkedOnceSuccess(Status.OK_200.code(), "Hello World");
+    }
+
+    @Test
+    @Order(5)
+    void testSplatHttp2OnceSuccess() throws Exception {
+        testSplatHttp2OnceSuccess(Status.OK_200.code(), "Hello World");
+    }
+
+    @Test
+    @Order(6)
+    void testSplatChunkedZeroLengthOnceSuccess() throws Exception {
+        testSplatChunkedZeroLengthOnceSuccess(Status.OK_200.code(), "");
+    }
+
+    @Test
+    @Order(7)
+    void testSplatHttp2ZeroLengthOnceSuccess() throws Exception {
+        testSplatHttp2ZeroLengthOnceSuccess(Status.OK_200.code(), "");
+    }
+
     @Override
     Map<String, String> signRequest(URI uri,
                                     String httpMethod,

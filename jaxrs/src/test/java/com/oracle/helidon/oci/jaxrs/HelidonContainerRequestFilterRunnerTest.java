@@ -6,17 +6,23 @@ package com.oracle.helidon.oci.jaxrs;
 import java.security.cert.Certificate;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Response;
 
+import io.helidon.common.GenericType;
+import io.helidon.common.buffers.BufferData;
 import io.helidon.common.socket.PeerInfo;
 import io.helidon.http.ServerRequestHeaders;
+import io.helidon.http.media.ReadableEntity;
+import io.helidon.http.media.ReadableEntityBase;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -25,6 +31,65 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class HelidonContainerRequestFilterRunnerTest {
+
+    @Test
+    void shouldBufferAndReplayZeroLengthEntity() throws Exception {
+        ReadableEntity entity = new ZeroLengthReadableEntity();
+        ServerRequest request = mockRequest(entity);
+        ServerResponse response = mockResponse();
+        AtomicBoolean filterInvoked = new AtomicBoolean();
+
+        Optional<HelidonContainerRequestContext> result = HelidonContainerRequestFilterRunner.run(
+                context -> {
+                    filterInvoked.set(true);
+                    assertTrue(context.hasEntity());
+                    assertArrayEquals(new byte[0], context.getEntityStream().readAllBytes());
+                },
+                request,
+                response,
+                new HelidonResourceInfo(HelidonResourceInfoTest.SampleService.class.getName(), "void doNothing()"));
+
+        assertTrue(result.isPresent());
+        assertTrue(filterInvoked.get());
+        assertArrayEquals(new byte[0], request.content().inputStream().readAllBytes());
+    }
+
+    @Test
+    void shouldBufferEntityWithoutContentLength() throws Exception {
+        ReadableEntity entity = mock(ReadableEntity.class);
+        ServerRequest request = mockRequest(entity);
+        ServerResponse response = mockResponse();
+
+        when(entity.hasEntity()).thenReturn(true);
+
+        Optional<HelidonContainerRequestContext> result = HelidonContainerRequestFilterRunner.run(
+                context -> assertTrue(context.hasEntity()),
+                request,
+                response,
+                new HelidonResourceInfo(HelidonResourceInfoTest.SampleService.class.getName(), "void doNothing()"));
+
+        assertTrue(result.isPresent());
+        verify(entity).buffer();
+    }
+
+    @Test
+    void shouldNotBufferBodylessRequest() throws Exception {
+        ReadableEntity entity = mock(ReadableEntity.class);
+        ServerRequest request = mockRequest(entity);
+        ServerResponse response = mockResponse();
+
+        when(entity.hasEntity()).thenReturn(false);
+
+        Optional<HelidonContainerRequestContext> result = HelidonContainerRequestFilterRunner.run(
+                context -> {
+                },
+                request,
+                response,
+                new HelidonResourceInfo(HelidonResourceInfoTest.SampleService.class.getName(), "void doNothing()"));
+
+        assertTrue(result.isPresent());
+        verify(entity, never()).buffer();
+    }
 
     @Test
     void shouldReturnContextWhenFilterAllowsRequest() throws Exception {
@@ -81,12 +146,18 @@ class HelidonContainerRequestFilterRunnerTest {
     }
 
     private static ServerRequest mockRequest() {
+        ReadableEntity entity = mock(ReadableEntity.class);
+        return mockRequest(entity);
+    }
+
+    private static ServerRequest mockRequest(ReadableEntity entity) {
         ServerRequest request = mock(ServerRequest.class);
         PeerInfo peerInfo = mock(PeerInfo.class);
 
         when(request.remotePeer()).thenReturn(peerInfo);
         when(peerInfo.tlsCertificates()).thenReturn(Optional.<Certificate[]>empty());
         when(request.headers()).thenReturn(ServerRequestHeaders.create());
+        when(request.content()).thenReturn(entity);
         return request;
     }
 
@@ -94,5 +165,23 @@ class HelidonContainerRequestFilterRunnerTest {
         ServerResponse response = mock(ServerResponse.class);
         when(response.status(anyInt())).thenReturn(response);
         return response;
+    }
+
+    private static final class ZeroLengthReadableEntity extends ReadableEntityBase {
+        private ZeroLengthReadableEntity() {
+            super(ignored -> BufferData.empty(), () -> {
+            }, 1);
+        }
+
+        @Override
+        protected <T> T entityAs(GenericType<T> type) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ReadableEntity copy(Runnable entityProcessedRunnable) {
+            entityProcessedRunnable.run();
+            return this;
+        }
     }
 }

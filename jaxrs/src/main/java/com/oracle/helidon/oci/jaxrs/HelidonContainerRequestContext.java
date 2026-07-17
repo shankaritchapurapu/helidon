@@ -201,7 +201,7 @@ public class HelidonContainerRequestContext implements ContainerRequestContext {
 
     @Override
     public boolean hasEntity() {
-        return getLength() > 0;
+        return request.content().hasEntity();
     }
 
     @Override

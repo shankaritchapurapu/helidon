@@ -8,15 +8,49 @@ import java.security.cert.X509Certificate;
 import java.util.Optional;
 
 import io.helidon.common.socket.PeerInfo;
+import io.helidon.http.ServerRequestHeaders;
+import io.helidon.http.media.ReadableEntity;
 import io.helidon.webserver.http.ServerRequest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class HelidonContainerRequestContextTest {
+
+    @Test
+    void shouldDetectEntityWithoutContentLength() {
+        ServerRequest request = mockRequest();
+        ReadableEntity entity = mock(ReadableEntity.class);
+
+        when(entity.hasEntity()).thenReturn(true);
+        when(request.content()).thenReturn(entity);
+
+        HelidonContainerRequestContext context = new HelidonContainerRequestContext(
+                request,
+                new HelidonResourceInfo(HelidonResourceInfoTest.SampleService.class.getName(), "void doNothing()"));
+
+        assertTrue(context.hasEntity());
+    }
+
+    @Test
+    void shouldDetectBodylessRequestFromHelidonEntityState() {
+        ServerRequest request = mockRequest();
+        ReadableEntity entity = mock(ReadableEntity.class);
+
+        when(entity.hasEntity()).thenReturn(false);
+        when(request.content()).thenReturn(entity);
+
+        HelidonContainerRequestContext context = new HelidonContainerRequestContext(
+                request,
+                new HelidonResourceInfo(HelidonResourceInfoTest.SampleService.class.getName(), "void doNothing()"));
+
+        assertFalse(context.hasEntity());
+    }
 
     @Test
     void shouldExposeTlsCertificatesAsRequestProperty() {
@@ -52,5 +86,15 @@ class HelidonContainerRequestContextTest {
                         "void doNothing()"));
 
         assertNull(context.getProperty(HelidonContainerRequestContext.X509_CERTIFICATE_PROPERTY));
+    }
+
+    private static ServerRequest mockRequest() {
+        ServerRequest request = mock(ServerRequest.class);
+        PeerInfo peerInfo = mock(PeerInfo.class);
+
+        when(request.remotePeer()).thenReturn(peerInfo);
+        when(peerInfo.tlsCertificates()).thenReturn(Optional.<Certificate[]>empty());
+        when(request.headers()).thenReturn(ServerRequestHeaders.create());
+        return request;
     }
 }

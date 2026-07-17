@@ -3,6 +3,7 @@
  */
 package com.oracle.helidon.oci.examples.identity;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -37,6 +38,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 abstract class IdentityEndpointBase {
     private static final System.Logger LOGGER = System.getLogger(IdentityEndpointBase.class.getName());
+    private static final String REQUEST_BODY = "Hello World";
 
     static {
         System.setProperty("jdk.httpclient.allowRestrictedHeaders", "host,content-length");
@@ -97,20 +99,75 @@ abstract class IdentityEndpointBase {
     }
 
     void testSplatCall(int status, String body, String path) throws Exception {
+        testSplatCall(status,
+                      body,
+                      path,
+                      HttpClient.Version.HTTP_1_1,
+                      HttpRequest.BodyPublishers.ofString(REQUEST_BODY));
+    }
+
+    void testSplatChunkedCall(int status, String body, String path) throws Exception {
+        testSplatCall(status,
+                      body,
+                      path,
+                      HttpClient.Version.HTTP_1_1,
+                      unknownLengthBodyPublisher(REQUEST_BODY));
+    }
+
+    void testSplatHttp2Call(int status, String body, String path) throws Exception {
+        testSplatCall(status,
+                      body,
+                      path,
+                      HttpClient.Version.HTTP_2,
+                      unknownLengthBodyPublisher(REQUEST_BODY));
+    }
+
+    void testSplatChunkedZeroLengthCall(int status, String body, String path) throws Exception {
+        testSplatCall(status,
+                      body,
+                      path,
+                      HttpClient.Version.HTTP_1_1,
+                      unknownLengthBodyPublisher(""));
+    }
+
+    void testSplatHttp2ZeroLengthCall(int status, String body, String path) throws Exception {
+        testSplatCall(status,
+                      body,
+                      path,
+                      HttpClient.Version.HTTP_2,
+                      unknownLengthBodyPublisher(""));
+    }
+
+    private void testSplatCall(int status,
+                               String body,
+                               String path,
+                               HttpClient.Version version,
+                               HttpRequest.BodyPublisher bodyPublisher) throws Exception {
         URI uri = URI.create(this.baseUri + path);
         // Test-only SPLAT simulation: in production these headers are supplied
         // only by trusted SPLAT/mTLS infrastructure after validation. Direct
         // clients must not inject or rely on these authorization-related headers.
         HttpRequest.Builder request = HttpRequest.newBuilder(uri)
+                .version(version)
                 .header(HeaderNames.CONTENT_TYPE.defaultCase(), ContentType.TEXT_PLAIN.toString())
                 .header(HeaderNames.ACCEPT.defaultCase(), ContentType.TEXT_PLAIN.toString())
                 .header(Principal.OPC_HEADER, serializedSplatPrincipal())
                 .header("oci-skip-authorization-for-splat", "true")
-                .POST(HttpRequest.BodyPublishers.ofString("Hello World"));
+                .POST(bodyPublisher);
 
-        try (HttpClient client = HttpClient.newHttpClient()) {
+        try (HttpClient client = HttpClient.newBuilder().version(version).build()) {
+            if (version == HttpClient.Version.HTTP_2) {
+                HttpRequest warmup = HttpRequest.newBuilder(URI.create(this.baseUri + "/identity"))
+                        .version(HttpClient.Version.HTTP_2)
+                        .GET()
+                        .build();
+                HttpResponse<Void> warmupResponse = client.send(warmup, HttpResponse.BodyHandlers.discarding());
+                assertThat(warmupResponse.statusCode(), is(Status.OK_200.code()));
+                assertThat(warmupResponse.version(), is(HttpClient.Version.HTTP_2));
+            }
             HttpResponse<String> response = client.send(request.build(), HttpResponse.BodyHandlers.ofString());
             assertThat(response.statusCode(), is(status));
+            assertThat(response.version(), is(version));
             if (status == Status.OK_200.code() && body != null) {
                 assertThat(response.body(), is(body));
             }
@@ -131,6 +188,27 @@ abstract class IdentityEndpointBase {
 
     void testSplatTwiceSuccess(int status, String body) throws Exception {
         testSplatCall(status, body, "/identity/twice");
+    }
+
+    void testSplatChunkedOnceSuccess(int status, String body) throws Exception {
+        testSplatChunkedCall(status, body, "/identity/once");
+    }
+
+    void testSplatHttp2OnceSuccess(int status, String body) throws Exception {
+        testSplatHttp2Call(status, body, "/identity/once");
+    }
+
+    void testSplatChunkedZeroLengthOnceSuccess(int status, String body) throws Exception {
+        testSplatChunkedZeroLengthCall(status, body, "/identity/once");
+    }
+
+    void testSplatHttp2ZeroLengthOnceSuccess(int status, String body) throws Exception {
+        testSplatHttp2ZeroLengthCall(status, body, "/identity/once");
+    }
+
+    private static HttpRequest.BodyPublisher unknownLengthBodyPublisher(String value) {
+        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+        return HttpRequest.BodyPublishers.ofInputStream(() -> new ByteArrayInputStream(bytes));
     }
 
     static byte[] readBodyBytes(Object body) throws IOException {
