@@ -14,7 +14,7 @@ import com.oracle.helidon.oci.codegen.OciRequestIdParameterCodegenProvider;
 /**
  * Code generation support for OCI.
  */
-module io.helidon.examples.oci.poc.codegen {
+module com.oracle.helidon.oci.codegen {
     requires io.helidon.codegen;
     requires io.helidon.codegen.classmodel;
     requires io.helidon.service.codegen;
