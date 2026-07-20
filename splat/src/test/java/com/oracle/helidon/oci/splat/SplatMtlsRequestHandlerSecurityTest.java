@@ -20,6 +20,7 @@ import io.helidon.http.HttpPrologue;
 import io.helidon.http.Method;
 import io.helidon.http.ServerRequestHeaders;
 import io.helidon.http.WritableHeaders;
+import io.helidon.http.media.ReadableEntity;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 
@@ -239,6 +240,9 @@ class SplatMtlsRequestHandlerSecurityTest {
                                                      .buildPrototype());
         when(request.headers()).thenReturn(headers);
         when(request.context()).thenReturn(Context.create());
+        ReadableEntity content = mock(ReadableEntity.class);
+        when(content.hasEntity()).thenReturn(false);
+        when(request.content()).thenReturn(content);
         return request;
     }
 
