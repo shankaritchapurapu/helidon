@@ -47,6 +47,7 @@ persistence_3_0.xsd
 service.loader
 /README
 target/
+etc/THIRD_PARTY.xml
 presentations/
 src/main/resources/META-INF/services
 src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker
