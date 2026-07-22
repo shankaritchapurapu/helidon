@@ -73,6 +73,12 @@ interface AuditV2ConfigBlueprint extends Prototype.Factory<AuditV2Feature> {
     boolean respectSplatAuditedFlag();
 
     /**
+     * CIDR ranges for proxies whose {@code X-Forwarded-For} header may be used for audit client attribution.
+     */
+    @Option.Configured
+    List<String> trustedProxyCidrs();
+
+    /**
      * Collection of request parameter rules (patterns).
      */
     @Option.Configured

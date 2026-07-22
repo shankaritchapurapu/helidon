@@ -124,6 +124,7 @@ Configure `AuditV2Filter` behavior using the `application.yaml` file.
 | oci.auditv2.resource-id                |                             | Resource identifier used when application code does not set one.                                      |
 | oci.auditv2.resource-name              |                             | Resource name used when application code does not set one.                                            |
 | oci.auditv2.respect-splat-audited-flag | true                        | Whether a request with trusted SPLAT provenance may use `oci-splat-audited: true` to disable duplicate auditing. The header alone is never trusted. |
+| oci.auditv2.trusted-proxy-cidrs        | []                          | CIDR ranges for load balancers or SPLAT proxies whose single-value `X-Forwarded-For` header may be used as the audit client IP. All other requests use the socket peer address. |
 | oci.auditv2.request-parameter-rules    | []                          | List of rules for filtering or auditing HTTP request parameters.                                      |
 | oci.auditv2.request-header-rules       | []                          | List of rules for filtering or auditing HTTP request headers.                                         |
 | oci.auditv2.response-header-rules      | []                          | List of rules for filtering or auditing HTTP response headers.                                        |
@@ -147,6 +148,7 @@ oci:
     resource-id: my-service
     resource-name: My Service
     respect-splat-audited-flag: true
+    trusted-proxy-cidrs: ["10.0.0.0/8"]
     request-parameter-rules:
       - resources: "/orders"
         actions: "POST"

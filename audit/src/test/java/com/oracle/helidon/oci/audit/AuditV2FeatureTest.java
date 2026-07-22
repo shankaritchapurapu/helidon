@@ -5,6 +5,7 @@
 package com.oracle.helidon.oci.audit;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,15 +19,30 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
+import io.helidon.common.context.Context;
+import io.helidon.common.socket.PeerInfo;
+import io.helidon.common.uri.UriInfo;
+import io.helidon.common.uri.UriPath;
 import io.helidon.http.HeaderName;
 import io.helidon.http.HeaderNames;
+import io.helidon.http.HeaderValues;
+import io.helidon.http.HttpPrologue;
+import io.helidon.http.Method;
+import io.helidon.http.ServerRequestHeaders;
 import io.helidon.http.Status;
+import io.helidon.http.WritableHeaders;
 import io.helidon.json.JsonArray;
 import io.helidon.json.JsonObject;
 import io.helidon.json.JsonParser;
 import io.helidon.webclient.http1.Http1ClientResponse;
+import io.helidon.webserver.http.FilterChain;
 import io.helidon.webserver.http.HttpRouting;
+import io.helidon.webserver.http.RoutingRequest;
+import io.helidon.webserver.http.RoutingResponse;
 import io.helidon.webserver.spi.ServerFeature;
 import io.helidon.webserver.testing.junit5.DirectClient;
 import io.helidon.webserver.testing.junit5.RoutingTest;
@@ -34,17 +50,18 @@ import io.helidon.webserver.testing.junit5.SetUpFeatures;
 import io.helidon.webserver.testing.junit5.SetUpRoute;
 import io.helidon.webserver.testing.junit5.Socket;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import com.oracle.helidon.oci.requestid.OciRequestId;
+import com.oracle.pic.sherlock.collector.AuditEventV2Validator;
 import com.oracle.pic.sherlock.collector.AuditLogger;
 import com.oracle.pic.sherlock.collector.AuditPayloadAppender;
 import com.oracle.pic.sherlock.collector.AuditRIO;
 import com.oracle.pic.sherlock.collector.OperationSynchronousType;
-import com.oracle.pic.sherlock.collector.AuditEventV2Validator;
 import com.oracle.pic.sherlock.common.event.AuditEventV2;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -54,6 +71,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RoutingTest
@@ -84,7 +102,7 @@ class AuditV2FeatureTest {
 
     @SetUpRoute
     static void setUp(HttpRouting.Builder router) {
-        router.get("/get", (req, res) -> {
+        io.helidon.webserver.http.Handler auditRioHandler = (req, res) -> {
             var optional = AuditPayloadAppenders.current(req);
             if (optional.isEmpty()) {
                 res.status(Status.NOT_ACCEPTABLE_406).send("AuditPayloadAppender not found");
@@ -95,8 +113,24 @@ class AuditV2FeatureTest {
                 appender.appendToAuditRios(List.of(new AuditRIO(DEFAULT_COMPARTMENT_ID, "resource-2")));
                 res.status(Status.OK_200).send();
             }
-        });
+        };
+        router.get("/get", auditRioHandler);
+        router.post("/get", auditRioHandler);
         router.get("/default", (req, res) -> res.status(Status.OK_200).send());
+        router.get("/failure", (req, res) -> {
+            throw new IllegalStateException("route failure");
+        });
+        router.post("/chunked-failure", (req, res) -> {
+            if (req.headers().contains(HeaderNames.CONTENT_LENGTH)) {
+                res.status(Status.BAD_REQUEST_400).send();
+                return;
+            }
+            throw new IllegalStateException("chunked route failure");
+        });
+        router.get("/mapped-failure", (req, res) -> {
+            throw new IllegalArgumentException("mapped route failure");
+        });
+        router.error(IllegalArgumentException.class, (req, res, e) -> res.status(Status.BAD_REQUEST_400).send());
         router.get("/special-summary", (req, res) -> {
             AuditPayloadAppenders.current(req).orElseThrow().setEventGroupingId(SPECIAL_GROUPING_ID);
             res.status(Status.OK_200).send();
@@ -146,6 +180,19 @@ class AuditV2FeatureTest {
                                 .actions("GET")
                                 .resources("/get")
                                 .values("opc-request-id")
+                                .build(),
+                        RuleConfig.builder()
+                                .actions("GET")
+                                .resources("/get")
+                                .values("Authorization|proxy-authorization|cookie|opc-principal|x-auth-token|x-id-token|"
+                                                + "x-obo-token|x-security-token|x-subject-token|x-cross-tenancy-request")
+                                .build(),
+                        RuleConfig.builder()
+                                .actions("POST")
+                                .resources("/get")
+                                .values("Authorization|proxy-authorization|cookie|opc-principal|x-auth-token|x-id-token|"
+                                                + "x-obo-token|x-security-token|x-subject-token|x-cross-tenancy-request|"
+                                                + "opc-request-id")
                                 .build()))
                 .responseHeaderRules(List.of(RuleConfig.builder()
                         .actions("GET")
@@ -265,7 +312,461 @@ class AuditV2FeatureTest {
     }
 
     @Test
-    void testSpoofedSplatAuditedHeaderDoesNotSuppressAudit() throws Exception {
+    void testUntrustedForwardedForDoesNotControlAuditIpAddress() throws Exception {
+        AuditLogger logger = Mockito.mock(AuditLogger.class);
+        AuditV2Filter filter = new AuditV2Filter(AuditV2Config.builder().buildPrototype(), logger);
+        RoutingRequest request = Mockito.mock(RoutingRequest.class, Mockito.RETURNS_DEEP_STUBS);
+        PeerInfo remotePeer = Mockito.mock(PeerInfo.class);
+        RoutingResponse response = Mockito.mock(RoutingResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+        HttpPrologue prologue = Mockito.mock(HttpPrologue.class);
+        AtomicReference<Runnable> whenSent = new AtomicReference<>();
+        ServerRequestHeaders headers = ServerRequestHeaders.create(WritableHeaders.create()
+                .add(HeaderValues.create(HeaderNames.X_FORWARDED_FOR, "203.0.113.55")));
+
+        Mockito.when(request.context()).thenReturn(Context.create());
+        Mockito.when(request.headers()).thenReturn(headers);
+        Mockito.when(request.remotePeer()).thenReturn(remotePeer);
+        Mockito.when(remotePeer.address()).thenReturn(new InetSocketAddress("198.51.100.10", 443));
+        Mockito.when(request.requestedUri().path().path()).thenReturn("/default");
+        Mockito.when(request.prologue()).thenReturn(prologue);
+        Mockito.when(prologue.method()).thenReturn(Method.GET);
+        Mockito.when(response.status()).thenReturn(Status.OK_200);
+        Mockito.when(response.whenSent(Mockito.any())).thenAnswer(invocation -> {
+            whenSent.set(invocation.getArgument(0));
+            return response;
+        });
+
+        filter.filter(chain, request, response);
+        whenSent.get().run();
+
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+        Mockito.verify(logger).log(captor.capture());
+        assertThat(captor.getValue().getData().getIdentity().getIpAddress(), is("198.51.100.10"));
+    }
+
+    @Test
+    void testTrustedProxyForwardedForControlsAuditIpAddress() throws Exception {
+        AuditLogger logger = Mockito.mock(AuditLogger.class);
+        AuditV2Config config = AuditV2Config.builder()
+                .trustedProxyCidrs(List.of("198.51.100.0/24"))
+                .buildPrototype();
+        AuditV2Filter filter = new AuditV2Filter(config, logger);
+        RoutingRequest request = Mockito.mock(RoutingRequest.class, Mockito.RETURNS_DEEP_STUBS);
+        PeerInfo remotePeer = Mockito.mock(PeerInfo.class);
+        RoutingResponse response = Mockito.mock(RoutingResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+        HttpPrologue prologue = Mockito.mock(HttpPrologue.class);
+        AtomicReference<Runnable> whenSent = new AtomicReference<>();
+        ServerRequestHeaders headers = ServerRequestHeaders.create(WritableHeaders.create()
+                .add(HeaderValues.create(HeaderNames.X_FORWARDED_FOR, "203.0.113.55")));
+
+        Mockito.when(request.context()).thenReturn(Context.create());
+        Mockito.when(request.headers()).thenReturn(headers);
+        Mockito.when(request.remotePeer()).thenReturn(remotePeer);
+        Mockito.when(remotePeer.address()).thenReturn(new InetSocketAddress("198.51.100.10", 443));
+        Mockito.when(request.requestedUri().path().path()).thenReturn("/default");
+        Mockito.when(request.prologue()).thenReturn(prologue);
+        Mockito.when(prologue.method()).thenReturn(Method.GET);
+        Mockito.when(response.status()).thenReturn(Status.OK_200);
+        Mockito.when(response.whenSent(Mockito.any())).thenAnswer(invocation -> {
+            whenSent.set(invocation.getArgument(0));
+            return response;
+        });
+
+        filter.filter(chain, request, response);
+        whenSent.get().run();
+
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+        Mockito.verify(logger).log(captor.capture());
+        assertThat(captor.getValue().getData().getIdentity().getIpAddress(), is("203.0.113.55"));
+    }
+
+    @Test
+    void testTrustedProxyDuplicateForwardedForDoesNotControlAuditIpAddress() throws Exception {
+        AuditLogger logger = Mockito.mock(AuditLogger.class);
+        AuditV2Config config = AuditV2Config.builder()
+                .trustedProxyCidrs(List.of("198.51.100.0/24"))
+                .buildPrototype();
+        AuditV2Filter filter = new AuditV2Filter(config, logger);
+        RoutingRequest request = Mockito.mock(RoutingRequest.class, Mockito.RETURNS_DEEP_STUBS);
+        PeerInfo remotePeer = Mockito.mock(PeerInfo.class);
+        RoutingResponse response = Mockito.mock(RoutingResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+        HttpPrologue prologue = Mockito.mock(HttpPrologue.class);
+        AtomicReference<Runnable> whenSent = new AtomicReference<>();
+        ServerRequestHeaders headers = ServerRequestHeaders.create(WritableHeaders.create()
+                .add(HeaderValues.create(HeaderNames.X_FORWARDED_FOR, "203.0.113.55"))
+                .add(HeaderValues.create(HeaderNames.X_FORWARDED_FOR, "198.51.100.10")));
+
+        Mockito.when(request.context()).thenReturn(Context.create());
+        Mockito.when(request.headers()).thenReturn(headers);
+        Mockito.when(request.remotePeer()).thenReturn(remotePeer);
+        Mockito.when(remotePeer.address()).thenReturn(new InetSocketAddress("198.51.100.10", 443));
+        Mockito.when(request.requestedUri().path().path()).thenReturn("/default");
+        Mockito.when(request.prologue()).thenReturn(prologue);
+        Mockito.when(prologue.method()).thenReturn(Method.GET);
+        Mockito.when(response.status()).thenReturn(Status.OK_200);
+        Mockito.when(response.whenSent(Mockito.any())).thenAnswer(invocation -> {
+            whenSent.set(invocation.getArgument(0));
+            return response;
+        });
+
+        filter.filter(chain, request, response);
+        whenSent.get().run();
+
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+        Mockito.verify(logger).log(captor.capture());
+        assertThat(captor.getValue().getData().getIdentity().getIpAddress(), is("198.51.100.10"));
+    }
+
+    @Test
+    void testInvalidTrustedProxyCidrsAreRejected() {
+        assertThrows(IllegalArgumentException.class,
+                     () -> new AuditV2Filter(AuditV2Config.builder()
+                             .trustedProxyCidrs(List.of("10/8"))
+                             .buildPrototype(),
+                             Mockito.mock(AuditLogger.class)));
+        assertThrows(IllegalArgumentException.class,
+                     () -> new AuditV2Filter(AuditV2Config.builder()
+                             .trustedProxyCidrs(List.of("1.2.3.999/24"))
+                             .buildPrototype(),
+                             Mockito.mock(AuditLogger.class)));
+    }
+
+    @Test
+    void testTrustedProxyMalformedForwardedForDoesNotControlAuditIpAddress() throws Exception {
+        AuditLogger logger = Mockito.mock(AuditLogger.class);
+        AuditV2Config config = AuditV2Config.builder()
+                .trustedProxyCidrs(List.of("198.51.100.0/24"))
+                .buildPrototype();
+        AuditV2Filter filter = new AuditV2Filter(config, logger);
+        RoutingRequest request = Mockito.mock(RoutingRequest.class, Mockito.RETURNS_DEEP_STUBS);
+        PeerInfo remotePeer = Mockito.mock(PeerInfo.class);
+        RoutingResponse response = Mockito.mock(RoutingResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+        HttpPrologue prologue = Mockito.mock(HttpPrologue.class);
+        AtomicReference<Runnable> whenSent = new AtomicReference<>();
+        ServerRequestHeaders headers = ServerRequestHeaders.create(WritableHeaders.create()
+                .add(HeaderValues.create(HeaderNames.X_FORWARDED_FOR, "1.2.3.999")));
+
+        Mockito.when(request.context()).thenReturn(Context.create());
+        Mockito.when(request.headers()).thenReturn(headers);
+        Mockito.when(request.remotePeer()).thenReturn(remotePeer);
+        Mockito.when(remotePeer.address()).thenReturn(new InetSocketAddress("198.51.100.10", 443));
+        Mockito.when(request.requestedUri().path().path()).thenReturn("/default");
+        Mockito.when(request.prologue()).thenReturn(prologue);
+        Mockito.when(prologue.method()).thenReturn(Method.GET);
+        Mockito.when(response.status()).thenReturn(Status.OK_200);
+        Mockito.when(response.whenSent(Mockito.any())).thenAnswer(invocation -> {
+            whenSent.set(invocation.getArgument(0));
+            return response;
+        });
+
+        filter.filter(chain, request, response);
+        whenSent.get().run();
+
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+        Mockito.verify(logger).log(captor.capture());
+        assertThat(captor.getValue().getData().getIdentity().getIpAddress(), is("198.51.100.10"));
+    }
+
+    @Test
+    void testAuditEmissionWaitsForChainCompletion() throws Exception {
+        AuditLogger logger = Mockito.mock(AuditLogger.class);
+        AuditV2Filter filter = new AuditV2Filter(AuditV2Config.builder().buildPrototype(), logger);
+        RoutingRequest request = Mockito.mock(RoutingRequest.class, Mockito.RETURNS_DEEP_STUBS);
+        PeerInfo remotePeer = Mockito.mock(PeerInfo.class);
+        RoutingResponse response = Mockito.mock(RoutingResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+        HttpPrologue prologue = Mockito.mock(HttpPrologue.class);
+        AtomicReference<Runnable> whenSent = new AtomicReference<>();
+        Context context = Context.create();
+
+        Mockito.when(request.context()).thenReturn(context);
+        Mockito.when(request.headers()).thenReturn(ServerRequestHeaders.create(WritableHeaders.create()));
+        Mockito.when(request.remotePeer()).thenReturn(remotePeer);
+        Mockito.when(remotePeer.address()).thenReturn(new InetSocketAddress("198.51.100.10", 443));
+        Mockito.when(request.requestedUri().path().path()).thenReturn("/chain-completion");
+        Mockito.when(request.prologue()).thenReturn(prologue);
+        Mockito.when(prologue.method()).thenReturn(Method.GET);
+        Mockito.when(response.status()).thenReturn(Status.OK_200);
+        Mockito.when(response.whenSent(Mockito.any())).thenAnswer(invocation -> {
+            whenSent.set(invocation.getArgument(0));
+            return response;
+        });
+        Mockito.doAnswer(invocation -> {
+            whenSent.get().run();
+            AuditPayloadAppenders.require(request).appendToAuditRios(List.of(new AuditRIO(DEFAULT_COMPARTMENT_ID,
+                                                                               "late-resource")));
+            return null;
+        }).when(chain).proceed();
+
+        filter.filter(chain, request, response);
+
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+        Mockito.verify(logger).log(captor.capture());
+        assertThat(captor.getValue().getData().getResourceId(), is("late-resource"));
+    }
+
+    @Test
+    void testAuditEmissionFallsBackWhenStreamingResponseWriteFails() throws Exception {
+        AuditLogger logger = Mockito.mock(AuditLogger.class);
+        AuditV2Filter filter = new AuditV2Filter(AuditV2Config.builder().buildPrototype(), logger);
+        RoutingRequest request = Mockito.mock(RoutingRequest.class, Mockito.RETURNS_DEEP_STUBS);
+        PeerInfo remotePeer = Mockito.mock(PeerInfo.class);
+        RoutingResponse response = Mockito.mock(RoutingResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+        HttpPrologue prologue = Mockito.mock(HttpPrologue.class);
+        Context context = Context.create();
+
+        Mockito.when(request.context()).thenReturn(context);
+        Mockito.when(request.headers()).thenReturn(ServerRequestHeaders.create(WritableHeaders.create()));
+        Mockito.when(request.remotePeer()).thenReturn(remotePeer);
+        Mockito.when(remotePeer.address()).thenReturn(new InetSocketAddress("198.51.100.10", 443));
+        Mockito.when(request.requestedUri().path().path()).thenReturn("/write-failure");
+        Mockito.when(request.prologue()).thenReturn(prologue);
+        Mockito.when(prologue.method()).thenReturn(Method.GET);
+        Mockito.when(response.status()).thenReturn(Status.OK_200);
+        Mockito.when(response.hasEntity()).thenReturn(true);
+        Mockito.when(response.whenSent(Mockito.any())).thenReturn(response);
+
+        filter.filter(chain, request, response);
+
+        Mockito.verify(logger).log(Mockito.any(AuditEventV2.class));
+    }
+
+    @Test
+    void testWhitelistedCredentialHeadersAreMaskedAndRequestIdRetained() throws Exception {
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+
+        try (Http1ClientResponse response = client.post("/get")
+                .header(HeaderNames.AUTHORIZATION, "authorization-secret")
+                .header(HeaderNames.create("opc-principal"), "principal-secret")
+                .header(HeaderNames.create("x-auth-token"), "auth-token-secret")
+                .header(HeaderNames.create("x-id-token"), "id-token-secret")
+                .header(HeaderNames.create("x-obo-token"), "obo-secret")
+                .header(HeaderNames.create("x-security-token"), "security-token-secret")
+                .header(HeaderNames.create("x-subject-token"), "subject-secret")
+                .header(HeaderNames.create("x-cross-tenancy-request"), "cross-tenancy-secret")
+                .header(OPC_REQUEST_ID_HEADER, "request-id")
+                .submit("")) {
+            assertThat(response.status(), is(Status.OK_200));
+        }
+
+        Mockito.verify(auditLogger, Mockito.timeout(2000).atLeast(2)).log(captor.capture());
+        Map<String, String[]> headers = captor.getAllValues().get(0).getData().getRequest().getHeaders();
+        for (String headerName : List.of("authorization", "opc-principal", "x-auth-token", "x-id-token",
+                                         "x-obo-token", "x-security-token", "x-subject-token",
+                                         "x-cross-tenancy-request")) {
+            String[] values = headers.entrySet().stream()
+                    .filter(entry -> headerName.equalsIgnoreCase(entry.getKey()))
+                    .map(Map.Entry::getValue)
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Missing " + headerName + " from " + headers.keySet()));
+            assertThat(values, is(new String[] {"*****"}));
+        }
+        String[] requestId = headers.entrySet().stream()
+                .filter(entry -> OPC_REQUEST_ID_HEADER.lowerCase().equalsIgnoreCase(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Missing " + OPC_REQUEST_ID_HEADER + " from " + headers.keySet()));
+        assertThat(requestId.length, is(1));
+        assertThat(requestId[0], is(not("*****")));
+    }
+
+    @Test
+    void testCookieAndProxyAuthorizationAreMasked() throws Exception {
+        AuditLogger logger = Mockito.mock(AuditLogger.class);
+        AuditV2Config config = AuditV2Config.builder()
+                .requestHeaderRules(List.of(RuleConfig.builder()
+                        .actions("POST")
+                        .resources("/credential-test")
+                        .values("Cookie|Proxy-Authorization")
+                        .build()))
+                .buildPrototype();
+        AuditV2Filter filter = new AuditV2Filter(config, logger);
+        RoutingRequest request = Mockito.mock(RoutingRequest.class, Mockito.RETURNS_DEEP_STUBS);
+        RoutingResponse response = Mockito.mock(RoutingResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+        HttpPrologue prologue = Mockito.mock(HttpPrologue.class);
+        UriInfo uriInfo = Mockito.mock(UriInfo.class);
+        UriPath uriPath = Mockito.mock(UriPath.class);
+        AtomicReference<Runnable> whenSent = new AtomicReference<>();
+        ServerRequestHeaders headers = ServerRequestHeaders.create(WritableHeaders.create()
+                .add(HeaderValues.create("cookie", "cookie-secret"))
+                .add(HeaderValues.create("proxy-authorization", "proxy-authorization-secret")));
+
+        Mockito.when(request.context()).thenReturn(Context.create());
+        Mockito.when(request.headers()).thenReturn(headers);
+        Mockito.when(request.requestedUri()).thenReturn(uriInfo);
+        Mockito.when(uriInfo.path()).thenReturn(uriPath);
+        Mockito.when(uriPath.path()).thenReturn("/credential-test");
+        Mockito.when(request.prologue()).thenReturn(prologue);
+        Mockito.when(prologue.method()).thenReturn(Method.POST);
+        Mockito.when(response.status()).thenReturn(Status.OK_200);
+        Mockito.when(response.whenSent(Mockito.any())).thenAnswer(invocation -> {
+            whenSent.set(invocation.getArgument(0));
+            return response;
+        });
+
+        filter.filter(chain, request, response);
+        whenSent.get().run();
+
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+        Mockito.verify(logger).log(captor.capture());
+        assertThat(captor.getValue().getData().getRequest().getPath(), is("/credential-test"));
+        assertThat(captor.getValue().getData().getRequest().getAction(), is("POST"));
+        Map<String, String[]> eventHeaders = captor.getValue().getData().getRequest().getHeaders();
+        for (String headerName : List.of("cookie", "proxy-authorization")) {
+            String[] values = eventHeaders.entrySet().stream()
+                    .filter(entry -> headerName.equalsIgnoreCase(entry.getKey()))
+                    .map(Map.Entry::getValue)
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("Missing " + headerName + " from " + eventHeaders.keySet()));
+            assertThat(values, is(new String[] {"*****"}));
+        }
+    }
+
+    @Test
+    void testLoggerRuntimeExceptionDoesNotSuppressLaterEvents() throws Exception {
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+        var failureLog = new AtomicReference<LogRecord>();
+        CountDownLatch failureLogCaptured = new CountDownLatch(1);
+        Logger logger = Logger.getLogger(AuditV2Filter.class.getName());
+        Handler handler = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                failureLog.set(record);
+                failureLogCaptured.countDown();
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        logger.addHandler(handler);
+        Mockito.doThrow(new IllegalStateException("serialization failure"))
+                .doNothing()
+                .when(auditLogger)
+                .log(Mockito.any(AuditEventV2.class));
+
+        try {
+            try (Http1ClientResponse response = client.get("/get").request()) {
+                assertThat(response.status(), is(Status.OK_200));
+            }
+            assertTrue(failureLogCaptured.await(2, TimeUnit.SECONDS), "Audit logger failure was not reported");
+        } finally {
+            logger.removeHandler(handler);
+        }
+
+        Mockito.verify(auditLogger, Mockito.timeout(2000).times(2)).log(captor.capture());
+        assertThat(captor.getAllValues().size(), is(2));
+        assertThat(captor.getAllValues().get(0).getEventId(), is(not(captor.getAllValues().get(1).getEventId())));
+        assertThat(failureLog.get().getMessage(),
+                   is("Failed to log audit event " + captor.getAllValues().get(0).getEventId()));
+    }
+
+    @Test
+    void testAuditLoggerFailureDoesNotLogAuditEventContents() throws Exception {
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+        var failureLog = new AtomicReference<LogRecord>();
+        CountDownLatch failureLogCaptured = new CountDownLatch(1);
+        Logger logger = Logger.getLogger(AuditV2Filter.class.getName());
+        Handler handler = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                failureLog.set(record);
+                failureLogCaptured.countDown();
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        logger.addHandler(handler);
+        Mockito.doThrow(new IOException("audit backend unavailable"))
+                .when(auditLogger)
+                .log(Mockito.any(AuditEventV2.class));
+
+        try {
+            try (Http1ClientResponse response = client.get("/default").request()) {
+                assertThat(response.status(), is(Status.OK_200));
+            }
+            assertTrue(failureLogCaptured.await(2, TimeUnit.SECONDS), "Audit logger failure was not reported");
+        } finally {
+            logger.removeHandler(handler);
+        }
+
+        Mockito.verify(auditLogger, Mockito.timeout(2000).atLeastOnce()).log(captor.capture());
+        LogRecord record = failureLog.get();
+        assertThat(record, notNullValue());
+        assertThat(record.getMessage(), is("Failed to log audit event " + captor.getValue().getEventId()));
+    }
+
+    @Test
+    void testUncaughtHandlerFailureIsAuditedAsServerError() throws Exception {
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+
+        try (Http1ClientResponse response = client.get("/failure").request()) {
+            assertThat(response.status(), is(Status.INTERNAL_SERVER_ERROR_500));
+        }
+
+        Mockito.verify(auditLogger, Mockito.timeout(2000).atLeastOnce()).log(captor.capture());
+        AuditEventV2 event = captor.getAllValues()
+                .stream()
+                .filter(it -> "/failure".equals(it.getData().getRequest().getPath()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(event.getData().getResponse().getStatus(), is("500 Internal Server Error"));
+    }
+
+    @Test
+    void testChunkedPostHandlerFailureIsAuditedAsServerError() throws Exception {
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+
+        try (Http1ClientResponse response = client.post("/chunked-failure")
+                .header(HeaderNames.TRANSFER_ENCODING, "chunked")
+                .outputStream(output -> output.write("request body".getBytes(StandardCharsets.UTF_8)))) {
+            assertThat(response.status(), is(Status.INTERNAL_SERVER_ERROR_500));
+        }
+
+        Mockito.verify(auditLogger, Mockito.timeout(2000).atLeastOnce()).log(captor.capture());
+        AuditEventV2 event = captor.getAllValues()
+                .stream()
+                .filter(it -> "/chunked-failure".equals(it.getData().getRequest().getPath()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(event.getData().getResponse().getStatus(), is("500 Internal Server Error"));
+    }
+
+    @Test
+    void testExceptionMappedToClientErrorUsesFinalResponseStatus() throws Exception {
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+
+        try (Http1ClientResponse response = client.get("/mapped-failure").request()) {
+            assertThat(response.status(), is(Status.BAD_REQUEST_400));
+        }
+
+        Mockito.verify(auditLogger, Mockito.timeout(2000).atLeastOnce()).log(captor.capture());
+        AuditEventV2 event = captor.getAllValues()
+                .stream()
+                .filter(it -> "/mapped-failure".equals(it.getData().getRequest().getPath()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(event.getData().getResponse().getStatus(), is("400 Bad Request"));
+    }
+
+    @Test
+    void testUnauthenticatedSplatAuditedHeaderDoesNotSuppressAudit() throws Exception {
         var captor = ArgumentCaptor.forClass(AuditEventV2.class);
 
         try (Http1ClientResponse response = client.get("/default")
@@ -274,11 +775,17 @@ class AuditV2FeatureTest {
             assertThat(response.status(), is(Status.OK_200));
         }
 
-        Mockito.verify(auditLogger, Mockito.timeout(2000).atLeastOnce()).log(captor.capture());
-        assertThat(captor.getAllValues()
-                           .stream()
-                           .anyMatch(event -> "/default".equals(event.getData().getRequest().getPath())),
-                   is(true));
+        Mockito.verify(auditLogger, Mockito.timeout(2000).times(1)).log(captor.capture());
+        assertThat(captor.getValue().getData().getRequest().getPath(), is("/default"));
+
+        Mockito.clearInvocations(auditLogger);
+
+        try (Http1ClientResponse response = client.get("/default").request()) {
+            assertThat(response.status(), is(Status.OK_200));
+        }
+
+        Mockito.verify(auditLogger, Mockito.timeout(2000).times(1)).log(captor.capture());
+        assertThat(captor.getValue().getData().getRequest().getPath(), is("/default"));
     }
 
     @Test
@@ -319,6 +826,7 @@ class AuditV2FeatureTest {
         assertThat(config.compartmentId(), is(""));
         assertThat(config.resourceId(), is(""));
         assertThat(config.resourceName(), is(""));
+        assertThat(config.trustedProxyCidrs(), is(List.of()));
     }
 
     @Test
@@ -413,6 +921,41 @@ class AuditV2FeatureTest {
         assertThat(requestIdHeader[0], not(containsString("!")));
         assertThat(requestIdHeader[0], not(containsString("?")));
         assertThat(requestIdHeader[0], not(containsString("$")));
+    }
+
+    @Test
+    void testRequestIdContextDoesNotSetConsoleSessionId() throws Exception {
+        AuditLogger logger = Mockito.mock(AuditLogger.class);
+        AuditV2Filter filter = new AuditV2Filter(AuditV2Config.builder().buildPrototype(), logger);
+        RoutingRequest request = Mockito.mock(RoutingRequest.class, Mockito.RETURNS_DEEP_STUBS);
+        PeerInfo remotePeer = Mockito.mock(PeerInfo.class);
+        RoutingResponse response = Mockito.mock(RoutingResponse.class);
+        FilterChain chain = Mockito.mock(FilterChain.class);
+        HttpPrologue prologue = Mockito.mock(HttpPrologue.class);
+        AtomicReference<Runnable> whenSent = new AtomicReference<>();
+        Context context = Context.create();
+        context.register(OciRequestId.parseUpstreamRequest("csidVictimSession/trace"));
+
+        Mockito.when(request.context()).thenReturn(context);
+        Mockito.when(request.headers()).thenReturn(ServerRequestHeaders.create(WritableHeaders.create()));
+        Mockito.when(request.remotePeer()).thenReturn(remotePeer);
+        Mockito.when(remotePeer.address()).thenReturn(new InetSocketAddress("198.51.100.10", 443));
+        Mockito.when(request.requestedUri().path().path()).thenReturn("/request-id-context");
+        Mockito.when(request.prologue()).thenReturn(prologue);
+        Mockito.when(prologue.method()).thenReturn(Method.GET);
+        Mockito.when(response.status()).thenReturn(Status.OK_200);
+        Mockito.when(response.whenSent(Mockito.any())).thenAnswer(invocation -> {
+            whenSent.set(invocation.getArgument(0));
+            return response;
+        });
+
+        filter.filter(chain, request, response);
+        whenSent.get().run();
+
+        var captor = ArgumentCaptor.forClass(AuditEventV2.class);
+        Mockito.verify(logger).log(captor.capture());
+        assertThat(captor.getValue().getData().getRequest().getId(), containsString("csidVictimSession"));
+        assertThat(captor.getValue().getData().getIdentity().getConsoleSessionId(), nullValue());
     }
 
     private static String auditLine(AuditEventV2 event) {

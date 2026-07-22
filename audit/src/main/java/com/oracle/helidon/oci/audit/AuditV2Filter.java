@@ -4,7 +4,7 @@
 
 package com.oracle.helidon.oci.audit;
 
-import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -13,7 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -71,16 +74,31 @@ class AuditV2Filter implements Filter {
     private static final String APPENDER_ATTRIBUTE_NAME = AuditPayloadAppender.class.getName();
     private static final String SPLAT_REQUEST_VALIDATED_CONTEXT_KEY =
             "com.oracle.helidon.oci.splat.requestValidated";
+    private static final Set<String> SENSITIVE_REQUEST_HEADER_NAMES = Set.of(
+            HeaderNames.AUTHORIZATION.lowerCase(),
+            HeaderNames.PROXY_AUTHORIZATION.lowerCase(),
+            HeaderNames.COOKIE.lowerCase(),
+            REQUEST_OPC_PRINCIPAL_NAME.lowerCase(),
+            "x-auth-token",
+            "x-id-token",
+            "x-obo-token",
+            "x-security-token",
+            "x-subject-token",
+            "x-cross-tenancy-request");
     static final String EVENT_TYPE = "com.oraclecloud";
 
     private final AuditLogger auditLogger;
     private final AuditV2Config auditConfig;
     private final Whitelister whitelister;
+    private final List<TrustedProxyCidr> trustedProxyCidrs;
 
     AuditV2Filter(AuditV2Config config, AuditLogger auditLogger) {
         this.auditConfig = config;
         this.auditLogger = auditLogger;
         this.whitelister = whitelister();
+        this.trustedProxyCidrs = config.trustedProxyCidrs().stream()
+                .map(TrustedProxyCidr::parse)
+                .toList();
         LOGGER.info("AuditV2Filter will be invoked on each request");
     }
 
@@ -88,6 +106,9 @@ class AuditV2Filter implements Filter {
     public void filter(FilterChain filterChain, RoutingRequest request, RoutingResponse response) {
         AuditEventV2 event = auditEventV2(UUID.randomUUID().toString(), request);
         AuditPayloadAppenderImpl appender = new AuditPayloadAppenderImpl(event);
+        AtomicBoolean chainCompleted = new AtomicBoolean();
+        AtomicBoolean responseSent = new AtomicBoolean();
+        AtomicBoolean auditEmitted = new AtomicBoolean();
         // Keep the appender injectable even when emission is skipped.
         request.context().register(APPENDER_ATTRIBUTE_NAME, appender);
         if (attachSummary(request)) {
@@ -98,19 +119,31 @@ class AuditV2Filter implements Filter {
                 }
             });
         }
+        Runnable emitAudit = () -> {
+            if (!chainCompleted.get() || !auditEmitted.compareAndSet(false, true) || skipAuditDueToSplat(request)) {
+                return;
+            }
+            addResponse(response, event.getData().getRequest(), event.getData().getResponse());
+            List<AuditEventV2> events = generateEvents(appender, request, response);
+            for (AuditEventV2 ev : events) {
+                try {
+                    auditLogger.log(ev);
+                } catch (Exception e) {
+                    LOGGER.log(Level.SEVERE, "Failed to log audit event " + ev.getEventId(), e);
+                }
+            }
+        };
+        response.whenSent(() -> {
+            responseSent.set(true);
+            emitAudit.run();
+        });
         try {
             filterChain.proceed();
         } finally {
-            if (!skipAuditDueToSplat(request)) {
-                addResponse(response, event.getData().getRequest(), event.getData().getResponse());
-                List<AuditEventV2> events = generateEvents(appender, request, response);
-                for (AuditEventV2 ev : events) {
-                    try {
-                        auditLogger.log(ev);
-                    } catch (IOException e) {
-                        LOGGER.log(Level.SEVERE, "Failed to log audit event " + event, e);
-                    }
-                }
+            chainCompleted.set(true);
+            // A response write can fail after the entity is started but before whenSent callbacks run.
+            if (responseSent.get() || response.isSent() || response.hasEntity()) {
+                emitAudit.run();
             }
         }
     }
@@ -284,16 +317,16 @@ class AuditV2Filter implements Filter {
                 .build();
         identity.setTenantId(auditConfig.tenantId());
         ServerRequestHeaders headers = request.headers();
-        // Obtain IP from header or from the request itself
-        headers.find(HeaderNames.X_FORWARDED_FOR).ifPresentOrElse(
-                header -> identity.setIpAddress(header.get()),
-                () -> {
-                    if (request.remotePeer().address() instanceof InetSocketAddress isa) {
-                        if (isa.getAddress() != null) {
-                            identity.setIpAddress(isa.getAddress().getHostAddress());
-                        }
-                    }
-                });
+        remotePeerAddress(request).ifPresent(remoteAddress -> {
+            // X-Forwarded-For is trusted only when the direct peer is explicitly configured.
+            if (isTrustedProxy(remoteAddress)) {
+                forwardedForAddress(headers).ifPresentOrElse(
+                        forwardedAddress -> identity.setIpAddress(forwardedAddress.getHostAddress()),
+                        () -> identity.setIpAddress(remoteAddress.getHostAddress()));
+            } else {
+                identity.setIpAddress(remoteAddress.getHostAddress());
+            }
+        });
         headers.find(HeaderNames.USER_AGENT).ifPresent(header -> identity.setUserAgent(header.get()));
         req.setPath(path);
         req.setAction(action);
@@ -302,15 +335,103 @@ class AuditV2Filter implements Filter {
                 .map(OciRequestId::upstreamHeaderValue)
                 .orElse(eventId);
         req.setId(requestIdHeaderValue);
-        if (requestIdHeaderValue.toLowerCase().startsWith("csid")) {
-            int idx = requestIdHeaderValue.indexOf('/');
-            if (idx > 0) {
-                identity.setConsoleSessionId(requestIdHeaderValue.substring(0, idx));
-            }
-        }
         addRequestHeaders(request, req, requestIdHeaderValue);
         addRequestParameters(request, req);
         return data;
+    }
+
+    private boolean isTrustedProxy(InetAddress remoteAddress) {
+        return trustedProxyCidrs.stream().anyMatch(cidr -> cidr.contains(remoteAddress));
+    }
+
+    private static Optional<InetAddress> remotePeerAddress(RoutingRequest request) {
+        if (request.remotePeer().address() instanceof InetSocketAddress isa) {
+            return Optional.ofNullable(isa.getAddress());
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<InetAddress> forwardedForAddress(ServerRequestHeaders headers) {
+        return headers.find(HeaderNames.X_FORWARDED_FOR)
+                .filter(header -> header.valueCount() == 1)
+                .map(Header::get)
+                .flatMap(AuditV2Filter::literalIpAddress);
+    }
+
+    private static Optional<InetAddress> literalIpAddress(String value) {
+        String candidate = value.trim();
+        if (candidate.contains(",") || candidate.contains("%")) {
+            return Optional.empty();
+        }
+        try {
+            if (candidate.matches("[0-9.]+") && isIpv4Literal(candidate)) {
+                return Optional.of(InetAddress.ofLiteral(candidate));
+            }
+            if (candidate.contains(":")) {
+                return Optional.of(InetAddress.ofLiteral(candidate));
+            }
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+        return Optional.empty();
+    }
+
+    private static boolean isIpv4Literal(String value) {
+        String[] octets = value.split("\\.", -1);
+        if (octets.length != 4) {
+            return false;
+        }
+        for (String octet : octets) {
+            try {
+                if (octet.isEmpty() || Integer.parseInt(octet) > 255) {
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private record TrustedProxyCidr(InetAddress network, int prefixLength) {
+        private static TrustedProxyCidr parse(String value) {
+            String[] parts = value.split("/", -1);
+            if (parts.length != 2) {
+                throw new IllegalArgumentException("Invalid trusted proxy CIDR: " + value);
+            }
+            InetAddress network = literalIpAddress(parts[0])
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid trusted proxy CIDR: " + value));
+            try {
+                int prefixLength = Integer.parseInt(parts[1]);
+                int maxPrefixLength = network.getAddress().length * Byte.SIZE;
+                if (prefixLength < 0 || prefixLength > maxPrefixLength) {
+                    throw new IllegalArgumentException("Invalid trusted proxy CIDR: " + value);
+                }
+                return new TrustedProxyCidr(network, prefixLength);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid trusted proxy CIDR: " + value, e);
+            }
+        }
+
+        private boolean contains(InetAddress address) {
+            byte[] networkBytes = network.getAddress();
+            byte[] addressBytes = address.getAddress();
+            if (networkBytes.length != addressBytes.length) {
+                return false;
+            }
+            int completeBytes = prefixLength / Byte.SIZE;
+            for (int i = 0; i < completeBytes; i++) {
+                if (networkBytes[i] != addressBytes[i]) {
+                    return false;
+                }
+            }
+            int remainingBits = prefixLength % Byte.SIZE;
+            if (remainingBits == 0) {
+                return true;
+            }
+            int mask = 0xFF << (Byte.SIZE - remainingBits);
+            return (networkBytes[completeBytes] & mask) == (addressBytes[completeBytes] & mask);
+        }
     }
 
     static String generateEventType(String serviceName, String eventName, OperationSynchronousType syncType) {
@@ -350,10 +471,9 @@ class AuditV2Filter implements Filter {
                 if (whitelister.requestHeaderAllowed(req.getPath(), req.getAction(), header.name())) {
                     String[] values = header.allValues().toArray(new String[0]);
                     // Even if white listed, mask sensitive headers
-                    if (HeaderNames.AUTHORIZATION.lowerCase().equals(header.name())
-                            || REQUEST_OPC_PRINCIPAL_NAME.lowerCase().equals(header.name())) {
+                    if (SENSITIVE_REQUEST_HEADER_NAMES.contains(header.headerName().lowerCase())) {
                         values = new String[] {"*****"};
-                    } else if (REQUEST_ID_HEADER_NAME.lowerCase().equals(header.name())) {
+                    } else if (REQUEST_ID_HEADER_NAME.lowerCase().equals(header.headerName().lowerCase())) {
                         values = new String[] {requestIdHeaderValue};
                     }
                     headers.put(header.name().toString(), values);
