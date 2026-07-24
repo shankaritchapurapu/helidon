@@ -60,6 +60,17 @@
         <dependency>
             <groupId>com.oracle.pic.bling</groupId>
             <artifactId>lease-kiev</artifactId>
+            <exclusions>
+                <!-- https://jira.oci.oraclecorp.com/browse/BLING-5166 -->
+                <exclusion>
+                    <groupId>org.apache.maven.surefire</groupId>
+                    <artifactId>surefire-booter</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.maven.surefire</groupId>
+                    <artifactId>common-java5</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.helidon.config</groupId>

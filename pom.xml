@@ -20,7 +20,7 @@
     <name>Helidon OCI Project</name>
 
     <properties>
-        <helidon.version>4.5.1-M1</helidon.version>
+        <helidon.version>4.5.1</helidon.version>
         <version.oci.dropwizard.bom>5.0.1</version.oci.dropwizard.bom>
 
         <maven.compiler.source>25</maven.compiler.source>

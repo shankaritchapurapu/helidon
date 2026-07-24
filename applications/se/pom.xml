@@ -21,9 +21,8 @@
     <description>Helidon OCI SE applications</description>
 
     <properties>
-        <helidon.version>4.5.1-M1</helidon.version>
+        <helidon.version>4.5.1</helidon.version>
         <helidon.oci.version>2.0.0-SNAPSHOT</helidon.oci.version>
-
         <helidon.test.config.profile>test</helidon.test.config.profile>
         <version.oci.dropwizard.bom>5.0.1</version.oci.dropwizard.bom>
 

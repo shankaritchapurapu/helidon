@@ -5,14 +5,101 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
 <!-- For information see https://jeremylong.github.io/DependencyCheck/general/suppression.html -->
 
-   <!--
-    These are FPs.
-    See https://github.com/jeremylong/DependencyCheck/issues/5973
-   -->
-   <suppress>
-      <packageUrl regex="true">^pkg:maven/org\.codehaus\.plexus/plexus\-(cipher|classworlds|component-annotations|interpolation|container-default|sec-dispatcher)@.*$</packageUrl>
-      <cve>CVE-2022-4244</cve>
-      <cve>CVE-2022-4245</cve>
-   </suppress>
+
+<!-- Under dispute
+     These CVEs are being disputed. For details see:
+     https://github.com/HdrHistogram/HdrHistogram/issues/222
+     https://github.com/HdrHistogram/HdrHistogram/issues/221
+     https://github.com/HdrHistogram/HdrHistogram/issues/220
+     https://github.com/HdrHistogram/HdrHistogram/issues/218
+-->
+<suppress>
+    <notes><![CDATA[
+    file name: HdrHistogram-2.2.2.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.hdrhistogram/HdrHistogram@.*$</packageUrl>
+    <vulnerabilityName>CVE-2026-14683</vulnerabilityName>
+</suppress>
+<suppress>
+    <notes><![CDATA[
+    file name: HdrHistogram-2.2.2.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.hdrhistogram/HdrHistogram@.*$</packageUrl>
+    <vulnerabilityName>CVE-2026-14685</vulnerabilityName>
+</suppress>
+<suppress>
+    <notes><![CDATA[
+    file name: HdrHistogram-2.2.2.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.hdrhistogram/HdrHistogram@.*$</packageUrl>
+    <vulnerabilityName>CVE-2026-14686</vulnerabilityName>
+</suppress>
+<suppress>
+    <notes><![CDATA[
+    file name: HdrHistogram-2.2.2.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.hdrhistogram/HdrHistogram@.*$</packageUrl>
+    <vulnerabilityName>CVE-2026-14684</vulnerabilityName>
+</suppress>
+
+<!-- False Positives
+     These various OCI SDKs are being identified as old Java SDK
+-->
+<suppress>
+   <notes><![CDATA[
+   file name: splat-sdk-0.1.39635.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/com\.oracle\.pic\.platform\.splat\.sdk/splat-sdk@.*$</packageUrl>
+   <cpe>cpe:/a:sun:sdk</cpe>
+</suppress>
+<suppress>
+   <notes><![CDATA[
+   file name: service-sdk-1.0.39.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/com\.oracle\.pic\.commons\.metadata/service-sdk@.*$</packageUrl>
+   <cpe>cpe:/a:sun:sdk</cpe>
+</suppress>
+<suppress>
+   <notes><![CDATA[
+   file name: ocihealth-java-sdk-v2-1.2.250.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/com\.oracle\.oci\.tos/ocihealth-java-sdk-v2@.*$</packageUrl>
+   <cpe>cpe:/a:sun:sdk</cpe>
+</suppress>
+<suppress>
+   <notes><![CDATA[
+   file name: java-sdk-oci-internals-commons-1.3.5.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/com\.oracle\.oci\.internals\.sdk/java-sdk-oci-internals-commons@.*$</packageUrl>
+   <cpe>cpe:/a:sun:sdk</cpe>
+</suppress>
+
+
+<!-- 
+   These do not apply for local antlr use. antlr likely not fixing
+   https://github.com/antlr/antlr4/issues/4952
+-->
+<suppress>
+   <notes><![CDATA[
+   file name: antlr4-4.13.2.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.antlr/antlr4@.*$</packageUrl>
+   <vulnerabilityName>CVE-2026-13500</vulnerabilityName>
+</suppress>
+<suppress>
+   <notes><![CDATA[
+   file name: antlr4-4.13.2.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.antlr/antlr4@.*$</packageUrl>
+   <vulnerabilityName>CVE-2026-13503</vulnerabilityName>
+</suppress>
+<suppress>
+   <notes><![CDATA[
+   file name: antlr4-4.13.2.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.antlr/antlr4@.*$</packageUrl>
+   <vulnerabilityName>CVE-2026-13501</vulnerabilityName>
+</suppress>
+
 
 </suppressions>

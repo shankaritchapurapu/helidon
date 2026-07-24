@@ -19,12 +19,11 @@
     <description>Maven dependency management for Helidon OCI native applications</description>
 
     <properties>
-        <helidon.version>4.5.1-M1</helidon.version>
+        <helidon.version>4.5.1</helidon.version>
+
         <version.lib.oci>2.88.0</version.lib.oci>
         <sherlock-version>3.0.13</sherlock-version>
-        <version-lib-joda-time>2.10.14</version-lib-joda-time>
         <bc-fips-lib-version>1.0.2.4</bc-fips-lib-version>
-        <nimbus-jose-jwt-lib-version>9.10.1</nimbus-jose-jwt-lib-version>
         <bcpkix-fips-lib-version>1.0.6</bcpkix-fips-lib-version>
         <checker-qual-lib-version>3.49.5</checker-qual-lib-version>
         <j2objc-lib-version>3.0.0</j2objc-lib-version>
@@ -158,25 +157,9 @@
                 <version>${version.lib.logback}</version>
             </dependency>
             <dependency>
-                <groupId>joda-time</groupId>
-                <artifactId>joda-time</artifactId>
-                <version>${version-lib-joda-time}</version>
-            </dependency>
-            <dependency>
                 <groupId>bc-fips</groupId>
                 <artifactId>bc-fips</artifactId>
                 <version>${bc-fips-lib-version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.nimbusds</groupId>
-                <artifactId>nimbus-jose-jwt</artifactId>
-                <version>${nimbus-jose-jwt-lib-version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.github.stephenc.jcip</groupId>
-                        <artifactId>jcip-annotations</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>bcpkix-fips</groupId>
