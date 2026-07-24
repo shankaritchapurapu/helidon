@@ -8,6 +8,7 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <!-- Parent pom defines some properties (like helidon.oci.version) and configures plugins -->
     <parent>
         <groupId>com.oracle.helidon.oci</groupId>
         <artifactId>helidon-oci-se</artifactId>
@@ -17,11 +18,42 @@
 
     <groupId>com.oracle.helidon.oci.examples.dataplane</groupId>
     <artifactId>helidon-oci-examples-dataplane</artifactId>
-    <name>Helidon OCI Examples Data Plane</name>
+    <version>1.0.0-SNAPSHOT</version>
+    <name>Helidon Talon Examples Data Plane</name>
 
     <properties>
         <mainClass>com.oracle.helidon.oci.examples.dataplane.Main</mainClass>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- The order of these imports is important. First has precedence over later. -->
+            <!-- Manage versions of com.oracle.pic artifacts -->
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-internal-bom</artifactId>
+                <version>${helidon.oci.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Manage versions of io.helidon, com.oracle.helidon and associated third party artifacts -->
+            <dependency>
+                <groupId>com.oracle.helidon.oci</groupId>
+                <artifactId>helidon-oci-dependencies</artifactId>
+                <version>${helidon.oci.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Manage versions of additional OCI third party artifacts -->
+            <dependency>
+                <groupId>com.oracle.pic.commons</groupId>
+                <artifactId>dropwizard-service-bom</artifactId>
+                <version>${version.oci.dropwizard.bom}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -162,7 +194,7 @@
                         <path>
                             <groupId>com.oracle.helidon.oci</groupId>
                             <artifactId>helidon-oci-codegen</artifactId>
-                            <version>${project.version}</version>
+                            <version>${helidon.oci.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

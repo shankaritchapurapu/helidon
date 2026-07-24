@@ -22,6 +22,8 @@
 
     <properties>
         <helidon.version>4.5.1-M1</helidon.version>
+        <helidon.oci.version>2.0.0-SNAPSHOT</helidon.oci.version>
+
         <helidon.test.config.profile>test</helidon.test.config.profile>
         <version.oci.dropwizard.bom>5.0.1</version.oci.dropwizard.bom>
 
@@ -144,34 +146,6 @@
             </releases>
         </pluginRepository>
     </pluginRepositories>
-
-    <dependencyManagement>
-        <dependencies>
-        <!-- Manage version of com.oracle.pic stuff -->
-        <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-internal-bom</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.helidon.oci</groupId>
-            <artifactId>helidon-oci-dependencies</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-        <!-- Manage versions of various OCI third party libraries -->
-        <dependency>
-            <groupId>com.oracle.pic.commons</groupId>
-            <artifactId>dropwizard-service-bom</artifactId>
-            <version>${version.oci.dropwizard.bom}</version>
-            <type>pom</type>
-            <scope>import</scope>
-        </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <build>
         <finalName>${project.artifactId}</finalName>

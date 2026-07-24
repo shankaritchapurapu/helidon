@@ -1,9 +1,10 @@
 # Helidon Talon Documentation: Guides
 
-| Topic                                                   | Description                                                                                         |
-|---------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
-| [APM](apm.md)                                           | OpenTelemetry configuration guidance for exporting Helidon tracing data to Oracle APM.              |
-| [Jipher](jipher.md)                                     | Guidance for enabling the Oracle Jipher security provider for FIPS-oriented deployments.            |
-| [Lumberjack](lumberjack.md)                             | Logging and onboarding guidance for sending service logs to Lumberjack.                             |
-| [OMK](omk.md)                                           | Overview of OMK and the Shepherd infrastructure used to deploy Helidon services.                    |
-| [Migration](migration/README.md)                        | Migration guidance for moving OCI services to Helidon and Talon.                                    |
+| Topic                            | Description                                                                                         |
+|----------------------------------|-----------------------------------------------------------------------------------------------------|
+| [APM](apm.md)                    | OpenTelemetry configuration guidance for exporting Helidon tracing data to Oracle APM.              |
+| [Dependencies](dependencies.md)  | Using Helidon Talon BOM files to manage depenencies in your application.                            |
+| [Jipher](jipher.md)              | Guidance for enabling the Oracle Jipher security provider for FIPS-oriented deployments.            |
+| [Lumberjack](lumberjack.md)      | Logging and onboarding guidance for sending service logs to Lumberjack.                             |
+| [OMK](omk.md)                    | Overview of OMK and the Shepherd infrastructure used to deploy Helidon services.                    |
+| [Migration](migration/README.md) | Migration guidance for moving OCI services to Helidon and Talon.                                    |
