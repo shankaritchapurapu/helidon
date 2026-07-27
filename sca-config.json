@@ -8,7 +8,7 @@
   "build": [
     {
       "tool": "maven",
-      "command": "mvn clean install -e -B --global-toolchains build_config/toolchains.xml -DskipTests=true -Dfindbugs.skip=true -DskipITs=true -Dcheckstyle.skip -Dspotbugs.skip -Dpmd.skip -Dclirr.skip -Djacoco.skip -Dmaven.javadoc.skip -Dmaven.source.skip=true -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.exec.skip.swagger=true -Denforcer.skip=true -Ddockerfile.build.skip=true -Ddocker.skip -Dskip.npm -Dskip.yarn -Dskip.bower -Dskip.grunt -Dskip.gulp -Dskip.jspm -Dskip.karma -Dskip.webpack -Dmaven.gitcommitid.skip=true -DrpmPackagePhase=none"
+      "command": ". mvn clean install -e -B --global-toolchains build_config/toolchains.xml -DskipTests=true -Dfindbugs.skip=true -DskipITs=true -Dcheckstyle.skip -Dspotbugs.skip -Dpmd.skip -Dclirr.skip -Djacoco.skip -Dmaven.javadoc.skip -Dmaven.source.skip=true -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.exec.skip.swagger=true -Denforcer.skip=true -Ddockerfile.build.skip=true -Ddocker.skip -Dskip.npm -Dskip.yarn -Dskip.bower -Dskip.grunt -Dskip.gulp -Dskip.jspm -Dskip.karma -Dskip.webpack -Dmaven.gitcommitid.skip=true -DrpmPackagePhase=none"
     }
   ],
   "dependencies": {
