@@ -62,6 +62,14 @@ interface MeteringConfigBlueprint {
     Optional<Duration> meteringPeriod();
 
     /**
+     * Duration of an archive lease.
+     *
+     * @return lease duration
+     */
+    @Option.Configured
+    Optional<Duration> leaseDuration();
+
+    /**
      * Whether canary behavior is disabled.
      *
      * @return {@code true} when disabled
@@ -76,6 +84,14 @@ interface MeteringConfigBlueprint {
      */
     @Option.Configured
     List<MeteringBucketConfig> bucketConfigs();
+
+    /**
+     * Version 3 bucket configurations for the control plane metering path.
+     *
+     * @return version 3 bucket configurations
+     */
+    @Option.Configured
+    List<MeteringBucketConfigV3> bucketV3Configs();
 
     /**
      * OCI region used by the metering agent. If not specified, uses the region from the current environment.
@@ -148,4 +164,20 @@ interface MeteringConfigBlueprint {
      */
     @Option.Configured
     Optional<Boolean> fastCatchupModeEnabled();
+
+    /**
+     * Whether duplicate writes to version 2 buckets are disabled.
+     *
+     * @return {@code true} when duplicate version 2 writes are disabled
+     */
+    @Option.Configured
+    Optional<Boolean> duplicateV2WritesDisabled();
+
+    /**
+     * Maximum time allowed for archiving.
+     *
+     * @return archiver timeout
+     */
+    @Option.Configured
+    Optional<Duration> archiverTimeout();
 }

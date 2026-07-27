@@ -5,6 +5,7 @@
 package com.oracle.helidon.oci.metering.cp;
 
 import java.time.Duration;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import io.helidon.common.Weight;
@@ -30,14 +31,20 @@ class MeteringAgentConfigFactory implements Supplier<com.oracle.pic.bling.emit.c
                 .stream()
                 .map(MeteringAgentConfigFactory::nativeBucketConfig)
                 .toList();
+        var bucketV3Configs = meteringConfig.bucketV3Configs()
+                .stream()
+                .map(MeteringAgentConfigFactory::nativeBucketV3Config)
+                .toList();
 
         var builder = com.oracle.pic.bling.emit.config.MeteringAgentConfig.builder()
                 .endpoint(meteringConfig.endpoint())
                 .clientId(meteringConfig.clientId())
-                .bucketConfigs(bucketConfigs);
+                .bucketConfigs(bucketConfigs)
+                .bucketV3Configs(bucketV3Configs);
 
         meteringConfig.maxWorkers().ifPresent(builder::maxWorkers);
         meteringConfig.meteringPeriod().map(MeteringAgentConfigFactory::seconds).ifPresent(builder::meteringPeriodInSeconds);
+        meteringConfig.leaseDuration().map(MeteringAgentConfigFactory::seconds).ifPresent(builder::leaseDurationInSeconds);
         meteringConfig.canaryDisabled().ifPresent(builder::canaryDisabled);
         meteringConfig.maxArchiveWorkers().ifPresent(builder::maxArchiveWorkers);
         meteringConfig.scanPageSize().ifPresent(builder::scanPageSize);
@@ -46,6 +53,8 @@ class MeteringAgentConfigFactory implements Supplier<com.oracle.pic.bling.emit.c
         meteringConfig.skipArchiveLeaseCheck().ifPresent(builder::skipArchiveLeaseCheck);
         meteringConfig.leaseDaoScanPageSize().ifPresent(builder::leaseDAOScanPageSize);
         meteringConfig.fastCatchupModeEnabled().ifPresent(builder::fastCatchupModeEnabled);
+        meteringConfig.duplicateV2WritesDisabled().ifPresent(builder::duplicateV2WritesDisabled);
+        meteringConfig.archiverTimeout().map(MeteringAgentConfigFactory::minutes).ifPresent(builder::archiverTimeOut);
 
         com.oracle.pic.bling.emit.config.MeteringAgentConfig nativeConfig = builder.build();
         nativeConfig.validate();
@@ -60,11 +69,32 @@ class MeteringAgentConfigFactory implements Supplier<com.oracle.pic.bling.emit.c
                 .build();
     }
 
+    private static com.oracle.pic.bling.emit.config.MeteringBucketConfigV3 nativeBucketV3Config(MeteringBucketConfigV3 config) {
+        return com.oracle.pic.bling.emit.config.MeteringBucketConfigV3.builder()
+                .bucketName(config.bucketName())
+                .serviceName(config.serviceName())
+                .meterNames(Set.copyOf(config.meterNames()))
+                .build();
+    }
+
     private static int seconds(Duration duration) {
+        if (duration.getNano() != 0) {
+            throw new IllegalArgumentException("Metering duration must be a whole number of seconds: " + duration);
+        }
         return Math.toIntExact(duration.toSeconds());
     }
 
+    private static int minutes(Duration duration) {
+        if (duration.getNano() != 0 || duration.getSeconds() % 60 != 0) {
+            throw new IllegalArgumentException("Archiver timeout must be a whole number of minutes: " + duration);
+        }
+        return Math.toIntExact(duration.toMinutes());
+    }
+
     private static int days(Duration duration) {
+        if (duration.getNano() != 0 || duration.getSeconds() % Duration.ofDays(1).toSeconds() != 0) {
+            throw new IllegalArgumentException("Retention period must be a whole number of days: " + duration);
+        }
         return Math.toIntExact(duration.toDays());
     }
 }

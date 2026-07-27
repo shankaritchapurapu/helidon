@@ -179,11 +179,27 @@ oci:
     client-id: "orders-cp"
     region: "us-phoenix-1"
     metering-period: "PT1M"
+    lease-duration: "PT5M"
+    duplicate-v2-writes-disabled: true
+    archiver-timeout: "PT30M"
     bucket-configs:
       - bucket-name: "orders_metering"
         service-name: "orders"
         meter-name: "orders.requests"
+    bucket-v3-configs:
+      - bucket-name: "orders_metering_v3"
+        service-name: "orders"
+        meter-names:
+          - "orders.created"
+          - "orders.deleted"
 ```
+
+The CP module forwards `bucket-configs` and `bucket-v3-configs` independently to the native metering agent; it does not
+translate between the version 2 and version 3 bucket models. `lease-duration` must be a whole number of seconds and
+`archiver-timeout` must be a whole number of minutes. When omitted, the native metering-agent defaults apply: a
+five-minute lease duration, an empty V3 bucket list, duplicate V2 writes enabled, and a 30-minute archiver timeout.
+`retention-period` must be a whole number of days. Native validation requires a lease duration between five and 15 minutes,
+an archiver timeout between 30 and 60 minutes, and a retention period of at least two days.
 
 When the CP config is present, Helidon can create and inject:
 
@@ -334,17 +350,17 @@ and metering-agent for CP configuration.
 |------------------------------------------|----------------|-------------|
 | `oci.metering.enabled`                   | `true`         | Whether Helidon starts and stops the native reporting agent. |
 | `oci.metering.endpoint`                  | required       | Bling ingest endpoint. |
-| `oci.metering.metering-period`           | native default | Period used by emitter-dp for metering work. |
-| `oci.metering.archiving-duration`        | native default | Duration for retaining archived metering data. |
+| `oci.metering.metering-period`           | `PT5M`         | Period used by emitter-dp for metering work; must be a whole number of seconds. |
+| `oci.metering.archiving-duration`        | `PT5M`         | Duration for retaining archived metering data; must be a whole number of seconds. |
 | `oci.metering.metering-dir`              | required       | Local directory used by emitter-dp. |
 | `oci.metering.client-id`                 | required       | Metering client ID for the native emitter-dp config. |
 | `oci.metering.service`                   | required       | Service name reported to Bling. |
-| `oci.metering.region`                    |                | OCI public region name used when constructing the native DP reporter. |
-| `oci.metering.os-enabled`                | native default | Whether Object Storage reporting is enabled. |
-| `oci.metering.k8s-based-deployment`      | native default | Whether the deployment is Kubernetes-based. |
-| `oci.metering.bucket-name`               | native default | Object Storage bucket name used by emitter-dp; required by native validation when Object Storage backup remains enabled. |
-| `oci.metering.namespace`                 | native default | Object Storage namespace used by emitter-dp; required by native validation when Object Storage backup remains enabled. |
-| `oci.metering.report-interval`           | native default | Duration interval for reporting archived usage to Bling; must be at least `PT1S` and is converted to seconds for emitter-dp. |
+| `oci.metering.region`                    | environment   | OCI public region name used when constructing the native DP reporter. |
+| `oci.metering.os-enabled`                | `true`        | Whether Object Storage reporting is enabled. |
+| `oci.metering.k8s-based-deployment`      | `true`        | Whether the deployment is Kubernetes-based. |
+| `oci.metering.bucket-name`               | unset         | Object Storage bucket name used by emitter-dp; required by native validation when Object Storage backup remains enabled. |
+| `oci.metering.namespace`                 | unset         | Object Storage namespace used by emitter-dp; required by native validation when Object Storage backup remains enabled. |
+| `oci.metering.report-interval`           | `PT15M`       | Interval for reporting archived usage to Bling; must be at least `PT1S` and a whole number of seconds. |
 | `oci.metering.host-name`                 | local host     | Host name passed to `LogFileUsageRecorder`. |
 | `oci.metering.bling-publisher-client.endpoint` | required when using generated client | Bling endpoint for the native publisher client. |
 | `oci.metering.bling-publisher-client.client-id` | required when using generated client | Client ID for the native publisher client. |
@@ -357,23 +373,29 @@ Required when `helidon-oci-metering-cp` is present.
 | Key                                                     | Default value  | Description |
 |---------------------------------------------------------|----------------|-------------|
 | `oci.metering.enabled`                                  | `true`         | Whether Helidon starts and stops the native metering agent. |
-| `oci.metering.endpoint`                                 |                | Bling ingest endpoint. |
-| `oci.metering.client-id`                                |                | Metering client ID. |
-| `oci.metering.region`                                   | required       | OCI public region name used by the native metering agent. |
+| `oci.metering.endpoint`                                 | required       | Bling ingest endpoint. |
+| `oci.metering.client-id`                                | required       | Metering client ID. |
+| `oci.metering.region`                                   | environment    | OCI public region name used by the native metering agent. |
 | `oci.metering.host-name`                                | local host     | Host name passed to the native metering agent. |
-| `oci.metering.bucket-configs[].bucket-name`             |                | Metering bucket name. |
-| `oci.metering.bucket-configs[].service-name`            |                | Service name associated with the bucket. |
-| `oci.metering.bucket-configs[].meter-name`              |                | Meter name associated with the bucket. |
-| `oci.metering.max-workers`                              | native default | Maximum workers for the full control plane agent path. |
-| `oci.metering.metering-period`                          | native default | Period used by metering-agent for metering work. |
-| `oci.metering.canary-disabled`                          | native default | Whether canary behavior is disabled. |
-| `oci.metering.max-archive-workers`                      | native default | Maximum archive workers. |
-| `oci.metering.scan-page-size`                           | native default | Scan page size. |
-| `oci.metering.max-writes-per-transaction`               | native default | Maximum writes per transaction. |
-| `oci.metering.retention-period`                         | native default | Retention period for archived data. |
-| `oci.metering.skip-archive-lease-check`                 | native default | Whether archive lease checking should be skipped. |
-| `oci.metering.lease-dao-scan-page-size`                 | native default | Lease DAO scan page size. |
-| `oci.metering.fast-catchup-mode-enabled`                | native default | Whether fast catchup mode is enabled. |
+| `oci.metering.bucket-configs[].bucket-name`             | required per entry | Version 2 metering bucket name. |
+| `oci.metering.bucket-configs[].service-name`            | required per entry | Service name associated with the Version 2 bucket. |
+| `oci.metering.bucket-configs[].meter-name`              | required per entry | Meter name associated with the Version 2 bucket. |
+| `oci.metering.bucket-v3-configs[].bucket-name`          | required per entry | Version 3 metering bucket name. |
+| `oci.metering.bucket-v3-configs[].service-name`         | required per entry | Service name associated with the Version 3 bucket. |
+| `oci.metering.bucket-v3-configs[].meter-names`          | empty set     | Meter names associated with the Version 3 bucket. |
+| `oci.metering.max-workers`                              | native default | Maximum workers for the full control plane agent path; required by native validation. |
+| `oci.metering.metering-period`                          | native default | Period used by metering-agent for metering work; required by native validation and must be a whole number of seconds. |
+| `oci.metering.lease-duration`                           | `PT5M`        | Archive lease duration; must be a whole number of seconds and between `PT5M` and `PT15M`. |
+| `oci.metering.canary-disabled`                          | `false`       | Whether canary behavior is disabled. |
+| `oci.metering.max-archive-workers`                      | `2`           | Maximum archive workers. |
+| `oci.metering.scan-page-size`                           | `5000`        | Scan page size. |
+| `oci.metering.max-writes-per-transaction`               | `10`          | Maximum writes per transaction. |
+| `oci.metering.retention-period`                         | `P14D`        | Retention period for archived data; must be a whole number of days and at least `P2D`. |
+| `oci.metering.skip-archive-lease-check`                 | `false`       | Whether archive lease checking should be skipped. |
+| `oci.metering.lease-dao-scan-page-size`                 | `10`          | Lease DAO scan page size. |
+| `oci.metering.fast-catchup-mode-enabled`                | `false`       | Whether fast catchup mode is enabled. |
+| `oci.metering.duplicate-v2-writes-disabled`             | `false`       | Whether duplicate writes to Version 2 buckets are disabled. |
+| `oci.metering.archiver-timeout`                         | `PT30M`       | Maximum archiving time; must be a whole number of minutes and between `PT30M` and `PT60M`. |
 
 ### CP annotation values
 

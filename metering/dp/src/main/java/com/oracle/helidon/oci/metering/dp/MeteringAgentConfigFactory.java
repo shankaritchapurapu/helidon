@@ -46,6 +46,9 @@ class MeteringAgentConfigFactory implements Supplier<com.oracle.pic.bling.config
     }
 
     private static int seconds(Duration duration) {
+        if (duration.getNano() != 0) {
+            throw new IllegalArgumentException("Metering duration must be a whole number of seconds: " + duration);
+        }
         return Math.toIntExact(duration.toSeconds());
     }
 }

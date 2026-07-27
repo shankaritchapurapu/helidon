@@ -184,6 +184,42 @@ class MeteringConfigFactoryTest {
         assertThat(exception.getMessage(), containsString("at least PT1S"));
     }
 
+    @Test
+    void rejectsMeteringPeriodWithSubSecondPrecision() {
+        MeteringConfig config = meteringConfigWithDuration("metering-period", "PT1.5S");
+
+        assertThrows(IllegalArgumentException.class, () -> new MeteringAgentConfigFactory(config).get());
+    }
+
+    @Test
+    void rejectsArchivingDurationWithSubSecondPrecision() {
+        MeteringConfig config = meteringConfigWithDuration("archiving-duration", "PT1.5S");
+
+        assertThrows(IllegalArgumentException.class, () -> new MeteringAgentConfigFactory(config).get());
+    }
+
+    @Test
+    void rejectsReportIntervalWithSubSecondPrecision() {
+        MeteringConfig config = meteringConfigWithDuration("report-interval", "PT1.5S");
+
+        assertThrows(IllegalArgumentException.class, () -> new MeteringAgentConfigFactory(config).get());
+    }
+
+    private static MeteringConfig meteringConfigWithDuration(String key, String value) {
+        Map<String, String> values = new java.util.HashMap<>(Map.of(
+                "oci.metering.endpoint", "https://bling-dp.example",
+                "oci.metering.metering-dir", "/var/metering",
+                "oci.metering.client-id", "dp-client",
+                "oci.metering.service", "dp-service",
+                "oci.metering.os-enabled", "false",
+                "oci.metering.k8s-based-deployment", "false",
+                "oci.metering.bling-publisher-client.endpoint", "https://bling-client.example",
+                "oci.metering.bling-publisher-client.client-id", "publisher-client"
+        ));
+        values.put("oci.metering." + key, value);
+        return new MeteringConfigFactory(config(values)).get();
+    }
+
     private static Config config(Map<String, String> values) {
         return Config.just(ConfigSources.create(values));
     }

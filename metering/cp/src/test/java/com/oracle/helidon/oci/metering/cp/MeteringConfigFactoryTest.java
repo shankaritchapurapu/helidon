@@ -7,6 +7,7 @@ package com.oracle.helidon.oci.metering.cp;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import io.helidon.common.testing.junit5.OptionalMatcher;
 import io.helidon.config.Config;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MeteringConfigFactoryTest {
 
@@ -29,6 +31,7 @@ class MeteringConfigFactoryTest {
                 Map.entry("oci.metering.host-name", "cp-host"),
                 Map.entry("oci.metering.max-workers", "4"),
                 Map.entry("oci.metering.metering-period", "PT75S"),
+                Map.entry("oci.metering.lease-duration", "PT6M"),
                 Map.entry("oci.metering.canary-disabled", "true"),
                 Map.entry("oci.metering.bucket-configs.0.bucket-name", "first-bucket"),
                 Map.entry("oci.metering.bucket-configs.0.service-name", "first-service"),
@@ -36,13 +39,22 @@ class MeteringConfigFactoryTest {
                 Map.entry("oci.metering.bucket-configs.1.bucket-name", "second-bucket"),
                 Map.entry("oci.metering.bucket-configs.1.service-name", "second-service"),
                 Map.entry("oci.metering.bucket-configs.1.meter-name", "second-meter"),
+                Map.entry("oci.metering.bucket-v3-configs.0.bucket-name", "v3-bucket"),
+                Map.entry("oci.metering.bucket-v3-configs.0.service-name", "v3-service"),
+                Map.entry("oci.metering.bucket-v3-configs.0.meter-names.0", "first-v3-meter"),
+                Map.entry("oci.metering.bucket-v3-configs.0.meter-names.1", "second-v3-meter"),
+                Map.entry("oci.metering.bucket-v3-configs.1.bucket-name", "second-v3-bucket"),
+                Map.entry("oci.metering.bucket-v3-configs.1.service-name", "second-v3-service"),
+                Map.entry("oci.metering.bucket-v3-configs.1.meter-names.0", "third-v3-meter"),
                 Map.entry("oci.metering.max-archive-workers", "5"),
                 Map.entry("oci.metering.scan-page-size", "250"),
                 Map.entry("oci.metering.max-writes-per-transaction", "25"),
                 Map.entry("oci.metering.retention-period", "PT72H"),
                 Map.entry("oci.metering.skip-archive-lease-check", "true"),
                 Map.entry("oci.metering.lease-dao-scan-page-size", "125"),
-                Map.entry("oci.metering.fast-catchup-mode-enabled", "true")
+                Map.entry("oci.metering.fast-catchup-mode-enabled", "true"),
+                Map.entry("oci.metering.duplicate-v2-writes-disabled", "true"),
+                Map.entry("oci.metering.archiver-timeout", "PT45M")
         ))).get();
 
         assertThat(config.endpoint(), is("https://bling-cp.example"));
@@ -52,10 +64,20 @@ class MeteringConfigFactoryTest {
         assertThat(config.hostName(), is(Optional.of("cp-host")));
         assertThat(config.maxWorkers(), is(Optional.of(4)));
         assertThat(config.meteringPeriod(), is(Optional.of(Duration.ofSeconds(75))));
+        assertThat(config.leaseDuration(), is(Optional.of(Duration.ofMinutes(6))));
         assertThat(config.canaryDisabled(), is(Optional.of(true)));
         assertThat(config.bucketConfigs().size(), is(2));
         assertBucketConfig(config.bucketConfigs().getFirst(), "first-bucket", "first-service", "first-meter");
         assertBucketConfig(config.bucketConfigs().get(1), "second-bucket", "second-service", "second-meter");
+        assertThat(config.bucketV3Configs().size(), is(2));
+        assertBucketV3Config(config.bucketV3Configs().getFirst(),
+                             "v3-bucket",
+                             "v3-service",
+                             Set.of("first-v3-meter", "second-v3-meter"));
+        assertBucketV3Config(config.bucketV3Configs().get(1),
+                             "second-v3-bucket",
+                             "second-v3-service",
+                             Set.of("third-v3-meter"));
         assertThat(config.maxArchiveWorkers(), is(Optional.of(5)));
         assertThat(config.scanPageSize(), is(Optional.of(250)));
         assertThat(config.maxWritesPerTransaction(), is(Optional.of(25)));
@@ -63,6 +85,8 @@ class MeteringConfigFactoryTest {
         assertThat(config.skipArchiveLeaseCheck(), is(Optional.of(true)));
         assertThat(config.leaseDaoScanPageSize(), is(Optional.of(125)));
         assertThat(config.fastCatchupModeEnabled(), is(Optional.of(true)));
+        assertThat(config.duplicateV2WritesDisabled(), is(Optional.of(true)));
+        assertThat(config.archiverTimeout(), is(Optional.of(Duration.ofMinutes(45))));
     }
 
     @Test
@@ -80,8 +104,10 @@ class MeteringConfigFactoryTest {
         assertThat(config.hostName(), is(Optional.empty()));
         assertThat(config.maxWorkers(), is(Optional.empty()));
         assertThat(config.meteringPeriod(), is(Optional.empty()));
+        assertThat(config.leaseDuration(), is(Optional.empty()));
         assertThat(config.canaryDisabled(), is(Optional.empty()));
         assertThat(config.bucketConfigs().isEmpty(), is(true));
+        assertThat(config.bucketV3Configs().isEmpty(), is(true));
         assertThat(config.maxArchiveWorkers(), is(Optional.empty()));
         assertThat(config.scanPageSize(), is(Optional.empty()));
         assertThat(config.maxWritesPerTransaction(), is(Optional.empty()));
@@ -89,6 +115,8 @@ class MeteringConfigFactoryTest {
         assertThat(config.skipArchiveLeaseCheck(), is(Optional.empty()));
         assertThat(config.leaseDaoScanPageSize(), is(Optional.empty()));
         assertThat(config.fastCatchupModeEnabled(), is(Optional.empty()));
+        assertThat(config.duplicateV2WritesDisabled(), is(Optional.empty()));
+        assertThat(config.archiverTimeout(), is(Optional.empty()));
     }
 
     @Test
@@ -99,17 +127,24 @@ class MeteringConfigFactoryTest {
                 Map.entry("oci.metering.region", "us-phoenix-1"),
                 Map.entry("oci.metering.max-workers", "6"),
                 Map.entry("oci.metering.metering-period", "PT3M"),
+                Map.entry("oci.metering.lease-duration", "PT10M"),
                 Map.entry("oci.metering.canary-disabled", "true"),
                 Map.entry("oci.metering.bucket-configs.0.bucket-name", "archive-bucket"),
                 Map.entry("oci.metering.bucket-configs.0.service-name", "archive-service"),
                 Map.entry("oci.metering.bucket-configs.0.meter-name", "archive-meter"),
+                Map.entry("oci.metering.bucket-v3-configs.0.bucket-name", "archive-v3-bucket"),
+                Map.entry("oci.metering.bucket-v3-configs.0.service-name", "archive-v3-service"),
+                Map.entry("oci.metering.bucket-v3-configs.0.meter-names.0", "archive-first-meter"),
+                Map.entry("oci.metering.bucket-v3-configs.0.meter-names.1", "archive-second-meter"),
                 Map.entry("oci.metering.max-archive-workers", "7"),
                 Map.entry("oci.metering.scan-page-size", "300"),
                 Map.entry("oci.metering.max-writes-per-transaction", "30"),
                 Map.entry("oci.metering.retention-period", "PT96H"),
                 Map.entry("oci.metering.skip-archive-lease-check", "true"),
                 Map.entry("oci.metering.lease-dao-scan-page-size", "150"),
-                Map.entry("oci.metering.fast-catchup-mode-enabled", "true")
+                Map.entry("oci.metering.fast-catchup-mode-enabled", "true"),
+                Map.entry("oci.metering.duplicate-v2-writes-disabled", "true"),
+                Map.entry("oci.metering.archiver-timeout", "PT45M")
         ))).get();
 
         com.oracle.pic.bling.emit.config.MeteringAgentConfig nativeConfig =
@@ -119,11 +154,19 @@ class MeteringConfigFactoryTest {
         assertThat(nativeConfig.getClientId(), is("cp-client"));
         assertThat(nativeConfig.getMaxWorkers(), is(6));
         assertThat(nativeConfig.getMeteringPeriodInSeconds(), is(180));
+        assertThat(nativeConfig.getLeaseDurationInSeconds(), is(600));
         assertThat(nativeConfig.isCanaryDisabled(), is(true));
         assertThat(nativeConfig.getBucketConfigs().size(), is(1));
         assertThat(nativeConfig.getBucketConfigs().getFirst().getBucketName(), is("archive-bucket"));
         assertThat(nativeConfig.getBucketConfigs().getFirst().getServiceName(), is("archive-service"));
         assertThat(nativeConfig.getBucketConfigs().getFirst().getMeterName(), is("archive-meter"));
+        assertThat(nativeConfig.getBucketV3Configs().size(), is(1));
+        assertThat(nativeConfig.getBucketV3Configs().getFirst().getBucketName(), is("archive-v3-bucket"));
+        assertThat(nativeConfig.getBucketV3Configs().getFirst().getServiceName(), is("archive-v3-service"));
+        assertThat(nativeConfig.getBucketV3Configs().getFirst().getMeterNames(),
+                   is(Set.of("archive-first-meter", "archive-second-meter")));
+        assertThrows(UnsupportedOperationException.class,
+                     () -> nativeConfig.getBucketV3Configs().getFirst().getMeterNames().add("another-meter"));
         assertThat(nativeConfig.getMaxArchiveWorkers(), is(7));
         assertThat(nativeConfig.getScanPageSize(), is(300));
         assertThat(nativeConfig.getMaxWritesPerTransaction(), is(30));
@@ -131,6 +174,65 @@ class MeteringConfigFactoryTest {
         assertThat(nativeConfig.isSkipArchiveLeaseCheck(), is(true));
         assertThat(nativeConfig.getLeaseDAOScanPageSize(), is(150));
         assertThat(nativeConfig.isFastCatchupModeEnabled(), is(true));
+        assertThat(nativeConfig.isDuplicateV2WritesDisabled(), is(true));
+        assertThat(nativeConfig.getArchiverTimeOut(), is(45));
+    }
+
+    @Test
+    void preservesNativeDefaultsForNewOptionalValues() {
+        MeteringConfig config = new MeteringConfigFactory(config(Map.ofEntries(
+                Map.entry("oci.metering.endpoint", "https://bling-cp.example"),
+                Map.entry("oci.metering.client-id", "cp-client"),
+                Map.entry("oci.metering.max-workers", "1"),
+                Map.entry("oci.metering.metering-period", "PT1M")
+        ))).get();
+
+        com.oracle.pic.bling.emit.config.MeteringAgentConfig nativeConfig =
+                new MeteringAgentConfigFactory(config).get();
+
+        assertThat(nativeConfig.getLeaseDurationInSeconds(), is(300));
+        assertThat(nativeConfig.getBucketV3Configs().isEmpty(), is(true));
+        assertThat(nativeConfig.isDuplicateV2WritesDisabled(), is(false));
+        assertThat(nativeConfig.getArchiverTimeOut(), is(30));
+    }
+
+    @Test
+    void rejectsLeaseDurationWithSubSecondPrecision() {
+        MeteringConfig config = new MeteringConfigFactory(config(Map.ofEntries(
+                Map.entry("oci.metering.endpoint", "https://bling-cp.example"),
+                Map.entry("oci.metering.client-id", "cp-client"),
+                Map.entry("oci.metering.max-workers", "1"),
+                Map.entry("oci.metering.metering-period", "PT1M"),
+                Map.entry("oci.metering.lease-duration", "PT300.5S")
+        ))).get();
+
+        assertThrows(IllegalArgumentException.class, () -> new MeteringAgentConfigFactory(config).get());
+    }
+
+    @Test
+    void rejectsArchiverTimeoutWithSubMinutePrecision() {
+        MeteringConfig config = new MeteringConfigFactory(config(Map.ofEntries(
+                Map.entry("oci.metering.endpoint", "https://bling-cp.example"),
+                Map.entry("oci.metering.client-id", "cp-client"),
+                Map.entry("oci.metering.max-workers", "1"),
+                Map.entry("oci.metering.metering-period", "PT1M"),
+                Map.entry("oci.metering.archiver-timeout", "PT30M30S")
+        ))).get();
+
+        assertThrows(IllegalArgumentException.class, () -> new MeteringAgentConfigFactory(config).get());
+    }
+
+    @Test
+    void rejectsRetentionPeriodWithSubDayPrecision() {
+        MeteringConfig config = new MeteringConfigFactory(config(Map.ofEntries(
+                Map.entry("oci.metering.endpoint", "https://bling-cp.example"),
+                Map.entry("oci.metering.client-id", "cp-client"),
+                Map.entry("oci.metering.max-workers", "1"),
+                Map.entry("oci.metering.metering-period", "PT1M"),
+                Map.entry("oci.metering.retention-period", "PT25H")
+        ))).get();
+
+        assertThrows(IllegalArgumentException.class, () -> new MeteringAgentConfigFactory(config).get());
     }
 
     private static void assertBucketConfig(MeteringBucketConfig config,
@@ -140,6 +242,15 @@ class MeteringConfigFactoryTest {
         assertThat(config.bucketName(), is(bucketName));
         assertThat(config.serviceName(), is(serviceName));
         assertThat(config.meterName(), is(meterName));
+    }
+
+    private static void assertBucketV3Config(MeteringBucketConfigV3 config,
+                                             String bucketName,
+                                             String serviceName,
+                                             Set<String> meterNames) {
+        assertThat(config.bucketName(), is(bucketName));
+        assertThat(config.serviceName(), is(serviceName));
+        assertThat(config.meterNames(), is(meterNames));
     }
 
     private static Config config(Map<String, String> values) {
